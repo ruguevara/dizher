@@ -1,2 +1,2 @@
-# dizhyr
-Dizhyr the 8-bit Graphics Converter
+# Dizher or AutoDizher
+Dizher the 8-bit Graphics Converter
