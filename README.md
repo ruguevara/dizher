@@ -1,5 +1,5 @@
 # Dizher 
-Dizher (or AutoDizher) is a 8-bit Graphics Converter for color-restricive modes
+Dizher (or AutoDizher) is a 8-bit Graphics Converter for lovely retro color-restricive graphics modes.
 
 Turn on, tune in, drop out.
 
