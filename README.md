@@ -1,2 +1,4 @@
-# Dizher or AutoDizher
-Dizher the 8-bit Graphics Converter
+# Dizher 
+Dizher (or AutoDizher) is the 8-bit Graphics Converter
+
+Tune in, drop out.
