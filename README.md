@@ -1,6 +1,6 @@
 # Dizher
 
-Dizher (and AvtoDizher) is a 8-bit Graphics Converter for lovely retro color-restricive graphics modes.
+Dizher (and AvtoDizher) is a 8-bit Graphics Converter for lovely retrocomputers with color-restricive graphics modes.
 
 Turn on, tune in, drop out.
 
@@ -18,12 +18,13 @@ Turn on, tune in, drop out.
 * [ ] Correct Error-Diffusion dithering respecting character blocks color restrictions
 * [ ] Crop adjustments
 * [ ] Python installation package
-* [ ] Commodore 64 HiRes 320x200 mode
+* [ ] Commodore 64 HiRes 320x200 mode with 2 colors per character block
 * [ ] Custom ZX Spectrum palettes (ZX Spectrum Next or another hardware enhanceds)
 * [ ] ZX Spectrum MultiColor, GigaScreen and MultiGigaScreen software mode
-* [ ] Standalone binary package with PyInstaller
+* [ ] Commodore 64 LowRes 160x200 mode with 4 colors per character block
+* [ ] Standalone binary package with PyInstaller for macOS, Windows, Linux
 * [ ] Overpaint color brushes
 * [ ] Ability to save and load conversion projects with an image, settings and overpaint layers
 * [ ] Kivy GUI
-* [ ] Android app
-* [ ] iOS app
+* [ ] Android application
+* [ ] iOS application
