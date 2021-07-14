@@ -20,8 +20,6 @@ from ..converter.zxconverter import Converter, LumaMetric, ChromaMetric, Smoothn
 from ..converter.colors import gray2rgb
 from ..converter.dither import EDStucki, Ditherer, OrderedBayer, Stohastic
 
-# sg.theme('SystemDefaultForReal')
-sg.ChangeLookAndFeel('Dark Blue 3')
 
 class Params:
     zoom: int = 2
@@ -40,9 +38,6 @@ class ImagePane(sg.Image):
         super().update(data=asPhotoImage(image, self.zoom))
 
 
-# def
-
-
 class DizherApp:
     title = 'Dizher'
     version = '0.0.1'
@@ -58,8 +53,10 @@ class DizherApp:
         SmoothnessMetric
     ]
     metric_weights = [0.5, 0.4, 0.002]
+    psg_theme = 'Dark Blue 3'
 
     def __init__(self):
+        sg.theme(self.psg_theme)
         self.params = Params()
         self.converter = Converter(self.metric_classes)
         zoom = self.params.zoom

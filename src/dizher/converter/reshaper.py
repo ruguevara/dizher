@@ -11,7 +11,10 @@ from .colors import convert_color
 class Reshaper:
     def __init__(self, filename: str, size: Sequence[int], interpolation: int = cv2.INTER_AREA):
         self.height, self.width = size
-        self.image = convert_color(cv2.imread(filename), 'BGR', 'RGB')
+        image = cv2.imread(filename)
+        if image is None:
+            raise RuntimeError('Image file "{:s}" not found'.format(filename))
+        self.image = convert_color(image, 'BGR', 'RGB')
         self.interpolation = interpolation
 
     def crop(self):
