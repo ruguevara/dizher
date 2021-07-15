@@ -1,0 +1,6 @@
+# run: pip install -i requirements.txt
+numpy
+scipy
+scikit-image
+PySimpleGUI
+opencv-python

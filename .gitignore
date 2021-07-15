@@ -133,4 +133,4 @@ dmypy.json
 .vscode
 
 # macOS
-tests/.DS_Store
+.DS_Store

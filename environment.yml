@@ -1,0 +1,13 @@
+name: dizher
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.8
+  - codecov
+  - numpy
+  - scipy
+  - scikit-image
+  - PySimpleGUI
+  - py-opencv
+  - pip

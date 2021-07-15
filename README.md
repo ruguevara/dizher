@@ -11,16 +11,19 @@ Turn on, tune in, drop out.
 
 ## Installation
 
+Assuming you are in the dizher package directory where setup.cfg is located.
+
+### Installation with pip
+
     python3 -m pip install --upgrade pip setuptools wheel
-    python3 -m pip install --upgrade numpy scipy scikit-image opencv-python PySimpleGUI
-    python3 -m pip install <folder containig dizher package>
+    python3 -m pip install -r requirements.txt
+    python3 -m pip install .
 
-In case of problems recommend intall dependecies it in `conda` environment
+### Installation with conda
 
-    conda create -n test-dizher
-    conda activate test-dizher
-    conda install numpy scipy scikit-image py-opencv PySimpleGUI
-    python3 -m pip install <folder containig dizher package>
+    conda env create -f environment.yml
+    conda activate dizher
+    python3 -m pip install --upgrade-strategy only-if-needed .
 
 ## TODO
 
