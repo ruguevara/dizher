@@ -12,12 +12,14 @@ Turn on, tune in, drop out.
 ## Installation
 
     python3 -m pip install --upgrade pip setuptools wheel
-    python3 -m pip install --upgrade numpy scipy opencv-python PySimpleGUI
+    python3 -m pip install --upgrade numpy scipy scikit-image opencv-python PySimpleGUI
     python3 -m pip install <folder containig dizher package>
 
 In case of problems recommend intall dependecies it in `conda` environment
 
-    conda install numpy scipy opencv-python PySimpleGUI
+    conda create -n test-dizher
+    conda activate test-dizher
+    conda install numpy scipy scikit-image py-opencv PySimpleGUI
     python3 -m pip install <folder containig dizher package>
 
 ## TODO

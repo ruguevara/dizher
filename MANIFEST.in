@@ -1,0 +1,2 @@
+include src/dizher/halftoning/noise/data/*
+include src/dizher/halftoning/noise/data/512_512/*
