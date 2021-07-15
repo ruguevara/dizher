@@ -38,9 +38,14 @@ class ImagePane(sg.Image):
         super().update(data=asPhotoImage(image, self.zoom))
 
 
+def get_version():
+    import dizher
+    return dizher.__version__
+
+
 class DizherApp:
     title = 'Dizher'
-    version = '0.0.1'
+    version = get_version()
     title_text = '{:s} the 8-bit Graphics Converter — version {:s}'.format(title, version)
     dither_classes = [
         Stohastic,
@@ -52,7 +57,7 @@ class DizherApp:
         ChromaMetric,
         SmoothnessMetric
     ]
-    metric_weights = [0.5, 0.4, 0.002]
+    metric_weights = [0.9, 0.1, 0.002]
     psg_theme = 'Dark Blue 3'
 
     def __init__(self):

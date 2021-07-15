@@ -9,6 +9,17 @@ Turn on, tune in, drop out.
 * ZX Spectrum
   * Standard mode — 256x192 with 15 colors, two colors in one character 8x8 block. No flashing bit support.
 
+## Installation
+
+    python3 -m pip install --upgrade pip setuptools wheel
+    python3 -m pip install --upgrade numpy scipy opencv-python PySimpleGUI
+    python3 -m pip install <folder containig dizher package>
+
+In case of problems recommend intall dependecies it in `conda` environment
+
+    conda install numpy scipy opencv-python PySimpleGUI
+    python3 -m pip install <folder containig dizher package>
+
 ## TODO
 
 * [ ] Adjustable metrics weights
