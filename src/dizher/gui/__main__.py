@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from tkinter.constants import S
-from typing import Tuple
+from typing import Tuple, Type
 import PySimpleGUI as sg
 
 import os
@@ -19,6 +19,7 @@ from ..converter.reshaper import Reshaper
 from ..converter.zxconverter import Converter, LumaMetric, ChromaMetric, SmoothnessMetric
 from ..converter.colors import gray2rgb
 from ..converter.dither import EDStucki, Ditherer, OrderedBayer, Stohastic
+from .. import __version__
 
 
 class Params:
@@ -38,26 +39,22 @@ class ImagePane(sg.Image):
         super().update(data=asPhotoImage(image, self.zoom))
 
 
-def get_version():
-    import dizher
-    return dizher.__version__
-
-
 class DizherApp:
     title = 'Dizher'
-    version = get_version()
+    version = __version__
     title_text = '{:s} the 8-bit Graphics Converter — version {:s}'.format(title, version)
     dither_classes = [
         Stohastic,
         EDStucki,
         OrderedBayer,
     ]
+    current_dithering = Stohastic
     metric_classes = [
         LumaMetric,
         ChromaMetric,
         SmoothnessMetric
     ]
-    metric_weights = [0.9, 0.1, 0.002]
+    metric_weights = [0.6, 0.4, 0.002]
     psg_theme = 'Dark Blue 3'
 
     def __init__(self):
@@ -75,6 +72,13 @@ class DizherApp:
                 )], [
                     sg.Button('Open Image', key = 'open-image'),
                     sg.Button('Optimize brightness', key = 'optimize-brightness'),
+                    sg.VerticalSeparator(pad=None),
+
+                    sg.Button('Stohastic', key = 'halftone-noise'),
+                    sg.Button('Ordered Bayer', key = 'halftone-ordered'),
+                    sg.Button('ED Stucki', key = 'halftone-ed'),
+
+                    sg.VerticalSeparator(pad=None),
                     sg.Button('Save', key = 'save-conversion'),
                 ], [
                     ImagePane(key='image-original', dims=dims, zoom=zoom),
@@ -89,22 +93,36 @@ class DizherApp:
             return
         image = Reshaper(filename, self.converter.size)()
         self.window['image-original'].update(image)
-        self.try_convert_image(image)
+        self.convert_image(image)
 
-    def try_convert_image(self, image):
+    def convert_image(self, image):
         self.converter.set_image(image)
         self.converter.calc_best_on_metrics(self.metric_weights)
         self.apply_dither()
-        self.show_conversion()
 
     def optimize_brightness(self):
         self.converter.optimize_brights()
         self.apply_dither()
-        self.show_conversion()
+
+    def handle_halftone(self, event):
+        if event == 'halftone-noise':
+            self.set_dither(Stohastic)
+        elif event == 'halftone-ordered':
+            self.set_dither(OrderedBayer)
+        elif event == 'halftone-ed':
+            self.set_dither(EDStucki)
+        else:
+            self.not_so_fast(event)
+            return
+        self.apply_dither()
+
+    def set_dither(self, dither_class: Type[Ditherer]):
+        self.current_dithering = dither_class
 
     def apply_dither(self):
-        # TODO move current DitherMethod to converter and make "conversion stages" feature
-        self.converter.dither(self.dither_classes[0]())
+        # TODO maybe move current DitherMethod to converter and make "conversion stages" feature
+        self.converter.dither(self.current_dithering())
+        self.show_conversion()
 
     def show_conversion(self):
         self.window['image-conversion'].update(self.converter.dithered_result)
@@ -133,6 +151,8 @@ class DizherApp:
                     self.open_image(filename)
                 elif event in ('optimize-brightness', 'Brightness') :
                     self.optimize_brightness()
+                elif event.startswith('halftone-'):
+                    self.handle_halftone(event)
                 else:
                     self.not_so_fast(event)
             except Exception as e:

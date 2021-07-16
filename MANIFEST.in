@@ -1,2 +1,4 @@
 include src/dizher/halftoning/noise/data/*
 include src/dizher/halftoning/noise/data/512_512/*
+include requirements.txt
+include environment.yml
