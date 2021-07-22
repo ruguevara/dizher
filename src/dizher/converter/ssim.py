@@ -37,11 +37,11 @@ def greedy_ssim_optimize(converter):
     from .zxconverter import select_best_charblocks  # TODO refactor to separate file
 
     attr_indexes = converter.best_attr_indexes.copy()
-    max_ssim = -np.inf
     comparer = SSIMComparer(converter.image_rgb, downscale=2)
     invbright = converter.palette.invert_bright_index
+    current_convert = select_best_charblocks(converter.recolorized, attr_indexes)
+    max_ssim = comparer(current_convert)
 
-    # TODO cache converter.pair_index_to_bright_ink_paper in list
     for row in range(24):
         for col in range(32):
             cur_index = attr_indexes[row, col]

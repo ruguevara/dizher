@@ -53,23 +53,6 @@ def apply_attrs(bitmap, paper, ink):
     return np.where(bitmap[..., np.newaxis], ink, paper)
 
 
-class AdjustableParameter:
-    @abstractmethod
-    def type(self):
-        raise NotImplementedError()
-
-
-class Adjustable:
-    @abstractmethod
-    def __len__(self):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def __iter__(self):
-        raise NotImplementedError()
-
-
-
 class ConversionMetric:
     label = 'You can not get label of an abstract base ConversionMetric class'
 
@@ -151,10 +134,28 @@ class Converter:
         self.metric_arrays = OrderedDict()
         self.color_pairs = self.palette.color_pairs()
 
-    def load_image(self, filename):
+    def invalidate(self):
+        self.image_rgb = None
+        self.image_lrgb = None
+        self.image_luma = None
+        self.levels = None
+        self.recolorized = None
+        self.metric_arrays = OrderedDict()
+        self.best_attr_indexes = None
+        self.invalidate_result()
+
+    def invalidate_result(self):
+        self.best_recolor = None
+        self.best_levels = None
+        self.best_paper = None
+        self.best_ink = None
+        self.dithered_bitmap = None
+        self.dithered_result = None
+
+    def load_image(self, filename: str):
         self.set_image(convert_color(cv2.imread(filename), 'BGR', 'RGB'))
 
-    def preprocess_image(self, image_rgb) -> np.ndarray:
+    def preprocess_image(self, image_rgb: np.ndarray) -> np.ndarray:
         image_rgb = img_as_float(image_rgb).astype(np.float32)
         assert image_rgb.shape[:2] == self.size, "Wrong image size!"
 
@@ -163,7 +164,7 @@ class Converter:
         assert image_rgb.shape[2] == 3
         return image_rgb
 
-    def set_image(self, image_rgb) -> None:
+    def set_image(self, image_rgb: np.ndarray) -> None:
         self.image_rgb = self.preprocess_image(image_rgb)
         self.image_lrgb = image_rgb ** self.gamma
         self.image_luma = lrgb2luminance(self.image_lrgb)
@@ -234,9 +235,10 @@ class Converter:
         self.best_levels = select_best_charblocks(self.levels, self.best_attr_indexes)
         self.best_paper, self.best_ink = self.best_paper_ink(self.best_attr_indexes)
 
-    def dither(self, ditherer: Ditherer):
+    def dither(self, ditherer: Ditherer) -> np.ndarray:
         self.dithered_bitmap = ditherer(img_as_ubyte(self.best_levels)).astype(np.float32) / 255  # TODO add paper and ink
         self.dithered_result = apply_attrs(self.dithered_bitmap, self.best_paper, self.best_ink)
+        return self.dithered_result
 
     def optimize_brights(self):
         # TODO somehow simulate dithering with blue noise to account dithering effect in SSIM
