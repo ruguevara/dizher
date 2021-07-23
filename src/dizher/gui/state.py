@@ -15,15 +15,16 @@ from ..converter.dither import EDStucki, Ditherer, OrderedBayer, Stohastic
 class Params:
     zoom: int = 2
     debug: bool = False
+    timeout: int = 10
 
 
 class DizherState:
     dither_classes: List[Type[Ditherer]] = [
-        Stohastic,
-        EDStucki,
         OrderedBayer,
+        EDStucki,
+        Stohastic,
     ]
-    current_dithering: Type[Ditherer] = Stohastic
+    current_dithering: Type[Ditherer] = dither_classes[0]
     metric_classes: List[Type[ConversionMetric]] = [
         LumaMetric,
         ChromaMetric,
@@ -71,7 +72,3 @@ def optimize_brightness(converter: Converter, halftoner: Ditherer):
     converter.optimize_brights()
     dither(converter, halftoner)
     return converter
-
-def exposure_update(exposure: ExposureFilter):
-    image = exposure.apply(exposure.image)
-    return image

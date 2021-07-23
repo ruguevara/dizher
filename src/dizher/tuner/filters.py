@@ -1,29 +1,30 @@
 # -*- coding: utf-8 -*-
 
 from abc import abstractmethod
-from typing import Any, Dict, Type, Union
+from typing import Any, Dict, Tuple, Type, Union
 from collections import namedtuple
 
 import numpy as np
 import cv2
 from skimage import img_as_float
 
-from dizher.converter.colors import convert_color
+from ..converter.colors import convert_color
+from .params import Parameter, ParamSet
 
 
 class Filter:
-    label = 'Abstract Filter'
+
+    class Params(ParamSet):
+        pass
 
     # There are only two reasons to apply filter and change its result:
-    # 1. Loaded new image or updated params of the filter up in the chain — .apply(image)
-    # 2. Updated params of this filter — .update(params)
-
-    # TODO filter params as descriptors-properties
+    # 1. Updated params of this filter — .update(params)
+    # 2. Loaded new image or updated params of the filter up in the chain — .apply(image)
 
     def __init__(self) -> None:
+        self.params = self.Params()
         self.chain_filter = None
         self.image: Union[np.ndarray, Any] = None  # @type: Union[np.ndarray, None]
-        self.params = {}
 
     def insert(self, chain_filter) -> None:
         chain_filter.link_to(self.chain_filter)
@@ -54,51 +55,40 @@ class Filter:
             self.chain_filter.invalidate()
 
     def update(self, **params) -> Union[np.ndarray, None]:
-        self.params = params
+        # NOTE .update and .apply methods were splitted,
+        #      because in multiprocesses environment we first update, then fork and apply
+        self.params.update(**params)
         self.invalidate()
-
-    def update_and_apply(self, **params) -> Union[np.ndarray, None]:
-        self.update(**params)
-        if self.image is not None:
-            return self.apply(self.image)
 
     @abstractmethod
     def __call__(self) -> np.ndarray:
         raise NotImplementedError()
 
 
-class Parameter:
-    def __get__(self, obj, objtype=None):
-        return 1
-
-
 class ExposureFilter(Filter):
-    label = 'exposure'
-    # TODO for params we need something like ProtoBuffers, serializable and introspectionable
-    # TODO we need to construct forms and controls for params, like for models in MVC
+    class Params(Filter.Params):
+        exposure = Parameter(default=0., range=(-4., 4.))
 
-    # class Params:
-        # value = Parameter()
-        # value = Parameter(default=0.0, range=(-3., 3.))
-
-    @classmethod
-    def get_defaults(cls) -> Dict[str, Any]:
-        return {
-            'value': 0.0
-        }
-
-    @classmethod
-    def get_ranges(cls) -> Dict[str, Any]:
-        return {
-            'value': (-4.0, 4.0)
-        }
-
-    def __init__(self):
-        super().__init__()
-        self.params = self.get_defaults()
+    params = Params()
 
     def __call__(self) -> Union[np.ndarray, None]:
         if self.image is not None:
-            gamma = np.exp(-self.params['value'])
-            # TODO use cv2.LUT, make LUTFilter class for this
+            gamma = np.exp(-self.params.exposure)
+            # NOTE Guess we do not need LUT for that, as we work with float32 images
+            #      But if we work with uint16 unstead, LUT would be helpful
+            return self.image ** gamma
+
+
+class SaturationVibeFilter(Filter):
+    class Params(Filter.Params):
+        saturation = Parameter(default=0., range=(-4., 4.))
+        vibe = Parameter(default=0., range=(-4., 4.))
+
+    params = Params()
+
+    def __call__(self) -> Union[np.ndarray, None]:
+        if self.image is not None:
+            gamma = np.exp(-self.params.saturation)
+            # NOTE Guess we do not need LUT for that, as we work with float32 images
+            #      But if we work with uint16 unstead, LUT would be helpful
             return self.image ** gamma

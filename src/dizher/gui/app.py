@@ -1,16 +1,12 @@
 #! python
 # -*- coding: utf-8 -*-
 
-import threading
 from tkinter.constants import S
-from typing import Callable, Tuple, Type
+from typing import Any, Callable, Dict, List, Tuple, Type
 import PySimpleGUI as sg
 
 import os
-import time
-from io import BytesIO
 import sys
-import threading
 from enum import Enum, IntEnum
 from multiprocessing import current_process
 
@@ -19,17 +15,15 @@ sys.path.append(os.path.abspath(os.path.join(os.path.basename(__file__), '..')))
 from skimage import img_as_ubyte, img_as_float
 import cv2
 import numpy as np
-from PIL import Image, ImageTk
+import tkinter as tk
 
 from ..tuner import Tuner
-from ..tuner.filters import ExposureFilter
-from ..tuner.reshaper import ReshaperFilter
-from ..converter.zxconverter import Converter, LumaMetric, ChromaMetric, SmoothnessMetric
+from ..tuner.filters import Filter
 from ..converter.colors import gray2rgb
 from ..converter.dither import EDStucki, Ditherer, OrderedBayer, Stohastic
 from .. import __version__
-from ..util.worker import SingleAsyncPriorityWorker
-from .state import DizherState, convert_image, optimize_brightness, dither, exposure_update
+from ..util.worker import SingleAsyncPriorityWorker, SyncWorker
+from .state import DizherState, convert_image, optimize_brightness, dither
 
 
 class BGTask(IntEnum):
@@ -39,30 +33,33 @@ class BGTask(IntEnum):
     TUNER = 3
 
 
-def asPhotoImage(image: np.ndarray, scale: int=1):
-    image = cv2.resize(image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST)
-    return ImageTk.PhotoImage(Image.fromarray(img_as_ubyte(image)))
-
-
 class ImagePane(sg.Image):
     def __init__(self, zoom: int, dims: Tuple[int, int], key=None):
         self.zoom = zoom
         super().__init__(key=key, size=(dims[0] * zoom, dims[1] * zoom), background_color='black')
 
+    def makePhotoImage(self, image: np.ndarray, scale: int=1):
+        if image is None:
+            return
+        image = cv2.resize(image, (0, 0), fx=scale, fy=scale, interpolation=cv2.INTER_NEAREST)
+        image = img_as_ubyte(image)
+        # turn our ndarray into a bytesarray of PPM image by adding a simple header:
+        # this header is good for RGB. for monochrome, use P5 (look for PPM docs)
+        ppm = ('P6 %d %d 255 ' % (image.shape[1], image.shape[0])).encode('ascii') + image.tobytes()
+        return ppm
+
     def update(self, image: np.ndarray):
-        super().update(data=asPhotoImage(image, self.zoom))
+        data=self.makePhotoImage(image, self.zoom)
+        super().update(data=data)
 
 
-def LabelSlider(label, filter, param_name, pad=(5, 7)):
-    hpad, vpad = pad
-    default = filter.get_defaults().get(param_name)
-    range = filter.get_ranges().get(param_name)
-    return [
-        [sg.Text(label.capitalize(), font=(None, 10), size=(15, 1), pad=(hpad, (vpad, 0)))],
-        [sg.Slider(range=range, default_value=default, resolution=0.1,
-                   orientation='h', size=(20, 10), pad=(hpad, (0, vpad)), enable_events=True,
-                   font=(None, 10), key="slider-{:s}".format(label.lower()))],
-    ]
+def HalftoneButtons(ditherers: List[Type[Ditherer]]):
+    buttons = []
+    for i, ditherer in enumerate(ditherers):
+        name = ditherer.label.lower().replace(' ', '-')
+        buttons.append(sg.Radio(ditherer.label, 'halftone', enable_events=True,
+                                key=f'halftone-{name}', default=i==0))
+    return buttons
 
 
 class DizherApp:
@@ -74,6 +71,8 @@ class DizherApp:
     def __init__(self):
         sg.theme(self.psg_theme)
         self._state = DizherState()
+        self.worker = SingleAsyncPriorityWorker()
+        self.dispatcher = {}
 
         zoom = self._state.params.zoom
         dims = (self._state.converter.size[1], self._state.converter.size[0])
@@ -84,27 +83,33 @@ class DizherApp:
                     ['Help', '&About {:s}...'.format(self.title)],],
                     font=(None, 13)
                 )], [
-                    sg.Button('Open Image', key = 'open-image'),
-                    sg.Button('Optimize brightness', key = 'optimize_brightness'),
-                    sg.VerticalSeparator(pad=None),
-
-                    sg.Button('Stohastic', key = 'halftone-noise'),
-                    sg.Button('Ordered Bayer', key = 'halftone-ordered'),
-                    sg.Button('ED Stucki', key = 'halftone-ed'),
-
-                    sg.VerticalSeparator(pad=None),
-                    sg.Button('Save', key = 'save-conversion'),
-                ], [
                     sg.Column(
-                        LabelSlider('Exposure', self._state.exposure, 'value') +
-                        # LabelSlider("Gamma",      range=(-100, 100), default_value=0) +
-                        # LabelSlider("Saturation", range=(-100, 100), default_value=0) +
-                        # LabelSlider("Vibe",       range=(-100, 100), default_value=0) +
-                        [],
+                        [[
+                            sg.Text(f'{self.title}', font=(None, 20), text_color="black", auto_size_text=True),
+                            # sg.Text(f'v.{self.version}', font=(None, 11), text_color="black", auto_size_text=True),
+                            ]] +
+                        # [[sg.Sizer(20, 20)]] +
+                        self.tuner_sliders(),
                         vertical_alignment="top"
                     ),
-                    ImagePane(key='image-original', dims=dims, zoom=zoom),
-                    ImagePane(key='image-conversion', dims=dims, zoom=zoom),
+                    sg.Column([
+                        [sg.Button('Open Image', key = 'open-image')],
+                        [ImagePane(key='image-original', dims=dims, zoom=zoom)]
+                    ]),
+                    sg.Column([
+                        [
+                            sg.Button('Optimize brightness', key = 'optimize_brightness'),
+                            sg.VerticalSeparator(pad=None),
+                        ] +
+                            HalftoneButtons(self._state.dither_classes)
+                        + [
+                            sg.VerticalSeparator(pad=None),
+                            sg.Button('Save', key = 'save-conversion'),
+                        ],
+                        [ImagePane(key='image-conversion', dims=dims, zoom=zoom)]
+                    ]),
+                    #    size=(dims[0] * zoom + 20, 42 + dims[1] * zoom),
+                    #    element_justification = 'r'),
                     sg.Column([
                         # [sg.Slider(range=(-100, 100), default_value=0, label="luma")],
                         # [sg.Slider(range=(-100, 100), default_value=0, label="chroma")],
@@ -117,16 +122,51 @@ class DizherApp:
             finalize=True,
             return_keyboard_events=True,
         )
-        self.worker = SingleAsyncPriorityWorker()
+        self.window.disable_debugger()
+        self.window.bind('<Control-o>', 'open-image')
 
-    def update_async(self, priority, event, task, args=(), kwds={}, callback: Callable = None):
-        task_descr = "{} ({}) -> {}".format(task.__name__, priority.name, event)
-        def wrap_callback(value):
-            if callback:
-                callback(value)
-            self.debug_log("sending {}", task_descr)
-            self.window.write_event_value(event, None)
+    def bind(self, event: str, handler: Callable):
+        self.dispatcher[event] = handler
 
+    def dispatch(self, event: str, values: Dict[str, Any]) -> bool:
+        handler = self.dispatcher.get(event)
+        if handler:
+            handler(values[event])
+            return True
+        return False
+
+    def label_slider(self, filter: Filter, param_name: str, key: str, pad: Tuple[int, int]=(5, 7)):
+        hpad, vpad = pad
+        default = filter.params.get_default(param_name)
+        range = filter.params.get_range(param_name)
+        return [
+            [sg.Text(param_name.capitalize(), font=(None, 10), size=(15, 1), pad=(hpad, (vpad, 0)))],
+            [sg.Slider(range=range, default_value=default, resolution=0.1,
+                    orientation='h', size=(20, 10), pad=(hpad, (0, vpad)), enable_events=True,
+                    font=(None, 10), key=key)],
+        ]
+
+    def tuner_sliders(self):
+        def callback(image):
+            self._state.tuner.result = image
+            self.update_tuned_image(image)
+
+        sliders = []
+        for filter in self._state.tuner.filters:
+            for param in filter.Params.defaults.keys():
+                event = f"slider-{filter.__class__.__name__}-{param.lower()}"
+                sliders.extend(self.label_slider(filter, param, event))
+
+                def handler(value):
+                    self.debug_log("Slider {}={}", param, value)
+                    filter.update(**{param: value})
+                    self.update_async(BGTask.TUNER, filter.apply, (filter.image,), {}, callback=callback)
+
+                self.bind(event, handler)
+        return sliders
+
+    def update_async(self, priority, task, args=(), kwds={}, callback: Callable = None):
+        task_descr = "{} ({})".format(task.__name__, priority.name)
         def error_callback(value):
             self.debug_log("error {}, value={}", task_descr, value)
 
@@ -134,32 +174,41 @@ class DizherApp:
             self.debug_log("aborted {}, value={}", task_descr, value)
 
         self.debug_log("update_async {}", task_descr)
-        self.worker.apply(priority, task, args, kwds,
-                          callback=wrap_callback, error_callback=error_callback, abort_callback=abort_callback)
+        self.worker.apply(priority, task, args, kwds, callback=callback,
+                          error_callback=error_callback, abort_callback=abort_callback)
 
     def update_tuned_image(self, image):
+        self.debug_log('called update_tuned_image from {}', current_process())
         self.window['image-original'].update(image)
+        self.window.refresh()
         self.convert_image(image)
 
     def update_converted_image(self, image):
+        self.debug_log('called update_converted_image')
         self.window['image-conversion'].update(image)
+        self.window.refresh()
 
     def convert_image(self, image):
-        # TODO can this events and callbacks be simplified somehow?
+        self.debug_log("called convert_image")
+
         def callback(converter):
             self._state.converter = converter
+            self.debug_log("convert_image callback")
+            self.update_converted_image(self._state.converter.dithered_result)
 
         self._state.converter.invalidate()
-        self.update_async(BGTask.CONVERTER, 'update_converted_image', convert_image,
-                          (self._state.converter, self._state.current_dithering(), image, self._state.metric_weights),
-                           callback=callback)
+        self.update_async(BGTask.CONVERTER, convert_image,
+            (self._state.converter, self._state.current_dithering(), image, self._state.metric_weights),
+            callback=callback)
 
     def optimize_brightness(self):
         def callback(converter):
             self._state.converter = converter
+            self.debug_log("optimize_brightness callback")
+            self.update_converted_image(self._state.converter.dithered_result)
 
         self._state.converter.invalidate_result()
-        self.update_async(BGTask.CONVERTER, 'update_converted_image', optimize_brightness,
+        self.update_async(BGTask.CONVERTER, optimize_brightness,
                           (self._state.converter, self._state.current_dithering()), callback=callback)
 
     def open_image(self, filename):
@@ -168,26 +217,12 @@ class DizherApp:
         image = self._state.tuner.load_image(filename)
         self.update_tuned_image(image)
 
-    def handle_sliders(self, event, values):
-        if not event.startswith("slider-"):
-            return
-        key = event[len("slider-"):]
-        value = values[event]
-        if key == "exposure":
-            def callback(image):
-                self._state.tuner.result = image
-
-            self.debug_log("Slider {}", value)
-            self._state.exposure.update(value=value)
-            self.update_async(BGTask.TUNER, 'update_tuned_image',
-                              exposure_update, (self._state.exposure,), {}, callback=callback)
-
     def handle_halftone(self, event):
-        if event == 'halftone-noise':
+        if event == 'halftone-stohastic':
             self._state.current_dithering = Stohastic
-        elif event == 'halftone-ordered':
+        elif event == 'halftone-ordered-bayer':
             self._state.current_dithering = OrderedBayer
-        elif event == 'halftone-ed':
+        elif event == 'halftone-ed-stucki':
             self._state.current_dithering = EDStucki
         else:
             self.not_so_fast(event)
@@ -195,8 +230,10 @@ class DizherApp:
 
         def callback(converter):
             self._state.converter = converter
+            self.debug_log("handle_halftone callback")
+            self.update_converted_image(self._state.converter.dithered_result)
 
-        self.update_async(BGTask.HALFTONER, 'update_converted_image', dither,
+        self.update_async(BGTask.HALFTONER, dither,
                           (self._state.converter, self._state.current_dithering()), callback=callback)
 
     def popup_error(self, *args, custom_text='Okay :-(', **kwargs):
@@ -216,10 +253,18 @@ class DizherApp:
 
     def event_loop(self):
         while True:
-            event, values = self.window.read()
-            self.debug_log(str(event))
+            event, values = self.window.read(self._state.params.timeout)
             try:
-                if event in (None, 'Exit', 'Cancel'):
+                if event == sg.TIMEOUT_KEY:
+                    async_result = self.worker.read(self._state.params.timeout)
+                    if async_result is not None:
+                        self.debug_log("async worker event {}", type(async_result))
+                    continue
+
+                self.debug_log(str(event))
+                if self.dispatch(event, values):
+                    continue
+                if event in ('Exit', 'Cancel', 'Quit', sg.WIN_CLOSED):
                     break
                 elif event == 'open-image' or event == "o":
                     filename = sg.popup_get_file(
@@ -229,16 +274,13 @@ class DizherApp:
                     self.open_image(filename)
                 elif event in ('optimize_brightness', 'Brightness') :
                     self.optimize_brightness()
-                elif event == 'update_tuned_image':
-                    self.update_tuned_image(self._state.tuner.result)
-                elif event == 'update_converted_image':
-                    self.update_converted_image(self._state.converter.dithered_result)
                 elif event.startswith('halftone-'):
                     self.handle_halftone(event)
-                elif event.startswith('slider-'):
-                    self.handle_sliders(event, values)
                 # else:
                 #     self.not_so_fast("{}".format(event))
             except Exception as e:
-                raise
-                # self.popup_error("Error: {} {}".format(type(e), str(e)))
+                if self._state.params.debug:
+                    raise
+                else:
+                    self.popup_error("Error: {} {}".format(type(e), str(e)))
+        self.window.close()
