@@ -19,7 +19,7 @@ class ReshaperFilter(Filter):
         h, w = image.shape[:2]
         factor_h, factor_w = self.height / h, self.width / w
         max_factor = max(factor_h, factor_w)
-        return cv2.resize(self.image, (0, 0), fx = max_factor, fy = max_factor, interpolation = self.interpolation)
+        return cv2.resize(self.input, (0, 0), fx = max_factor, fy = max_factor, interpolation = self.interpolation)
 
     def crop(self, image: np.ndarray) -> np.ndarray:
         new_h, new_w = image.shape[:2]
@@ -28,5 +28,5 @@ class ReshaperFilter(Filter):
         return image[crop_h:crop_h + self.height, crop_w:crop_w + self.width]
 
     def __call__(self) -> Union[np.ndarray, None]:
-        if self.image is not None:
-            return self.crop(self.resize(self.image))
+        if self.input is not None:
+            return self.crop(self.resize(self.input))

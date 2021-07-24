@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import Sequence
+from typing import Sequence, Union
 
 import numpy as np
 import cv2
@@ -28,9 +28,9 @@ class Tuner(Filter):
         for filter in self.filters[1:]:
             prev_filter.link_to(filter)
             prev_filter = filter
-        self.result = None
+        self.output: Union[np.ndarray, None] = None
 
     def __call__(self):
-        if self.image is not None and self.filters:
-            self.result = self.filters[0].apply(self.image.copy())
-            return self.result
+        if self.input is not None and self.filters:
+            self.output = self.filters[0].apply(self.input.copy())
+            return self.output

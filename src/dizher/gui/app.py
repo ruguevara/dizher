@@ -1,17 +1,14 @@
 #! python
 # -*- coding: utf-8 -*-
 
-from tkinter.constants import S
 from typing import Any, Callable, Dict, List, Tuple, Type
-import PySimpleGUI as sg
-
 import os
 import sys
 from enum import Enum, IntEnum
 from multiprocessing import current_process
+from functools import partial
 
-sys.path.append(os.path.abspath(os.path.join(os.path.basename(__file__), '..')))
-
+import PySimpleGUI as sg
 from skimage import img_as_ubyte, img_as_float
 import cv2
 import numpy as np
@@ -22,8 +19,8 @@ from ..tuner.filters import Filter
 from ..converter.colors import gray2rgb
 from ..converter.dither import EDStucki, Ditherer, OrderedBayer, Stohastic
 from .. import __version__
-from ..util.worker import SingleAsyncPriorityWorker, SyncWorker
-from .state import DizherState, convert_image, optimize_brightness, dither
+from ..util.worker import SingleAsyncPriorityWorker
+from .state import DizherState, convert_image, optimize_brightness, dither, apply_filter
 
 
 class BGTask(IntEnum):
@@ -146,23 +143,24 @@ class DizherApp:
                     font=(None, 10), key=key)],
         ]
 
-    def tuner_sliders(self):
-        def callback(image):
-            self._state.tuner.result = image
-            self.update_tuned_image(image)
+    def handle_slider(self, filter: Filter, param: str, value: Any):
+        def callback(result):
+            new_filter, output = result
+            filter.copy_from(new_filter)
+            self._state.tuner.output = output
+            self.update_tuned_image(output)
 
+        self.debug_log("Slider {}={}", param, value)
+        filter.update(**{param: value})
+        self.update_async(BGTask.TUNER, apply_filter, (filter,), {}, callback=callback)
+
+    def tuner_sliders(self):
         sliders = []
         for filter in self._state.tuner.filters:
             for param in filter.Params.defaults.keys():
                 event = f"slider-{filter.__class__.__name__}-{param.lower()}"
                 sliders.extend(self.label_slider(filter, param, event))
-
-                def handler(value):
-                    self.debug_log("Slider {}={}", param, value)
-                    filter.update(**{param: value})
-                    self.update_async(BGTask.TUNER, filter.apply, (filter.image,), {}, callback=callback)
-
-                self.bind(event, handler)
+                self.bind(event, partial(self.handle_slider, filter, param))
         return sliders
 
     def update_async(self, priority, task, args=(), kwds={}, callback: Callable = None):
@@ -254,6 +252,7 @@ class DizherApp:
     def event_loop(self):
         while True:
             event, values = self.window.read(self._state.params.timeout)
+            self.window.refresh()
             try:
                 if event == sg.TIMEOUT_KEY:
                     async_result = self.worker.read(self._state.params.timeout)

@@ -5,7 +5,7 @@ from typing import Dict, List, Sequence, Type
 import numpy as np
 
 from ..tuner import Tuner
-from ..tuner.filters import ExposureFilter
+from ..tuner.filters import ExposureFilter, ContrastFilter, Filter
 from ..tuner.reshaper import ReshaperFilter
 from ..converter.zxconverter import Converter, ConversionMetric, LumaMetric, ChromaMetric, SmoothnessMetric
 from ..converter.dither import Ditherer
@@ -35,11 +35,10 @@ class DizherState:
     def __init__(self) -> None:
         self.params = Params()
         self.converter = Converter(self.metric_classes)
-        reshaper = ReshaperFilter(self.converter.size)
-        self.exposure = ExposureFilter()
         self.tuner = Tuner([
-            reshaper,
-            self.exposure,
+            ReshaperFilter(self.converter.size),
+            ExposureFilter(),
+            ContrastFilter(),
         ])
 
     # def convert_image(self, image):
@@ -72,3 +71,7 @@ def optimize_brightness(converter: Converter, halftoner: Ditherer):
     converter.optimize_brights()
     dither(converter, halftoner)
     return converter
+
+def apply_filter(filter: Filter):
+    output = filter.apply(filter.input)
+    return (filter, output)

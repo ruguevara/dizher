@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 
 from abc import abstractmethod
 from typing import Any, Dict, Tuple, Type, Union
@@ -7,6 +8,7 @@ from collections import namedtuple
 import numpy as np
 import cv2
 from skimage import img_as_float
+from skimage.exposure import adjust_sigmoid
 
 from ..converter.colors import convert_color
 from .params import Parameter, ParamSet
@@ -22,43 +24,49 @@ class Filter:
     # 2. Loaded new image or updated params of the filter up in the chain — .apply(image)
 
     def __init__(self) -> None:
-        self.params = self.Params()
-        self.chain_filter = None
-        self.image: Union[np.ndarray, Any] = None  # @type: Union[np.ndarray, None]
+        self.params: Filter.Params = self.Params()
+        self.chain_filter: Union[Filter, None] = None
+        self.input: Union[np.ndarray, None] = None
 
-    def insert(self, chain_filter) -> None:
-        chain_filter.link_to(self.chain_filter)
-        self.link_to(chain_filter)
+    def insert(self, filter) -> None:
+        filter.link_to(self.chain_filter)
+        self.link_to(filter)
 
-    def link_to(self, chain_filter) -> None:
-        self.chain_filter = chain_filter
+    def link_to(self, filter) -> None:
+        self.chain_filter = filter
 
     def load_image(self, filename: str) -> Union[np.ndarray, None]:
         image = cv2.imread(filename)
         if image is None:
             raise RuntimeError('Image file "{:s}" not found'.format(filename))
-        image = convert_color(image, 'BGR', 'RGB')
+        image = img_as_float(convert_color(image, 'BGR', 'RGB'))
         return self.apply(image)
 
-    def apply(self, image: np.ndarray) -> Union[np.ndarray, None]:
-        if image is None:
+    def apply(self, input: np.ndarray) -> Union[np.ndarray, None]:
+        if input is None:
             return
-        self.image = img_as_float(image).astype(np.float32)
-        image = self()
+        self.input = input
+        output = self()
         if self.chain_filter is not None:
-            image = self.chain_filter.apply(image)
-        return image
+            self.chain_filter.input = output
+            output = self.chain_filter.apply(self.chain_filter.input)
+        return output
 
     def invalidate(self) -> None:
         if self.chain_filter is not None:
-            self.chain_filter.image = None
+            self.chain_filter.input = None
             self.chain_filter.invalidate()
 
     def update(self, **params) -> Union[np.ndarray, None]:
-        # NOTE .update and .apply methods were splitted,
-        #      because in multiprocesses environment we first update, then fork and apply
+        # NOTE .update and .apply methods were split
+        #      because in multiprocess environment we first update, then fork and apply
         self.params.update(**params)
         self.invalidate()
+
+    def copy_from(self, other: Filter):
+        if (type(self) == type(other) and self.chain_filter and other.chain_filter):
+            self.chain_filter.input = other.chain_filter.input
+            self.chain_filter.copy_from(other.chain_filter)
 
     @abstractmethod
     def __call__(self) -> np.ndarray:
@@ -69,26 +77,36 @@ class ExposureFilter(Filter):
     class Params(Filter.Params):
         exposure = Parameter(default=0., range=(-4., 4.))
 
-    params = Params()
+    params: ExposureFilter.Params = Params()
 
     def __call__(self) -> Union[np.ndarray, None]:
-        if self.image is not None:
+        if self.input is not None:
             gamma = np.exp(-self.params.exposure)
             # NOTE Guess we do not need LUT for that, as we work with float32 images
             #      But if we work with uint16 unstead, LUT would be helpful
-            return self.image ** gamma
+            return self.input ** gamma
 
 
-class SaturationVibeFilter(Filter):
+# class SaturationVibeFilter(Filter):
+#     class Params(Filter.Params):
+#         saturation = Parameter(default=0., range=(-4., 4.))
+#         vibe = Parameter(default=0., range=(-4., 4.))
+
+#     params = Params()
+
+#     def __call__(self) -> Union[np.ndarray, None]:
+#         if self.image is not None:
+#             gamma = np.exp(-self.params.saturation)
+#             # NOTE Guess we do not need LUT for that, as we work with float32 images
+#             #      But if we work with uint16 unstead, LUT would be helpful
+#             return self.image ** gamma
+
+class ContrastFilter(Filter):
     class Params(Filter.Params):
-        saturation = Parameter(default=0., range=(-4., 4.))
-        vibe = Parameter(default=0., range=(-4., 4.))
+        contrast = Parameter(default=10., range=(0., 20.))
 
-    params = Params()
+    params: ContrastFilter.Params = Params()
 
     def __call__(self) -> Union[np.ndarray, None]:
-        if self.image is not None:
-            gamma = np.exp(-self.params.saturation)
-            # NOTE Guess we do not need LUT for that, as we work with float32 images
-            #      But if we work with uint16 unstead, LUT would be helpful
-            return self.image ** gamma
+        if self.input is not None:
+            return adjust_sigmoid(self.input, cutoff=0.5, gain=self.params.contrast, inv=False)
