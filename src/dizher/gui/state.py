@@ -8,13 +8,15 @@ from ..tuner import Tuner
 from ..tuner.filters import ExposureFilter, ContrastFilter, Filter
 from ..tuner.vibe import VibeSatFilter
 from ..tuner.reshaper import ReshaperFilter
-from ..converter.zxconverter import Converter, ConversionMetric, LumaMetric, ChromaMetric, SmoothnessMetric
+from ..converter.zxconverter import Converter
+from ..converter.metrics import ConversionMetric, LumaMetric, ChromaMetric, SmoothnessMetric
 from ..converter.dither import Ditherer
 from ..converter.colors import gray2rgb
 from ..converter.dither import EDStucki, Ditherer, OrderedBayer, Stohastic
 
 class Params:
     zoom: int = 2
+    # debug: bool = True
     debug: bool = False
     timeout: int = 10
 
@@ -35,7 +37,7 @@ class DizherState:
 
     def __init__(self) -> None:
         self.params = Params()
-        self.converter = Converter(self.metric_classes)
+        self.converter = Converter(self.metric_classes, self.metric_weights)
         self.tuner = Tuner([
             ReshaperFilter(self.converter.size),
             ExposureFilter(),
@@ -58,15 +60,20 @@ class DizherState:
     #     return self.converter.dither(self.current_dithering())
 
 
+def convert_image(converter: Converter, halftoner: Ditherer, image: np.ndarray):
+    converter.set_image(image)
+    converter.calc_best_on_metrics()
+    dither(converter, halftoner)
+    return converter
+
+def apply_metric_weights(converter: Converter, halftoner: Ditherer):
+    converter.calc_best_on_metrics()
+    dither(converter, halftoner)
+    return converter
+
 def dither(converter: Converter, halftoner: Ditherer):
     # TODO maybe move current DitherMethod to converter as a subfilter
     converter.dither(halftoner)
-    return converter
-
-def convert_image(converter: Converter, halftoner: Ditherer, image: np.ndarray, metric_weights: Sequence):
-    converter.set_image(image)
-    converter.calc_best_on_metrics(metric_weights)
-    dither(converter, halftoner)
     return converter
 
 def optimize_brightness(converter: Converter, halftoner: Ditherer):

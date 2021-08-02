@@ -21,7 +21,7 @@ from ..converter.dither import EDStucki, Ditherer, OrderedBayer, Stohastic
 from ..converter.zxconverter import ConversionMetric
 from .. import __version__
 from ..util.worker import SingleAsyncPriorityWorker
-from .state import DizherState, convert_image, optimize_brightness, dither, apply_filter
+from .state import DizherState, convert_image, optimize_brightness, dither, apply_filter, apply_metric_weights
 
 
 class BGTask(IntEnum):
@@ -155,16 +155,19 @@ class DizherApp:
         filter.update(**{param: value})
         self.update_async(BGTask.TUNER, apply_filter, (filter,), {}, callback=callback)
 
-    def handle_metric_weight(self, metric_class: Type[ConversionMetric], value: Any):
-        # def callback(result):
-        #     new_filter, output = result
-        #     filter.copy_from(new_filter)
-        #     self._state.tuner.output = output
-        #     self.update_tuned_image(output)
+    def handle_metric_weight(self, param: str, value: Any):
+        def callback(result):
+            self._state.converter = result
+            self.debug_log("handle_metric_weight callback")
+            self.update_converted_image(self._state.converter.dithered_result)
 
-        self.debug_log("Slider {}={}", metric_class.label, value)
-        # filter.update(**{param: value})
-        # self.update_async(BGTask.TUNER, apply_filter, (filter,), {}, callback=callback)
+        self.debug_log("Slider {}={}", param, value)
+        tuner = self._state.converter.metric_tuner
+        tuner.update(**{param: value})
+        self._state.converter.invalidate_result()
+        self.update_async(BGTask.CONVERTER, apply_metric_weights,
+            (self._state.converter, self._state.current_dithering()),
+            callback=callback)
 
     def tuner_sliders(self):
         sliders = []
@@ -177,10 +180,11 @@ class DizherApp:
 
     def metric_sliders(self):
         sliders = []
-        for metric_class, weight in zip(self._state.metric_classes, self._state.metric_weights):
-            event = f"slider-{metric_class.label}-weight"
-            sliders.extend(self.label_slider(metric_class.label.capitalize(), event, weight, (0., 1.0), resolution=0.01))
-            self.bind(event, partial(self.handle_metric_weight, metric_class))
+        tuner = self._state.converter.metric_tuner
+        for label, weight in tuner.weights.items():
+            event = f"slider-metric-weight-{label}"
+            sliders.extend(self.label_slider(label.capitalize(), event, weight, (0., 1.0), resolution=0.01))
+            self.bind(event, partial(self.handle_metric_weight, label))
         return sliders
 
     def update_async(self, priority, task, args=(), kwds={}, callback: Callable = None):
@@ -216,7 +220,7 @@ class DizherApp:
 
         self._state.converter.invalidate()
         self.update_async(BGTask.CONVERTER, convert_image,
-            (self._state.converter, self._state.current_dithering(), image, self._state.metric_weights),
+            (self._state.converter, self._state.current_dithering(), image),
             callback=callback)
 
     def optimize_brightness(self):

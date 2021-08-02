@@ -13,114 +13,17 @@ from .palette import Palette, ZXPalette
 from .colors import convert_color, lrgb2luminance, gray2rgb
 from .dither import Ditherer
 from .ssim import greedy_ssim_optimize
+from .metrics import ConversionMetric, MetricTuner
+from .utils import reshape_by_charblock, attrs2rgb, apply_attrs, select_best_charblocks
+
 
 FitDuocolorResult = namedtuple('FitDuocolorResult', ['ammount', 'reconstructed'])
 
 
-def reshape_by_charblock(image, axis=1):
-    height, width = image.shape[axis:axis+2]
-    rows, cols = height // 8, width // 8
-    reshaped = image.reshape(image.shape[:axis] + (rows, 8, cols, 8, -1))
-    axis_numbers = list(range(len(reshaped.shape)))
-    axis_numbers[axis + 1], axis_numbers[axis + 2] = axis_numbers[axis + 2], axis_numbers[axis + 1]  # swap to rows and cols together
-    transposed = reshaped.transpose(axis_numbers)
-    if transposed.shape[-1] == 1:
-        transposed = transposed[..., 0]
-    return transposed
-
-def reshape_from_charblocks(image):
-    rows, cols = image.shape[:2]
-    height, width = rows * 8, cols * 8
-    axis_i = list(range(len(image.shape)))
-    axis_i[1:3] = 2, 1
-    transposed = image.transpose(axis_i).reshape(height, width, -1)
-    if transposed.shape[-1] == 1:
-        transposed = transposed[..., 0]
-    return transposed
-
-def select_best_charblocks(data, best_attr_indexes):
-    n_combs, height, width = data.shape[:3]
-    rows, cols = height // 8, width // 8
-    rows_i, cols_i = np.mgrid[:rows, :cols]
-    return reshape_from_charblocks(reshape_by_charblock(data)[best_attr_indexes, rows_i, cols_i,...])
-
-def attrs2rgb(attrs):
-    # TODO refactor to AttrBlocksScreen
-    return cv2.resize(img_as_float(attrs), (0, 0), fx=8, fy=8, interpolation=cv2.INTER_NEAREST)
-
-def apply_attrs(bitmap, paper, ink):
-    # TODO refactor to AttrBlocksScreen
-    return np.where(bitmap[..., np.newaxis], ink, paper)
-
-
-class ConversionMetric:
-    label = 'You can not get label of an abstract base ConversionMetric class'
-
-    def __init__(self, converter):
-        self.converter = converter
-
-    @abstractmethod
-    def __call__(self, **kwargs):
-        raise NotImplementedError()
-
-
-class LumaMetric(ConversionMetric):
-    label = 'Luma'
-
-    def __call__(self, **kwargs):
-        # returns error in range 0..1
-        gamma = self.converter.gamma
-        image_luma = self.converter.image_luma ** (1/gamma)
-        reconstruct_luma = lrgb2luminance(self.converter.recolorized ** gamma) ** (1/gamma)
-        return np.abs(reconstruct_luma - image_luma)
-
-
-class ChromaMetric(ConversionMetric):
-    label = 'Chroma'
-
-    def __call__(self, blur_size=3, **kwargs):
-        # TODO make params adjustable
-        # returns error in range 0..1
-        image_rgb = cv2.GaussianBlur(self.converter.image_rgb, ksize=(blur_size, blur_size), sigmaX=0)
-        image_luv = convert_color(image_rgb, 'RGB', 'LUV')
-
-        reconstruct_luv = np.empty_like(self.converter.recolorized)
-        for i, recolorized in enumerate(self.converter.recolorized):
-            reconstruct_rgb = cv2.GaussianBlur(recolorized, ksize=(blur_size, blur_size), sigmaX=0)
-            reconstruct_luv[i] = convert_color(reconstruct_rgb.astype(np.float32), 'RGB', 'LUV')
-
-        diff_u = (image_luv[..., 1] - reconstruct_luv[..., 1]) / 180
-        diff_v = (image_luv[..., 2] - reconstruct_luv[..., 2]) / 180
-        # TODO можно перевести LUV в LHS и учитывать расстояния по H и S с разными весами
-        result = np.sqrt(diff_u ** 2 + diff_v ** 2)
-        return result
-
-
-class DitherMetric(ConversionMetric):
-    label = 'Ditherness'
-
-    def __call__(self, **kwargs):
-        # слабые уровни — мало точек для градиента: плохо. Точек 50/50 — хорошо, точек почти 0/100 — хорошо
-        purity = (1 - np.abs((self.converter.levels - 0.5) * 2))
-        purity = (1 - np.abs((purity - 0.5) * 2))
-        purity[purity < 1/64] = 0
-        return purity
-
-
-class SmoothnessMetric(ConversionMetric):
-    label = 'Smoothness'
-
-    def __call__(self, **kwargs):
-        color_pair_luma = lrgb2luminance(self.converter.color_pairs) ** (1/self.converter.gamma)
-        luma_dist = np.abs(color_pair_luma[:, 1] - color_pair_luma[:, 0])
-        height, width = self.converter.size
-        luma_dist = luma_dist[:, np.newaxis].repeat(height * width, axis=1).reshape(-1, height, width)
-        return luma_dist
-
-
 class Converter:
     def __init__(self,
-            metric_classes: List[Type[ConversionMetric]],
+            metric_classes: Sequence[Type[ConversionMetric]],
+            default_weights: Sequence[float],
             size: Tuple[int, int] = (192, 256),
             palette: Palette = ZXPalette(),
             gamma: float = 2.2
@@ -130,8 +33,7 @@ class Converter:
         self.size = size
         self.palette = palette
         self.gamma = gamma
-        self.metrics = OrderedDict((metric_class.label, metric_class(self)) for metric_class in metric_classes)
-        self.metric_arrays = OrderedDict()
+        self.metric_tuner = MetricTuner(self, metric_classes, default_weights)
         self.color_pairs = self.palette.color_pairs()
 
     def invalidate(self):
@@ -140,8 +42,8 @@ class Converter:
         self.image_luma = None
         self.levels = None
         self.recolorized = None
-        self.metric_arrays = OrderedDict()
         self.best_attr_indexes = None
+        self.metric_tuner.invalidate()
         self.invalidate_result()
 
     def invalidate_result(self):
@@ -169,11 +71,7 @@ class Converter:
         self.image_lrgb = image_rgb ** self.gamma
         self.image_luma = lrgb2luminance(self.image_lrgb)
         self.levels, self.recolorized = self.fit_duocolors()
-        self.calc_metrics()
-
-    def calc_metrics(self) -> None:
-        for label, metric in self.metrics.items():
-            self.metric_arrays[label] = metric()
+        self.metric_tuner.calc_metrics()
 
     def fit_duocolors(self) -> FitDuocolorResult:
         assert self.image_rgb is not None
@@ -217,17 +115,8 @@ class Converter:
         best_ink   = attrs2rgb(best_ink_i)
         return best_paper, best_ink
 
-    def calc_best_on_metrics(self, weights: Sequence):
-        assert len(weights) == len(self.metric_arrays), "len(weights) == {:d} != len(self.metric_arrays) == {:d}".format(len(weights), len(self.metric_arrays))
-        integral_errors = np.sum([
-            metric * weight
-            # TODO calc metrics on arrays already reshaped by charblocks
-            for weight, metric in zip(weights, self.metric_arrays.values())
-        ], axis=0)
-
-        integral_errors = reshape_by_charblock(integral_errors)
-        mse_by_combs_and_blocks = ((integral_errors * 255) ** 2).sum(axis=(3, 4)) / 64
-        self.set_best_conversion(mse_by_combs_and_blocks.argmin(0))
+    def calc_best_on_metrics(self):
+        self.metric_tuner.apply()
 
     def set_best_conversion(self, attr_indexes):
         self.best_attr_indexes = attr_indexes
