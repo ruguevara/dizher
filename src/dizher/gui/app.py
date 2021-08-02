@@ -18,6 +18,7 @@ from ..tuner import Tuner
 from ..tuner.filters import Filter
 from ..converter.colors import gray2rgb
 from ..converter.dither import EDStucki, Ditherer, OrderedBayer, Stohastic
+from ..converter.zxconverter import ConversionMetric
 from .. import __version__
 from ..util.worker import SingleAsyncPriorityWorker
 from .state import DizherState, convert_image, optimize_brightness, dither, apply_filter
@@ -105,15 +106,10 @@ class DizherApp:
                         ],
                         [ImagePane(key='image-conversion', dims=dims, zoom=zoom)]
                     ]),
-                    #    size=(dims[0] * zoom + 20, 42 + dims[1] * zoom),
-                    #    element_justification = 'r'),
-                    sg.Column([
-                        # [sg.Slider(range=(-100, 100), default_value=0, label="luma")],
-                        # [sg.Slider(range=(-100, 100), default_value=0, label="chroma")],
-                        # [sg.Slider(range=(-100, 100), default_value=0, label="1")],
-                        # [sg.Slider(range=(-100, 100), default_value=0, label="2")],
-                        # [sg.Sizer(20, zoom * dims[1] - 100)],
-                    ]),
+                    sg.Column(
+                        self.metric_sliders(),
+                        vertical_alignment="top"
+                    ),
                 ],
             ],
             finalize=True,
@@ -132,16 +128,21 @@ class DizherApp:
             return True
         return False
 
-    def label_slider(self, filter: Filter, param_name: str, key: str, pad: Tuple[int, int]=(5, 7)):
+    def label_slider(self, param_name: str, key: str, default: float, range: Tuple[float, float],
+                     resolution:float = 0.1, pad: Tuple[int, int]=(5, 7)):
         hpad, vpad = pad
-        default = filter.params.get_default(param_name)
-        range = filter.params.get_range(param_name)
         return [
             [sg.Text(param_name.capitalize(), font=(None, 10), size=(15, 1), pad=(hpad, (vpad, 0)))],
-            [sg.Slider(range=range, default_value=default, resolution=0.1,
+            [sg.Slider(range=range, default_value=default, resolution=resolution,
                     orientation='h', size=(20, 10), pad=(hpad, (0, vpad)), enable_events=True,
                     font=(None, 10), key=key)],
         ]
+
+    def label_slider_filter(self, filter: Filter, param_name: str, key: str, pad: Tuple[int, int]=(5, 7)):
+        hpad, vpad = pad
+        default = filter.params.get_default(param_name)
+        range = filter.params.get_range(param_name)
+        return self.label_slider(param_name, key, default, range, pad=pad)
 
     def handle_slider(self, filter: Filter, param: str, value: Any):
         def callback(result):
@@ -154,13 +155,32 @@ class DizherApp:
         filter.update(**{param: value})
         self.update_async(BGTask.TUNER, apply_filter, (filter,), {}, callback=callback)
 
+    def handle_metric_weight(self, metric_class: Type[ConversionMetric], value: Any):
+        # def callback(result):
+        #     new_filter, output = result
+        #     filter.copy_from(new_filter)
+        #     self._state.tuner.output = output
+        #     self.update_tuned_image(output)
+
+        self.debug_log("Slider {}={}", metric_class.label, value)
+        # filter.update(**{param: value})
+        # self.update_async(BGTask.TUNER, apply_filter, (filter,), {}, callback=callback)
+
     def tuner_sliders(self):
         sliders = []
         for filter in self._state.tuner.filters:
             for param in filter.Params.defaults.keys():
                 event = f"slider-{filter.__class__.__name__}-{param.lower()}"
-                sliders.extend(self.label_slider(filter, param, event))
+                sliders.extend(self.label_slider_filter(filter, param, event))
                 self.bind(event, partial(self.handle_slider, filter, param))
+        return sliders
+
+    def metric_sliders(self):
+        sliders = []
+        for metric_class, weight in zip(self._state.metric_classes, self._state.metric_weights):
+            event = f"slider-{metric_class.label}-weight"
+            sliders.extend(self.label_slider(metric_class.label.capitalize(), event, weight, (0., 1.0), resolution=0.01))
+            self.bind(event, partial(self.handle_metric_weight, metric_class))
         return sliders
 
     def update_async(self, priority, task, args=(), kwds={}, callback: Callable = None):

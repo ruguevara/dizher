@@ -6,6 +6,7 @@ import numpy as np
 
 from ..tuner import Tuner
 from ..tuner.filters import ExposureFilter, ContrastFilter, Filter
+from ..tuner.vibe import VibeSatFilter
 from ..tuner.reshaper import ReshaperFilter
 from ..converter.zxconverter import Converter, ConversionMetric, LumaMetric, ChromaMetric, SmoothnessMetric
 from ..converter.dither import Ditherer
@@ -39,6 +40,7 @@ class DizherState:
             ReshaperFilter(self.converter.size),
             ExposureFilter(),
             ContrastFilter(),
+            VibeSatFilter(),
         ])
 
     # def convert_image(self, image):
@@ -73,5 +75,6 @@ def optimize_brightness(converter: Converter, halftoner: Ditherer):
     return converter
 
 def apply_filter(filter: Filter):
+    assert filter.input is not None
     output = filter.apply(filter.input)
     return (filter, output)
