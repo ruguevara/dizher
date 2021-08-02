@@ -103,10 +103,20 @@ class ExposureFilter(Filter):
 
 class ContrastFilter(Filter):
     class Params(Filter.Params):
-        contrast = Parameter(default=10., range=(0., 20.))
+        contrast = Parameter(default=0., range=(-4., 4.))
 
     params: ContrastFilter.Params = Params()
 
     def __call__(self) -> Union[np.ndarray, None]:
-        if self.input is not None:
-            return adjust_sigmoid(self.input, cutoff=0.5, gain=self.params.contrast, inv=False)
+        if self.input is None:
+            return
+
+        if self.params.contrast > 0:
+            gain = np.exp(self.params.contrast)
+
+            a = (np.exp(gain/2) + 1) / (np.exp(gain/2) - 1)
+            y = (1 / (1 + np.exp(-(self.input-0.5) * gain)) - 0.5) * a + 0.5
+        else:
+            a = 1 - self.params.contrast / 5
+            y = (self.input - 0.5) / (a * a) + 0.5
+        return y.clip(0., 1.)
