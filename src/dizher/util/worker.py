@@ -71,7 +71,7 @@ class SingleAsyncPriorityWorker(AbstractWorker):
                 result = task(*args, **kwargs)
                 queue.put(result)
             except:
-                print("FATAL: reader({0}) exited while multiprocessing".format(args))
+                print("FATAL: worker({0}) exited while multiprocessing".format(str(task)))
                 traceback.print_exc()
 
         self._process = mp.Process(target=run, args=tuple([self._queue]) + args, kwargs=kwds)
