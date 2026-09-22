@@ -26,11 +26,11 @@ class SSIMComparer:
     def __call__(self, image):
         # TODO we can cache further ref image parts in skimage structural_similarity
         return structural_similarity(self.pp_ref, self.preprocess(image),
-                                     multichannel=True,
+                                     channel_axis=-1,
                                      gaussian_weights=True,
                                      sigma=1.5,
                                      use_sample_covariance=False,
-#                                      data_range=1.0
+                                     data_range=1.0,
                                     )
 
 def greedy_ssim_optimize(converter):

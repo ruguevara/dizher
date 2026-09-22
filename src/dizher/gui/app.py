@@ -71,6 +71,7 @@ class DizherApp:
         self._state = DizherState()
         self.worker = SingleAsyncPriorityWorker()
         self.dispatcher = {}
+        self.slider_defaults = {}
 
         zoom = self._state.params.zoom
         dims = (self._state.converter.size[1], self._state.converter.size[0])
@@ -124,13 +125,14 @@ class DizherApp:
     def dispatch(self, event: str, values: Dict[str, Any]) -> bool:
         handler = self.dispatcher.get(event)
         if handler:
-            handler(values[event])
+            handler(values.get(event))
             return True
         return False
 
     def label_slider(self, param_name: str, key: str, default: float, range: Tuple[float, float],
                      resolution:float = 0.1, pad: Tuple[int, int]=(5, 7)):
         hpad, vpad = pad
+        self.slider_defaults[key] = default
         return [
             [sg.Text(param_name.capitalize(), font=(None, 10), size=(15, 1), pad=(hpad, (vpad, 0)))],
             [sg.Slider(range=range, default_value=default, resolution=resolution,
@@ -153,6 +155,8 @@ class DizherApp:
 
         self.debug_log("Slider {}={}", param, value)
         filter.update(**{param: value})
+        if filter.input is None:  # no image loaded yet, params are kept for when it is
+            return
         self.update_async(BGTask.TUNER, apply_filter, (filter,), {}, callback=callback)
 
     def handle_metric_weight(self, param: str, value: Any):
@@ -169,23 +173,35 @@ class DizherApp:
             (self._state.converter, self._state.current_dithering()),
             callback=callback)
 
+    def reset_sliders(self, keys: List[str]):
+        for key in keys:
+            default = self.slider_defaults[key]
+            self.window[key].update(value=default)
+            self.dispatcher[key](default)
+
+    def reset_button(self, key: str, slider_keys: List[str]):
+        self.bind(key, lambda _: self.reset_sliders(slider_keys))
+        return [sg.Button('Reset', key=key, font=(None, 10), pad=(5, 7))]
+
     def tuner_sliders(self):
-        sliders = []
+        sliders, keys = [], []
         for filter in self._state.tuner.filters:
             for param in filter.Params.defaults.keys():
                 event = f"slider-{filter.__class__.__name__}-{param.lower()}"
                 sliders.extend(self.label_slider_filter(filter, param, event))
                 self.bind(event, partial(self.handle_slider, filter, param))
-        return sliders
+                keys.append(event)
+        return sliders + [self.reset_button('reset-tuner', keys)]
 
     def metric_sliders(self):
-        sliders = []
+        sliders, keys = [], []
         tuner = self._state.converter.metric_tuner
         for label, weight in tuner.weights.items():
             event = f"slider-metric-weight-{label}"
             sliders.extend(self.label_slider(label.capitalize(), event, weight, (0., 1.0), resolution=0.01))
             self.bind(event, partial(self.handle_metric_weight, label))
-        return sliders
+            keys.append(event)
+        return sliders + [self.reset_button('reset-metrics', keys)]
 
     def update_async(self, priority, task, args=(), kwds={}, callback: Callable = None):
         task_descr = "{} ({})".format(task.__name__, priority.name)
@@ -238,6 +254,12 @@ class DizherApp:
             return
         image = self._state.tuner.load_image(filename)
         self.update_tuned_image(image)
+
+    def save_conversion(self, filename):
+        if not filename:
+            return
+        # image = self._state.tuner.load_image(filename)
+        # self.update_tuned_image(image)
 
     def handle_halftone(self, event):
         if event == 'halftone-stohastic':
@@ -299,6 +321,12 @@ class DizherApp:
                     self.optimize_brightness()
                 elif event.startswith('halftone-'):
                     self.handle_halftone(event)
+                elif event == 'save-conversion':
+                    filename = sg.popup_get_file(
+                        'Save converted image', no_window=True,
+                        file_types = (('Image Files', '*.png *.jpeg *.jpg *.bmp'),),
+                    )
+                    self.save_conversion(filename)
                 # else:
                 #     self.not_so_fast("{}".format(event))
             except Exception as e:

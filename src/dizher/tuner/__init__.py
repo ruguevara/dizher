@@ -22,15 +22,17 @@ class Tuner(Filter):
     def __init__(self, filters: Sequence[Filter]) -> None:
         super().__init__()
         self.filters = filters
-        assert len(self.filters) != 0
-        # make linked list of filters
-        prev_filter = self.filters[0]
-        for filter in self.filters[1:]:
-            prev_filter.link_to(filter)
-            prev_filter = filter
+        if len(self.filters) != 0:
+            # make linked list of filters
+            prev_filter = self.filters[0]
+            for filter in self.filters[1:]:
+                prev_filter.link_to(filter)
+                prev_filter = filter
         self.output: Union[np.ndarray, None] = None
 
     def __call__(self):
         if self.input is not None and self.filters:
             self.output = self.filters[0].apply(self.input.copy())
             return self.output
+        else:
+            return self.input
