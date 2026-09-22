@@ -14,7 +14,7 @@ import cv2
 
 from ..converter.eye import eye_kernel
 
-def dbs_duo(luma, paper, ink, init, scale=1.0, alpha=0.95, max_sweeps=10, stop_fraction=1e-3):
+def dbs_duo(luma, paper, ink, init, scale=1.4, alpha=2.0, max_sweeps=10, stop_fraction=1e-3):
     h = eye_kernel(scale, alpha)
     radius = h.shape[0] // 2
     cpp = cv2.filter2D(np.pad(h, radius), -1, h, borderType=cv2.BORDER_CONSTANT)  # full autocorrelation

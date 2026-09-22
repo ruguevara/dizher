@@ -11,13 +11,17 @@ import cv2
 from ..converter.colors import convert_color, lrgb2luminance
 from .utils import reshape_by_charblock
 from .eye import eye_blur
+from .mrf import icm_labels
 
 
 # Eye model (see eye.py): luminance is judged at near pixel resolution, chroma at a coarser one,
 # in the spirit of S-CIELAB (Zhang & Wandell 1996). Blurs act in linear light, where the eye integrates dither.
-# Defaults for Converter(eye_alpha, luma_scale, chroma_scale); the GUI exposes all three as sliders.
-EYE_ALPHA = 0.95
-LUMA_SCALE = 1.0
+# Luma: Gaussian (alpha 2) near pixel resolution, where DBS dot placement is well understood and cheap.
+# Chroma: exponential (alpha 1) and wider; its heavy tail approximates S-CIELAB's wide chromatic component.
+# Defaults for Converter(luma_alpha, luma_scale, chroma_alpha, chroma_scale); the GUI exposes all four as sliders.
+LUMA_ALPHA = 2.0
+LUMA_SCALE = 1.4  # sigma 1.0 px for alpha 2
+CHROMA_ALPHA = 1.0
 CHROMA_SCALE = 2.0
 
 class ConversionMetric:
@@ -37,7 +41,7 @@ class LumaMetric(ConversionMetric):
     def __call__(self, **kwargs):
         # residual dither ripple after the blur is the dither-noise penalty
         c = self.converter
-        blur = lambda a: eye_blur(a.astype(np.float32), c.luma_scale, c.eye_alpha)
+        blur = lambda a: eye_blur(a.astype(np.float32), c.luma_scale, c.luma_alpha).clip(0, None)  # DFT path can dip below 0
         gamma = c.gamma
         image_luma = blur(c.image_luma) ** (1/gamma)
         reconstruct_luma = np.stack([
@@ -52,7 +56,7 @@ class ChromaMetric(ConversionMetric):
     def __call__(self, **kwargs):
         c = self.converter
         gamma = c.gamma
-        to_luv = lambda lrgb: convert_color(eye_blur(lrgb, c.chroma_scale, c.eye_alpha).clip(0, 1) ** (1/gamma), 'RGB', 'LUV')
+        to_luv = lambda lrgb: convert_color(eye_blur(lrgb, c.chroma_scale, c.chroma_alpha).clip(0, 1) ** (1/gamma), 'RGB', 'LUV')
         image_luv = to_luv(self.converter.image_lrgb.astype(np.float32))
         reconstruct_luv = np.stack([to_luv(realized ** gamma) for realized in self.converter.realized])
 
@@ -113,4 +117,6 @@ class MetricTuner:
 
         integral_errors = reshape_by_charblock(integral_errors)
         mse_by_combs_and_blocks = ((integral_errors * 255) ** 2).sum(axis=(3, 4)) / 64
-        self.converter.set_best_conversion(mse_by_combs_and_blocks.argmin(0))
+        # coherence 1.0: a seam's per-pixel MSE counts as much as the block's own per-pixel MSE
+        S_h, S_v = self.converter.seam_costs
+        self.converter.set_best_conversion(icm_labels(mse_by_combs_and_blocks, S_h, S_v, self.converter.coherence))

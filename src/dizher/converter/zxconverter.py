@@ -8,7 +8,8 @@ from .palette import Palette, ZXPalette
 from .colors import convert_color, lrgb2luminance, gray2rgb
 from .dither import Ditherer, Stohastic
 from .ssim import greedy_ssim_optimize
-from .metrics import ConversionMetric, MetricTuner, EYE_ALPHA, LUMA_SCALE, CHROMA_SCALE
+from .metrics import ConversionMetric, MetricTuner, LUMA_ALPHA, LUMA_SCALE, CHROMA_ALPHA, CHROMA_SCALE
+from .mrf import seam_costs
 from .utils import attrs2rgb, apply_attrs
 
 class Converter:
@@ -18,18 +19,22 @@ class Converter:
             size: Tuple[int, int] = (192, 256),
             palette: Palette = ZXPalette(),
             gamma: float = 2.2,
-            eye_alpha: float = EYE_ALPHA,
+            luma_alpha: float = LUMA_ALPHA,
             luma_scale: float = LUMA_SCALE,
+            chroma_alpha: float = CHROMA_ALPHA,
             chroma_scale: float = CHROMA_SCALE,
+            coherence: float = 0.3,
     ):
         assert isinstance(palette, Palette)
         assert len(size) == 2
         self.size = size
         self.palette = palette
         self.gamma = gamma
-        self.eye_alpha = eye_alpha  # eye model, see eye.py: kernel shape and blur scales in pixels
+        self.luma_alpha = luma_alpha  # eye model, see eye.py: kernel shape and blur scales in pixels
         self.luma_scale = luma_scale
+        self.chroma_alpha = chroma_alpha
         self.chroma_scale = chroma_scale
+        self.coherence = coherence  # penalty on pair change between neighbouring blocks, see mrf.py
         self.metric_tuner = MetricTuner(self, metric_classes, default_weights)
         self.color_pairs = self.palette.color_pairs()
         self.ditherer = None
@@ -42,6 +47,7 @@ class Converter:
         self.levels = None
         self.bitmaps = None
         self.realized = None
+        self.seam_costs = None
         self.best_attr_indexes = None
         self.metric_tuner.invalidate()
         self.invalidate_result()
@@ -74,6 +80,8 @@ class Converter:
         paper = self.color_pairs[:, 0, np.newaxis, np.newaxis, :]
         ink = self.color_pairs[:, 1, np.newaxis, np.newaxis, :]
         self.realized = np.where(self.bitmaps[..., np.newaxis], ink, paper).astype(np.float32)
+        expected = paper ** self.gamma + self.levels[..., np.newaxis] * (ink ** self.gamma - paper ** self.gamma)
+        self.seam_costs = seam_costs(expected.astype(np.float32), self.image_lrgb)
         self.metric_tuner.calc_metrics()
         self.ditherer = ditherer
 
@@ -113,7 +121,7 @@ class Converter:
         """Run the chosen halftoner once on the final composite, quantising each pixel to its block's paper or ink."""
         paper_luma = lrgb2luminance(self.best_paper ** self.gamma)
         ink_luma = lrgb2luminance(self.best_ink ** self.gamma)
-        self.dithered_bitmap = self.ditherer(self.image_luma, paper_luma, ink_luma, scale=self.luma_scale, alpha=self.eye_alpha).astype(np.float32)
+        self.dithered_bitmap = self.ditherer(self.image_luma, paper_luma, ink_luma, scale=self.luma_scale, alpha=self.luma_alpha).astype(np.float32)
         self.dithered_result = apply_attrs(self.dithered_bitmap, self.best_paper, self.best_ink)
 
     def dither(self, ditherer: Ditherer) -> np.ndarray:

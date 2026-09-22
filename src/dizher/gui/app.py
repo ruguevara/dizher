@@ -108,7 +108,7 @@ class DizherApp:
                         [ImagePane(key='image-conversion', dims=dims, zoom=zoom)]
                     ]),
                     sg.Column(
-                        self.metric_sliders() + self.eye_sliders(),
+                        self.metric_sliders() + self.coherence_sliders() + self.eye_sliders(),
                         vertical_alignment="top"
                     ),
                 ],
@@ -173,7 +173,7 @@ class DizherApp:
             (self._state.converter, self._state.current_dithering()),
             callback=callback)
 
-    def handle_eye_param(self, attr: str, value: Any):
+    def handle_converter_param(self, attr: str, task: Callable, value: Any):
         def callback(result):
             self._state.converter = result
             self.update_converted_image(self._state.converter.dithered_result)
@@ -183,19 +183,30 @@ class DizherApp:
         if converter.image_rgb is None:
             return
         converter.invalidate_result()
-        self.update_async(BGTask.CONVERTER, apply_eye_model, (converter, self._state.current_dithering()), callback=callback)
+        self.update_async(BGTask.CONVERTER, task, (converter, self._state.current_dithering()), callback=callback)
 
-    def eye_sliders(self):
+    def converter_param_sliders(self, key: str, specs):
         sliders, keys = [], []
         converter = self._state.converter
-        for label, attr, range, res in (('Eye alpha', 'eye_alpha', (0.5, 2.0), 0.05),
-                                        ('Luma blur px', 'luma_scale', (0.3, 2.0), 0.1),
-                                        ('Chroma blur px', 'chroma_scale', (0.3, 8.0), 0.1)):
-            event = f"slider-eye-{attr}"
+        for label, attr, task, range, res in specs:
+            event = f"slider-{key}-{attr}"
             sliders.extend(self.label_slider(label, event, getattr(converter, attr), range, resolution=res))
-            self.bind(event, partial(self.handle_eye_param, attr))
+            self.bind(event, partial(self.handle_converter_param, attr, task))
             keys.append(event)
-        return sliders + [self.reset_button('reset-eye', keys)]
+        return sliders + [self.reset_button(f'reset-{key}', keys)]
+
+    def eye_sliders(self):
+        return self.converter_param_sliders('eye', (
+            ('Luma alpha', 'luma_alpha', apply_eye_model, (0.5, 2.0), 0.05),
+            ('Luma blur px', 'luma_scale', apply_eye_model, (0.3, 3.0), 0.1),
+            ('Chroma alpha', 'chroma_alpha', apply_eye_model, (0.5, 2.0), 0.05),
+            ('Chroma blur px', 'chroma_scale', apply_eye_model, (0.3, 8.0), 0.1),
+        ))
+
+    def coherence_sliders(self):
+        return self.converter_param_sliders('coherence', (
+            ('Coherence', 'coherence', apply_metric_weights, (0.0, 2.0), 0.05),
+        ))
 
     def reset_sliders(self, keys: List[str]):
         for key in keys:
