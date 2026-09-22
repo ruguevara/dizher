@@ -14,16 +14,7 @@ def lrgb2luminance(image_lrgb, luminances=RGB_LUMINANCE_709YUV):
     return np.sum(image_lrgb * luminances, axis=len(image_lrgb.shape)-1)
 
 
-def lrgb2luma601YUV(a):
-    return lrgb2luminance(a, RGB_LUMINANCE_709YUV)
 
-
-def lrgb2luma240M(a):
-    return lrgb2luminance(a, RGB_LUMINANCE_240M)
-
-
-def lrgb2luma709YUV(a):
-    return lrgb2luminance(a, RGB_LUMINANCE_601YUV)
 
 
 def convert_color_cv2(image, from_space, to_space):

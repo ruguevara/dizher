@@ -68,7 +68,7 @@ class Converter:
 
     def set_image(self, image_rgb: np.ndarray) -> None:
         self.image_rgb = self.preprocess_image(image_rgb)
-        self.image_lrgb = image_rgb ** self.gamma
+        self.image_lrgb = self.image_rgb ** self.gamma
         self.image_luma = lrgb2luminance(self.image_lrgb)
         self.levels, self.recolorized = self.fit_duocolors()
         self.metric_tuner.calc_metrics()
@@ -125,7 +125,7 @@ class Converter:
         self.best_paper, self.best_ink = self.best_paper_ink(self.best_attr_indexes)
 
     def dither(self, ditherer: Ditherer) -> np.ndarray:
-        self.dithered_bitmap = ditherer(img_as_ubyte(self.best_levels)).astype(np.float32) / 255  # TODO add paper and ink
+        self.dithered_bitmap = (ditherer(img_as_ubyte(self.best_levels)) > 0).astype(np.float32)  # TODO add paper and ink
         self.dithered_result = apply_attrs(self.dithered_bitmap, self.best_paper, self.best_ink)
         return self.dithered_result
 

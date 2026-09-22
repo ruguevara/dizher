@@ -70,7 +70,7 @@ class SmoothnessMetric(ConversionMetric):
     label = 'Smoothness'
 
     def __call__(self, **kwargs):
-        color_pair_luma = lrgb2luminance(self.converter.color_pairs) ** (1/self.converter.gamma)
+        color_pair_luma = lrgb2luminance(self.converter.color_pairs ** self.converter.gamma) ** (1/self.converter.gamma)
         luma_dist = np.abs(color_pair_luma[:, 1] - color_pair_luma[:, 0])
         height, width = self.converter.size
         luma_dist = luma_dist[:, np.newaxis].repeat(height * width, axis=1).reshape(-1, height, width)
