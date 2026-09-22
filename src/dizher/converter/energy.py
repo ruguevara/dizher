@@ -15,6 +15,12 @@ papers plus of the inks), scaled down where the original itself has an edge acro
     coherence * SEAM_COST * sum_{b~b'} V[p_b, p_b'] * exp(-|x_b - x_b'|^2 / 2 EDGE_SIGMA^2)
 This is the contrast-sensitive Potts prior of MRF segmentation. It is graded, so the bright
 variant of the same colours is nearly free, and a change along a real edge costs nothing.
+
+The chroma kernel is a pure low-pass, so it calls blue dots on yellow (the palette's largest
+chroma contrast) invisible once blurred, and then prefers that pair for a salmon target on mean
+colour alone. Real chroma sensitivity does not vanish at the pixel pitch, so the chroma kernel
+gets a delta component: h_chroma = g + chroma_noise * delta, whose extra energy is the unblurred
+chroma error, a per-block term with no cross-block part (the cross term with g is dropped).
 ponytail: fine interactions truncated to the 8 neighbouring blocks (offset-2 blocks see < 10% of
 the kernel peak). Labels by block coordinate descent on whole lines: each row, then each column, is
 re-solved exactly by dynamic programming given the rest, so a run of blocks can switch together
@@ -88,6 +94,7 @@ class SelectionEnergy:
 
     def invalidate(self) -> None:
         self.D, self.S, self.X = {}, {}, {}
+        self.N = None   # (P, R, C) unblurred chroma squared error per block
 
     def update(self, **kwargs):
         for k, v in kwargs.items():
@@ -109,6 +116,8 @@ class SelectionEnergy:
             K0 = block_kernel_matrix(cpp, 0, 0)
             A = [np.ascontiguousarray(E[..., k]) for k in channels]         # each (R, C, P, 64)
             self.X[g] = X[..., channels].reshape(R, BLOCK, C, BLOCK, len(channels)).mean(axis=(1, 3))   # (R, C, nch) target block means
+            if g == 'Chroma':
+                self.N = sum((a ** 2).sum(-1) for a in A).transpose(2, 0, 1)
             self.D[g] = sum(np.einsum('rcpx,xy,rcpy->prc', a, K0, a, optimize=True) for a in A)
             self.S[g] = {}
             for dr, dc in OFFSETS:
@@ -119,9 +128,13 @@ class SelectionEnergy:
                     np.einsum('rcpy,rcqy->rcpq', np.einsum('rcpx,xy->rcpy', a[rs, cs], K), a[ns])
                     for a in A)
 
+    def unary(self) -> np.ndarray:
+        w = self.weights
+        return sum(w[g] * self.D[g] for g in GROUPS) + w['Chroma'] * self.converter.chroma_noise * self.N
+
     def apply(self) -> None:
         w = self.weights
-        D = sum(w[g] * self.D[g] for g in GROUPS)
+        D = self.unary()
         S = {off: sum(w[g] * self.S[g][off] for g in GROUPS) for off in OFFSETS}
         Lh, Lv = self.seam_smoothness()
         V = self.converter.pair_dissimilarity
@@ -140,7 +153,7 @@ class SelectionEnergy:
         w = self.weights
         P, R, C = next(iter(self.D.values())).shape
         ri, ci = np.indices((R, C))
-        total = sum(w[g] * self.D[g][labels, ri, ci].sum() for g in GROUPS)
+        total = self.unary()[labels, ri, ci].sum()
         for (dr, dc) in OFFSETS:
             rs, cs = _ranges(dr, dc, R, C)
             me, nb = labels[rs, cs], labels[rs.start + dr:rs.stop + dr, cs.start + dc:cs.stop + dc]

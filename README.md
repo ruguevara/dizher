@@ -92,6 +92,8 @@ Planned:
 * [ ] ZX Spectrum MultiColor, GigaScreen and MultiGigaScreen software mode
 * [ ] Commodore 64 HiRes 320x200 mode with 2 colors per character block
 * [ ] Commodore 64 LowRes 160x200 mode with 4 colors per character block
+* [ ] ZX Gigascreen mode
+* [ ] Multicolor 8x4, 8x2, 8x1
 * [ ] Standalone binary package with PyInstaller for macOS, Windows, Linux
 * [ ] Overpaint bitmap, attrs, bright
 * [ ] Ability to save and load conversion projects with an image, settings and overpaint layers

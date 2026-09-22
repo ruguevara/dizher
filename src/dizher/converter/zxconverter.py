@@ -23,6 +23,7 @@ class Converter:
             chroma_alpha: float = CHROMA_ALPHA,
             chroma_scale: float = CHROMA_SCALE,
             coherence: float = 2.0,
+            chroma_noise: float = 0.05,
             structure: float = 0.06,
     ):
         assert isinstance(palette, Palette)
@@ -34,6 +35,7 @@ class Converter:
         self.luma_scale = luma_scale
         self.chroma_alpha = chroma_alpha
         self.chroma_scale = chroma_scale
+        self.chroma_noise = chroma_noise  # weight of unblurred chroma error: dot noise the low-pass eye model would miss, see energy.py
         self.coherence = coherence  # cost of a pair change between neighbours where the original is smooth, see energy.py
         self.structure = structure  # weight of the contrast-weighted SSIM term in the DBS halftoner, see halftoning/dbs.py
         self.energy = SelectionEnergy(self, weights)

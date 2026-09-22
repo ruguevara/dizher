@@ -246,10 +246,11 @@ class DizherApp:
             sliders.extend(self.label_slider(label.capitalize(), event, weight, (0., 4.0), resolution=0.05))
             self.bind(event, partial(self.handle_metric_weight, label))
             keys.append(event)
-        event = 'slider-metric-coherence'
-        sliders.extend(self.label_slider('Coherence', event, self._state.converter.coherence, (0., 8.0), resolution=0.1))
-        self.bind(event, partial(self.handle_converter_param, 'coherence', apply_metric_weights))
-        keys.append(event)
+        for label, attr, rng, res in (('Chroma noise', 'chroma_noise', (0., 0.5), 0.01), ('Coherence', 'coherence', (0., 8.0), 0.1)):
+            event = f'slider-metric-{attr}'
+            sliders.extend(self.label_slider(label, event, getattr(self._state.converter, attr), rng, resolution=res))
+            self.bind(event, partial(self.handle_converter_param, attr, apply_metric_weights))
+            keys.append(event)
         return sliders + [self.reset_button('reset-metrics', keys)]
 
     def update_async(self, priority, task, args=(), kwds={}, callback: Callable = None):
