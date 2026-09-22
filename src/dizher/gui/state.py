@@ -9,7 +9,6 @@ from ..tuner.filters import ExposureFilter, ContrastFilter, Filter
 from ..tuner.vibe import VibeSatFilter
 from ..tuner.reshaper import ReshaperFilter
 from ..converter.zxconverter import Converter
-from ..converter.metrics import ConversionMetric, LumaMetric, ChromaMetric, SmoothnessMetric
 from ..converter.dither import Ditherer
 from ..converter.colors import gray2rgb
 from ..converter.dither import DBS, EDStucki, Ditherer, OrderedBayer, Stohastic
@@ -29,16 +28,11 @@ class DizherState:
         Stohastic,
     ]
     current_dithering: Type[Ditherer] = dither_classes[0]
-    metric_classes: List[Type[ConversionMetric]] = [
-        LumaMetric,
-        ChromaMetric,
-        SmoothnessMetric
-    ]
-    metric_weights = [1.0, 0.6, 0.002]
+    metric_weights = {'Luma': 1.0, 'Chroma': 1.0}
 
     def __init__(self) -> None:
         self.params = Params()
-        self.converter = Converter(self.metric_classes, self.metric_weights)
+        self.converter = Converter(self.metric_weights)
         self.tuner = Tuner([
             ReshaperFilter(self.converter.size),
             ExposureFilter(),
@@ -72,18 +66,13 @@ def apply_metric_weights(converter: Converter, halftoner: Ditherer):
     return converter
 
 def apply_eye_model(converter: Converter, halftoner: Ditherer):
-    converter.metric_tuner.calc_metrics()
+    converter.energy.calc()
     converter.calc_best_on_metrics()
     return converter
 
 def dither(converter: Converter, halftoner: Ditherer):
     # TODO maybe move current DitherMethod to converter as a subfilter
     converter.dither(halftoner)
-    return converter
-
-def optimize_brightness(converter: Converter, halftoner: Ditherer):
-    converter.optimize_brights()
-    dither(converter, halftoner)
     return converter
 
 def apply_filter(filter: Filter):

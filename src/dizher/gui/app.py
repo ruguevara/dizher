@@ -18,10 +18,9 @@ from ..tuner import Tuner
 from ..tuner.filters import Filter
 from ..converter.colors import gray2rgb
 from ..converter.dither import EDStucki, Ditherer, OrderedBayer, Stohastic, DBS
-from ..converter.zxconverter import ConversionMetric
 from .. import __version__
 from ..util.worker import SingleAsyncPriorityWorker
-from .state import DizherState, convert_image, optimize_brightness, dither, apply_filter, apply_metric_weights, apply_eye_model
+from .state import DizherState, convert_image, dither, apply_filter, apply_metric_weights, apply_eye_model
 
 
 class BGTask(IntEnum):
@@ -97,8 +96,6 @@ class DizherApp:
                     ]),
                     sg.Column([
                         [
-                            sg.Button('Optimize brightness', key = 'optimize_brightness'),
-                            sg.VerticalSeparator(pad=None),
                         ] +
                             HalftoneButtons(self._state.dither_classes)
                         + [
@@ -108,7 +105,7 @@ class DizherApp:
                         [ImagePane(key='image-conversion', dims=dims, zoom=zoom)]
                     ]),
                     sg.Column(
-                        self.metric_sliders() + self.coherence_sliders() + self.eye_sliders(),
+                        self.metric_sliders() + self.eye_sliders(),
                         vertical_alignment="top"
                     ),
                 ],
@@ -166,8 +163,7 @@ class DizherApp:
             self.update_converted_image(self._state.converter.dithered_result)
 
         self.debug_log("Slider {}={}", param, value)
-        tuner = self._state.converter.metric_tuner
-        tuner.update(**{param: value})
+        self._state.converter.energy.update(**{param: value})
         self._state.converter.invalidate_result()
         self.update_async(BGTask.CONVERTER, apply_metric_weights,
             (self._state.converter, self._state.current_dithering()),
@@ -203,11 +199,6 @@ class DizherApp:
             ('Chroma blur px', 'chroma_scale', apply_eye_model, (0.3, 8.0), 0.1),
         ))
 
-    def coherence_sliders(self):
-        return self.converter_param_sliders('coherence', (
-            ('Coherence', 'coherence', apply_metric_weights, (0.0, 2.0), 0.05),
-        ))
-
     def reset_sliders(self, keys: List[str]):
         for key in keys:
             default = self.slider_defaults[key]
@@ -230,12 +221,15 @@ class DizherApp:
 
     def metric_sliders(self):
         sliders, keys = [], []
-        tuner = self._state.converter.metric_tuner
-        for label, weight in tuner.weights.items():
+        for label, weight in self._state.converter.energy.weights.items():
             event = f"slider-metric-weight-{label}"
-            sliders.extend(self.label_slider(label.capitalize(), event, weight, (0., 1.0), resolution=0.01))
+            sliders.extend(self.label_slider(label.capitalize(), event, weight, (0., 4.0), resolution=0.05))
             self.bind(event, partial(self.handle_metric_weight, label))
             keys.append(event)
+        event = 'slider-metric-coherence'
+        sliders.extend(self.label_slider('Coherence', event, self._state.converter.coherence, (0., 8.0), resolution=0.1))
+        self.bind(event, partial(self.handle_converter_param, 'coherence', apply_metric_weights))
+        keys.append(event)
         return sliders + [self.reset_button('reset-metrics', keys)]
 
     def update_async(self, priority, task, args=(), kwds={}, callback: Callable = None):
@@ -273,16 +267,6 @@ class DizherApp:
         self.update_async(BGTask.CONVERTER, convert_image,
             (self._state.converter, self._state.current_dithering(), image),
             callback=callback)
-
-    def optimize_brightness(self):
-        def callback(converter):
-            self._state.converter = converter
-            self.debug_log("optimize_brightness callback")
-            self.update_converted_image(self._state.converter.dithered_result)
-
-        self._state.converter.invalidate_result()
-        self.update_async(BGTask.CONVERTER, optimize_brightness,
-                          (self._state.converter, self._state.current_dithering()), callback=callback)
 
     def open_image(self, filename):
         if not filename:
@@ -354,8 +338,6 @@ class DizherApp:
                         file_types = (('Image Files', '*.png *.jpeg *.jpg *.bmp'),),
                     )
                     self.open_image(filename)
-                elif event in ('optimize_brightness', 'Brightness') :
-                    self.optimize_brightness()
                 elif event.startswith('halftone-'):
                     self.handle_halftone(event)
                 elif event == 'save-conversion':

@@ -1,4 +1,4 @@
-from typing import Sequence, Tuple, Type
+from typing import Dict, Tuple
 
 import numpy as np
 import cv2
@@ -7,15 +7,13 @@ from skimage import img_as_float
 from .palette import Palette, ZXPalette
 from .colors import convert_color, lrgb2luminance, gray2rgb
 from .dither import Ditherer, Stohastic
-from .ssim import greedy_ssim_optimize
-from .metrics import ConversionMetric, MetricTuner, LUMA_ALPHA, LUMA_SCALE, CHROMA_ALPHA, CHROMA_SCALE
-from .mrf import seam_costs
+from .eye import LUMA_ALPHA, LUMA_SCALE, CHROMA_ALPHA, CHROMA_SCALE
+from .energy import SelectionEnergy, pair_dissimilarity
 from .utils import attrs2rgb, apply_attrs
 
 class Converter:
     def __init__(self,
-            metric_classes: Sequence[Type[ConversionMetric]],
-            default_weights: Sequence[float],
+            weights: Dict[str, float],
             size: Tuple[int, int] = (192, 256),
             palette: Palette = ZXPalette(),
             gamma: float = 2.2,
@@ -23,7 +21,7 @@ class Converter:
             luma_scale: float = LUMA_SCALE,
             chroma_alpha: float = CHROMA_ALPHA,
             chroma_scale: float = CHROMA_SCALE,
-            coherence: float = 0.3,
+            coherence: float = 2.0,
     ):
         assert isinstance(palette, Palette)
         assert len(size) == 2
@@ -34,9 +32,10 @@ class Converter:
         self.luma_scale = luma_scale
         self.chroma_alpha = chroma_alpha
         self.chroma_scale = chroma_scale
-        self.coherence = coherence  # penalty on pair change between neighbouring blocks, see mrf.py
-        self.metric_tuner = MetricTuner(self, metric_classes, default_weights)
+        self.coherence = coherence  # cost of a pair change between neighbours where the original is smooth, see energy.py
+        self.energy = SelectionEnergy(self, weights)
         self.color_pairs = self.palette.color_pairs()
+        self.pair_dissimilarity = pair_dissimilarity(self.color_pairs)
         self.ditherer = None
         self.invalidate()
 
@@ -47,9 +46,8 @@ class Converter:
         self.levels = None
         self.bitmaps = None
         self.realized = None
-        self.seam_costs = None
         self.best_attr_indexes = None
-        self.metric_tuner.invalidate()
+        self.energy.invalidate()
         self.invalidate_result()
 
     def invalidate_result(self):
@@ -80,9 +78,7 @@ class Converter:
         paper = self.color_pairs[:, 0, np.newaxis, np.newaxis, :]
         ink = self.color_pairs[:, 1, np.newaxis, np.newaxis, :]
         self.realized = np.where(self.bitmaps[..., np.newaxis], ink, paper).astype(np.float32)
-        expected = paper ** self.gamma + self.levels[..., np.newaxis] * (ink ** self.gamma - paper ** self.gamma)
-        self.seam_costs = seam_costs(expected.astype(np.float32), self.image_lrgb)
-        self.metric_tuner.calc_metrics()
+        self.energy.calc()
         self.ditherer = ditherer
 
     def fit_duocolors(self) -> np.ndarray:
@@ -110,7 +106,7 @@ class Converter:
         return best_paper, best_ink
 
     def calc_best_on_metrics(self):
-        self.metric_tuner.apply()
+        self.energy.apply()
 
     def set_best_conversion(self, attr_indexes):
         self.best_attr_indexes = attr_indexes
@@ -132,7 +128,3 @@ class Converter:
             self.ditherer = ditherer
             self.halftone()
         return self.dithered_result
-
-    def optimize_brights(self):
-        greedy_ssim_optimize(self)
-        self.set_best_conversion(self.best_attr_indexes)
