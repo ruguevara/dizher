@@ -22,6 +22,7 @@ class Converter:
             chroma_alpha: float = CHROMA_ALPHA,
             chroma_scale: float = CHROMA_SCALE,
             coherence: float = 2.0,
+            structure: float = 0.06,
     ):
         assert isinstance(palette, Palette)
         assert len(size) == 2
@@ -33,11 +34,22 @@ class Converter:
         self.chroma_alpha = chroma_alpha
         self.chroma_scale = chroma_scale
         self.coherence = coherence  # cost of a pair change between neighbours where the original is smooth, see energy.py
+        self.structure = structure  # weight of the contrast-weighted SSIM term in the DBS halftoner, see halftoning/dbs.py
         self.energy = SelectionEnergy(self, weights)
-        self.color_pairs = self.palette.color_pairs()
-        self.pair_dissimilarity = pair_dissimilarity(self.color_pairs)
+        self.image_rgb = None
         self.ditherer = None
+        self.set_palette(palette)
+
+    def set_palette(self, palette: Palette):
+        """Swap the attribute pair set; redoes the whole conversion if an image is loaded."""
+        self.palette = palette
+        self.color_pairs = palette.color_pairs()
+        self.pair_dissimilarity = pair_dissimilarity(self.color_pairs)
+        image, ditherer = self.image_rgb, self.ditherer
         self.invalidate()
+        if image is not None:
+            self.set_image(image, ditherer)
+            self.calc_best_on_metrics()
 
     def invalidate(self):
         self.image_rgb = None
@@ -117,7 +129,7 @@ class Converter:
         """Run the chosen halftoner once on the final composite, quantising each pixel to its block's paper or ink."""
         paper_luma = lrgb2luminance(self.best_paper ** self.gamma)
         ink_luma = lrgb2luminance(self.best_ink ** self.gamma)
-        self.dithered_bitmap = self.ditherer(self.image_luma, paper_luma, ink_luma, scale=self.luma_scale, alpha=self.luma_alpha).astype(np.float32)
+        self.dithered_bitmap = self.ditherer(self.image_luma, paper_luma, ink_luma, scale=self.luma_scale, alpha=self.luma_alpha, structure=self.structure).astype(np.float32)
         self.dithered_result = apply_attrs(self.dithered_bitmap, self.best_paper, self.best_ink)
 
     def dither(self, ditherer: Ditherer) -> np.ndarray:

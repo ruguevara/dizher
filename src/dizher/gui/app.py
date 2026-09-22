@@ -20,7 +20,8 @@ from ..converter.colors import gray2rgb
 from ..converter.dither import EDStucki, Ditherer, OrderedBayer, Stohastic, DBS
 from .. import __version__
 from ..util.worker import SingleAsyncPriorityWorker
-from .state import DizherState, convert_image, dither, apply_filter, apply_metric_weights, apply_eye_model
+from .state import DizherState, convert_image, dither, apply_filter, apply_metric_weights, apply_eye_model, apply_halftoner, apply_palette
+from ..converter.palette import ZXPalette
 
 
 class BGTask(IntEnum):
@@ -100,6 +101,9 @@ class DizherApp:
                             HalftoneButtons(self._state.dither_classes)
                         + [
                             sg.VerticalSeparator(pad=None),
+                            sg.Combo(list(ZXPalette.SUBSETS), default_value=self._state.converter.palette.subset,
+                                     key='palette-subset', enable_events=True, readonly=True, font=(None, 10)),
+                            sg.VerticalSeparator(pad=None),
                             sg.Button('Save', key = 'save-conversion'),
                         ],
                         [ImagePane(key='image-conversion', dims=dims, zoom=zoom)]
@@ -114,6 +118,7 @@ class DizherApp:
             return_keyboard_events=True,
         )
         self.window.disable_debugger()
+        self.bind('palette-subset', self.handle_palette)
         self.window.bind('<Control-o>', 'open-image')
 
     def bind(self, event: str, handler: Callable):
@@ -169,6 +174,18 @@ class DizherApp:
             (self._state.converter, self._state.current_dithering()),
             callback=callback)
 
+    def handle_palette(self, subset: str):
+        def callback(result):
+            self._state.converter = result
+            self.update_converted_image(self._state.converter.dithered_result)
+
+        converter = self._state.converter
+        if converter.image_rgb is None:
+            converter.set_palette(ZXPalette(subset=subset))
+            return
+        self.update_async(BGTask.CONVERTER, apply_palette,
+            (converter, self._state.current_dithering(), subset), callback=callback)
+
     def handle_converter_param(self, attr: str, task: Callable, value: Any):
         def callback(result):
             self._state.converter = result
@@ -197,6 +214,7 @@ class DizherApp:
             ('Luma blur px', 'luma_scale', apply_eye_model, (0.3, 3.0), 0.1),
             ('Chroma alpha', 'chroma_alpha', apply_eye_model, (0.5, 2.0), 0.05),
             ('Chroma blur px', 'chroma_scale', apply_eye_model, (0.3, 8.0), 0.1),
+            ('Structure', 'structure', apply_halftoner, (0.0, 0.5), 0.01),
         ))
 
     def reset_sliders(self, keys: List[str]):

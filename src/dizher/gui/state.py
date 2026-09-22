@@ -9,6 +9,7 @@ from ..tuner.filters import ExposureFilter, ContrastFilter, GainFilter, ColorBal
 from ..tuner.vibe import VibeSatFilter
 from ..tuner.reshaper import ReshaperFilter
 from ..converter.zxconverter import Converter
+from ..converter.palette import ZXPalette
 from ..converter.dither import Ditherer
 from ..converter.colors import gray2rgb
 from ..converter.dither import DBS, EDStucki, Ditherer, OrderedBayer, Stohastic
@@ -70,6 +71,16 @@ def apply_metric_weights(converter: Converter, halftoner: Ditherer):
 def apply_eye_model(converter: Converter, halftoner: Ditherer):
     converter.energy.calc()
     converter.calc_best_on_metrics()
+    return converter
+
+def apply_palette(converter: Converter, halftoner: Ditherer, subset: str):
+    converter.ditherer = halftoner
+    converter.set_palette(ZXPalette(subset=subset))
+    return converter
+
+def apply_halftoner(converter: Converter, halftoner: Ditherer):
+    converter.ditherer = halftoner
+    converter.set_best_conversion(converter.best_attr_indexes)
     return converter
 
 def dither(converter: Converter, halftoner: Ditherer):
