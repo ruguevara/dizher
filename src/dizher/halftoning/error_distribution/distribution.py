@@ -3,7 +3,12 @@ import numpy as np
 def ed_dither_duo(luma, paper, ink, positions, weights):
     """Binary error diffusion where every pixel quantises to its own pair of luminances.
     luma, paper, ink : ndarray (rows, cols), linear luminance. paper/ink vary per pixel
-    (per character block on the ZX), so error crosses block boundaries in absolute units.
+    (per character block on the ZX). Error crosses block boundaries in absolute units.
+    ponytail: raster ED has no clean form under a per-block range constraint. The running error of
+    a wide-range block is a positive sawtooth and can saturate the first row of a narrow-range
+    neighbour into a visible line; keeping error inside blocks instead makes every 8th row a 1-D
+    diffusion with periodic stripes and worse eye-model error. DBS (halftoning/dbs.py) is the
+    principled solution; this stays as the classic look.
     """
     positions = np.asarray(positions)
     down, side = positions[:, 0].max(), np.abs(positions[:, 1]).max()
@@ -17,13 +22,13 @@ def ed_dither_duo(luma, paper, ink, positions, weights):
     padded[:rows, side:side + cols] = luma
     threshold = (paper + ink) / 2
     out = np.zeros((rows, cols), dtype=bool)
-    # ponytail: python loop, ~0.2 s per image; wavefront-vectorise (j + (side+1)*i == t) if it matters
     for i in range(rows):
         for j in range(cols):
-            value = min(max(padded[i, j + side], 0.0), 1.0)  # ponytail: clamp to valid luminance so clipped regions do not pile up error
+            lo, hi = paper[i, j], ink[i, j]
+            value = min(max(padded[i, j + side], lo), hi)  # luminance outside the range is unrepresentable
             is_ink = value >= threshold[i, j]
             out[i, j] = is_ink
-            d = value - (ink[i, j] if is_ink else paper[i, j])
+            d = value - (hi if is_ink else lo)
             padded[i:i + down + 1, j:j + 2 * side + 1] += d * kernel
     return out
 
