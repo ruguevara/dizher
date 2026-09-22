@@ -35,10 +35,14 @@ XYZ2OPP = np.array([[ 0.279,  0.72, -0.107],      # Poirson & Wandell opponent s
                     [-0.449,  0.29, -0.077],
                     [ 0.086, -0.59,  0.501]], dtype=np.float32)
 LRGB2OPP = XYZ2OPP @ SRGB2XYZ
-# Put the three channels on one scale: over the ZX palette the raw red-green channel spans 3.6x less than
-# luminance and blue-yellow 1.2x less, which made chroma error almost free. Each row is scaled so the
-# palette's spread is the same in every channel; the Luma/Chroma weights then compare like with like.
-_palette_std = np.array([0.2859, 0.0804, 0.2345], dtype=np.float32)
+# Poirson & Wandell's chroma axes are not orthogonal to the neutral axis: white maps to O2 = -0.22, so a
+# luminance error leaks into "chroma". Remove the neutral component so every grey has zero chroma.
+_white = LRGB2OPP @ np.ones(3, dtype=np.float32)
+LRGB2OPP[1:] -= (_white[1:] / _white[0])[:, None] * LRGB2OPP[0]
+# Put the three channels on one scale: over the ZX palette red-green spans ~3x less than luminance and
+# blue-yellow ~1.2x less, which made chroma error almost free. Each row is scaled so the palette's spread
+# is the same in every channel; the Luma/Chroma weights then compare like with like.
+_palette_std = np.array([0.2859, 0.0995, 0.2416], dtype=np.float32)
 LRGB2OPP = LRGB2OPP * (_palette_std[0] / _palette_std)[:, None]
 
 GROUPS = OrderedDict(Luma=[0], Chroma=[1, 2])   # weight name -> opponent channels
