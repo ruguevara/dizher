@@ -200,7 +200,9 @@ class DizherApp:
         ))
 
     def reset_sliders(self, keys: List[str]):
-        for key in keys:
+        # Downstream first: the last dispatched handler wins in the worker, and for the tuner
+        # that must be the head of the chain, pickled after every downstream param is already reset.
+        for key in reversed(keys):
             default = self.slider_defaults[key]
             self.window[key].update(value=default)
             self.dispatcher[key](default)

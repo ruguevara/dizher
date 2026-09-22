@@ -5,7 +5,7 @@ from typing import Dict, List, Sequence, Type
 import numpy as np
 
 from ..tuner import Tuner
-from ..tuner.filters import ExposureFilter, ContrastFilter, Filter
+from ..tuner.filters import ExposureFilter, ContrastFilter, GainFilter, ColorBalanceFilter, Filter
 from ..tuner.vibe import VibeSatFilter
 from ..tuner.reshaper import ReshaperFilter
 from ..converter.zxconverter import Converter
@@ -35,9 +35,11 @@ class DizherState:
         self.converter = Converter(self.metric_weights)
         self.tuner = Tuner([
             ReshaperFilter(self.converter.size),
+            GainFilter(),
             ExposureFilter(),
             ContrastFilter(),
             VibeSatFilter(),
+            ColorBalanceFilter(),
         ])
 
     # def convert_image(self, image):

@@ -50,3 +50,29 @@ class ContrastFilter(Filter):
         Y = np.clip(Y, 0., 1.)
         image_lab[..., 0] = Y * 100
         return lab2rgb(image_lab.astype(np.float32))
+
+class GainFilter(Filter):
+    class Params(Filter.Params):
+        gain = Parameter(default=0., range=(-2., 2.))
+
+    params: GainFilter.Params = Params()
+
+    def __call__(self) -> Union[np.ndarray, None]:
+        if self.input is not None:
+            return np.clip(self.input * np.exp(self.params.gain), 0., 1.)
+
+class ColorBalanceFilter(Filter):
+    # Lab a*/b* offsets: a* runs green(-) -> red(+), b* runs blue(-) -> yellow(+); slider unit = 10 Lab units
+    class Params(Filter.Params):
+        green_red = Parameter(default=0., range=(-5., 5.))
+        blue_yellow = Parameter(default=0., range=(-5., 5.))
+
+    params: ColorBalanceFilter.Params = Params()
+
+    def __call__(self) -> Union[np.ndarray, None]:
+        if self.input is None:
+            return
+        image_lab = rgb2lab(self.input.astype(np.float32))
+        image_lab[..., 1] += 10 * self.params.green_red
+        image_lab[..., 2] += 10 * self.params.blue_yellow
+        return np.clip(lab2rgb(image_lab), 0., 1.)
