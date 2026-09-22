@@ -93,5 +93,5 @@ Planned:
 * [ ] Commodore 64 HiRes 320x200 mode with 2 colors per character block
 * [ ] Commodore 64 LowRes 160x200 mode with 4 colors per character block
 * [ ] Standalone binary package with PyInstaller for macOS, Windows, Linux
-* [ ] Overpaint color brushes
+* [ ] Overpaint bitmap, attrs, bright
 * [ ] Ability to save and load conversion projects with an image, settings and overpaint layers
