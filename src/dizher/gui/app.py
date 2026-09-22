@@ -21,7 +21,7 @@ from ..converter.dither import EDStucki, Ditherer, OrderedBayer, Stohastic, DBS
 from ..converter.zxconverter import ConversionMetric
 from .. import __version__
 from ..util.worker import SingleAsyncPriorityWorker
-from .state import DizherState, convert_image, optimize_brightness, dither, apply_filter, apply_metric_weights
+from .state import DizherState, convert_image, optimize_brightness, dither, apply_filter, apply_metric_weights, apply_eye_model
 
 
 class BGTask(IntEnum):
@@ -108,7 +108,7 @@ class DizherApp:
                         [ImagePane(key='image-conversion', dims=dims, zoom=zoom)]
                     ]),
                     sg.Column(
-                        self.metric_sliders(),
+                        self.metric_sliders() + self.eye_sliders(),
                         vertical_alignment="top"
                     ),
                 ],
@@ -172,6 +172,30 @@ class DizherApp:
         self.update_async(BGTask.CONVERTER, apply_metric_weights,
             (self._state.converter, self._state.current_dithering()),
             callback=callback)
+
+    def handle_eye_param(self, attr: str, value: Any):
+        def callback(result):
+            self._state.converter = result
+            self.update_converted_image(self._state.converter.dithered_result)
+
+        converter = self._state.converter
+        setattr(converter, attr, value)
+        if converter.image_rgb is None:
+            return
+        converter.invalidate_result()
+        self.update_async(BGTask.CONVERTER, apply_eye_model, (converter, self._state.current_dithering()), callback=callback)
+
+    def eye_sliders(self):
+        sliders, keys = [], []
+        converter = self._state.converter
+        for label, attr, range, res in (('Eye alpha', 'eye_alpha', (0.5, 2.0), 0.05),
+                                        ('Luma blur px', 'luma_scale', (0.3, 2.0), 0.1),
+                                        ('Chroma blur px', 'chroma_scale', (0.3, 8.0), 0.1)):
+            event = f"slider-eye-{attr}"
+            sliders.extend(self.label_slider(label, event, getattr(converter, attr), range, resolution=res))
+            self.bind(event, partial(self.handle_eye_param, attr))
+            keys.append(event)
+        return sliders + [self.reset_button('reset-eye', keys)]
 
     def reset_sliders(self, keys: List[str]):
         for key in keys:

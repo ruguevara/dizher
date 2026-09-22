@@ -8,7 +8,7 @@ from .palette import Palette, ZXPalette
 from .colors import convert_color, lrgb2luminance, gray2rgb
 from .dither import Ditherer, Stohastic
 from .ssim import greedy_ssim_optimize
-from .metrics import ConversionMetric, MetricTuner
+from .metrics import ConversionMetric, MetricTuner, EYE_ALPHA, LUMA_SCALE, CHROMA_SCALE
 from .utils import attrs2rgb, apply_attrs
 
 class Converter:
@@ -18,12 +18,18 @@ class Converter:
             size: Tuple[int, int] = (192, 256),
             palette: Palette = ZXPalette(),
             gamma: float = 2.2,
+            eye_alpha: float = EYE_ALPHA,
+            luma_scale: float = LUMA_SCALE,
+            chroma_scale: float = CHROMA_SCALE,
     ):
         assert isinstance(palette, Palette)
         assert len(size) == 2
         self.size = size
         self.palette = palette
         self.gamma = gamma
+        self.eye_alpha = eye_alpha  # eye model, see eye.py: kernel shape and blur scales in pixels
+        self.luma_scale = luma_scale
+        self.chroma_scale = chroma_scale
         self.metric_tuner = MetricTuner(self, metric_classes, default_weights)
         self.color_pairs = self.palette.color_pairs()
         self.ditherer = None
@@ -107,7 +113,7 @@ class Converter:
         """Run the chosen halftoner once on the final composite, quantising each pixel to its block's paper or ink."""
         paper_luma = lrgb2luminance(self.best_paper ** self.gamma)
         ink_luma = lrgb2luminance(self.best_ink ** self.gamma)
-        self.dithered_bitmap = self.ditherer(self.image_luma, paper_luma, ink_luma).astype(np.float32)
+        self.dithered_bitmap = self.ditherer(self.image_luma, paper_luma, ink_luma, scale=self.luma_scale, alpha=self.eye_alpha).astype(np.float32)
         self.dithered_result = apply_attrs(self.dithered_bitmap, self.best_paper, self.best_ink)
 
     def dither(self, ditherer: Ditherer) -> np.ndarray:

@@ -71,6 +71,11 @@ def apply_metric_weights(converter: Converter, halftoner: Ditherer):
     dither(converter, halftoner)
     return converter
 
+def apply_eye_model(converter: Converter, halftoner: Ditherer):
+    converter.metric_tuner.calc_metrics()
+    converter.calc_best_on_metrics()
+    return converter
+
 def dither(converter: Converter, halftoner: Ditherer):
     # TODO maybe move current DitherMethod to converter as a subfilter
     converter.dither(halftoner)

@@ -10,9 +10,15 @@ import cv2
 
 from ..converter.colors import convert_color, lrgb2luminance
 from .utils import reshape_by_charblock
+from .eye import eye_blur
 
 
-BLUR_SIZE = 5  # ponytail: fixed viewing-distance model; expose as a slider if it needs tuning per image
+# Eye model (see eye.py): luminance is judged at near pixel resolution, chroma at a coarser one,
+# in the spirit of S-CIELAB (Zhang & Wandell 1996). Blurs act in linear light, where the eye integrates dither.
+# Defaults for Converter(eye_alpha, luma_scale, chroma_scale); the GUI exposes all three as sliders.
+EYE_ALPHA = 0.95
+LUMA_SCALE = 1.0
+CHROMA_SCALE = 2.0
 
 class ConversionMetric:
     label = 'You can not get label of an abstract base ConversionMetric class'
@@ -28,11 +34,12 @@ class ConversionMetric:
 class LumaMetric(ConversionMetric):
     label = 'Luma'
 
-    def __call__(self, blur_size=BLUR_SIZE, **kwargs):
-        # ponytail: blur = crude eye low-pass; the residual dither ripple after blur is the dither-noise penalty
-        gamma = self.converter.gamma
-        blur = lambda a: cv2.GaussianBlur(a, ksize=(blur_size, blur_size), sigmaX=0)
-        image_luma = blur(self.converter.image_luma) ** (1/gamma)
+    def __call__(self, **kwargs):
+        # residual dither ripple after the blur is the dither-noise penalty
+        c = self.converter
+        blur = lambda a: eye_blur(a.astype(np.float32), c.luma_scale, c.eye_alpha)
+        gamma = c.gamma
+        image_luma = blur(c.image_luma) ** (1/gamma)
         reconstruct_luma = np.stack([
             blur(lrgb2luminance(realized ** gamma)) ** (1/gamma)
             for realized in self.converter.realized
@@ -42,23 +49,16 @@ class LumaMetric(ConversionMetric):
 class ChromaMetric(ConversionMetric):
     label = 'Chroma'
 
-    def __call__(self, blur_size=3, **kwargs):
-        # TODO make params adjustable
-        # returns error in range 0..1
-        image_rgb = cv2.GaussianBlur(self.converter.image_rgb, ksize=(blur_size, blur_size), sigmaX=0)
-        image_luv = convert_color(image_rgb, 'RGB', 'LUV')
-
-        reconstruct_luv = np.empty_like(self.converter.realized)
-        for i, realized in enumerate(self.converter.realized):
-            reconstruct_rgb = cv2.GaussianBlur(realized, ksize=(blur_size, blur_size), sigmaX=0)
-            reconstruct_luv[i] = convert_color(reconstruct_rgb, 'RGB', 'LUV')
+    def __call__(self, **kwargs):
+        c = self.converter
+        gamma = c.gamma
+        to_luv = lambda lrgb: convert_color(eye_blur(lrgb, c.chroma_scale, c.eye_alpha).clip(0, 1) ** (1/gamma), 'RGB', 'LUV')
+        image_luv = to_luv(self.converter.image_lrgb.astype(np.float32))
+        reconstruct_luv = np.stack([to_luv(realized ** gamma) for realized in self.converter.realized])
 
         diff_u = (image_luv[..., 1] - reconstruct_luv[..., 1]) / 180
         diff_v = (image_luv[..., 2] - reconstruct_luv[..., 2]) / 180
-        # TODO можно перевести LUV в LHS и учитывать расстояния по H и S с разными весами
-        result = np.sqrt(diff_u ** 2 + diff_v ** 2)
-        return result
-
+        return np.sqrt(diff_u ** 2 + diff_v ** 2)
 
 class DitherMetric(ConversionMetric):
     label = 'Ditherness'
