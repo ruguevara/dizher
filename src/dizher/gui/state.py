@@ -33,7 +33,7 @@ class DizherState:
         ChromaMetric,
         SmoothnessMetric
     ]
-    metric_weights = [0.6, 0.4, 0.002]
+    metric_weights = [1.0, 0.6, 0.002]
 
     def __init__(self) -> None:
         self.params = Params()
