@@ -73,20 +73,25 @@ Run the GUI:
 
 ## TODO
 
-* [ ] Correct Error-Diffusion dithering respecting character blocks color restrictions
-* [ ] Adjustable metrics weights
-* [ ] Selectable dithering methods
-* [ ] Brightness, Contrast, Saturation and Vibe controls
-* [ ] Save as SCR and PNG
-* [ ] Crop adjustments
-* [ ] Python installation package
-* [ ] Commodore 64 HiRes 320x200 mode with 2 colors per character block
+Done:
+
+* [x] Error diffusion respecting the two colours of each character block
+* [x] Direct Binary Search halftoner under the eye model, with a structure-aware (SSIM) term
+* [x] Colour selection as one eye-model energy with a coherence prior
+* [x] Adjustable metric weights (luma, chroma, coherence) and eye-model parameters
+* [x] Selectable dithering methods
+* [x] Gain, exposure, contrast, saturation, vibe and colour balance controls
+* [x] Palette subsets: bright only, not bright only, grayscale, black and white
+* [x] Python installation package
+
+Planned:
+
+* [ ] Save as SCR and PNG (button is a stub)
+* [ ] Crop adjustments (currently an automatic centre crop)
 * [ ] Custom ZX Spectrum palettes (ZX Spectrum Next or another hardware enhanceds)
 * [ ] ZX Spectrum MultiColor, GigaScreen and MultiGigaScreen software mode
+* [ ] Commodore 64 HiRes 320x200 mode with 2 colors per character block
 * [ ] Commodore 64 LowRes 160x200 mode with 4 colors per character block
 * [ ] Standalone binary package with PyInstaller for macOS, Windows, Linux
 * [ ] Overpaint color brushes
 * [ ] Ability to save and load conversion projects with an image, settings and overpaint layers
-* [ ] Kivy GUI
-* [ ] Android application
-* [ ] iOS application
