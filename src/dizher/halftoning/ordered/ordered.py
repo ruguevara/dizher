@@ -15,6 +15,6 @@ order4x4 = np.tile((np.array([
 
 
 def ordered_dither(buffer, offset=0, order=order4x4):
-    h, w = buffer.shape
+    h, w = buffer.shape[-2:]
     offset = offset % 4
     return (img_as_ubyte(buffer) > order[offset:h+offset, :w]) * 255

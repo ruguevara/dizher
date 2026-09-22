@@ -34,12 +34,12 @@ class SSIMComparer:
                                     )
 
 def greedy_ssim_optimize(converter):
-    from .zxconverter import select_best_charblocks  # TODO refactor to separate file
+    from .utils import select_best_charblocks
 
     attr_indexes = converter.best_attr_indexes.copy()
     comparer = SSIMComparer(converter.image_rgb, downscale=2)
     invbright = converter.palette.invert_bright_index
-    current_convert = select_best_charblocks(converter.recolorized, attr_indexes)
+    current_convert = select_best_charblocks(converter.realized, attr_indexes)
     max_ssim = comparer(current_convert)
 
     for row in range(24):
@@ -47,7 +47,7 @@ def greedy_ssim_optimize(converter):
             cur_index = attr_indexes[row, col]
             new_index = invbright(cur_index)
             attr_indexes[row, col] = new_index
-            current_convert = select_best_charblocks(converter.recolorized, attr_indexes)
+            current_convert = select_best_charblocks(converter.realized, attr_indexes)
             new_ssim = comparer(current_convert)
             if new_ssim > max_ssim:
                 max_ssim = new_ssim

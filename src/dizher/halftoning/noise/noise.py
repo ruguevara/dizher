@@ -40,13 +40,13 @@ blue_noise = load_static_noise(BLUE_NOISE_FILE_GLOB)
 
 def apply_wrapped(ufunc, dest, src):
     noise_h, noise_w = src.shape
-    img_h, img_w = dest.shape
+    img_h, img_w = dest.shape[-2:]
     # TODO Maybe np.pad with wrap?
     for r in range(0, img_h, noise_h):
         for c in range(0, img_w, noise_w):
             win_h = min(img_h - r, noise_h)
             win_w = min(img_w - c, noise_w)
-            frame_dst = dest[r:r + win_h, c:c + win_w]
+            frame_dst = dest[..., r:r + win_h, c:c + win_w]
             frame_src = src[:win_h, :win_w]
             ufunc(frame_dst, frame_src, out=frame_dst)
 

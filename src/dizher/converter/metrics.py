@@ -12,6 +12,8 @@ from ..converter.colors import convert_color, lrgb2luminance
 from .utils import reshape_by_charblock
 
 
+BLUR_SIZE = 5  # ponytail: fixed viewing-distance model; expose as a slider if it needs tuning per image
+
 class ConversionMetric:
     label = 'You can not get label of an abstract base ConversionMetric class'
 
@@ -26,13 +28,16 @@ class ConversionMetric:
 class LumaMetric(ConversionMetric):
     label = 'Luma'
 
-    def __call__(self, **kwargs):
-        # returns error in range 0..1
+    def __call__(self, blur_size=BLUR_SIZE, **kwargs):
+        # ponytail: blur = crude eye low-pass; the residual dither ripple after blur is the dither-noise penalty
         gamma = self.converter.gamma
-        image_luma = self.converter.image_luma ** (1/gamma)
-        reconstruct_luma = lrgb2luminance(self.converter.recolorized ** gamma) ** (1/gamma)
+        blur = lambda a: cv2.GaussianBlur(a, ksize=(blur_size, blur_size), sigmaX=0)
+        image_luma = blur(self.converter.image_luma) ** (1/gamma)
+        reconstruct_luma = np.stack([
+            blur(lrgb2luminance(realized ** gamma)) ** (1/gamma)
+            for realized in self.converter.realized
+        ])
         return np.abs(reconstruct_luma - image_luma)
-
 
 class ChromaMetric(ConversionMetric):
     label = 'Chroma'
@@ -43,10 +48,10 @@ class ChromaMetric(ConversionMetric):
         image_rgb = cv2.GaussianBlur(self.converter.image_rgb, ksize=(blur_size, blur_size), sigmaX=0)
         image_luv = convert_color(image_rgb, 'RGB', 'LUV')
 
-        reconstruct_luv = np.empty_like(self.converter.recolorized)
-        for i, recolorized in enumerate(self.converter.recolorized):
-            reconstruct_rgb = cv2.GaussianBlur(recolorized, ksize=(blur_size, blur_size), sigmaX=0)
-            reconstruct_luv[i] = convert_color(reconstruct_rgb.astype(np.float32), 'RGB', 'LUV')
+        reconstruct_luv = np.empty_like(self.converter.realized)
+        for i, realized in enumerate(self.converter.realized):
+            reconstruct_rgb = cv2.GaussianBlur(realized, ksize=(blur_size, blur_size), sigmaX=0)
+            reconstruct_luv[i] = convert_color(reconstruct_rgb, 'RGB', 'LUV')
 
         diff_u = (image_luv[..., 1] - reconstruct_luv[..., 1]) / 180
         diff_v = (image_luv[..., 2] - reconstruct_luv[..., 2]) / 180

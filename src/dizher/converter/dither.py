@@ -1,40 +1,46 @@
-# -*- coding: utf-8 -*-
-
 import numpy as np
-from abc import abstractmethod
 
-from ..halftoning.error_distribution import stucki
+from ..halftoning.error_distribution import stucki_duo
 from ..halftoning.ordered import ordered_dither
 from ..halftoning.noise import noise_dither
 
+def duo_levels(luma, paper, ink):
+    """Fraction of ink in a linear-light mix of paper and ink that matches luma."""
+    span = ink - paper
+    return np.divide(luma - paper, span, out=np.zeros_like(luma), where=span != 0).clip(0, 1)
 
 class Ditherer:
+    """Halftones luma (linear luminance) to a bitmap where each pixel is paper (0) or ink (1).
+    paper and ink are per-pixel linear luminances of the attribute colours."""
     label = 'You can not get label of an abstract base Ditherer class'
 
     def __init__(self, **kwargs) -> None:
         pass
 
-    @abstractmethod
-    def __call__(self, color_levels: np.ndarray) -> np.ndarray:
+    def __call__(self, luma: np.ndarray, paper: np.ndarray, ink: np.ndarray) -> np.ndarray:
         raise NotImplementedError()
 
+class ThresholdDitherer(Ditherer):
+    def __call__(self, luma, paper, ink):
+        return self.threshold(duo_levels(luma, paper, ink))
+
+    def threshold(self, levels: np.ndarray) -> np.ndarray:
+        raise NotImplementedError()
 
 class EDStucki(Ditherer):
     label = 'ED Stucki'
 
-    def __call__(self, color_levels: np.ndarray) -> np.ndarray:
-        return stucki(color_levels, 2)
+    def __call__(self, luma, paper, ink):
+        return stucki_duo(luma, paper, ink)
 
-
-class OrderedBayer(Ditherer):
+class OrderedBayer(ThresholdDitherer):
     label = 'Ordered Bayer'
 
-    def __call__(self, color_levels: np.ndarray) -> np.ndarray:
-        return ordered_dither(color_levels, 2)
+    def threshold(self, levels):
+        return ordered_dither(levels, 2) > 0
 
-
-class Stohastic(Ditherer):
+class Stohastic(ThresholdDitherer):
     label = 'Stohastic'
 
-    def __call__(self, color_levels: np.ndarray) -> np.ndarray:
-        return noise_dither(color_levels)
+    def threshold(self, levels):
+        return noise_dither(levels)

@@ -11,7 +11,7 @@ Turn on, tune in, drop out.
 
 ## Installation
 
-Requires Python 3.10–3.13 (numba does not support 3.14 yet). From the repository root:
+Requires Python 3.10+. From the repository root:
 
     python3.13 -m venv .venv
     source .venv/bin/activate

@@ -61,9 +61,8 @@ class DizherState:
 
 
 def convert_image(converter: Converter, halftoner: Ditherer, image: np.ndarray):
-    converter.set_image(image)
+    converter.set_image(image, halftoner)
     converter.calc_best_on_metrics()
-    dither(converter, halftoner)
     return converter
 
 def apply_metric_weights(converter: Converter, halftoner: Ditherer):
