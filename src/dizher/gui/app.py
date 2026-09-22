@@ -8,7 +8,7 @@ from enum import Enum, IntEnum
 from multiprocessing import current_process
 from functools import partial
 
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 from skimage import img_as_ubyte, img_as_float
 import cv2
 import numpy as np
@@ -33,7 +33,7 @@ class BGTask(IntEnum):
 
 class ImagePane(sg.Image):
     def __init__(self, zoom: int, dims: Tuple[int, int], key=None):
-        self.zoom = zoom
+        self.scale = zoom  # not .zoom: FreeSimpleGUI Image.__init__ overwrites it
         super().__init__(key=key, size=(dims[0] * zoom, dims[1] * zoom), background_color='black')
 
     def makePhotoImage(self, image: np.ndarray, scale: int=1):
@@ -47,7 +47,7 @@ class ImagePane(sg.Image):
         return ppm
 
     def update(self, image: np.ndarray):
-        data=self.makePhotoImage(image, self.zoom)
+        data=self.makePhotoImage(image, self.scale)
         super().update(data=data)
 
 

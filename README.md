@@ -11,27 +11,24 @@ Turn on, tune in, drop out.
 
 ## Installation
 
-Assuming you are in the dizher package directory where setup.cfg is located.
+Requires Python 3.10–3.13 (numba does not support 3.14 yet). From the repository root:
 
-### Installation with pip
+    python3.13 -m venv .venv
+    source .venv/bin/activate
+    pip install --upgrade pip
+    pip install -e .
 
-    python3 -m pip install --upgrade pip setuptools wheel
-    python3 -m pip install -r requirements.txt
-    python3 -m pip install .
+Run the GUI:
 
-### Installation with conda
-
-    conda env create -f environment.yml
-    conda activate dizher
-    python3 -m pip install --upgrade-strategy only-if-needed .
+    dizher [image.png]
 
 ## TODO
 
+* [ ] Correct Error-Diffusion dithering respecting character blocks color restrictions
 * [ ] Adjustable metrics weights
 * [ ] Selectable dithering methods
 * [ ] Brightness, Contrast, Saturation and Vibe controls
 * [ ] Save as SCR and PNG
-* [ ] Correct Error-Diffusion dithering respecting character blocks color restrictions
 * [ ] Crop adjustments
 * [ ] Python installation package
 * [ ] Commodore 64 HiRes 320x200 mode with 2 colors per character block

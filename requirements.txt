@@ -1,6 +1,8 @@
-# run: pip install -i requirements.txt
+# run: pip install -r requirements.txt
 numpy
 scipy
 scikit-image
-PySimpleGUI
 opencv-python
+numba
+imageio
+FreeSimpleGUI
