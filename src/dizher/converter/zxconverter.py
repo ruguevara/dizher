@@ -17,7 +17,7 @@ class Converter:
             default_weights: Sequence[float],
             size: Tuple[int, int] = (192, 256),
             palette: Palette = ZXPalette(),
-            gamma: float = 2.2
+            gamma: float = 2.2,
     ):
         assert isinstance(palette, Palette)
         assert len(size) == 2

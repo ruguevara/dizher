@@ -12,7 +12,7 @@ from ..converter.zxconverter import Converter
 from ..converter.metrics import ConversionMetric, LumaMetric, ChromaMetric, SmoothnessMetric
 from ..converter.dither import Ditherer
 from ..converter.colors import gray2rgb
-from ..converter.dither import EDStucki, Ditherer, OrderedBayer, Stohastic
+from ..converter.dither import DBS, EDStucki, Ditherer, OrderedBayer, Stohastic
 
 class Params:
     zoom: int = 2
@@ -23,6 +23,7 @@ class Params:
 
 class DizherState:
     dither_classes: List[Type[Ditherer]] = [
+        DBS,
         OrderedBayer,
         EDStucki,
         Stohastic,

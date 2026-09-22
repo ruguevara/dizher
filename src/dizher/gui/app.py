@@ -17,7 +17,7 @@ import tkinter as tk
 from ..tuner import Tuner
 from ..tuner.filters import Filter
 from ..converter.colors import gray2rgb
-from ..converter.dither import EDStucki, Ditherer, OrderedBayer, Stohastic
+from ..converter.dither import EDStucki, Ditherer, OrderedBayer, Stohastic, DBS
 from ..converter.zxconverter import ConversionMetric
 from .. import __version__
 from ..util.worker import SingleAsyncPriorityWorker
@@ -262,7 +262,9 @@ class DizherApp:
         # self.update_tuned_image(image)
 
     def handle_halftone(self, event):
-        if event == 'halftone-stohastic':
+        if event == 'halftone-dbs':
+            self._state.current_dithering = DBS
+        elif event == 'halftone-stohastic':
             self._state.current_dithering = Stohastic
         elif event == 'halftone-ordered-bayer':
             self._state.current_dithering = OrderedBayer
