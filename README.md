@@ -83,10 +83,10 @@ Done:
 * [x] Gain, exposure, contrast, saturation, vibe and colour balance controls
 * [x] Palette subsets: bright only, not bright only, grayscale, black and white
 * [x] Python installation package
+* [x] Save as SCR and PNG
 
 Planned:
 
-* [ ] Save as SCR and PNG (button is a stub)
 * [ ] Crop adjustments (currently an automatic centre crop)
 * [ ] Custom ZX Spectrum palettes (ZX Spectrum Next or another hardware enhanceds)
 * [ ] ZX Spectrum MultiColor, GigaScreen and MultiGigaScreen software mode

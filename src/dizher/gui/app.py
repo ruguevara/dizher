@@ -297,8 +297,10 @@ class DizherApp:
     def save_conversion(self, filename):
         if not filename:
             return
-        # image = self._state.tuner.load_image(filename)
-        # self.update_tuned_image(image)
+        if self._state.converter.dithered_result is None:
+            self.popup_error('Open and convert an image first.', title='Nothing to save')
+            return
+        self._state.converter.save(filename)
 
     def handle_halftone(self, event):
         if event == 'halftone-dbs':
@@ -362,8 +364,8 @@ class DizherApp:
                     self.handle_halftone(event)
                 elif event == 'save-conversion':
                     filename = sg.popup_get_file(
-                        'Save converted image', no_window=True,
-                        file_types = (('Image Files', '*.png *.jpeg *.jpg *.bmp'),),
+                        'Save converted image', no_window=True, save_as=True, default_extension='.scr',
+                        file_types = (('ZX Spectrum screen', '*.scr'), ('PNG image', '*.png')),
                     )
                     self.save_conversion(filename)
                 # else:

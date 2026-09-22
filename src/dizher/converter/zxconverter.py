@@ -10,6 +10,7 @@ from .dither import Ditherer, Stohastic
 from .eye import LUMA_ALPHA, LUMA_SCALE, CHROMA_ALPHA, CHROMA_SCALE
 from .energy import SelectionEnergy, pair_dissimilarity
 from .utils import attrs2rgb, apply_attrs
+from .scr import to_scr
 
 class Converter:
     def __init__(self,
@@ -131,6 +132,16 @@ class Converter:
         ink_luma = lrgb2luminance(self.best_ink ** self.gamma)
         self.dithered_bitmap = self.ditherer(self.image_luma, paper_luma, ink_luma, scale=self.luma_scale, alpha=self.luma_alpha, structure=self.structure).astype(np.float32)
         self.dithered_result = apply_attrs(self.dithered_bitmap, self.best_paper, self.best_ink)
+
+    def save(self, filename: str) -> None:
+        """.scr writes the Spectrum screen; any other extension writes the composite through OpenCV."""
+        assert self.dithered_result is not None, "Nothing converted yet"
+        if filename.lower().endswith('.scr'):
+            idx_pairs = np.array(list(self.palette.iter_idxs_pairs()))[self.best_attr_indexes]
+            with open(filename, 'wb') as f:
+                f.write(to_scr(self.dithered_bitmap > 0.5, idx_pairs))
+        else:
+            assert cv2.imwrite(filename, convert_color((self.dithered_result * 255).round().astype(np.uint8), 'RGB', 'BGR')), filename
 
     def dither(self, ditherer: Ditherer) -> np.ndarray:
         if self.best_attr_indexes is None:
