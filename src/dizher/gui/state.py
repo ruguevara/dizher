@@ -8,8 +8,8 @@ from ..tuner import Tuner
 from ..tuner.filters import ExposureFilter, ContrastFilter, GainFilter, ColorBalanceFilter, Filter
 from ..tuner.vibe import VibeSatFilter
 from ..tuner.reshaper import ReshaperFilter
-from ..converter.zxconverter import Converter
-from ..converter.palette import ZXPalette
+from ..converter.converter import Converter
+from ..platforms import zxspectrum, c64
 from ..converter.dither import Ditherer
 from ..converter.colors import gray2rgb
 from ..converter.dither import DBS, EDStucki, Ditherer, OrderedBayer, Stohastic
@@ -30,18 +30,25 @@ class DizherState:
     ]
     current_dithering: Type[Ditherer] = dither_classes[0]
     metric_weights = {'Luma': 1.0, 'Chroma': 1.0}
+    modes = [zxspectrum.STANDARD, c64.HIRES]
 
     def __init__(self) -> None:
         self.params = Params()
-        self.converter = Converter(self.metric_weights)
+        self.converter = Converter(self.metric_weights, self.modes[0])
+        self.reshaper = ReshaperFilter(self.converter.size)
         self.tuner = Tuner([
-            ReshaperFilter(self.converter.size),
+            self.reshaper,
             GainFilter(),
             ExposureFilter(),
             ContrastFilter(),
             VibeSatFilter(),
             ColorBalanceFilter(),
         ])
+
+    def set_mode(self, name: str):
+        mode = next(m for m in self.modes if m.name == name)
+        self.converter = self.converter.with_mode(mode)
+        self.reshaper.height, self.reshaper.width = mode.size
 
     # def convert_image(self, image):
     #     self.converter.set_image(image)
@@ -75,7 +82,7 @@ def apply_eye_model(converter: Converter, halftoner: Ditherer):
 
 def apply_palette(converter: Converter, halftoner: Ditherer, subset: str):
     converter.ditherer = halftoner
-    converter.set_palette(ZXPalette(subset=subset))
+    converter.set_palette(converter.palette.with_subset(subset))
     return converter
 
 def apply_halftoner(converter: Converter, halftoner: Ditherer):

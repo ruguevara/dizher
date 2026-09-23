@@ -8,6 +8,12 @@ Turn on, tune in, drop out.
 
 * ZX Spectrum
   * Standard mode — 256x192 with 15 colors, two colors in one character 8x8 block. No flashing bit support.
+* Commodore 64
+  * HiRes mode — 320x200 with 16 colors, two colors in one character 8x8 block. PNG output only for now.
+
+A mode is a `platforms.Mode`: screen size, attribute cell size, palette (with its allowed
+paper/ink pairs) and the native screen file writer. The converter is generic over these; the ZX
+Spectrum specifics live in `platforms/zxspectrum`.
 
 ## How it works
 
@@ -90,8 +96,8 @@ Planned:
 * [ ] Crop adjustments (currently an automatic centre crop)
 * [ ] Custom ZX Spectrum palettes (ZX Spectrum Next or another hardware enhanceds)
 * [ ] ZX Spectrum MultiColor, GigaScreen and MultiGigaScreen software mode
-* [ ] Commodore 64 HiRes 320x200 mode with 2 colors per character block
+* [ ] Commodore 64 HiRes: native file format (Art Studio)
 * [ ] Commodore 64 LowRes 160x200 mode with 4 colors per character block
-* [ ] Standalone binary package with PyInstaller for macOS, Windows, Linux
 * [ ] Overpaint bitmap, attrs, bright
+* [ ] Standalone binary package with PyInstaller for macOS, Windows, Linux
 * [ ] Ability to save and load conversion projects with an image, settings and overpaint layers

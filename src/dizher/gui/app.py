@@ -21,7 +21,6 @@ from ..converter.dither import EDStucki, Ditherer, OrderedBayer, Stohastic, DBS
 from .. import __version__
 from ..util.worker import SingleAsyncPriorityWorker
 from .state import DizherState, convert_image, dither, apply_filter, apply_metric_weights, apply_eye_model, apply_halftoner, apply_palette
-from ..converter.palette import ZXPalette
 
 
 class BGTask(IntEnum):
@@ -46,9 +45,8 @@ class ImagePane(sg.Image):
         ppm = ('P6 %d %d 255 ' % (image.shape[1], image.shape[0])).encode('ascii') + image.tobytes()
         return ppm
 
-    def update(self, image: np.ndarray):
-        data=self.makePhotoImage(image, self.scale)
-        super().update(data=data)
+    def update(self, image: np.ndarray = None, **kwargs):
+        super().update(data=self.makePhotoImage(image, self.scale), **kwargs)
 
 
 def HalftoneButtons(ditherers: List[Type[Ditherer]]):
@@ -101,7 +99,9 @@ class DizherApp:
                             HalftoneButtons(self._state.dither_classes)
                         + [
                             sg.VerticalSeparator(pad=None),
-                            sg.Combo(list(ZXPalette.SUBSETS), default_value=self._state.converter.palette.subset,
+                            sg.Combo([m.name for m in self._state.modes], default_value=self._state.converter.mode.name,
+                                     key='mode', enable_events=True, readonly=True, font=(None, 10)),
+                            sg.Combo(list(self._state.converter.palette.SUBSETS), default_value=self._state.converter.palette.subset,
                                      key='palette-subset', enable_events=True, readonly=True, font=(None, 10)),
                             sg.VerticalSeparator(pad=None),
                             sg.Button('Save', key = 'save-conversion'),
@@ -119,6 +119,7 @@ class DizherApp:
         )
         self.window.disable_debugger()
         self.bind('palette-subset', self.handle_palette)
+        self.bind('mode', self.handle_mode)
         self.window.bind('<Control-o>', 'open-image')
 
     def bind(self, event: str, handler: Callable):
@@ -169,6 +170,8 @@ class DizherApp:
 
         self.debug_log("Slider {}={}", param, value)
         self._state.converter.energy.update(**{param: value})
+        if self._state.converter.image_rgb is None:  # the weight is kept for the next conversion
+            return
         self._state.converter.invalidate_result()
         self.update_async(BGTask.CONVERTER, apply_metric_weights,
             (self._state.converter, self._state.current_dithering()),
@@ -181,10 +184,22 @@ class DizherApp:
 
         converter = self._state.converter
         if converter.image_rgb is None:
-            converter.set_palette(ZXPalette(subset=subset))
+            converter.set_palette(converter.palette.with_subset(subset))
             return
         self.update_async(BGTask.CONVERTER, apply_palette,
             (converter, self._state.current_dithering(), subset), callback=callback)
+
+    def handle_mode(self, name: str):
+        """New converter and screen size; the loaded image is re-tuned and re-converted for it."""
+        self._state.set_mode(name)
+        converter, zoom = self._state.converter, self._state.params.zoom
+        palette = converter.palette
+        self.window['palette-subset'].update(values=list(palette.SUBSETS), value=palette.subset)
+        for key in ('image-original', 'image-conversion'):
+            self.window[key].update(size=(converter.size[1] * zoom, converter.size[0] * zoom))
+        self.window['image-conversion'].update(None)
+        if self._state.tuner.input is not None:
+            self.update_tuned_image(self._state.tuner())
 
     def handle_converter_param(self, attr: str, task: Callable, value: Any):
         def callback(result):
@@ -246,7 +261,7 @@ class DizherApp:
             sliders.extend(self.label_slider(label.capitalize(), event, weight, (0., 4.0), resolution=0.05))
             self.bind(event, partial(self.handle_metric_weight, label))
             keys.append(event)
-        for label, attr, rng, res in (('Chroma noise', 'chroma_noise', (0., 0.5), 0.01), ('Coherence', 'coherence', (0., 8.0), 0.1)):
+        for label, attr, rng, res in (('Luma noise', 'luma_noise', (0., 0.5), 0.01), ('Chroma noise', 'chroma_noise', (0., 0.5), 0.01), ('Coherence', 'coherence', (0., 8.0), 0.1)):
             event = f'slider-metric-{attr}'
             sliders.extend(self.label_slider(label, event, getattr(self._state.converter, attr), rng, resolution=res))
             self.bind(event, partial(self.handle_converter_param, attr, apply_metric_weights))
@@ -364,9 +379,11 @@ class DizherApp:
                 elif event.startswith('halftone-'):
                     self.handle_halftone(event)
                 elif event == 'save-conversion':
+                    native = self._state.converter.mode.file_type
                     filename = sg.popup_get_file(
-                        'Save converted image', no_window=True, save_as=True, default_extension='.scr',
-                        file_types = (('ZX Spectrum screen', '*.scr'), ('PNG image', '*.png')),
+                        'Save converted image', no_window=True, save_as=True,
+                        default_extension=native[1].lstrip('*') if native else '.png',
+                        file_types = ((native,) if native else ()) + (('PNG image', '*.png'),),
                     )
                     self.save_conversion(filename)
                 # else:

@@ -1,50 +1,59 @@
-from typing import Dict, Tuple
+import copy
+from typing import Dict
 
 import numpy as np
 import cv2
 from skimage import img_as_float
 
-from .palette import Palette, ZXPalette
+from .palette import Palette
 from .colors import convert_color, lrgb2luminance, gray2rgb
 from .dither import Ditherer, Stohastic
 from .eye import LUMA_ALPHA, LUMA_SCALE, CHROMA_ALPHA, CHROMA_SCALE
 from .energy import SelectionEnergy, pair_dissimilarity
-from .utils import attrs2rgb, apply_attrs
-from .scr import to_scr
 
 class Converter:
     def __init__(self,
             weights: Dict[str, float],
-            size: Tuple[int, int] = (192, 256),
-            palette: Palette = ZXPalette(),
+            mode,   # platforms.Mode: screen size, attribute cell size, palette, native file encoder
             gamma: float = 2.2,
             luma_alpha: float = LUMA_ALPHA,
             luma_scale: float = LUMA_SCALE,
             chroma_alpha: float = CHROMA_ALPHA,
             chroma_scale: float = CHROMA_SCALE,
             coherence: float = 2.0,
+            luma_noise: float = 0.0,
             chroma_noise: float = 0.05,
             structure: float = 0.06,
     ):
-        assert isinstance(palette, Palette)
-        assert len(size) == 2
-        self.size = size
-        self.palette = palette
+        self.mode = mode
+        self.size = mode.size
+        self.cell = mode.cell
         self.gamma = gamma
         self.luma_alpha = luma_alpha  # eye model, see eye.py: kernel shape and blur scales in pixels
         self.luma_scale = luma_scale
         self.chroma_alpha = chroma_alpha
         self.chroma_scale = chroma_scale
-        self.chroma_noise = chroma_noise  # weight of unblurred chroma error: dot noise the low-pass eye model would miss, see energy.py
+        self.luma_noise = luma_noise      # weights of the unblurred error: dot noise the low-pass eye model would miss, see energy.py
+        self.chroma_noise = chroma_noise
         self.coherence = coherence  # cost of a pair change between neighbours where the original is smooth, see energy.py
         self.structure = structure  # weight of the contrast-weighted SSIM term in the DBS halftoner, see halftoning/dbs.py
         self.energy = SelectionEnergy(self, weights)
         self.image_rgb = None
         self.ditherer = None
-        self.set_palette(palette)
+        self.set_palette(mode.palette)
+
+    def with_mode(self, mode) -> 'Converter':
+        """Same parameters and halftoner on another mode; the image is dropped, it has the old size."""
+        c = copy.copy(self)
+        c.energy = SelectionEnergy(c, self.energy.weights)
+        c.mode, c.size, c.cell = mode, mode.size, mode.cell
+        c.image_rgb = None
+        c.set_palette(mode.palette)
+        return c
 
     def set_palette(self, palette: Palette):
         """Swap the attribute pair set; redoes the whole conversion if an image is loaded."""
+        assert isinstance(palette, Palette)
         self.palette = palette
         self.color_pairs = palette.color_pairs()
         self.pair_dissimilarity = pair_dissimilarity(self.color_pairs)
@@ -113,12 +122,14 @@ class Converter:
             return np.zeros_like(self.image_luma)
         return ((self.image_luma - c1_luminance) / c_lum_range).clip(0, 1)
 
+    def expand_cells(self, per_cell: np.ndarray) -> np.ndarray:
+        """(R, C, ...) one value per cell -> (H, W, ...) one value per pixel."""
+        h, w = self.cell
+        return np.repeat(np.repeat(per_cell, h, axis=0), w, axis=1)
+
     def best_paper_ink(self, attr_indexes):
-        best_paper_i = self.color_pairs[attr_indexes][..., 0, :]
-        best_ink_i = self.color_pairs[attr_indexes][..., 1, :]
-        best_paper = attrs2rgb(best_paper_i)
-        best_ink   = attrs2rgb(best_ink_i)
-        return best_paper, best_ink
+        pairs = self.color_pairs[attr_indexes]                 # (R, C, 2, 3)
+        return self.expand_cells(pairs[..., 0, :]), self.expand_cells(pairs[..., 1, :])
 
     def calc_best_on_metrics(self):
         self.energy.apply()
@@ -133,15 +144,15 @@ class Converter:
         paper_luma = lrgb2luminance(self.best_paper ** self.gamma)
         ink_luma = lrgb2luminance(self.best_ink ** self.gamma)
         self.dithered_bitmap = self.ditherer(self.image_luma, paper_luma, ink_luma, scale=self.luma_scale, alpha=self.luma_alpha, structure=self.structure).astype(np.float32)
-        self.dithered_result = apply_attrs(self.dithered_bitmap, self.best_paper, self.best_ink)
+        self.dithered_result = np.where(self.dithered_bitmap[..., np.newaxis], self.best_ink, self.best_paper)
 
     def save(self, filename: str) -> None:
-        """.scr writes the Spectrum screen; any other extension writes the composite through OpenCV."""
+        """The mode's native extension writes its screen file; any other extension writes the composite through OpenCV."""
         assert self.dithered_result is not None, "Nothing converted yet"
-        if filename.lower().endswith('.scr'):
+        if self.mode.file_type and filename.lower().endswith(self.mode.file_type[1].lstrip('*')):
             idx_pairs = np.array(list(self.palette.iter_idxs_pairs()))[self.best_attr_indexes]
             with open(filename, 'wb') as f:
-                f.write(to_scr(self.dithered_bitmap > 0.5, idx_pairs))
+                f.write(self.mode.encode(self.dithered_bitmap > 0.5, idx_pairs))
         else:
             assert cv2.imwrite(filename, convert_color((self.dithered_result * 255).round().astype(np.uint8), 'RGB', 'BGR')), filename
 
@@ -149,7 +160,8 @@ class Converter:
         if self.best_attr_indexes is None:
             self.ditherer = ditherer
             self.calc_best_on_metrics()
-        elif type(ditherer) is not type(self.ditherer):
+        elif type(ditherer) is not type(self.ditherer) or self.dithered_result is None:
+            # a result may have been invalidated (parameter change) without a rerun yet: rebuild it from the labels
             self.ditherer = ditherer
-            self.halftone()
+            self.set_best_conversion(self.best_attr_indexes)
         return self.dithered_result

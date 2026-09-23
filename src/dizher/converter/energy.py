@@ -16,13 +16,16 @@ papers plus of the inks), scaled down where the original itself has an edge acro
 This is the contrast-sensitive Potts prior of MRF segmentation. It is graded, so the bright
 variant of the same colours is nearly free, and a change along a real edge costs nothing.
 
-The chroma kernel is a pure low-pass, so it calls blue dots on yellow (the palette's largest
-chroma contrast) invisible once blurred, and then prefers that pair for a salmon target on mean
-colour alone. Real chroma sensitivity does not vanish at the pixel pitch, so the chroma kernel
-gets a delta component: h_chroma = g + chroma_noise * delta, whose extra energy is the unblurred
-chroma error, a per-block term with no cross-block part (the cross term with g is dropped).
+The kernels are pure low-pass, so they call blue dots on yellow (the palette's largest chroma
+contrast) invisible once blurred, and then prefer that pair for a salmon target on mean colour
+alone; likewise black dots on white for a grey a palette could paint with two close greys. Real
+sensitivity does not vanish at the pixel pitch, so each kernel gets a delta component:
+h = g + noise * delta, whose extra energy is the unblurred error of the channel group, a per-block
+term with no cross-block part (the cross term with g is dropped). The weights are luma_noise and
+chroma_noise: dot contrast the eye still sees at the viewing distance.
 ponytail: fine interactions truncated to the 8 neighbouring blocks (offset-2 blocks see < 10% of
-the kernel peak). Labels by block coordinate descent on whole lines: each row, then each column, is
+the kernel peak for 8x8 cells; cells thinner than the kernel radius, like 8x1, would need farther
+offsets and a higher-order chain in the optimiser). Labels by block coordinate descent on whole lines: each row, then each column, is
 re-solved exactly by dynamic programming given the rest, so a run of blocks can switch together
 (single-block ICM gets trapped by clusters that are wrong in the same way).
 """
@@ -53,7 +56,6 @@ LRGB2OPP = LRGB2OPP * (_palette_std[0] / _palette_std)[:, None]
 
 GROUPS = OrderedDict(Luma=[0], Chroma=[1, 2])   # weight name -> opponent channels
 OFFSETS = [(0, 1), (1, 0), (1, 1), (1, -1)]      # unordered neighbour pairs, block units
-BLOCK = 8
 EDGE_SIGMA = 0.05   # step of the original's block means (weighted opponent units) that counts as a real edge
 SEAM_COST = 0.1     # energy of one seam between totally different pairs at coherence 1; a block's own cost is ~0.2
 
@@ -61,12 +63,13 @@ def autocorrelation(h: np.ndarray) -> np.ndarray:
     r = h.shape[0] // 2
     return cv2.filter2D(np.pad(h, r), -1, h, borderType=cv2.BORDER_CONSTANT)
 
-def block_kernel_matrix(cpp: np.ndarray, dr: int, dc: int) -> np.ndarray:
-    """K[x, y] = cpp(pos_x - pos_y) for pixel x of block (0, 0) and pixel y of block (dr, dc)."""
+def block_kernel_matrix(cpp: np.ndarray, dr: int, dc: int, cell) -> np.ndarray:
+    """K[x, y] = cpp(pos_x - pos_y) for pixel x of block (0, 0) and pixel y of block (dr, dc); cell = (h, w)."""
     centre = cpp.shape[0] // 2
-    xi, xj = np.divmod(np.arange(BLOCK * BLOCK), BLOCK)
-    di = xi[:, None] - (xi[None, :] + BLOCK * dr) + centre
-    dj = xj[:, None] - (xj[None, :] + BLOCK * dc) + centre
+    h, w = cell
+    xi, xj = np.divmod(np.arange(h * w), w)
+    di = xi[:, None] - (xi[None, :] + h * dr) + centre
+    dj = xj[:, None] - (xj[None, :] + w * dc) + centre
     inside = (di >= 0) & (di < cpp.shape[0]) & (dj >= 0) & (dj < cpp.shape[1])
     K = np.zeros(di.shape, dtype=np.float32)
     K[inside] = cpp[di[inside], dj[inside]]
@@ -94,7 +97,7 @@ class SelectionEnergy:
 
     def invalidate(self) -> None:
         self.D, self.S, self.X = {}, {}, {}
-        self.N = None   # (P, R, C) unblurred chroma squared error per block
+        self.N = {}     # group -> (P, R, C) unblurred squared error per block
 
     def update(self, **kwargs):
         for k, v in kwargs.items():
@@ -108,20 +111,20 @@ class SelectionEnergy:
         Y = (c.realized ** c.gamma) @ LRGB2OPP.T
         E = Y - X                                                         # (P, H, W, 3)
         P, H, W, _ = E.shape
-        R, C = H // BLOCK, W // BLOCK
-        E = E.reshape(P, R, BLOCK, C, BLOCK, 3).transpose(1, 3, 0, 2, 4, 5).reshape(R, C, P, BLOCK * BLOCK, 3)
+        h, w = c.cell
+        R, C = H // h, W // w
+        E = E.reshape(P, R, h, C, w, 3).transpose(1, 3, 0, 2, 4, 5).reshape(R, C, P, h * w, 3)
         kernels = dict(Luma=eye_kernel(c.luma_scale, c.luma_alpha), Chroma=eye_kernel(c.chroma_scale, c.chroma_alpha))
         for g, channels in GROUPS.items():
             cpp = autocorrelation(kernels[g])
-            K0 = block_kernel_matrix(cpp, 0, 0)
+            K0 = block_kernel_matrix(cpp, 0, 0, c.cell)
             A = [np.ascontiguousarray(E[..., k]) for k in channels]         # each (R, C, P, 64)
-            self.X[g] = X[..., channels].reshape(R, BLOCK, C, BLOCK, len(channels)).mean(axis=(1, 3))   # (R, C, nch) target block means
-            if g == 'Chroma':
-                self.N = sum((a ** 2).sum(-1) for a in A).transpose(2, 0, 1)
+            self.X[g] = X[..., channels].reshape(R, h, C, w, len(channels)).mean(axis=(1, 3))   # (R, C, nch) target block means
+            self.N[g] = sum((a ** 2).sum(-1) for a in A).transpose(2, 0, 1)
             self.D[g] = sum(np.einsum('rcpx,xy,rcpy->prc', a, K0, a, optimize=True) for a in A)
             self.S[g] = {}
             for dr, dc in OFFSETS:
-                K = block_kernel_matrix(cpp, dr, dc)
+                K = block_kernel_matrix(cpp, dr, dc, c.cell)
                 rs, cs = _ranges(dr, dc, R, C)
                 ns = slice(rs.start + dr, rs.stop + dr), slice(cs.start + dc, cs.stop + dc)
                 self.S[g][(dr, dc)] = 2 * sum(
@@ -129,8 +132,9 @@ class SelectionEnergy:
                     for a in A)
 
     def unary(self) -> np.ndarray:
-        w = self.weights
-        return sum(w[g] * self.D[g] for g in GROUPS) + w['Chroma'] * self.converter.chroma_noise * self.N
+        w, c = self.weights, self.converter
+        noise = dict(Luma=c.luma_noise, Chroma=c.chroma_noise)
+        return sum(w[g] * self.D[g] for g in GROUPS) + sum(w[g] * noise[g] * self.N[g] for g in GROUPS)
 
     def apply(self) -> None:
         w = self.weights

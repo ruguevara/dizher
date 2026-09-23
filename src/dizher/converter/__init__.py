@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-from .zxconverter import *
+from .converter import *
