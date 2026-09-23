@@ -4,6 +4,19 @@ Dizher (and AvtoDizher) is a 8-bit Graphics Converter for lovely retrocomputers 
 
 Turn on, tune in, drop out.
 
+## Goal
+
+A research prototype: can a converter driven by an eye model beat existing tools?
+
+Done means:
+
+* On 3 reference images, DBS with the eye model visibly beats known converters
+  (ZX-Paintbrush, image2zx, image2spec) in both dithering and colour selection.
+* The UI concept is clear and usable: adjustment layers for preprocessing, and a processing
+  pipeline with a preview at each stage.
+
+Out of scope: animation, non-8-bit platforms, compression.
+
 ## Supported 8-bit platforms and modes
 
 * ZX Spectrum
