@@ -46,11 +46,12 @@ class SingleAsyncPriorityWorker(AbstractWorker):
                 self._process.kill()
             if self._abort_callback:
                 self._abort_callback(SystemExit)
-                self._abort_callback = None
-            self._process.join()
-            self._process.close()
-            self._queue.close()
-            self._queue = mp.Queue()
+        self._abort_callback = None
+        self._process.join()
+        self._process.close()
+        self._process = None
+        self._queue.close()
+        self._queue = mp.Queue()
 
     def apply(self, priority: int, task: Callable, args: Tuple = (), kwds: Dict = {}, callback: Callable = None,
               error_callback: Callable = None, abort_callback: Callable = None) -> bool:

@@ -70,6 +70,8 @@ class DizherApp:
         self.worker = SingleAsyncPriorityWorker()
         self.dispatcher = {}
         self.slider_defaults = {}
+        self._converter_revision = self._tuner_revision = 0
+        self._conversion_image = None
 
         zoom = self._state.params.zoom
         dims = (self._state.converter.size[1], self._state.converter.size[0])
@@ -132,6 +134,57 @@ class DizherApp:
             return True
         return False
 
+    def converter_changed(self):
+        self._converter_revision = getattr(self, '_converter_revision', 0) + 1
+        return self._converter_revision
+
+    def tuner_changed(self):
+        self._tuner_revision = getattr(self, '_tuner_revision', 0) + 1
+        self.converter_changed()
+        self._state.converter.invalidate_result()
+        return self._tuner_revision
+
+    def accept_converter(self, revision, converter):
+        if revision != self._converter_revision:
+            return False
+        self._state.converter = converter
+        return True
+
+    def update_conversion(self):
+        if self._conversion_image is None:
+            return
+        revision = self.converter_changed()
+
+        def callback(converter):
+            if not self.accept_converter(revision, converter):
+                return
+            self.debug_log("convert_image callback")
+            self.update_converted_image(self._state.converter.dithered_result)
+
+        self._state.converter.invalidate()
+        self.update_async(BGTask.CONVERTER, convert_image,
+            (self._state.converter, self._state.current_dithering(), self._conversion_image),
+            callback=callback)
+
+    def update_tuner(self):
+        tuner = self._state.tuner
+        if tuner.input is None:
+            return
+        revision = self._tuner_revision
+        filter = tuner.filters[0]
+        filter.input = tuner.input
+
+        def callback(result):
+            new_filter, output = result
+            if revision != self._tuner_revision:
+                self.update_tuner()
+                return
+            filter.copy_from(new_filter)
+            tuner.output = output
+            self.update_tuned_image(output)
+
+        self.update_async(BGTask.TUNER, apply_filter, (filter,), {}, callback=callback)
+
     def label_slider(self, param_name: str, key: str, default: float, range: Tuple[float, float],
                      resolution:float = 0.1, pad: Tuple[int, int]=(5, 7)):
         hpad, vpad = pad
@@ -150,47 +203,26 @@ class DizherApp:
         return self.label_slider(param_name, key, default, range, pad=pad)
 
     def handle_slider(self, filter: Filter, param: str, value: Any):
-        def callback(result):
-            new_filter, output = result
-            filter.copy_from(new_filter)
-            self._state.tuner.output = output
-            self.update_tuned_image(output)
-
         self.debug_log("Slider {}={}", param, value)
         filter.update(**{param: value})
-        if filter.input is None:  # no image loaded yet, params are kept for when it is
-            return
-        self.update_async(BGTask.TUNER, apply_filter, (filter,), {}, callback=callback)
+        self.tuner_changed()
+        self.update_tuner()
 
     def handle_metric_weight(self, param: str, value: Any):
-        def callback(result):
-            self._state.converter = result
-            self.debug_log("handle_metric_weight callback")
-            self.update_converted_image(self._state.converter.dithered_result)
-
         self.debug_log("Slider {}={}", param, value)
         self._state.converter.energy.update(**{param: value})
-        if self._state.converter.image_rgb is None:  # the weight is kept for the next conversion
-            return
-        self._state.converter.invalidate_result()
-        self.update_async(BGTask.CONVERTER, apply_metric_weights,
-            (self._state.converter, self._state.current_dithering()),
-            callback=callback)
+        self.update_conversion()
 
     def handle_palette(self, subset: str):
-        def callback(result):
-            self._state.converter = result
-            self.update_converted_image(self._state.converter.dithered_result)
-
         converter = self._state.converter
-        if converter.image_rgb is None:
-            converter.set_palette(converter.palette.with_subset(subset))
-            return
-        self.update_async(BGTask.CONVERTER, apply_palette,
-            (converter, self._state.current_dithering(), subset), callback=callback)
+        converter.invalidate()
+        converter.set_palette(converter.palette.with_subset(subset))
+        self.update_conversion()
 
     def handle_mode(self, name: str):
         """New converter and screen size; the loaded image is re-tuned and re-converted for it."""
+        self.tuner_changed()
+        self._conversion_image = None
         self._state.set_mode(name)
         converter, zoom = self._state.converter, self._state.params.zoom
         palette = converter.palette
@@ -199,19 +231,12 @@ class DizherApp:
             self.window[key].update(size=(converter.size[1] * zoom, converter.size[0] * zoom))
         self.window['image-conversion'].update(None)
         if self._state.tuner.input is not None:
-            self.update_tuned_image(self._state.tuner())
+            self.update_tuner()
 
     def handle_converter_param(self, attr: str, task: Callable, value: Any):
-        def callback(result):
-            self._state.converter = result
-            self.update_converted_image(self._state.converter.dithered_result)
-
         converter = self._state.converter
         setattr(converter, attr, value)
-        if converter.image_rgb is None:
-            return
-        converter.invalidate_result()
-        self.update_async(BGTask.CONVERTER, task, (converter, self._state.current_dithering()), callback=callback)
+        self.update_conversion()
 
     def converter_param_sliders(self, key: str, specs):
         sliders, keys = [], []
@@ -226,9 +251,9 @@ class DizherApp:
     def eye_sliders(self):
         return self.converter_param_sliders('eye', (
             ('Luma alpha', 'luma_alpha', apply_eye_model, (0.5, 2.0), 0.05),
-            ('Luma blur px', 'luma_scale', apply_eye_model, (0.3, 3.0), 0.1),
+            ('Luma blur px', 'luma_scale', apply_eye_model, (0.3, 1.9), 0.1),   # kernel radius is capped at half a cell (4 px): beyond ~1.9 px at alpha 2 the slider did nothing
             ('Chroma alpha', 'chroma_alpha', apply_eye_model, (0.5, 2.0), 0.05),
-            ('Chroma blur px', 'chroma_scale', apply_eye_model, (0.3, 8.0), 0.1),
+            ('Chroma blur px', 'chroma_scale', apply_eye_model, (0.3, 1.9), 0.1),
             ('Structure', 'structure', apply_halftoner, (0.0, 0.5), 0.01),
         ))
 
@@ -294,19 +319,13 @@ class DizherApp:
     def convert_image(self, image):
         self.debug_log("called convert_image")
 
-        def callback(converter):
-            self._state.converter = converter
-            self.debug_log("convert_image callback")
-            self.update_converted_image(self._state.converter.dithered_result)
-
-        self._state.converter.invalidate()
-        self.update_async(BGTask.CONVERTER, convert_image,
-            (self._state.converter, self._state.current_dithering(), image),
-            callback=callback)
+        self._conversion_image = image
+        self.update_conversion()
 
     def open_image(self, filename):
         if not filename:
             return
+        self.tuner_changed()
         image = self._state.tuner.load_image(filename)
         self.update_tuned_image(image)
 
@@ -331,13 +350,7 @@ class DizherApp:
             self.not_so_fast(event)
             return
 
-        def callback(converter):
-            self._state.converter = converter
-            self.debug_log("handle_halftone callback")
-            self.update_converted_image(self._state.converter.dithered_result)
-
-        self.update_async(BGTask.HALFTONER, dither,
-                          (self._state.converter, self._state.current_dithering()), callback=callback)
+        self.update_conversion()
 
     def popup_error(self, *args, custom_text='Okay :-(', **kwargs):
         sg.popup(*args, custom_text=custom_text, **kwargs)

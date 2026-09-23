@@ -28,13 +28,20 @@ as their average. We model that with an isotropic kernel `exp(-(r / scale)^alpha
 linear light (alpha 2 is a Gaussian, alpha near 1 has a sharper peak and heavier tails, closer to
 measured contrast sensitivity). Colour is compared in an opponent space, as in S-CIELAB:
 one luminance channel and two chroma channels (red-green, blue-yellow), each with its own blur,
-because the eye resolves luminance detail much finer than colour detail. All errors below are
-"blurred difference squared" in this space, so the same kernel and weights drive both stages.
+because the eye resolves luminance detail much finer than colour detail. Both stages use squared
+error after this blur, plus an unblurred error penalty for visible dot noise, with the same
+kernels and channel weights.
+
+The converter caps kernel support at half the smallest cell dimension (radius 4 for
+an 8x8 cell) before normalisation, so nearest-neighbour selection includes every interaction.
+The `scale` and `alpha` controls still shape the finite support; wider or heavier tails are
+deliberately truncated.
 
 ### Colour selection
 
 For every block and every allowed pair of palette colours (72 pairs on the Spectrum), a candidate
-block is realised by blue-noise dithering the image luminance between the two colours. The whole
+block is realised by projecting the source onto the paper/ink segment in weighted linear opponent
+colour space, then blue-noise dithering that mixture. The whole
 screen is then the sum of one candidate per block, and the eye-model error of that composite is a
 quadratic function of the block labels: a cost per block, plus a pairwise cost for every pair of
 neighbouring blocks that measures the visible seam their two candidates paint across the border.
@@ -51,11 +58,15 @@ only, not bright only, grayscale, or black and white.
 ### Halftoning
 
 With paper and ink fixed per block, each pixel is set to one of them so that the blurred result
-matches the blurred image. This is Direct Binary Search (DBS): start from a blue-noise dither, then
+matches the blurred image. All halftoners consume the same colour-aware inputs. The default,
+Direct Binary Search (DBS), starts from a blue-noise dither, then
 repeatedly visit every pixel and flip it if the flip lowers the eye-model error, until no flip
 helps. The error change of a flip is computed exactly from a running error image, so a pass costs
 a few convolutions. Pixels farther apart than the kernel do not interact, so a whole lattice of
 pixels is flipped at once.
+
+DBS uses the same per-channel blur and noise terms as colour selection, with SSIM applied to the
+luminance channel.
 
 Plain DBS reproduces tone but blurs faint edges and texture. Following structure-aware halftoning
 (Pang et al. 2008), the energy also includes a structural similarity term (SSIM) between the

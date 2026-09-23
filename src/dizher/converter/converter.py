@@ -7,9 +7,9 @@ from skimage import img_as_float
 
 from .palette import Palette
 from .colors import convert_color, lrgb2luminance, gray2rgb
-from .dither import Ditherer, Stohastic
-from .eye import LUMA_ALPHA, LUMA_SCALE, CHROMA_ALPHA, CHROMA_SCALE
-from .energy import SelectionEnergy, pair_dissimilarity
+from .dither import Ditherer, Stohastic, duo_levels
+from .eye import LUMA_ALPHA, LUMA_SCALE, CHROMA_ALPHA, CHROMA_SCALE, eye_kernel
+from .energy import SelectionEnergy, pair_dissimilarity, LRGB2OPP
 
 class Converter:
     def __init__(self,
@@ -93,7 +93,9 @@ class Converter:
         return image_rgb
 
     def set_image(self, image_rgb: np.ndarray, ditherer: Ditherer) -> None:
-        self.image_rgb = self.preprocess_image(image_rgb)
+        image_rgb = self.preprocess_image(image_rgb)
+        self.invalidate()
+        self.image_rgb = image_rgb
         self.image_lrgb = self.image_rgb ** self.gamma
         self.image_luma = lrgb2luminance(self.image_lrgb)
         self.levels = self.fit_duocolors()
@@ -113,14 +115,22 @@ class Converter:
         return levels
 
     def fit_duocolor(self, c1, c2) -> np.ndarray:
-        """Amount of c2 in a linear-light mix of c1 and c2 that matches the image luminance."""
-        c1_lrgb = np.asarray(c1, dtype=np.float32) ** self.gamma
-        c2_lrgb = np.asarray(c2, dtype=np.float32) ** self.gamma
-        c1_luminance, c2_luminance = lrgb2luminance(c1_lrgb), lrgb2luminance(c2_lrgb)
-        c_lum_range = c2_luminance - c1_luminance
-        if c_lum_range == 0:
-            return np.zeros_like(self.image_luma)
-        return ((self.image_luma - c1_luminance) / c_lum_range).clip(0, 1)
+        """Closest mixture in the weighted colour space used to score candidates."""
+        paper = self.opponent(np.asarray(c1, dtype=np.float32) ** self.gamma)
+        ink = self.opponent(np.asarray(c2, dtype=np.float32) ** self.gamma)
+        return duo_levels(self.opponent(self.image_lrgb), paper, ink)
+
+    def opponent(self, linear_rgb):
+        w = self.energy.weights
+        return (linear_rgb @ LRGB2OPP.T) * np.sqrt(np.array([w['Luma'], w['Chroma'], w['Chroma']], dtype=np.float32))
+
+    def eye_kernels(self):
+        # ponytail: bounded support keeps all interactions inside adjacent cells; wider support
+        # requires a different label optimiser, not dropping terms from its squared-error energy.
+        radius = min(self.cell) // 2
+        luma = eye_kernel(self.luma_scale, self.luma_alpha, max_radius=radius)
+        chroma = eye_kernel(self.chroma_scale, self.chroma_alpha, max_radius=radius)
+        return luma, chroma, chroma
 
     def expand_cells(self, per_cell: np.ndarray) -> np.ndarray:
         """(R, C, ...) one value per cell -> (H, W, ...) one value per pixel."""
@@ -141,9 +151,11 @@ class Converter:
 
     def halftone(self):
         """Run the chosen halftoner once on the final composite, quantising each pixel to its block's paper or ink."""
-        paper_luma = lrgb2luminance(self.best_paper ** self.gamma)
-        ink_luma = lrgb2luminance(self.best_ink ** self.gamma)
-        self.dithered_bitmap = self.ditherer(self.image_luma, paper_luma, ink_luma, scale=self.luma_scale, alpha=self.luma_alpha, structure=self.structure).astype(np.float32)
+        paper = self.opponent(self.best_paper ** self.gamma)
+        ink = self.opponent(self.best_ink ** self.gamma)
+        self.dithered_bitmap = self.ditherer(self.opponent(self.image_lrgb), paper, ink,
+            scale=self.luma_scale, alpha=self.luma_alpha, structure=self.structure,
+            kernels=self.eye_kernels(), noise=(self.luma_noise, self.chroma_noise, self.chroma_noise)).astype(np.float32)
         self.dithered_result = np.where(self.dithered_bitmap[..., np.newaxis], self.best_ink, self.best_paper)
 
     def save(self, filename: str) -> None:

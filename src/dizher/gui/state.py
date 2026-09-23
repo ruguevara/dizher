@@ -71,11 +71,13 @@ def convert_image(converter: Converter, halftoner: Ditherer, image: np.ndarray):
     return converter
 
 def apply_metric_weights(converter: Converter, halftoner: Ditherer):
+    converter.set_image(converter.image_rgb, halftoner)
     converter.calc_best_on_metrics()
     dither(converter, halftoner)
     return converter
 
 def apply_eye_model(converter: Converter, halftoner: Ditherer):
+    converter.ditherer = halftoner
     converter.energy.calc()
     converter.calc_best_on_metrics()
     return converter

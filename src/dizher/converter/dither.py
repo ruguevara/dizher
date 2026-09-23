@@ -6,13 +6,17 @@ from ..halftoning.noise import noise_dither
 from ..halftoning.dbs import dbs_duo
 
 def duo_levels(luma, paper, ink):
-    """Fraction of ink in a linear-light mix of paper and ink that matches luma."""
+    """Project an (H, W) scalar or (H, W, channels) colour image onto its paper/ink segment."""
     span = ink - paper
+    if luma.ndim == 3:
+        numerator = ((luma - paper) * span).sum(-1)
+        denominator = (span * span).sum(-1)
+        return np.divide(numerator, denominator, out=np.zeros_like(numerator), where=denominator != 0).clip(0, 1)
     return np.divide(luma - paper, span, out=np.zeros_like(luma), where=span != 0).clip(0, 1)
 
 class Ditherer:
-    """Halftones luma (linear luminance) to a bitmap where each pixel is paper (0) or ink (1).
-    paper and ink are per-pixel linear luminances of the attribute colours.
+    """Halftones scalar luminance or weighted opponent colour to a paper (0) / ink (1) bitmap.
+    paper and ink are per-pixel values in the same space as the target.
     eye: eye-model parameters (scale = luminance blur in pixels, alpha = kernel shape, see eye.py)."""
     label = 'You can not get label of an abstract base Ditherer class'
 
@@ -32,8 +36,9 @@ class ThresholdDitherer(Ditherer):
 class DBS(Ditherer):
     label = 'DBS'
 
-    def __call__(self, luma, paper, ink, scale=1.4, alpha=2.0, structure=0.06, **eye):
-        return dbs_duo(luma, paper, ink, init=noise_dither(duo_levels(luma, paper, ink)), scale=scale, alpha=alpha, structure=structure)
+    def __call__(self, luma, paper, ink, scale=1.4, alpha=2.0, structure=0.06, kernels=None, noise=0, **eye):
+        return dbs_duo(luma, paper, ink, init=noise_dither(duo_levels(luma, paper, ink)),
+                       scale=scale, alpha=alpha, structure=structure, kernels=kernels, noise=noise)
 
 class EDStucki(Ditherer):
     label = 'ED Stucki'

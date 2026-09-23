@@ -19,13 +19,13 @@ variant of the same colours is nearly free, and a change along a real edge costs
 The kernels are pure low-pass, so they call blue dots on yellow (the palette's largest chroma
 contrast) invisible once blurred, and then prefer that pair for a salmon target on mean colour
 alone; likewise black dots on white for a grey a palette could paint with two close greys. Real
-sensitivity does not vanish at the pixel pitch, so each kernel gets a delta component:
-h = g + noise * delta, whose extra energy is the unblurred error of the channel group, a per-block
-term with no cross-block part (the cross term with g is dropped). The weights are luma_noise and
+sensitivity does not vanish at the pixel pitch, so each kernel autocorrelation gets a delta
+component: K = h (*) h + noise * delta. Its extra energy is the unblurred squared error of the
+channel group, a per-block term with no cross-block part. The weights are luma_noise and
 chroma_noise: dot contrast the eye still sees at the viewing distance.
-ponytail: fine interactions truncated to the 8 neighbouring blocks (offset-2 blocks see < 10% of
-the kernel peak for 8x8 cells; cells thinner than the kernel radius, like 8x1, would need farther
-offsets and a higher-order chain in the optimiser). Labels by block coordinate descent on whole lines: each row, then each column, is
+The eye kernels have radius at most half the smallest cell dimension, so their autocorrelations
+couple only the 8 neighbouring blocks. No nonzero interaction is dropped.
+Labels by block coordinate descent on whole lines: each row, then each column, is
 re-solved exactly by dynamic programming given the rest, so a run of blocks can switch together
 (single-block ICM gets trapped by clusters that are wrong in the same way).
 """
@@ -35,7 +35,6 @@ import numpy as np
 import cv2
 
 from .colors import convert_color
-from .eye import eye_kernel
 
 SRGB2XYZ = np.array([[0.4124, 0.3576, 0.1805],
                      [0.2126, 0.7152, 0.0722],
@@ -114,7 +113,8 @@ class SelectionEnergy:
         h, w = c.cell
         R, C = H // h, W // w
         E = E.reshape(P, R, h, C, w, 3).transpose(1, 3, 0, 2, 4, 5).reshape(R, C, P, h * w, 3)
-        kernels = dict(Luma=eye_kernel(c.luma_scale, c.luma_alpha), Chroma=eye_kernel(c.chroma_scale, c.chroma_alpha))
+        luma, chroma, _ = c.eye_kernels()
+        kernels = dict(Luma=luma, Chroma=chroma)
         for g, channels in GROUPS.items():
             cpp = autocorrelation(kernels[g])
             K0 = block_kernel_matrix(cpp, 0, 0, c.cell)

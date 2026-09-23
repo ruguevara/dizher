@@ -1,8 +1,9 @@
 """Direct Binary Search halftoning under a per-pixel two-colour constraint.
 
-Minimises E(b) = || h * (y - x) ||^2 + structure * sum_p c_p (1 - SSIM_p(y, x))
-where x is the target linear luminance, h the eye-model kernel (converter/eye.py), and
-y = paper + b * (ink - paper) with paper/ink luminance given per pixel.
+Minimises E(b) = sum_k (|| h_k * (y_k - x_k) ||^2 + noise_k ||y_k - x_k||^2)
+                + structure * sum_p c_p (1 - SSIM_p(y_0, x_0))
+where x is scalar luminance or weighted opponent colour, h the eye-model kernels
+(converter/eye.py), and y = paper + b * (ink - paper) with colours given per pixel.
 
 Tone term: toggling pixel n changes y by a_n and E by  a_n^2 * cpp[0] + 2 a_n * (cpp * e)[n]  with
 cpp = h (*) h the filter autocorrelation and e = y - x.
@@ -88,46 +89,56 @@ class _Structure:
         self.wxy[R:-R, R:-R] += _blur(self.x * dy, self.w)
         self.ssim = self._ssim(self.my, self.wyy, self.wxy)
 
-def dbs_duo(luma, paper, ink, init, scale=1.4, alpha=2.0, structure=0.06, max_sweeps=10, stop_fraction=1e-3):
-    h = eye_kernel(scale, alpha)
-    radius = h.shape[0] // 2
-    cpp = cv2.filter2D(np.pad(h, radius), -1, h, borderType=cv2.BORDER_CONSTANT)  # full autocorrelation
-    c0 = cpp[2 * radius, 2 * radius]
-    keep = np.argwhere(cpp > 1e-2 * c0)
-    r = int(np.abs(keep - 2 * radius).max())
-    cpp = cpp[2 * radius - r:2 * radius + r + 1, 2 * radius - r:2 * radius + r + 1]
-    lattice = r + 1  # > radius of cpp, so same-phase toggles are independent
+def dbs_duo(luma, paper, ink, init, scale=1.4, alpha=2.0, structure=0.06, max_sweeps=10,
+            stop_fraction=1e-3, kernels=None, noise=0):
+    luma, paper, ink = [np.asarray(a, dtype=np.float32) for a in (luma, paper, ink)]
+    if luma.ndim == 2:
+        luma, paper, ink = [a[..., None] for a in (luma, paper, ink)]
+    channels = luma.shape[-1]
+    if kernels is None:
+        kernels = [eye_kernel(scale, alpha)] * channels
+    noise = np.broadcast_to(noise, (channels,))
+    if len(kernels) != channels or not np.isfinite(noise).all() or (noise < 0).any():
+        raise ValueError('DBS needs one kernel and a finite nonnegative noise weight per channel')
+    cpp, centres = [], []
+    for h, n in zip(kernels, noise):
+        radius = h.shape[0] // 2
+        k = _blur(np.pad(h, radius), h)  # full autocorrelation: do not truncate its cross terms
+        k[2 * radius, 2 * radius] += n
+        cpp.append(k)
+        centres.append(k[2 * radius, 2 * radius])
+    c0 = np.asarray(centres, dtype=np.float32)
+    lattice = max(k.shape[0] // 2 for k in cpp) + 1
 
-    luma = np.clip(luma, np.minimum(paper, ink), np.maximum(paper, ink)).astype(np.float32)
     b = init.astype(bool)
     span = (ink - paper).astype(np.float32)
-    y = (paper + b * span).astype(np.float32)
+    y = (paper + b[..., None] * span).astype(np.float32)
     e = y - luma
     struct = None
     if structure > 0:
-        struct = _Structure(luma, CONTRAST_GAIN)
-        struct.set(y)
+        struct = _Structure(luma[..., 0], CONTRAST_GAIN)
+        struct.set(y[..., 0])
         lattice = max(lattice, 2 * struct.R + 1)  # two toggles closer than 2R share a window
     mask = np.zeros_like(b)
     for _ in range(max_sweeps):
         toggled = 0
-        for r in range(lattice):
-            for c in range(lattice):
-                g = _blur(e, cpp)
-                a = np.where(b, -span, span)
-                delta = a * a * c0 + 2 * a * g
+        for r in range(min(lattice, b.shape[0])):
+            for c in range(min(lattice, b.shape[1])):
+                g = np.stack([_blur(e[..., k], cpp[k]) for k in range(channels)], axis=-1)
+                a = np.where(b[..., None], -span, span)
+                delta = (a * a * c0 + 2 * a * g).sum(-1)
                 if struct is not None:
-                    delta[r::lattice, c::lattice] += structure * struct.delta(r, c, lattice, a, y)
+                    delta[r::lattice, c::lattice] += structure * struct.delta(r, c, lattice, a[..., 0], y[..., 0])
                 mask[:] = False
                 mask[r::lattice, c::lattice] = True
                 toggle = mask & (delta < 0)
                 n = int(toggle.sum())
                 if n == 0:
                     continue
-                dy = np.where(toggle, a, 0).astype(np.float32)
+                dy = np.where(toggle[..., None], a, 0).astype(np.float32)
                 b[toggle] ^= True
                 if struct is not None:
-                    struct.update(dy, y)
+                    struct.update(dy[..., 0], y[..., 0])
                 y += dy
                 e += dy
                 toggled += n
