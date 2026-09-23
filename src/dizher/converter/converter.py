@@ -1,4 +1,5 @@
 import copy
+import hashlib
 from typing import Dict
 
 import numpy as np
@@ -10,6 +11,7 @@ from .colors import convert_color, lrgb2luminance, gray2rgb
 from .dither import Ditherer, Stohastic, duo_levels
 from .eye import LUMA_ALPHA, LUMA_SCALE, CHROMA_ALPHA, CHROMA_SCALE, eye_kernel
 from .energy import SelectionEnergy, pair_dissimilarity, LRGB2OPP
+from ..util.worker import report_progress, report_stage
 
 class Converter:
     def __init__(self,
@@ -71,6 +73,7 @@ class Converter:
         self.bitmaps = None
         self.realized = None
         self.best_attr_indexes = None
+        self.setup_key = None
         self.energy.invalidate()
         self.invalidate_result()
 
@@ -92,12 +95,26 @@ class Converter:
         assert image_rgb.shape[2] == 3
         return image_rgb
 
+    def inputs_key(self, image_rgb: np.ndarray):
+        """Everything the candidates and the selection energy depend on. Coherence, noise, structure
+        and the halftoner come after them, so changing those reuses the ~1 s setup."""
+        return (hashlib.sha1(np.ascontiguousarray(image_rgb).tobytes()).digest(), image_rgb.shape, self.gamma,
+                self.luma_alpha, self.luma_scale, self.chroma_alpha, self.chroma_scale,
+                tuple(self.energy.weights.items()))
+
     def set_image(self, image_rgb: np.ndarray, ditherer: Ditherer) -> None:
         image_rgb = self.preprocess_image(image_rgb)
+        key = self.inputs_key(image_rgb)
+        if key == self.setup_key:
+            report_stage('setup cached')
+            self.ditherer = ditherer
+            self.invalidate_result()
+            return
         self.invalidate()
         self.image_rgb = image_rgb
         self.image_lrgb = self.image_rgb ** self.gamma
         self.image_luma = lrgb2luminance(self.image_lrgb)
+        report_stage(f'fitting {len(self.color_pairs)} pairs')
         self.levels = self.fit_duocolors()
         # candidates are scored on a blue-noise dither: cheap for all pairs, right noise amplitude for choosing them
         self.bitmaps = Stohastic().threshold(self.levels)
@@ -106,6 +123,7 @@ class Converter:
         self.realized = np.where(self.bitmaps[..., np.newaxis], ink, paper).astype(np.float32)
         self.energy.calc()
         self.ditherer = ditherer
+        self.setup_key = key
 
     def fit_duocolors(self) -> np.ndarray:
         assert self.image_rgb is not None
@@ -141,6 +159,18 @@ class Converter:
         pairs = self.color_pairs[attr_indexes]                 # (R, C, 2, 3)
         return self.expand_cells(pairs[..., 0, :]), self.expand_cells(pairs[..., 1, :])
 
+    def render_labels(self, labels):
+        """Composite of the blue-noise candidates for a labelling: what pair selection scores."""
+        idx = self.expand_cells(labels)
+        return self.realized[(idx,) + tuple(np.indices(idx.shape))]
+
+    def eye_view(self, rgb):
+        """What the selection energy compares: each opponent channel blurred with its eye kernel, back to sRGB."""
+        opp = (rgb.astype(np.float32) ** self.gamma) @ LRGB2OPP.T
+        blurred = np.stack([cv2.filter2D(np.ascontiguousarray(opp[..., k]), -1, h, borderType=cv2.BORDER_REFLECT_101)
+                            for k, h in enumerate(self.eye_kernels())], axis=-1)
+        return (blurred @ np.linalg.inv(LRGB2OPP).T).clip(0, 1) ** (1 / self.gamma)
+
     def calc_best_on_metrics(self):
         self.energy.apply()
 
@@ -153,9 +183,11 @@ class Converter:
         """Run the chosen halftoner once on the final composite, quantising each pixel to its block's paper or ink."""
         paper = self.opponent(self.best_paper ** self.gamma)
         ink = self.opponent(self.best_ink ** self.gamma)
+        report_stage(self.ditherer.label)
         self.dithered_bitmap = self.ditherer(self.halftone_target(paper, ink), paper, ink,
             scale=self.luma_scale, alpha=self.luma_alpha, structure=self.structure,
-            kernels=self.eye_kernels(), noise=(self.luma_noise, self.chroma_noise, self.chroma_noise)).astype(np.float32)
+            kernels=self.eye_kernels(), noise=(self.luma_noise, self.chroma_noise, self.chroma_noise),
+            on_step=lambda b: report_progress(lambda: np.where(b[..., None], self.best_ink, self.best_paper))).astype(np.float32)
         self.dithered_result = np.where(self.dithered_bitmap[..., np.newaxis], self.best_ink, self.best_paper)
 
     def halftone_target(self, paper, ink):

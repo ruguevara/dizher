@@ -20,7 +20,8 @@ def vibe_hsv(image: np.ndarray, transform: Callable) -> np.ndarray:
     result = image.copy()
     VS = result[..., 1] * result[..., 2]
     VS = transform(VS).clip(0, 1)
-    result[..., 1] = VS / result[..., 2]
+    V = result[..., 2]
+    result[..., 1] = np.divide(VS, V, out=np.zeros_like(VS), where=V > 0)  # black has no saturation
     return result
 
 def vibe_sat_fx(image_rgb: np.ndarray, transform: Callable) -> np.ndarray:

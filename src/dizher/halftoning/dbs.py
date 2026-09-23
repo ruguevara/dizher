@@ -26,6 +26,7 @@ import numpy as np
 import cv2
 
 from ..converter.eye import eye_kernel
+from ..util.worker import report_stage
 
 SSIM_RADIUS = 3       # 7x7 window: at 256x192 an 11x11 window spans more than an attribute block
 SSIM_SIGMA = 1.0
@@ -90,7 +91,7 @@ class _Structure:
         self.ssim = self._ssim(self.my, self.wyy, self.wxy)
 
 def dbs_duo(luma, paper, ink, init, scale=1.4, alpha=2.0, structure=0.06, max_sweeps=10,
-            stop_fraction=1e-3, kernels=None, noise=0):
+            stop_fraction=1e-3, kernels=None, noise=0, on_step=None):
     luma, paper, ink = [np.asarray(a, dtype=np.float32) for a in (luma, paper, ink)]
     if luma.ndim == 2:
         luma, paper, ink = [a[..., None] for a in (luma, paper, ink)]
@@ -120,7 +121,9 @@ def dbs_duo(luma, paper, ink, init, scale=1.4, alpha=2.0, structure=0.06, max_sw
         struct.set(y[..., 0])
         lattice = max(lattice, 2 * struct.R + 1)  # two toggles closer than 2R share a window
     mask = np.zeros_like(b)
-    for _ in range(max_sweeps):
+    toggled = None
+    for sweep in range(max_sweeps):
+        report_stage(f'DBS sweep {sweep + 1}' + (f' · {toggled} toggled' if toggled is not None else ''))
         toggled = 0
         for r in range(min(lattice, b.shape[0])):
             for c in range(min(lattice, b.shape[1])):
@@ -142,6 +145,8 @@ def dbs_duo(luma, paper, ink, init, scale=1.4, alpha=2.0, structure=0.06, max_sw
                 y += dy
                 e += dy
                 toggled += n
+                if on_step:
+                    on_step(b)
         if toggled < stop_fraction * b.size:  # converged in ~5 sweeps in practice; the tail buys nothing visible
             break
     return b

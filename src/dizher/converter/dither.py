@@ -36,9 +36,9 @@ class ThresholdDitherer(Ditherer):
 class DBS(Ditherer):
     label = 'DBS'
 
-    def __call__(self, luma, paper, ink, scale=1.4, alpha=2.0, structure=0.06, kernels=None, noise=0, **eye):
+    def __call__(self, luma, paper, ink, scale=1.4, alpha=2.0, structure=0.06, kernels=None, noise=0, on_step=None, **eye):
         return dbs_duo(luma, paper, ink, init=noise_dither(duo_levels(luma, paper, ink)),
-                       scale=scale, alpha=alpha, structure=structure, kernels=kernels, noise=noise)
+                       scale=scale, alpha=alpha, structure=structure, kernels=kernels, noise=noise, on_step=on_step)
 
 class EDStucki(Ditherer):
     label = 'ED Stucki'

@@ -4,6 +4,7 @@
 from typing import Any, Callable, Dict, List, Tuple, Type
 import os
 import sys
+import time
 from enum import Enum, IntEnum
 from multiprocessing import current_process
 from functools import partial
@@ -92,24 +93,22 @@ class DizherApp:
                         vertical_alignment="top"
                     ),
                     sg.Column([
+                        [ImagePane(key='image-original', dims=dims, zoom=zoom)],
                         [sg.Button('Open Image', key = 'open-image')],
-                        [ImagePane(key='image-original', dims=dims, zoom=zoom)]
-                    ]),
+                    ], vertical_alignment="top", pad=(5, (14, 3))),
                     sg.Column([
+                        [ImagePane(key='image-conversion', dims=dims, zoom=zoom)],
                         [
-                        ] +
-                            HalftoneButtons(self._state.dither_classes)
-                        + [
-                            sg.VerticalSeparator(pad=None),
                             sg.Combo([m.name for m in self._state.modes], default_value=self._state.converter.mode.name,
                                      key='mode', enable_events=True, readonly=True, font=(None, 10)),
                             sg.Combo(list(self._state.converter.palette.SUBSETS), default_value=self._state.converter.palette.subset,
                                      key='palette-subset', enable_events=True, readonly=True, font=(None, 10)),
+                        ],
+                        HalftoneButtons(self._state.dither_classes) + [
                             sg.VerticalSeparator(pad=None),
                             sg.Button('Save', key = 'save-conversion'),
                         ],
-                        [ImagePane(key='image-conversion', dims=dims, zoom=zoom)]
-                    ]),
+                    ], vertical_alignment="top", pad=(5, (14, 3))),
                     sg.Column(
                         self.metric_sliders() + self.eye_sliders(),
                         vertical_alignment="top"
@@ -141,10 +140,12 @@ class DizherApp:
 
     def converter_changed(self):
         self._converter_revision = getattr(self, '_converter_revision', 0) + 1
+        self.worker.cancel(BGTask.CONVERTER)
         return self._converter_revision
 
     def tuner_changed(self):
         self._tuner_revision = getattr(self, '_tuner_revision', 0) + 1
+        self.worker.cancel(BGTask.TUNER)
         self.converter_changed()
         self._state.converter.invalidate_result()
         return self._tuner_revision
@@ -166,10 +167,14 @@ class DizherApp:
             self.debug_log("convert_image callback")
             self.update_converted_image(self._state.converter.dithered_result)
 
-        self._state.converter.invalidate()
+        def progress(image):
+            if revision == self._converter_revision:
+                self.update_converted_image(image)
+
+        self._state.converter.invalidate_result()  # keeps the setup: set_image reuses it if its inputs are unchanged
         self.update_async(BGTask.CONVERTER, convert_image,
             (self._state.converter, self._state.current_dithering(), self._conversion_image),
-            callback=callback)
+            callback=callback, progress_callback=progress)
 
     def update_tuner(self):
         tuner = self._state.tuner
@@ -298,7 +303,7 @@ class DizherApp:
             keys.append(event)
         return sliders + [self.reset_button('reset-metrics', keys)]
 
-    def update_async(self, priority, task, args=(), kwds={}, callback: Callable = None):
+    def update_async(self, priority, task, args=(), kwds={}, callback: Callable = None, progress_callback: Callable = None):
         task_descr = "{} ({})".format(task.__name__, priority.name)
         def error_callback(value):
             self.debug_log("error {}, value={}", task_descr, value)
@@ -306,19 +311,28 @@ class DizherApp:
         def abort_callback(value):
             self.debug_log("aborted {}, value={}", task_descr, value)
 
+        started = time.monotonic()
+        def on_progress(kind, value):
+            if kind == 'stage':
+                self.window['status'].update(f'{value} · {time.monotonic() - started:.1f}s')
+            elif progress_callback:
+                progress_callback(value)
+
         self.debug_log("update_async {}", task_descr)
         if self.worker.apply(priority, task, args, kwds, callback=callback,
-                             error_callback=error_callback, abort_callback=abort_callback):
+                             error_callback=error_callback, abort_callback=abort_callback,
+                             progress_callback=on_progress):
             self.set_busy(task_descr)
 
     def set_busy(self, task_descr: str = None):
         # ponytail: indeterminate bar, the worker process is opaque; real % needs a progress queue through the converter
         bar = self.window['busy'].Widget
         if task_descr:
+            self._busy_started = time.monotonic()
             self.window['status'].update(task_descr)
             bar.start(15)
         elif self._busy:
-            self.window['status'].update('Ready')
+            self.window['status'].update(f'Ready · last task {time.monotonic() - self._busy_started:.1f}s')
             bar.stop()
             bar['value'] = 0
         self._busy = bool(task_descr)

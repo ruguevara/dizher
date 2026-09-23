@@ -42,7 +42,27 @@ def test_invalid_image_keeps_last_valid_conversion():
     assert np.array_equal(expected, converter.dither(ditherer))
 
 
+def test_setup_is_reused_only_while_its_inputs_are_unchanged():
+    ditherer = OrderedBayer()
+    image = np.random.default_rng(0).random((*TEST_MODE.size, 3)).astype(np.float32)
+    converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, TEST_MODE)
+    converter.set_image(image, ditherer)
+    D = converter.energy.D
+    converter.coherence = 5.0                     # downstream of the setup
+    converter.set_image(image, ditherer)
+    assert converter.energy.D is D
+    converter.calc_best_on_metrics()
+    fresh = Converter({'Luma': 1.0, 'Chroma': 1.0}, TEST_MODE, coherence=5.0)
+    fresh.set_image(image, ditherer)
+    fresh.calc_best_on_metrics()
+    assert np.array_equal(converter.dithered_result, fresh.dithered_result)
+    converter.luma_scale = 0.7                    # the setup depends on the eye model
+    converter.set_image(image, ditherer)
+    assert converter.energy.D is not D
+
+
 if __name__ == '__main__':
     test_set_image_invalidates_cached_conversion()
     test_invalid_image_keeps_last_valid_conversion()
+    test_setup_is_reused_only_while_its_inputs_are_unchanged()
     print('ok')

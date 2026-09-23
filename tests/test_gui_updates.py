@@ -21,6 +21,9 @@ class Worker:
     def apply(self, priority, task, args, kwds, callback=None, **_):
         self.tasks.append((task, copy.deepcopy(args), copy.deepcopy(kwds), callback))
 
+    def cancel(self, priority):
+        pass
+
     def complete(self, index):
         task, args, kwds, callback = self.tasks[index]
         callback(task(*args, **kwds))
@@ -158,11 +161,57 @@ def test_completed_worker_cannot_supply_a_previous_result():
         assert not worker.is_alive()
         with patch.object(mp, 'Process', context.Process):
             worker.apply(1, int, args=('2',))
-        assert worker._queue.get(timeout=5) == 2
+        assert worker._queue.get(timeout=5) == ('done', 2)
     finally:
         worker.abort()
         worker._queue.close()
 
+
+def _two_steps():
+    import time
+    from dizher.util.worker import report_progress
+    report_progress(lambda: 'step 1')
+    time.sleep(0.05)
+    report_progress(lambda: 'step 2')
+    report_progress(lambda: 'throttled')  # within PROGRESS_INTERVAL of step 2
+    return 'final'
+
+
+def test_idle_worker_can_be_read():
+    assert SingleAsyncPriorityWorker().read(10) is None   # the GUI polls it every tick, before any task
+
+
+def _sleep_forever():
+    import time
+    time.sleep(60)
+
+
+def test_invalidation_cancels_a_stale_task_but_not_a_more_important_one():
+    context = mp.get_context('fork')
+    worker = SingleAsyncPriorityWorker()
+    try:
+        with patch.object(mp, 'Process', context.Process):
+            worker.apply(2, _sleep_forever)
+            worker.cancel(1)
+            assert worker.is_alive()
+            worker.cancel(2)
+            assert not worker.is_alive()
+    finally:
+        worker.abort()
+        worker._queue.close()
+
+
+def test_progress_is_throttled_and_precedes_the_result():
+    context = mp.get_context('fork')
+    worker = SingleAsyncPriorityWorker()
+    try:
+        with patch.object(mp, 'Process', context.Process):
+            worker.apply(1, _two_steps)
+        items = [worker._queue.get(timeout=5) for _ in range(3)]
+        assert items == [('image', 'step 1'), ('image', 'step 2'), ('done', 'final')], items
+    finally:
+        worker.abort()
+        worker._queue.close()
 
 if __name__ == '__main__':
     test_converter_changes_restart_from_the_latest_parent_state()
@@ -170,4 +219,7 @@ if __name__ == '__main__':
     test_mode_change_discards_an_old_tuner_result()
     test_metric_rebuilds_candidates_and_eye_uses_the_requested_halftoner()
     test_completed_worker_cannot_supply_a_previous_result()
+    test_idle_worker_can_be_read()
+    test_invalidation_cancels_a_stale_task_but_not_a_more_important_one()
+    test_progress_is_throttled_and_precedes_the_result()
     print('ok')

@@ -35,6 +35,7 @@ import numpy as np
 import cv2
 
 from .colors import convert_color
+from ..util.worker import report_progress, report_stage
 
 SRGB2XYZ = np.array([[0.4124, 0.3576, 0.1805],
                      [0.2126, 0.7152, 0.0722],
@@ -105,6 +106,7 @@ class SelectionEnergy:
             self.weights[k] = v
 
     def calc(self) -> None:
+        report_stage('selection energy')
         c = self.converter
         X = c.image_lrgb.astype(np.float32) @ LRGB2OPP.T
         Y = (c.realized ** c.gamma) @ LRGB2OPP.T
@@ -142,7 +144,8 @@ class SelectionEnergy:
         S = {off: sum(w[g] * self.S[g][off] for g in GROUPS) for off in OFFSETS}
         Lh, Lv = self.seam_smoothness()
         V = self.converter.pair_dissimilarity
-        self.converter.set_best_conversion(optimise(D, S, V, Lh, Lv, self.converter.coherence))
+        preview = lambda labels: report_progress(lambda: self.converter.eye_view(self.converter.render_labels(labels)))
+        self.converter.set_best_conversion(optimise(D, S, V, Lh, Lv, self.converter.coherence, on_step=preview))
 
     def seam_smoothness(self):
         """Weight 0..1 of every seam: 1 where the original is flat across it, ~0 across a real edge.
@@ -177,7 +180,7 @@ def _transpose(D, S, Lh, Lv):
           (1, -1): S[(1, -1)].transpose(1, 0, 3, 2)}   # the pair reverses its roles, so p and q swap
     return D.transpose(0, 2, 1), St, Lv.T, Lh.T
 
-def _row_pass(D, S, V, Lh, Lv, coherence, labels):
+def _row_pass(D, S, V, Lh, Lv, coherence, labels, on_row=None):
     """Re-solve every row exactly (Viterbi over the labels) given the other rows. Returns changes."""
     P, R, C = D.shape
     k = coherence * SEAM_COST
@@ -216,18 +219,22 @@ def _row_pass(D, S, V, Lh, Lv, coherence, labels):
             new[c - 1] = back[c, new[c]]
         changed += int((new != labels[r]).sum())
         labels[r] = new
+        if on_row:
+            on_row()
     return changed
 
 def optimise(D: np.ndarray, S: dict, V: np.ndarray, Lh: np.ndarray, Lv: np.ndarray, coherence: float,
-             max_sweeps: int = 10) -> np.ndarray:
+             max_sweeps: int = 10, on_step=None) -> np.ndarray:
     """D: (P, R, C) unary; S[(dr, dc)]: (R', C', P, P) pairwise for block (r, c) with (r+dr, c+dc);
     V: (P, P) pair dissimilarity; Lh, Lv: seam smoothness weights. Returns (R, C) labels."""
     labels = D.argmin(0)
     Dt, St, Lht, Lvt = _transpose(D, S, Lh, Lv)
-    for _ in range(max_sweeps):
-        changed = _row_pass(D, S, V, Lh, Lv, coherence, labels)
+    changed = None
+    for sweep in range(max_sweeps):
+        report_stage(f'pair sweep {sweep + 1}' + (f' · {changed} changed' if changed is not None else ''))
+        changed = _row_pass(D, S, V, Lh, Lv, coherence, labels, on_step and (lambda: on_step(labels)))
         labels = np.ascontiguousarray(labels.T)
-        changed += _row_pass(Dt, St, V, Lht, Lvt, coherence, labels)
+        changed += _row_pass(Dt, St, V, Lht, Lvt, coherence, labels, on_step and (lambda: on_step(labels.T)))
         labels = np.ascontiguousarray(labels.T)
         if changed == 0:
             break
