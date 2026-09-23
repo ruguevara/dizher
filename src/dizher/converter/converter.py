@@ -153,10 +153,19 @@ class Converter:
         """Run the chosen halftoner once on the final composite, quantising each pixel to its block's paper or ink."""
         paper = self.opponent(self.best_paper ** self.gamma)
         ink = self.opponent(self.best_ink ** self.gamma)
-        self.dithered_bitmap = self.ditherer(self.opponent(self.image_lrgb), paper, ink,
+        self.dithered_bitmap = self.ditherer(self.halftone_target(paper, ink), paper, ink,
             scale=self.luma_scale, alpha=self.luma_alpha, structure=self.structure,
             kernels=self.eye_kernels(), noise=(self.luma_noise, self.chroma_noise, self.chroma_noise)).astype(np.float32)
         self.dithered_result = np.where(self.dithered_bitmap[..., np.newaxis], self.best_ink, self.best_paper)
+
+    def halftone_target(self, paper, ink):
+        """The halftoner minimises blurred error over the whole image, so the part of a cell's target its
+        pair cannot reach would be cancelled by the neighbour's ink along the seam: a line of white dots on
+        the attribute grid, plainest in smooth backgrounds. Each pixel is given the reachable projection
+        of its target instead, so a cell's residual is zero-mean and there is nothing for the neighbour to
+        cancel. The pair optimiser already owns the unreachable part (energy.py)."""
+        target = self.opponent(self.image_lrgb)
+        return paper + duo_levels(target, paper, ink)[..., None] * (ink - paper)
 
     def save(self, filename: str) -> None:
         """The mode's native extension writes its screen file; any other extension writes the composite through OpenCV."""

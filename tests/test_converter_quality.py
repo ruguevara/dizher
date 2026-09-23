@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 from dizher.converter.converter import Converter
-from dizher.converter.dither import DBS, EDStucki, OrderedBayer, Stohastic
+from dizher.converter.dither import DBS, EDStucki, OrderedBayer, Stohastic, duo_levels
 from dizher.halftoning.dbs import _Structure, CONTRAST_GAIN
 from dizher.halftoning.error_distribution import stucki_duo
 from dizher.platforms import Mode
@@ -82,6 +82,20 @@ def test_dbs_lowers_complete_colour_objective():
                              np.all(result == converter.best_ink, axis=-1)).all()
 
 
+def test_halftone_target_is_reachable():
+    mode = Mode('two cells', (8, 16), (8, 8), ZXPalette(subset='Mono'))
+    converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, mode)
+    image = np.full((*mode.size, 3), (0.5, 0.2, 0.2), dtype=np.float32)   # red: off the black-white segment
+    image[:, 8:] = (0.2, 0.2, 0.5)
+    converter.set_image(image, Stohastic())
+    converter.dither(Stohastic())
+    paper, ink = converter.opponent(converter.best_paper ** converter.gamma), converter.opponent(converter.best_ink ** converter.gamma)
+    target = converter.halftone_target(paper, ink)
+    np.testing.assert_allclose(target[..., 1:], 0, atol=1e-6)               # chroma the pair cannot paint is dropped
+    raw = converter.opponent(converter.image_lrgb)
+    np.testing.assert_allclose(duo_levels(target, paper, ink), duo_levels(raw, paper, ink), atol=1e-6)   # same mixture
+
+
 def test_colour_diffusion_preserves_scalar_projection():
     image = np.full((8, 8), 0.375, dtype=np.float32)
     paper, ink = np.zeros_like(image), np.ones_like(image)
@@ -97,5 +111,6 @@ if __name__ == '__main__':
     test_equal_luminance_colour_edge()
     test_selection_matches_full_convolution()
     test_dbs_lowers_complete_colour_objective()
+    test_halftone_target_is_reachable()
     test_colour_diffusion_preserves_scalar_projection()
     print('ok')
