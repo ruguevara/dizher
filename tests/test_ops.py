@@ -34,13 +34,12 @@ def test_pipeline_converts_and_reuses_upstream():
 
 
 def test_pipeline_matches_single_converter():
-    """The staged ops give the old GUI's one-shot conversion."""
+    """The staged ops give the one-shot Converter.dither."""
     memo = Memo()
     graph = pipeline()
     result = evaluate(graph, 'halftone', memo)
-    old = evaluate(graph, 'prepare', memo).copy(ditherer=OrderedBayer())
-    old.calc_best_on_metrics()
-    np.testing.assert_array_equal(old.dithered_result, result.dithered_result)
+    direct = evaluate(graph, 'prepare', memo).copy()
+    np.testing.assert_array_equal(direct.dither(OrderedBayer()), result.dithered_result)
 
 
 def settle(host):
@@ -66,6 +65,11 @@ def test_host_reruns_only_downstream_of_an_edit():
     assert settle(host) == ['halftone']
     host.set_params('select', replace(host.graph['select'].params, coherence=1.0))
     assert settle(host) == ['select', 'halftone']
+    before = host.result('color')
+    host.set_params('contrast', replace(host.graph['contrast'].params, contrast=30.0))
+    assert host.result('color') is None and host.shown('color') is before   # the old picture stays up meanwhile
+    assert settle(host) == ['contrast', 'color', 'prepare', 'select', 'halftone']
+    assert host.shown('color') is host.result('color') is not before
     host.set_params('target', replace(host.graph['target'].params, mode='C64 hires', palette='Bright only'))
     settle(host)
     assert 'target' in host.errors                   # C64 has no bright subset: an error on its block

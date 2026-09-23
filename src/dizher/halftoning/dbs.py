@@ -26,7 +26,7 @@ import numpy as np
 import cv2
 
 from ..converter.eye import eye_kernel
-from ..util.worker import report_stage
+from ..progress import report_stage
 
 SSIM_RADIUS = 3       # 7x7 window: at 256x192 an 11x11 window spans more than an attribute block
 SSIM_SIGMA = 1.0

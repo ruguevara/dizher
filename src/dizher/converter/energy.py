@@ -35,7 +35,7 @@ import numpy as np
 import cv2
 
 from .colors import convert_color
-from ..util.worker import report_progress, report_stage
+from ..progress import report_progress, report_stage
 
 SRGB2XYZ = np.array([[0.4124, 0.3576, 0.1805],
                      [0.2126, 0.7152, 0.0722],

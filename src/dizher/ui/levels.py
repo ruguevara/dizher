@@ -1,6 +1,7 @@
 """Photoshop-style editor of the levels node: the input histogram with the black, midtone and white handles under
-it, the output range strip with its two handles, the numbers, Auto and Reset. The midtone handle sits where the
-curve crosses mid grey, so moving the black or white point carries it along at the same gamma, as in Photoshop."""
+it, the output range strip with its two handles, the numbers and Auto (Reset is on the block header). The
+midtone handle sits where the curve crosses mid grey, so moving the black or white point carries it along at
+the same gamma, as in Photoshop."""
 import math
 from dataclasses import replace
 
@@ -63,9 +64,6 @@ class LevelsEditor:
             in_black, in_white = tone.auto_levels(picture)
             set_(in_black=in_black, in_white=in_white)
         imgui.end_disabled()
-        imgui.same_line()
-        if imgui.button('Reset'):
-            on_change(type(params)())
         imgui.pop_id()
 
     def _histogram(self, picture, width: float) -> None:

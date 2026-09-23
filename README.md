@@ -97,13 +97,9 @@ Requires Python 3.10+. From the repository root:
     pip install --upgrade pip
     pip install -e .
 
-Run the GUI:
+Run the GUI (imgui_bundle; the pipeline stages are mokit nodes):
 
     dizher [image.png]
-
-or the new modular UI (imgui_bundle, mokit pipeline nodes):
-
-    dizher-ui [image.png]
 
 ## TODO
 

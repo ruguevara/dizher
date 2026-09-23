@@ -32,7 +32,7 @@ def test_equal_luminance_colour_edge():
     expected[..., 1] = 1
     expected[:, 4:, 2] = 1
     for halftoner in (Stohastic(), OrderedBayer(), EDStucki(), DBS()):
-        converter.set_image(image, halftoner)
+        converter.set_image(image)
         np.testing.assert_allclose(converter.image_luma, 0.7152, atol=1e-7)
         np.testing.assert_array_equal(converter.dither(halftoner), expected)
 
@@ -45,7 +45,7 @@ def test_selection_matches_full_convolution():
     for alpha, scale in ((2.0, 1.4), (0.5, 8.0)):
         converter.luma_alpha = converter.chroma_alpha = alpha
         converter.luma_scale = converter.chroma_scale = scale
-        converter.set_image(rng.random((*mode.size, 3), dtype=np.float32), Stohastic())
+        converter.set_image(rng.random((*mode.size, 3), dtype=np.float32))
         labels = rng.integers(len(converter.color_pairs), size=(3, 4))
         rows, cols = np.indices(mode.size)
         image = converter.realized[converter.expand_cells(labels), rows, cols]
@@ -54,7 +54,7 @@ def test_selection_matches_full_convolution():
         assert direct >= 0
 
     converter.luma_noise = converter.chroma_noise = 0
-    converter.set_image(np.full((*mode.size, 3), 0.5 ** (1 / converter.gamma), np.float32), Stohastic())
+    converter.set_image(np.full((*mode.size, 3), 0.5 ** (1 / converter.gamma), np.float32))
     converter.dither(Stohastic())
     assert (converter.best_attr_indexes == 1).all(), 'Uniform grey must not become solid block stripes'
 
@@ -67,7 +67,7 @@ def test_dbs_lowers_complete_colour_objective():
     image = rng.random((*mode.size, 3), dtype=np.float32)
     for structure in (0, 0.06):
         converter.structure = structure
-        converter.set_image(image, Stohastic())
+        converter.set_image(image)
         seed = converter.dither(Stohastic()).copy()
 
         def objective(result):
@@ -87,7 +87,7 @@ def test_halftone_target_is_reachable():
     converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, mode)
     image = np.full((*mode.size, 3), (0.5, 0.2, 0.2), dtype=np.float32)   # red: off the black-white segment
     image[:, 8:] = (0.2, 0.2, 0.5)
-    converter.set_image(image, Stohastic())
+    converter.set_image(image)
     converter.dither(Stohastic())
     paper, ink = converter.opponent(converter.best_paper ** converter.gamma), converter.opponent(converter.best_ink ** converter.gamma)
     target = converter.halftone_target(paper, ink)

@@ -20,7 +20,7 @@ from .converter.converter import Converter
 from .converter.dither import DBS, EDStucki, OrderedBayer, Stohastic
 from .platforms import Mode, c64, zxspectrum
 from . import tone
-from .util.worker import reporting
+from .progress import reporting
 
 MODES = {m.name: m for m in (zxspectrum.STANDARD, c64.HIRES)}
 SUBSETS = tuple(dict.fromkeys(s for m in MODES.values() for s in m.palette.SUBSETS))
@@ -29,8 +29,7 @@ HALFTONERS = {cls.label: cls for cls in (DBS, OrderedBayer, EDStucki, Stohastic)
 
 @dataclass(frozen=True)
 class Metric:
-    luma: float
-    chroma: float
+    chroma: float   # weight of the chroma error against luma's 1
 
 
 @dataclass(frozen=True)
@@ -93,10 +92,10 @@ def color(picture: np.ndarray,
     return tone.color(picture, vibrance, saturation)
 
 
-def metric(luma: Annotated[float, meta(min=0.0, max=4.0)] = 1.0,
-           chroma: Annotated[float, meta(min=0.0, max=4.0)] = 1.0) -> Metric:
-    """Weights of the luma and chroma error in the eye-model energy."""
-    return Metric(luma, chroma)
+def metric(chroma: Annotated[float, meta(min=0.0, max=4.0, help="weight of chroma error; luma error weighs 1")] = 1.0) -> Metric:
+    """Balance of chroma against luma error in the eye-model energy. One weight: scaling both would only
+    duplicate coherence (the seam cost has no weight), shift the edge threshold and the DBS structure term."""
+    return Metric(chroma)
 
 
 def eye(luma_alpha: Annotated[float, meta(min=0.5, max=2.0)] = eye_model.LUMA_ALPHA,
@@ -110,10 +109,10 @@ def eye(luma_alpha: Annotated[float, meta(min=0.5, max=2.0)] = eye_model.LUMA_AL
 
 def prepare(picture: np.ndarray, target: Mode, metric: Metric, eye: Eye, progress=None) -> Converter:
     """Every pair fitted per pixel, blue-noise candidates and the selection energy."""
-    c = Converter({'Luma': metric.luma, 'Chroma': metric.chroma}, target, luma_alpha=eye.luma_alpha,
+    c = Converter({'Luma': 1.0, 'Chroma': metric.chroma}, target, luma_alpha=eye.luma_alpha,
                   luma_scale=eye.luma_scale, chroma_alpha=eye.chroma_alpha, chroma_scale=eye.chroma_scale)
     with reporting(progress):
-        c.set_image(picture, None)
+        c.set_image(picture)
     return c
 
 

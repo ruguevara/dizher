@@ -27,7 +27,7 @@ class Job:
         self.cancel = threading.Event()
         self.started = time.monotonic()
         self.text = ''
-        self.image = None     # latest preview the op sent (util/worker.report_progress)
+        self.image = None     # latest preview the op sent (progress.report_progress)
         self.future = None
 
     def __call__(self, fraction, text) -> None:
@@ -46,6 +46,7 @@ class Pipeline:
         self.memo = Memo()
         self.digests = Digests()
         self.errors = {}          # node id -> message of its failed run; cleared by the next edit
+        self._latest = {}         # node id -> its last finished result, shown while an edit recomputes it
         self.job: Optional[Job] = None
         self.cancelled = False    # a user cancel holds everything until the next edit
         self._deadline = 0.0
@@ -85,6 +86,11 @@ class Pipeline:
         value = self.memo.get(self.keys[node_id])
         return None if value is MISSING else value
 
+    def shown(self, node_id: str):
+        """The current result, else the last finished one: what to display while the node recomputes."""
+        value = self.result(node_id)
+        return self._latest.get(node_id) if value is None else value
+
     def status(self, node_id: str) -> str:
         if self.job is not None and self.job.node_id == node_id:
             return 'running'
@@ -103,7 +109,7 @@ class Pipeline:
         if job is not None and job.future.done():
             self.job = None
             try:
-                job.future.result()
+                self._latest[job.node_id] = job.future.result()
             except Cancelled:
                 pass
             except Exception as e:

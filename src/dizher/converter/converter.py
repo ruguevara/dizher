@@ -1,5 +1,4 @@
 import copy
-import hashlib
 from typing import Dict
 
 import numpy as np
@@ -11,7 +10,7 @@ from .colors import convert_color, lrgb2luminance, gray2rgb
 from .dither import Ditherer, Stohastic, duo_levels
 from .eye import LUMA_ALPHA, LUMA_SCALE, CHROMA_ALPHA, CHROMA_SCALE, eye_kernel
 from .energy import SelectionEnergy, pair_dissimilarity, LRGB2OPP
-from ..util.worker import report_progress, report_stage
+from ..progress import report_progress, report_stage
 
 class Converter:
     def __init__(self,
@@ -44,15 +43,6 @@ class Converter:
         self.ditherer = None
         self.set_palette(mode.palette)
 
-    def with_mode(self, mode) -> 'Converter':
-        """Same parameters and halftoner on another mode; the image is dropped, it has the old size."""
-        c = copy.copy(self)
-        c.energy = SelectionEnergy(c, self.energy.weights)
-        c.mode, c.size, c.cell = mode, mode.size, mode.cell
-        c.image_rgb = None
-        c.set_palette(mode.palette)
-        return c
-
     def copy(self, **attrs) -> 'Converter':
         """Shallow copy for a later pipeline stage (ops.py): arrays are shared read-only, the energy is rebound to the copy."""
         c = copy.copy(self)
@@ -64,16 +54,12 @@ class Converter:
         return c
 
     def set_palette(self, palette: Palette):
-        """Swap the attribute pair set; redoes the whole conversion if an image is loaded."""
+        """Swap the attribute pair set; drops the image, whose setup was for the old pairs."""
         assert isinstance(palette, Palette)
         self.palette = palette
         self.color_pairs = palette.color_pairs()
         self.pair_dissimilarity = pair_dissimilarity(self.color_pairs)
-        image, ditherer = self.image_rgb, self.ditherer
         self.invalidate()
-        if image is not None:
-            self.set_image(image, ditherer)
-            self.calc_best_on_metrics()
 
     def invalidate(self):
         self.image_rgb = None
@@ -83,7 +69,6 @@ class Converter:
         self.bitmaps = None
         self.realized = None
         self.best_attr_indexes = None
-        self.setup_key = None
         self.energy.invalidate()
         self.invalidate_result()
 
@@ -92,9 +77,6 @@ class Converter:
         self.best_ink = None
         self.dithered_bitmap = None
         self.dithered_result = None
-
-    def load_image(self, filename: str, ditherer: Ditherer):
-        self.set_image(convert_color(cv2.imread(filename), 'BGR', 'RGB'), ditherer)
 
     def preprocess_image(self, image_rgb: np.ndarray) -> np.ndarray:
         image_rgb = img_as_float(image_rgb).astype(np.float32)
@@ -105,21 +87,9 @@ class Converter:
         assert image_rgb.shape[2] == 3
         return image_rgb
 
-    def inputs_key(self, image_rgb: np.ndarray):
-        """Everything the candidates and the selection energy depend on. Coherence, noise, structure
-        and the halftoner come after them, so changing those reuses the ~1 s setup."""
-        return (hashlib.sha1(np.ascontiguousarray(image_rgb).tobytes()).digest(), image_rgb.shape, self.gamma,
-                self.luma_alpha, self.luma_scale, self.chroma_alpha, self.chroma_scale,
-                tuple(self.energy.weights.items()))
-
-    def set_image(self, image_rgb: np.ndarray, ditherer: Ditherer) -> None:
+    def set_image(self, image_rgb: np.ndarray) -> None:
+        """The ~1 s setup: every pair fitted per pixel, blue-noise candidates, the selection energy."""
         image_rgb = self.preprocess_image(image_rgb)
-        key = self.inputs_key(image_rgb)
-        if key == self.setup_key:
-            report_stage('setup cached')
-            self.ditherer = ditherer
-            self.invalidate_result()
-            return
         self.invalidate()
         self.image_rgb = image_rgb
         self.image_lrgb = self.image_rgb ** self.gamma
@@ -132,8 +102,6 @@ class Converter:
         ink = self.color_pairs[:, 1, np.newaxis, np.newaxis, :]
         self.realized = np.where(self.bitmaps[..., np.newaxis], ink, paper).astype(np.float32)
         self.energy.calc()
-        self.ditherer = ditherer
-        self.setup_key = key
 
     def fit_duocolors(self) -> np.ndarray:
         assert self.image_rgb is not None
@@ -181,10 +149,6 @@ class Converter:
                             for k, h in enumerate(self.eye_kernels())], axis=-1)
         return (blurred @ np.linalg.inv(LRGB2OPP).T).clip(0, 1) ** (1 / self.gamma)
 
-    def calc_best_on_metrics(self):
-        self.set_labels(self.energy.apply())
-        self.halftone()
-
     def set_labels(self, attr_indexes):
         self.best_attr_indexes = attr_indexes
         self.best_paper, self.best_ink = self.best_paper_ink(self.best_attr_indexes)
@@ -220,12 +184,10 @@ class Converter:
             assert cv2.imwrite(filename, convert_color((self.dithered_result * 255).round().astype(np.uint8), 'RGB', 'BGR')), filename
 
     def dither(self, ditherer: Ditherer) -> np.ndarray:
+        """Pair selection (once per image) then the halftoner, in one call for tests and scripts; the UI runs
+        them as separate stages (ops.py)."""
         if self.best_attr_indexes is None:
-            self.ditherer = ditherer
-            self.calc_best_on_metrics()
-        elif type(ditherer) is not type(self.ditherer) or self.dithered_result is None:
-            # a result may have been invalidated (parameter change) without a rerun yet: rebuild it from the labels
-            self.ditherer = ditherer
-            self.set_labels(self.best_attr_indexes)
-            self.halftone()
+            self.set_labels(self.energy.apply())
+        self.ditherer = ditherer
+        self.halftone()
         return self.dithered_result

@@ -1,11 +1,14 @@
 """imgui_bundle window over the pipeline host, in AmaZX's layout: the Tune dock on the left and the Convert dock
 on the right, each with one collapsible block per stage in pipeline order (mokit's params editor inside, or a
-custom one), and the Preview dock between them with the tuned image and the conversion. hello_imgui's ini keeps the dock layout, its user prefs which blocks are open."""
+custom one), and the Preview dock between them with the tuned image and the conversion. A block header shows its
+stage's state: plain when done, tinted while it runs or after it failed, muted while waiting to run. hello_imgui's
+ini keeps the dock layout, its user prefs which blocks are open."""
 import json
 import signal
 import subprocess
 import sys
 import time
+from contextlib import contextmanager
 from pathlib import Path
 
 import numpy as np
@@ -14,13 +17,15 @@ from imgui_bundle import portable_file_dialogs as pfd
 
 from mokit.ui import style, widgets
 from mokit.ui.params import params_editor
+from mokit.graph import Op
 from mokit.ui.style import Palette
 
 from .. import ops
 from .app import Pipeline
 from .levels import LevelsEditor
 
-STATUS_COLOURS = dict(done=Palette.ok, running=Palette.warn, error=Palette.error, stale=Palette.muted)
+HEADER_TINT = dict(running=Palette.warn, error=Palette.error)   # header background of a running or failed stage
+NO_RESET = {'source'}   # resetting would drop the image
 LABELS = {nid: label for nid, label, _, _ in ops.PIPELINE}
 
 
@@ -34,6 +39,23 @@ def save_dialog(title: str, folder: str, name: str) -> str:
     return pfd.save_file(title, str(Path(folder) / name)).result()
 
 
+@contextmanager
+def header_style(status: str):
+    tint = HEADER_TINT.get(status)
+    cols = []
+    if tint is not None:
+        for col, alpha in ((imgui.Col_.header, 0.45), (imgui.Col_.header_hovered, 0.6), (imgui.Col_.header_active, 0.75)):
+            cols.append((col, imgui.ImVec4(tint.x, tint.y, tint.z, alpha)))
+    elif status == 'stale':
+        cols.append((imgui.Col_.text, Palette.muted))
+    for col, value in cols:
+        imgui.push_style_color(col.value, value)
+    try:
+        yield
+    finally:
+        imgui.pop_style_color(len(cols))
+
+
 def as_ubyte(rgb: np.ndarray) -> np.ndarray:
     return (np.clip(rgb, 0, 1) * 255).round().astype(np.uint8)
 
@@ -44,7 +66,6 @@ class Window:
         if path:
             self.app.open(path)
         self.images = {}       # immvision params per preview
-        self.result = None     # the last finished conversion, shown until the next one lands
         self.expanded = {}     # node id -> block open; imgui keeps no header state in its ini
         self.editors = {'levels': LevelsEditor()}   # node id -> custom params editor
 
@@ -127,34 +148,33 @@ class Window:
     def _frame(self) -> None:
         style.sync()
         self.app.update()
-        result = self.app.result('halftone')
-        if result is not None:
-            self.result = result
         hello_imgui.get_runner_params().fps_idling.enable_idling = not self.app.busy
 
     # ----- docks -----------------------------------------------------------------------------------
 
     def _column(self, nodes) -> None:
         app = self.app
-        for nid, label, _, inputs in nodes:
-            status = app.status(nid)
-            widgets.status_dot(STATUS_COLOURS[status])
-            imgui.same_line()
+        for nid, label, op_id, inputs in nodes:
+            status, params = app.status(nid), app.graph[nid].params
+            title = f'{label} · {app.job.text}' if status == 'running' and app.job.text else label
+            x0, width = imgui.get_cursor_pos_x(), imgui.get_content_region_avail().x
             imgui.set_next_item_open(self.expanded.get(nid, True), imgui.Cond_.once.value)
-            is_open = self.expanded[nid] = imgui.collapsing_header(f'{label}##{nid}')
+            imgui.set_next_item_allow_overlap()   # the Reset button sits on the header
+            with header_style(status):
+                is_open = self.expanded[nid] = imgui.collapsing_header(f'{title}###{nid}')
+            imgui.set_item_tooltip(app.errors[nid] if status == 'error' else Op.resolve(op_id).fn.__doc__ or '')
+            if params is not None and nid not in NO_RESET:
+                self._reset_button(nid, params, x0 + width)
             if status == 'error':
                 with style.text_color(Palette.error):
                     imgui.text_wrapped(app.errors[nid])
-            elif status == 'running' and app.job.text:
-                widgets.hint(app.job.text)
             if not is_open:
                 continue
-            params = app.graph[nid].params
             on_change = lambda p, n=nid: app.set_params(n, p)
             if nid in self.editors:
-                self.editors[nid].draw(params, app.result(inputs[0]), on_change, id=nid)
+                self.editors[nid].draw(params, app.shown(inputs[0]), on_change, id=nid)
             elif params is not None:
-                params_editor(params, on_change, id=nid)
+                params_editor(params, on_change, id=nid, help='tooltip')
             if nid == 'halftone':
                 imgui.begin_disabled(self.result is None)
                 if imgui.button('Save…'):
@@ -162,11 +182,21 @@ class Window:
                 imgui.end_disabled()
             widgets.gap()
 
+    def _reset_button(self, nid: str, params, right: float) -> None:
+        """At the right end of the block header; disabled while every param is at its default."""
+        default = type(params)()
+        style_ = imgui.get_style()
+        imgui.same_line(right - imgui.calc_text_size('Reset').x - 3 * style_.frame_padding.x)
+        imgui.begin_disabled(params == default)
+        if imgui.small_button(f'Reset##{nid}'):
+            self.app.set_params(nid, default)
+        imgui.end_disabled()
+
     def _preview(self) -> None:
-        tuned = self.app.result(ops.TUNED)
+        tuned, result = self.app.shown(ops.TUNED), self.result
         job = self.app.job
         live = job.image if job is not None and job.node_id in ('select', 'halftone') else None
-        converted = live if live is not None else (self.result.dithered_result if self.result is not None else None)
+        converted = live if live is not None else (result.dithered_result if result is not None else None)
         shown = [(key, image) for key, image in (('tuned', tuned), ('converted', converted)) if image is not None]
         if not shown:
             return
@@ -207,6 +237,11 @@ class Window:
             imgui.text('pending' if self.app.busy else 'ready')
 
     # ----- files -----------------------------------------------------------------------------------
+
+    @property
+    def result(self):
+        """The conversion on screen and in Save: the last one finished."""
+        return self.app.shown('halftone')
 
     def _source(self):
         return self.app.graph['source'].params.path
