@@ -18,10 +18,10 @@ import tkinter as tk
 from ..tuner import Tuner
 from ..tuner.filters import Filter
 from ..converter.colors import gray2rgb
-from ..converter.dither import EDStucki, Ditherer, OrderedBayer, Stohastic, DBS
+from ..converter.dither import Ditherer
 from .. import __version__
 from ..util.worker import SingleAsyncPriorityWorker
-from .state import DizherState, convert_image, dither, apply_filter, apply_metric_weights, apply_eye_model, apply_halftoner, apply_palette
+from .state import DizherState, convert_image, apply_filter
 
 
 class BGTask(IntEnum):
@@ -50,13 +50,13 @@ class ImagePane(sg.Image):
         super().update(data=self.makePhotoImage(image, self.scale), **kwargs)
 
 
+def halftone_key(ditherer: Type[Ditherer]) -> str:
+    return 'halftone-' + ditherer.label.lower().replace(' ', '-')
+
+
 def HalftoneButtons(ditherers: List[Type[Ditherer]]):
-    buttons = []
-    for i, ditherer in enumerate(ditherers):
-        name = ditherer.label.lower().replace(' ', '-')
-        buttons.append(sg.Radio(ditherer.label, 'halftone', enable_events=True,
-                                key=f'halftone-{name}', default=i==0))
-    return buttons
+    return [sg.Radio(d.label, 'halftone', enable_events=True, key=halftone_key(d), default=i==0)
+            for i, d in enumerate(ditherers)]
 
 
 class DizherApp:
@@ -243,28 +243,27 @@ class DizherApp:
         if self._state.tuner.input is not None:
             self.update_tuner()
 
-    def handle_converter_param(self, attr: str, task: Callable, value: Any):
-        converter = self._state.converter
-        setattr(converter, attr, value)
+    def handle_converter_param(self, attr: str, value: Any):
+        setattr(self._state.converter, attr, value)
         self.update_conversion()
 
     def converter_param_sliders(self, key: str, specs):
         sliders, keys = [], []
         converter = self._state.converter
-        for label, attr, task, range, res in specs:
+        for label, attr, range, res in specs:
             event = f"slider-{key}-{attr}"
             sliders.extend(self.label_slider(label, event, getattr(converter, attr), range, resolution=res))
-            self.bind(event, partial(self.handle_converter_param, attr, task))
+            self.bind(event, partial(self.handle_converter_param, attr))
             keys.append(event)
         return sliders + [self.reset_button(f'reset-{key}', keys)]
 
     def eye_sliders(self):
         return self.converter_param_sliders('eye', (
-            ('Luma alpha', 'luma_alpha', apply_eye_model, (0.5, 2.0), 0.05),
-            ('Luma blur px', 'luma_scale', apply_eye_model, (0.3, 1.9), 0.1),   # kernel radius is capped at half a cell (4 px): beyond ~1.9 px at alpha 2 the slider did nothing
-            ('Chroma alpha', 'chroma_alpha', apply_eye_model, (0.5, 2.0), 0.05),
-            ('Chroma blur px', 'chroma_scale', apply_eye_model, (0.3, 1.9), 0.1),
-            ('Structure', 'structure', apply_halftoner, (0.0, 0.5), 0.01),
+            ('Luma alpha', 'luma_alpha', (0.5, 2.0), 0.05),
+            ('Luma blur px', 'luma_scale', (0.3, 1.9), 0.1),   # kernel radius is capped at half a cell (4 px): beyond ~1.9 px at alpha 2 the slider did nothing
+            ('Chroma alpha', 'chroma_alpha', (0.5, 2.0), 0.05),
+            ('Chroma blur px', 'chroma_scale', (0.3, 1.9), 0.1),
+            ('Structure', 'structure', (0.0, 0.5), 0.01),
         ))
 
     def reset_sliders(self, keys: List[str]):
@@ -299,7 +298,7 @@ class DizherApp:
         for label, attr, rng, res in (('Luma noise', 'luma_noise', (0., 0.5), 0.01), ('Chroma noise', 'chroma_noise', (0., 0.5), 0.01), ('Coherence', 'coherence', (0., 8.0), 0.1)):
             event = f'slider-metric-{attr}'
             sliders.extend(self.label_slider(label, event, getattr(self._state.converter, attr), rng, resolution=res))
-            self.bind(event, partial(self.handle_converter_param, attr, apply_metric_weights))
+            self.bind(event, partial(self.handle_converter_param, attr))
             keys.append(event)
         return sliders + [self.reset_button('reset-metrics', keys)]
 
@@ -370,29 +369,11 @@ class DizherApp:
         self._state.converter.save(filename)
 
     def handle_halftone(self, event):
-        if event == 'halftone-dbs':
-            self._state.current_dithering = DBS
-        elif event == 'halftone-stohastic':
-            self._state.current_dithering = Stohastic
-        elif event == 'halftone-ordered-bayer':
-            self._state.current_dithering = OrderedBayer
-        elif event == 'halftone-ed-stucki':
-            self._state.current_dithering = EDStucki
-        else:
-            self.not_so_fast(event)
-            return
-
+        self._state.current_dithering = next(d for d in self._state.dither_classes if halftone_key(d) == event)
         self.update_conversion()
 
     def popup_error(self, *args, custom_text='Okay :-(', **kwargs):
         sg.popup(*args, custom_text=custom_text, **kwargs)
-
-    def not_so_fast(self, function=None):
-        func_text = 'Function "{:s}"'.format(function) if function else 'This function'
-        self.popup_error(
-            '{:s} is not implemented yet.'.format(func_text),
-            title='Wow-wow! Not so fast, kid!',
-        )
 
     def debug_log(self, message, *args, **kwargs):
         if self._state.params.debug:
@@ -433,8 +414,6 @@ class DizherApp:
                         file_types = ((native,) if native else ()) + (('PNG image', '*.png'),),
                     )
                     self.save_conversion(filename)
-                # else:
-                #     self.not_so_fast("{}".format(event))
             except Exception as e:
                 if self._state.params.debug:
                     raise

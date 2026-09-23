@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import Dict, List, Sequence, Type
+from typing import List, Type
 
 import numpy as np
 
@@ -10,8 +10,6 @@ from ..tuner.vibe import VibeSatFilter
 from ..tuner.reshaper import ReshaperFilter
 from ..converter.converter import Converter
 from ..platforms import zxspectrum, c64
-from ..converter.dither import Ditherer
-from ..converter.colors import gray2rgb
 from ..converter.dither import DBS, EDStucki, Ditherer, OrderedBayer, Stohastic
 
 class Params:
@@ -68,33 +66,6 @@ class DizherState:
 def convert_image(converter: Converter, halftoner: Ditherer, image: np.ndarray):
     converter.set_image(image, halftoner)
     converter.calc_best_on_metrics()
-    return converter
-
-def apply_metric_weights(converter: Converter, halftoner: Ditherer):
-    converter.set_image(converter.image_rgb, halftoner)
-    converter.calc_best_on_metrics()
-    dither(converter, halftoner)
-    return converter
-
-def apply_eye_model(converter: Converter, halftoner: Ditherer):
-    converter.ditherer = halftoner
-    converter.energy.calc()
-    converter.calc_best_on_metrics()
-    return converter
-
-def apply_palette(converter: Converter, halftoner: Ditherer, subset: str):
-    converter.ditherer = halftoner
-    converter.set_palette(converter.palette.with_subset(subset))
-    return converter
-
-def apply_halftoner(converter: Converter, halftoner: Ditherer):
-    converter.ditherer = halftoner
-    converter.set_best_conversion(converter.best_attr_indexes)
-    return converter
-
-def dither(converter: Converter, halftoner: Ditherer):
-    # TODO maybe move current DitherMethod to converter as a subfilter
-    converter.dither(halftoner)
     return converter
 
 def apply_filter(filter: Filter):
