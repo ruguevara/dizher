@@ -138,14 +138,15 @@ class SelectionEnergy:
         noise = dict(Luma=c.luma_noise, Chroma=c.chroma_noise)
         return sum(w[g] * self.D[g] for g in GROUPS) + sum(w[g] * noise[g] * self.N[g] for g in GROUPS)
 
-    def apply(self) -> None:
+    def apply(self) -> np.ndarray:
+        """The (R, C) pair labels of least energy."""
         w = self.weights
         D = self.unary()
         S = {off: sum(w[g] * self.S[g][off] for g in GROUPS) for off in OFFSETS}
         Lh, Lv = self.seam_smoothness()
         V = self.converter.pair_dissimilarity
         preview = lambda labels: report_progress(lambda: self.converter.eye_view(self.converter.render_labels(labels)))
-        self.converter.set_best_conversion(optimise(D, S, V, Lh, Lv, self.converter.coherence, on_step=preview))
+        return optimise(D, S, V, Lh, Lv, self.converter.coherence, on_step=preview)
 
     def seam_smoothness(self):
         """Weight 0..1 of every seam: 1 where the original is flat across it, ~0 across a real edge.

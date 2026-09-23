@@ -53,6 +53,16 @@ class Converter:
         c.set_palette(mode.palette)
         return c
 
+    def copy(self, **attrs) -> 'Converter':
+        """Shallow copy for a later pipeline stage (ops.py): arrays are shared read-only, the energy is rebound to the copy."""
+        c = copy.copy(self)
+        c.energy = copy.copy(self.energy)
+        c.energy.converter = c
+        for name, value in attrs.items():
+            assert hasattr(c, name), name
+            setattr(c, name, value)
+        return c
+
     def set_palette(self, palette: Palette):
         """Swap the attribute pair set; redoes the whole conversion if an image is loaded."""
         assert isinstance(palette, Palette)
@@ -172,12 +182,12 @@ class Converter:
         return (blurred @ np.linalg.inv(LRGB2OPP).T).clip(0, 1) ** (1 / self.gamma)
 
     def calc_best_on_metrics(self):
-        self.energy.apply()
+        self.set_labels(self.energy.apply())
+        self.halftone()
 
-    def set_best_conversion(self, attr_indexes):
+    def set_labels(self, attr_indexes):
         self.best_attr_indexes = attr_indexes
         self.best_paper, self.best_ink = self.best_paper_ink(self.best_attr_indexes)
-        self.halftone()
 
     def halftone(self):
         """Run the chosen halftoner once on the final composite, quantising each pixel to its block's paper or ink."""
@@ -216,5 +226,6 @@ class Converter:
         elif type(ditherer) is not type(self.ditherer) or self.dithered_result is None:
             # a result may have been invalidated (parameter change) without a rerun yet: rebuild it from the labels
             self.ditherer = ditherer
-            self.set_best_conversion(self.best_attr_indexes)
+            self.set_labels(self.best_attr_indexes)
+            self.halftone()
         return self.dithered_result

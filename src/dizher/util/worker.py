@@ -5,8 +5,10 @@ from multiprocessing import TimeoutError
 import multiprocessing as mp
 import queue
 import signal
+import threading
 import time
 import traceback
+from contextlib import contextmanager
 
 from typing import Any, Callable, Dict, Tuple, Union
 
@@ -15,11 +17,31 @@ PROGRESS_INTERVAL = 0.01  # s between intermediate results sent to the GUI
 _progress_queue = None
 _progress_last = 0.0
 
+_local = threading.local()   # .progress: the mokit progress of the op running on this thread (ui/app.py)
+
+@contextmanager
+def reporting(progress):
+    """Inside a mokit op: report_stage/report_progress go to progress(fraction, text), the host's cancel point,
+    and preview images to progress.preview(image) when the host has one."""
+    _local.progress, _local.last = progress, 0.0
+    try:
+        yield
+    finally:
+        _local.progress = None
+
 def report_progress(render: Callable[[], Any]):
     """Inside a worker task: send render() to the GUI as an intermediate result, at most every
     PROGRESS_INTERVAL. render is only called when due, so it may be expensive. No-op outside a worker."""
     global _progress_last
     now = time.monotonic()
+    progress = getattr(_local, 'progress', None)
+    if progress is not None:
+        progress(None, None)   # every step is a cancel point
+        preview = getattr(progress, 'preview', None)
+        if preview is not None and now - _local.last >= PROGRESS_INTERVAL:
+            preview(render())
+            _local.last = time.monotonic()
+        return
     if _progress_queue is None or now - _progress_last < PROGRESS_INTERVAL:
         return
     _progress_queue.put(('image', render()))
@@ -27,7 +49,10 @@ def report_progress(render: Callable[[], Any]):
 
 def report_stage(text: str):
     """Inside a worker task: name the step now running, for the status bar. No-op outside a worker."""
-    if _progress_queue is not None:
+    progress = getattr(_local, 'progress', None)
+    if progress is not None:
+        progress(None, text)
+    elif _progress_queue is not None:
         _progress_queue.put(('stage', text))
 
 class AbstractWorker:
