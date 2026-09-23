@@ -114,12 +114,17 @@ class DizherApp:
                         self.metric_sliders() + self.eye_sliders(),
                         vertical_alignment="top"
                     ),
+                ], [
+                    sg.Text('Ready', key='status', size=(40, 1), font=(None, 10)),
+                    sg.ProgressBar(1, orientation='h', size=(20, 8), key='busy'),
                 ],
             ],
             finalize=True,
             return_keyboard_events=True,
         )
         self.window.disable_debugger()
+        self.window['busy'].Widget.configure(mode='indeterminate')
+        self._busy = False
         self.bind('palette-subset', self.handle_palette)
         self.bind('mode', self.handle_mode)
         self.window.bind('<Control-o>', 'open-image')
@@ -302,8 +307,21 @@ class DizherApp:
             self.debug_log("aborted {}, value={}", task_descr, value)
 
         self.debug_log("update_async {}", task_descr)
-        self.worker.apply(priority, task, args, kwds, callback=callback,
-                          error_callback=error_callback, abort_callback=abort_callback)
+        if self.worker.apply(priority, task, args, kwds, callback=callback,
+                             error_callback=error_callback, abort_callback=abort_callback):
+            self.set_busy(task_descr)
+
+    def set_busy(self, task_descr: str = None):
+        # ponytail: indeterminate bar, the worker process is opaque; real % needs a progress queue through the converter
+        bar = self.window['busy'].Widget
+        if task_descr:
+            self.window['status'].update(task_descr)
+            bar.start(15)
+        elif self._busy:
+            self.window['status'].update('Ready')
+            bar.stop()
+            bar['value'] = 0
+        self._busy = bool(task_descr)
 
     def update_tuned_image(self, image):
         self.debug_log('called update_tuned_image from {}', current_process())
@@ -376,6 +394,8 @@ class DizherApp:
                     async_result = self.worker.read(self._state.params.timeout)
                     if async_result is not None:
                         self.debug_log("async worker event {}", type(async_result))
+                    if not self.worker.is_alive():
+                        self.set_busy(None)
                     continue
 
                 self.debug_log(str(event))
