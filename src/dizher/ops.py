@@ -24,7 +24,7 @@ from .halftoning.noise.noise import BLUE_NOISE_RESOLUTION
 from .halftoning.ordered.matrices import MATRICES
 from .halftoning.error_distribution.kernels import KERNELS
 from .platforms import Mode, c64, zxspectrum
-from . import tone
+from . import snap as palette_snap, tone
 from .progress import reporting
 
 MODES = {m.name: m for m in (zxspectrum.STANDARD, c64.HIRES)}
@@ -132,6 +132,20 @@ def color(picture: np.ndarray,
     return tone.color(picture, vibrance, saturation)
 
 
+def snap(picture: np.ndarray, target: Mode,
+         strength: Annotated[float, meta(min=0.0, max=1.0, help="how far a snapped surface moves to its target: "
+                                         "1 lands on it")] = 0.0,
+         radius: Annotated[float, meta(min=4.0, max=40.0, help="CIELAB distance within which a flat surface "
+                                       "joins a target; ramps and edges stronger than it keep their colours")] = 24.0,
+         smoothness: Annotated[float, meta(min=0.0, max=8.0, help="cost of a surface splitting between targets, "
+                                           "or into snapped and kept parts; free across edges of the image")] = 2.0,
+         mixes: Annotated[bool, meta(help="also snap to the half-and-half mix of each pair (a checkerboard), "
+                                    "not only to the palette's solid colours")] = True) -> np.ndarray:
+    """Flat surfaces moved, whole, onto colours that dither cleanly: the palette's own (a solid cell) and the 50%
+    mixes of its pairs, instead of sparse stray dots just off them. Regions are labelled first (snap.py)."""
+    return palette_snap.snap(picture, palette_snap.targets(target.palette, mixes), strength, radius, smoothness)
+
+
 def detail(picture: np.ndarray,
            texture: Annotated[float, meta(min=-100.0, max=100.0, help="contrast of fine texture")] = 0.0,
            sharpen: Annotated[float, meta(min=0.0, max=300.0, help="% of the fine detail added back")] = 0.0,
@@ -227,7 +241,8 @@ TUNE = (   # (node id, block label, op, inputs): the left column's blocks, top t
     ('local', 'Local tone', 'dizher.ops:local_tone', ('levels',)),
     ('contrast', 'Contrast', 'dizher.ops:contrast', ('local',)),
     ('color', 'Color', 'dizher.ops:color', ('contrast',)),
-    ('detail', 'Detail', 'dizher.ops:detail', ('color',)),
+    ('snap', 'Palette snap', 'dizher.ops:snap', ('color', 'target')),
+    ('detail', 'Detail', 'dizher.ops:detail', ('snap',)),
 )
 CONVERT = (   # the right column's
     ('target', 'Target', 'dizher.ops:target', ()),

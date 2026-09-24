@@ -71,7 +71,7 @@ def test_host_reruns_only_downstream_of_an_edit():
     before = host.result('detail')
     host.set_params('contrast', replace(host.graph['contrast'].params, contrast=30.0))
     assert host.result('detail') is None and host.shown('detail') is before   # the old picture stays up meanwhile
-    assert settle(host) == ['contrast', 'color', 'detail', 'prepare', 'select', 'halftone', 'optimise']
+    assert settle(host) == ['contrast', 'color', 'snap', 'detail', 'prepare', 'select', 'halftone', 'optimise']
     assert host.shown('detail') is host.result('detail') is not before
     host.set_params('target', replace(host.graph['target'].params, mode='C64 hires', palette='Bright only'))
     settle(host)
@@ -163,6 +163,29 @@ def test_tone_semantics():
             curved = np.array([patch(v, shadows=sh, highlights=hi) for v in greys])
             assert np.all(np.diff(curved) > 0) and np.allclose(curved[[0, -1]], [0, 1], atol=1e-3)   # monotone, ends fixed
     assert patch(0.3, shadows=100.0) > 0.3 and patch(0.7, highlights=-100.0) < 0.7
+
+
+def test_palette_snap():
+    from dizher import snap
+    from dizher.platforms import zxspectrum
+    palette = zxspectrum.STANDARD.palette
+    found = snap.targets(palette)
+    assert len(found[0]) == 53 and len(snap.targets(palette, mixes=False)[0]) == 15
+    rgb = np.random.default_rng(0).uniform(0.1, 0.9, (8, 8, 3)).astype(np.float32)
+    assert snap.snap(rgb, found) is rgb                                   # strength 0: the identity
+    red, cyan = palette.as_float()[10], palette.as_float()[5]
+    image = np.empty((32, 64, 3), np.float32)
+    image[:, :32] = red * 0.92 + 0.03                                     # a surface a little off bright red...
+    image[:, 32:] = cyan * 0.9 + 0.05                                     # ...and one off cyan, a step apart
+    out, labels = snap.snap(image, found, 1.0, labels_out=(kept := [])), kept[0]
+    assert (labels[:, :28] == labels[0, 0]).all() and (labels[:, 36:] == labels[0, -1]).all()   # whole surfaces
+    assert np.abs(out[:, :24] - red).max() < 0.02 and np.abs(out[:, 40:] - cyan).max() < 0.02  # on their targets
+    ramp = np.repeat(np.linspace(0, 1, 64, dtype=np.float32)[None, :, None], 32, 0).repeat(3, 2)
+    assert np.abs(snap.snap(ramp, found, 1.0, radius=8.0) - ramp).max() < 0.05   # a steep ramp is no surface
+    stripes = image.copy()
+    stripes[:, :32:2] += 0.1                                              # texture on the red surface rides along
+    moved = snap.snap(stripes, found, 1.0)
+    assert (moved[:, 4:20:2, 1] - moved[:, 5:20:2, 1] > 0.05).all()   # (Lab detail: less in sRGB near black)
 
 
 def test_project_round_trip_and_restore():

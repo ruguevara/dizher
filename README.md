@@ -40,7 +40,7 @@ Two optimisers in a row, both minimising the same eye-model error, each with its
 The GUI group that owns each knob is in brackets.
 
 ```
- source image ──► Tune (framing, light, levels, contrast, colour) ──► sRGB 256x192
+ source image ──► Tune (framing, light, levels, contrast, colour, palette snap, detail) ──► sRGB 256x192
                                                                         │
                        gamma 2.2 ──► linear RGB ──► opponent O1 O2 O3 (luma, red-green, blue-yellow)
                                                     scaled by sqrt(weights)         [Metric: chroma]
@@ -97,6 +97,19 @@ The GUI group that owns each knob is in brackets.
 Views in the Preview tab show what each stage sees: Projected is the stage-2 target, Unoptimised the
 halftone the optimiser started from, Eye is target and result through h, Error is their difference, Energy is the stage-1 loss per block (own, seam,
 coherence), Seams is where edge disables the coherence prior.
+
+### Palette snap
+
+A colour a few CIELAB units off a palette colour dithers as sparse stray dots, the most visible halftone
+texture, where on the colour it is a solid cell and on the 50% mix of a pair a checkerboard. The Palette snap
+stage (Tune, off at strength 0) moves flat surfaces, whole, onto those targets (snap.py). Pulling each pixel on
+its own breaks a surface lying between two targets into ragged patches, so regions are labelled first, as colour
+harmonization assigns hue sectors with a graph cut (Cohen-Or et al. 2006): every pixel takes keep or one of its
+nearest targets, a target costing its distance to the pixel's base (an edge-preserving blur) plus the base's
+change across a cell, so ramps stay; a label change between neighbours costs `smoothness`, free across edges.
+Labels by exact dynamic programming on rows and columns, as in pair selection. The labelled base moves onto
+its target, the detail on it rides along (Durand and Dorsey 2002), and the change map is smoothed by a guided
+filter on the image so region borders follow it (Rabin, Delon and Gousseau 2011).
 
 ### Eye model
 
