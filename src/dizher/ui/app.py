@@ -1,6 +1,7 @@
 """Pipeline host, AmaZX's ConverterApp cut down to a fixed linear graph: the mokit Graph of ops.PIPELINE, a memo
 of stage results and one worker thread running the next stale stage. No imgui here; window.py polls update()
 every frame and draws from it."""
+import itertools
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -9,6 +10,7 @@ from pathlib import Path
 from typing import Optional
 
 from mokit.graph import MISSING, Digests, GraphError, Memo, ready_steps, run_step
+from mokit import project
 from mokit.project import Unresolved
 
 from .. import ops
@@ -16,6 +18,21 @@ from .. import ops
 DEBOUNCE = 0.3   # s from the last edit to the next start, so a dragged slider does not restart a stage every frame
 HISTORY = 200    # undo steps kept
 CACHED = 5       # graphs on each side of the current one in the history whose results stay in RAM: undo shows them at once
+
+
+def project_folder(image) -> Path:
+    """The image's project, as a sidecar: the folder beside it named as the image, or "<name> 2", "<name> 3"... when
+    that one is taken by anything but this image's project. It may not exist yet."""
+    image = Path(image).resolve()
+    for n in itertools.count(1):
+        folder = image.with_name(image.stem if n == 1 else f'{image.stem} {n}')
+        if not folder.exists():
+            return folder
+        try:
+            if Path(project.load_project(folder).graph['source'].params.path).resolve() == image:
+                return folder
+        except (OSError, ValueError, KeyError, AttributeError, GraphError):   # not a project, or not readable
+            pass
 
 
 class Cancelled(Exception):
@@ -100,9 +117,10 @@ class Pipeline:
         self._deadline = time.monotonic() + DEBOUNCE
         self._sync()
 
-    def new(self) -> None:
-        """The default graph with nothing shown from before, and no history."""
-        self.restore(ops.make_graph())
+    def open(self, path) -> None:
+        """A new document: the image with default params, nothing shown from before, no history."""
+        g = ops.make_graph()
+        self.restore(g.with_params('source', replace(g['source'].params, path=Path(path))))
         self._latest.clear()
 
     def restore(self, graph) -> None:
@@ -115,9 +133,6 @@ class Pipeline:
                 g = g.with_params(nid, node.params)
         self.past, self.future, self._held = [], [], False   # a new document
         self._apply(g)
-
-    def open(self, path) -> None:
-        self.set_params('source', replace(self.graph['source'].params, path=Path(path)))
 
     def cancel(self) -> None:
         if self.job is not None:

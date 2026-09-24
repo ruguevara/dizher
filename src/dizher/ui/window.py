@@ -7,7 +7,9 @@ ini keeps the dock layout, its user prefs which blocks are open and the session:
 unsaved edits included, restored on the next start when no path is given.
 
 A project is AmaZX's mokit folder: project.json holds every node's params, the source path relative to the folder;
-exports default to its build/."""
+exports default to its build/. Every image has one, as a sidecar: opening an image opens the project beside it named
+as the image (app.project_folder), or starts it there. Autosave (on by default) writes it after every edit; off, Save
+project does, without asking where."""
 import json
 import signal
 import subprocess
@@ -29,12 +31,11 @@ from mokit.graph import GraphError, Op
 from mokit.ui.style import Palette
 
 from .. import __version__, ops
-from .app import Pipeline
+from .app import Pipeline, project_folder
 from .levels import LevelsEditor
 from . import views
 
 HEADER_TINT = dict(running=Palette.warn, error=Palette.error)   # header background of a running or failed stage
-NO_RESET = {'source'}   # resetting would drop the image
 LABELS = {nid: label for nid, label, _, _ in ops.PIPELINE}
 VIEWS = {'Screen': 'The conversion as the machine shows it', 'Bitmap': 'Ink pixels white, paper black',
          'Attrs': "Each cell's paper with a disc of its ink"}   # ToolZX's screen views
@@ -121,13 +122,14 @@ class HalftoneEditor:
 class Window:
     def __init__(self, path=None) -> None:
         self.app = Pipeline()
-        self.project = None                # the open project's folder
+        self.project = None                # the open image's project folder, written or not yet
         self.saved = self.app.graph        # the graph as last saved or opened: another one is unsaved
+        self.autosave = False              # the user pref, on by default, comes with the prefs: tests never write
         self.restore_session = path is None
         if path and (Path(path) / project.PROJECT_FILE).exists():
             self._open_project(path)
         elif path:
-            self.app.open(path)
+            self._open_image(path)
         self.images = {}       # immvision params per preview
         self.expanded = {}     # node id -> block open; imgui keeps no header state in its ini
         self.editors = {'levels': LevelsEditor(), 'halftoner': HalftoneEditor()}   # node id -> custom params editor
@@ -162,7 +164,7 @@ class Window:
             hello_imgui.DockingSplit('MainDockSpace', 'ConvertSpace', imgui.Dir.right, 0.28),
             hello_imgui.DockingSplit('ConvertSpace', 'HistorySpace', imgui.Dir.down, 0.25)]
         p.docking_params.dockable_windows = [
-            hello_imgui.DockableWindow('Tune', 'TuneSpace', lambda: self._column(ops.TUNE)),
+            hello_imgui.DockableWindow('Tune', 'TuneSpace', lambda: self._column(ops.TUNE[1:])),   # the source: File menu
             hello_imgui.DockableWindow('Convert', 'ConvertSpace', lambda: (self._column(ops.CONVERT), self._export())),
             hello_imgui.DockableWindow('Preview', 'MainDockSpace', self._preview),
             hello_imgui.DockableWindow('History', 'HistorySpace', self._history)]
@@ -226,6 +228,8 @@ class Window:
             self.app.undo()
         if imgui.shortcut(REDO, imgui.InputFlags_.route_global.value):
             self.app.redo()
+        if self.autosave and self.project and self.app.graph != self.saved and not imgui.is_any_item_active():
+            self._save_project()   # once a drag is let go, not every frame of it
         self.app.update()
         hello_imgui.get_runner_params().fps_idling.enable_idling = not self.app.busy
 
@@ -242,7 +246,7 @@ class Window:
             with header_style(status):
                 is_open = self.expanded[nid] = imgui.collapsing_header(f'{title}###{nid}')
             imgui.set_item_tooltip(app.errors[nid] if status == 'error' else Op.resolve(op_id).fn.__doc__ or '')
-            if params is not None and nid not in NO_RESET:
+            if params is not None:
                 self._reset_button(nid, params, x0 + width)
             if status == 'error':
                 with style.text_color(Palette.error):
@@ -449,20 +453,13 @@ class Window:
 
     def _menus(self) -> None:
         if imgui.begin_menu('File'):
-            if imgui.menu_item_simple('New project'):
-                self.app.new()
-                self.project, self.saved = None, self.app.graph
-            if imgui.menu_item_simple('Open project…'):
-                folder = widgets.native_pick('folder', 'Open project', str(self.project.parent if self.project else Path.home()))
-                if folder:
-                    self._open_project(folder)
-            if imgui.menu_item_simple('Save project'):
-                self._save_project(self.project) if self.project else self._save_project_as()
-            if imgui.menu_item_simple('Save project as…'):
-                self._save_project_as()
-            imgui.separator()
             if imgui.menu_item_simple('Open image…'):
                 self._open()
+            if imgui.menu_item_simple('Save project', enabled=self.project is not None and self.app.graph != self.saved):
+                self._save_project()
+            self.autosave = imgui.menu_item('Autosave project', '', self.autosave)[1]
+            imgui.set_item_tooltip('Save the project after every edit')
+            imgui.separator()
             if imgui.menu_item_simple('Save conversion…', enabled=self.result is not None):
                 self._save()
             imgui.separator()
@@ -484,7 +481,7 @@ class Window:
 
     def _status(self) -> None:
         imgui.text(f"{self.project.name if self.project else 'untitled'}{' *' if self.app.graph != self.saved else ''}")
-        imgui.set_item_tooltip(str(self.project) if self.project else 'Not saved as a project')
+        imgui.set_item_tooltip(str(self.project) if self.project else 'Open an image from the File menu')
         imgui.same_line()
         job = self.app.job
         if job is not None:
@@ -515,14 +512,23 @@ class Window:
         source = self._source()
         path = widgets.native_pick('file', 'Open image', str(source.parent if source else Path.home()))
         if path:
+            self._open_image(path)
+
+    def _open_image(self, path) -> None:
+        """Its project when it has one, else a new one beside it, written by the first save."""
+        folder = project_folder(path)
+        if (folder / project.PROJECT_FILE).exists():
+            self._open_project(folder)
+        else:
             self.app.open(path)
+            self.project, self.saved = folder, None
 
     def _save(self, ext: str = None) -> None:
         """ext picks the format (Converter.save); by default the mode's screen file, else PNG."""
         source, mode = self._source(), self.result.mode
         ext = ext or (mode.file_type[1].lstrip('*') if mode.file_type else '.png')
         folder = source.parent if source else Path.home()
-        if self.project:
+        if self.project and self.project.exists():
             folder = self.project / 'build'
             folder.mkdir(exist_ok=True)
         path = save_dialog('Save conversion', str(folder), (source.stem if source else 'conversion') + ext)
@@ -538,29 +544,22 @@ class Window:
         self.app.restore(p.graph)
         self.project, self.saved = p.folder, self.app.graph
 
-    def _save_project(self, folder) -> None:
-        folder = Path(folder).absolute()
+    def _save_project(self) -> None:
+        graph = self.app.graph
         try:
-            if (folder / project.PROJECT_FILE).exists():
-                project.save_project(folder, self.app.graph)
+            if (self.project / project.PROJECT_FILE).exists():
+                project.save_project(self.project, graph)
             else:
-                project.create_project(folder, self.app.graph)
+                project.create_project(self.project, graph)
         except OSError as e:
-            self.app.errors['project'] = f'cannot save {folder}: {e}'
+            self.app.errors['project'] = f'cannot save {self.project}: {e}; autosave is off'
+            self.autosave = False   # not a retry every frame
             return
-        self.project, self.saved = folder, self.app.graph
-
-    def _save_project_as(self) -> None:
-        """ToolZX's "name the project, not a file": the typed name is the project's folder."""
-        source = self._source()
-        where = self.project.parent if self.project else source.parent if source else Path.home()
-        name = self.project.name if self.project else source.stem if source else 'untitled'
-        folder = save_dialog('Save project as (the name is its folder)', str(where), name)
-        if folder:
-            self._save_project(folder)
+        self.saved = graph
 
     def _load_prefs(self) -> None:
         self.expanded.update(json.loads(hello_imgui.load_user_pref('expanded') or '{}'))
+        self.autosave = json.loads(hello_imgui.load_user_pref('autosave') or 'true')
         if not self.restore_session:
             return
         try:
@@ -568,13 +567,17 @@ class Window:
             graph = project.graph_from_json(session['graph'], None)[0] if 'graph' in session else None
         except (ValueError, KeyError, TypeError, GraphError):
             return   # a session from an incompatible version: start blank
-        if session.get('project') and (Path(session['project']) / project.PROJECT_FILE).exists():
-            self._open_project(session['project'])
+        folder = Path(session['project']) if session.get('project') else None
+        if folder and (folder / project.PROJECT_FILE).exists():
+            self._open_project(folder)
+        elif folder:
+            self.project, self.saved = folder, None   # never saved
         if graph is not None:
             self.app.restore(graph)   # the unsaved edits over the project
 
     def _save_prefs(self) -> None:
         hello_imgui.save_user_pref('expanded', json.dumps(self.expanded))
+        hello_imgui.save_user_pref('autosave', json.dumps(self.autosave))
         hello_imgui.save_user_pref('session', json.dumps({
             'project': str(self.project) if self.project else None,
             'graph': project.graph_to_json(self.app.graph, None, None)}))

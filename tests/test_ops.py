@@ -60,9 +60,9 @@ def settle(host):
 def test_host_reruns_only_downstream_of_an_edit():
     from dizher.ui.app import Pipeline
     host = Pipeline()
+    host.open(IMAGE)
     host.set_params('halftoner', replace(host.graph['halftoner'].params, halftoner=Ordered.label))
     host.set_params('optimise', replace(host.graph['optimise'].params, enabled=False))
-    host.open(IMAGE)
     assert settle(host)[-4:] == ['prepare', 'select', 'halftone', 'optimise'] and not host.errors
     host.set_params('optimise', replace(host.graph['optimise'].params, structure=0.2))
     assert settle(host) == ['optimise']
@@ -76,7 +76,7 @@ def test_host_reruns_only_downstream_of_an_edit():
     host.set_params('target', replace(host.graph['target'].params, mode='C64 hires', palette='Bright only'))
     settle(host)
     assert 'target' in host.errors                   # C64 has no bright subset: an error on its block
-    host.new()
+    host.open(IMAGE.with_name('david.png'))          # another image is a new document
     assert host.shown('detail') is None and host.shown('optimise') is None and not host.errors   # nothing left on screen
     host.close()
 
@@ -216,10 +216,29 @@ def test_undo_redo():
         host.undo()
     assert host.graph == start and not host.past
     host.redo()
-    host.new()                     # a new document has no history
+    host.open(Path(__file__).parent / 'images' / 'lena.png')   # a new document has no history
     assert not host.past and not host.future
     host.close()
 
+
+
+def test_project_folder():
+    """An image's sidecar project: named as the image, the next free name when another image's project or
+    anything else has it."""
+    from mokit import project
+    from dizher.ui.app import project_folder
+    with tempfile.TemporaryDirectory() as tmp:
+        a, b = Path(tmp) / 'pic.png', Path(tmp) / 'pic.jpg'
+        a.write_bytes(IMAGE.read_bytes()), b.write_bytes(IMAGE.read_bytes())
+        folder = project_folder(a)
+        assert folder == Path(tmp).resolve() / 'pic' and not folder.exists()
+        g = ops.make_graph()
+        project.create_project(folder, g.with_params('source', replace(g['source'].params, path=a)))
+        assert project_folder(a) == folder                          # found again
+        assert project_folder(b) == folder.with_name('pic 2')       # a namesake image gets its own
+        (Path(tmp) / 'other').mkdir()
+        (Path(tmp) / 'other.png').write_bytes(b'')
+        assert project_folder(Path(tmp) / 'other.png').name == 'other 2'   # a plain folder is not taken over
 
 if __name__ == '__main__':
     test_framing_geometry()
@@ -230,4 +249,5 @@ if __name__ == '__main__':
     test_host_discards_stale_completions()
     test_project_round_trip_and_restore()
     test_undo_redo()
+    test_project_folder()
     print('ok')

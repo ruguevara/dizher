@@ -108,6 +108,20 @@ def test_history_panel(ctx):
     assert params('contrast').contrast == 10.0 and len(ui.app.future) == 1, params('contrast')
     reset('contrast')
 
+
+def test_autosave(ctx):
+    import json, tempfile
+    folder = ui.project
+    assert folder == IMAGE.with_name('lena') and not folder.exists() and not ui.autosave   # tests never write it
+    with tempfile.TemporaryDirectory() as tmp:
+        ui.project, ui.autosave = Path(tmp) / 'lena', True
+        ui.app.set_params('contrast', replace(params('contrast'), contrast=15.0))
+        ctx.yield_(2)
+        stored = json.loads((ui.project / 'project.json').read_text())['nodes']['contrast']['params']
+        assert stored['contrast'] == 15.0 and ui.saved == ui.app.graph, stored
+        ui.project, ui.autosave = folder, False
+    reset('contrast')
+
 def test_block_collapses_and_expands(ctx):
     ctx.set_ref('//Tune')
     ctx.item_click('**/###framing')
@@ -190,6 +204,7 @@ TESTS = [
     ('ui', 'levels_handles_drag', test_levels_handles_drag),
     ('ui', 'levels_auto', test_levels_auto),
     ('ui', 'history_panel', test_history_panel),
+    ('ui', 'autosave', test_autosave),
     ('ui', 'block_collapses_and_expands', test_block_collapses_and_expands),
     ('ui', 'block_reset', test_block_reset),
     ('ui', 'views_and_grid', test_views_and_grid),
