@@ -7,7 +7,8 @@ from skimage import img_as_float
 
 from .palette import Palette
 from .colors import convert_color, lrgb2luminance, gray2rgb
-from .dither import Ditherer, Stohastic, duo_levels
+from .dither import Ditherer, Stohastic, duo_levels, snap_levels, MIX_PATTERN
+from ..halftoning.ordered import ordered_dither
 from ..halftoning.dbs import dbs_duo
 from .eye import LUMA_ALPHA, LUMA_SCALE, CHROMA_ALPHA, CHROMA_SCALE, eye_kernel
 from .energy import SelectionEnergy, pair_dissimilarity, lightness_gain, LRGB2OPP, EDGE_SIGMA
@@ -29,6 +30,7 @@ class Converter:
             structure: float = 0.06,
             ditherer: Ditherer = None,   # halftones the pair candidates and, after selection, the result
             flare: float = 0.1,
+            mix_snap=None,
     ):
         self.mode = mode
         self.size = mode.size
@@ -45,6 +47,7 @@ class Converter:
         self.structure = structure  # weight of the contrast-weighted SSIM term in the DBS optimiser, see halftoning/dbs.py
         self.ditherer = ditherer or Stohastic()
         self.flare = flare          # flattens the per-pixel lightness gain of the error, see energy.lightness_gain
+        self.mix_snap = mix_snap    # (levels, strength, radius) the halftone target's mix levels snap to, or None; see mix_levels
         self.energy = SelectionEnergy(self, weights)
         self.image_rgb = None
         self.set_palette(mode.palette)
@@ -179,7 +182,11 @@ class Converter:
         """Run the chosen halftoner once on the final composite, quantising each pixel to its block's paper or ink."""
         paper, ink = self._duo()
         report_stage(self.ditherer.label)
-        self.set_bitmap(self.ditherer(self.halftone_target(paper, ink), paper, ink))
+        t, on = self.mix_levels(paper, ink)
+        bitmap = self.ditherer(paper + t[..., None] * (ink - paper), paper, ink)
+        if on.any():   # the halftoners' own patterns are no checkerboard at 1/2, and DBS does not find one from them
+            bitmap = np.where(on, ordered_dither(t, MIX_PATTERN), bitmap)
+        self.set_bitmap(bitmap)
         self.halftoned = self.dithered_bitmap
 
     def optimise(self):
@@ -207,13 +214,20 @@ class Converter:
         the attribute grid, plainest in smooth backgrounds. Each pixel is given the reachable projection
         of its target instead, so a cell's residual is zero-mean and there is nothing for the neighbour to
         cancel. The pair optimiser already owns the unreachable part (energy.py)."""
-        target = self.opponent(self.image_lrgb)
-        return paper + duo_levels(target, paper, ink)[..., None] * (ink - paper)
+        return paper + self.mix_levels(paper, ink)[0][..., None] * (ink - paper)
+
+    def mix_levels(self, paper, ink):
+        """The target's mix of each pixel's paper and ink (duo_levels), snapped by mix_snap when it is set
+        (dither.snap_levels), and where the snap put it on a level."""
+        t = duo_levels(self.opponent(self.image_lrgb), paper, ink)
+        if self.mix_snap is None:
+            return t, np.zeros(t.shape, dtype=bool)
+        return snap_levels(t, self.cell, *self.mix_snap)
 
     def projected_target(self):
         """halftone_target in sRGB, for display: the opponent map is linear, so the same mix in linear RGB."""
         paper, ink = self.best_paper ** self.gamma, self.best_ink ** self.gamma
-        t = duo_levels(self.opponent(self.image_lrgb), self.opponent(paper), self.opponent(ink))[..., None]
+        t = self.mix_levels(self.opponent(paper), self.opponent(ink))[0][..., None]
         return (paper + t * (ink - paper)) ** (1 / self.gamma)
 
     def save(self, filename: str) -> None:

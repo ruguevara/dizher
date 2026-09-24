@@ -112,6 +112,15 @@ Cohen-Or et al. 2006), continuous where a surface lies between two targets and m
 fades with the local variance so texture and edges keep their colours. Strength is the share of the
 deviation taken off, radius the CIELAB distance it reaches.
 
+### Mix snap
+
+Between Select pairs and Halftone each pixel's target is a mix t of its cell's paper and ink. The Mix snap
+stage (on by default, a switch turns it off) pulls t in flat cells onto 0, 1/2, 1 (optionally 1/4 and 3/4)
+with the same soft nearest-target pull in one dimension, faded out where the cell's mix varies more than the
+radius. The halftoners' own patterns are no checkerboard at 1/2 and DBS does not reach one from them (blurred
+error ~0.7e-3 against 0 for the checkerboard), so the pixels that land on a level are painted with Bayer 4x4,
+aligned to the screen, which DBS keeps.
+
 ### Eye model
 
 A screen viewed from a normal distance is blurred by the eye, so a fine mix of two colours reads

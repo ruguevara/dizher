@@ -4,7 +4,7 @@ import numpy as np
 
 from dizher.converter.converter import Converter
 from dizher.converter.energy import SEAM_COST
-from dizher.converter.dither import ErrorDiffusion, Ordered, Stohastic, duo_levels
+from dizher.converter.dither import ErrorDiffusion, Ordered, Stohastic, duo_levels, snap_levels
 from dizher.halftoning.dbs import _Structure, CONTRAST_GAIN
 from dizher.halftoning.error_distribution import ed_dither_duo, stucki_duo
 from dizher.platforms import Mode
@@ -114,6 +114,29 @@ def test_halftone_target_is_reachable():
     np.testing.assert_allclose(duo_levels(target, paper, ink), duo_levels(raw, paper, ink), atol=1e-6)   # same mixture
 
 
+def test_mix_snap_lands_flat_cells_on_clean_patterns():
+    mode = Mode('three cells', (8, 24), (8, 8), ZXPalette(subset='Mono'))
+    converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, mode, coherence=0, mix_snap=((0.0, 0.5, 1.0), 1.0, 0.08))
+    grey = lambda t: (t * 1.0) ** (1 / converter.gamma)                    # black-white mix t in linear light
+    image = np.empty((*mode.size, 3), np.float32)
+    image[:, :8] = grey(0.47)                                              # near 1/2: a checkerboard
+    image[:, 8:16] = grey(0.03)                                            # near black: solid, no stray dots
+    image[:, 16:] = grey(0.3) + np.linspace(-0.25, 0.25, 8, dtype=np.float32)[None, :, None]   # not flat: kept
+    converter.set_image(image)
+    converter.dither(Ordered('Void dispersed dots'))
+    b = converter.dithered_bitmap
+    assert (b[:, :8] == np.indices((8, 8)).sum(0) % 2).all() or (b[:, :8] == 1 - np.indices((8, 8)).sum(0) % 2).all()
+    assert (b[:, 8:16] == 0).all()
+    paper, ink = converter._duo()
+    t, on = converter.mix_levels(paper, ink)
+    raw = duo_levels(converter.opponent(converter.image_lrgb), paper, ink)
+    np.testing.assert_allclose(t[:, 16:], raw[:, 16:], atol=0.02)
+    assert on[:, 8:16].all() and not on[:, 16:].any()
+    ramp = np.linspace(0, 1, 64, dtype=np.float32)[None].repeat(8, 0)
+    snapped, _ = snap_levels(ramp, (8, 8), (0.0, 0.5, 1.0), 1.0, 0.08)
+    assert np.all(np.diff(snapped[0]) >= -1e-6)                            # monotone along a ramp
+
+
 def test_colour_diffusion_preserves_scalar_projection():
     image = np.full((8, 8), 0.375, dtype=np.float32)
     paper, ink = np.zeros_like(image), np.ones_like(image)
@@ -208,6 +231,7 @@ if __name__ == '__main__':
     test_selection_matches_full_convolution()
     test_dbs_lowers_complete_colour_objective()
     test_halftone_target_is_reachable()
+    test_mix_snap_lands_flat_cells_on_clean_patterns()
     test_colour_diffusion_preserves_scalar_projection()
     test_candidates_follow_the_halftoner()
     test_ordered_matrices_cover_tone()

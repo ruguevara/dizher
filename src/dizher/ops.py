@@ -208,6 +208,25 @@ def select_pairs(prepared: Converter,
     return c
 
 
+MIX_LEVELS = {'0, 1/2, 1': (0.0, 0.5, 1.0), '0, 1/4, 1/2, 3/4, 1': (0.0, 0.25, 0.5, 0.75, 1.0), '0, 1': (0.0, 1.0)}
+
+
+def mix_snap(selection: Converter,
+             enabled: Annotated[bool, meta(help="snap flat cells' mix of paper and ink; off passes the selection "
+                                           "through")] = True,
+             levels: Annotated[str, meta(choices=tuple(MIX_LEVELS), help="mixes a flat cell may land on: solid, "
+                                         "a checkerboard, a regular grid")] = '0, 1/2, 1',
+             strength: Annotated[float, meta(min=0.0, max=1.0, help="share of the distance to the nearest level "
+                                             "taken off: 1 lands on it")] = 1.0,
+             radius: Annotated[float, meta(min=0.01, max=0.25, help="distance in mix within which a level pulls; "
+                                           "cells whose mix varies more than it keep theirs")] = 0.08) -> Converter:
+    """Flat cells' mix of their paper and ink pulled onto clean levels (a solid cell, a checkerboard) instead of
+    sparse stray dots just off them; the cells that land on a level are painted with a Bayer pattern."""
+    if not enabled:
+        return selection
+    return selection.copy(mix_snap=(MIX_LEVELS[levels], strength, radius))
+
+
 def halftone(selection: Converter, progress=None) -> Converter:
     """Each pixel quantised to its cell's paper or ink by the Halftoner: the start of the optimiser, or the result
     when it is off."""
@@ -249,7 +268,8 @@ CONVERT = (   # the right column's
     ('halftoner', 'Halftoner', 'dizher.ops:halftoner', ()),
     ('prepare', 'Prepare', 'dizher.ops:prepare', ('detail', 'target', 'metric', 'eye', 'halftoner')),
     ('select', 'Select pairs', 'dizher.ops:select_pairs', ('prepare',)),
-    ('halftone', 'Halftone', 'dizher.ops:halftone', ('select',)),
+    ('mixsnap', 'Mix snap', 'dizher.ops:mix_snap', ('select',)),
+    ('halftone', 'Halftone', 'dizher.ops:halftone', ('mixsnap',)),
     ('optimise', 'Optimise', 'dizher.ops:optimise', ('halftone',)),
 )
 PIPELINE = TUNE + CONVERT

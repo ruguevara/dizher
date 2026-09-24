@@ -40,7 +40,7 @@ def test_pipeline_matches_single_converter():
     memo = Memo()
     graph = pipeline()
     result = evaluate(graph, 'optimise', memo)
-    direct = evaluate(graph, 'prepare', memo).copy()
+    direct = evaluate(graph, 'prepare', memo).copy(mix_snap=result.mix_snap)
     np.testing.assert_array_equal(direct.dither(Ordered('Void dispersed dots')), result.dithered_result)
 
 
@@ -63,15 +63,15 @@ def test_host_reruns_only_downstream_of_an_edit():
     host.open(IMAGE)
     host.set_params('halftoner', replace(host.graph['halftoner'].params, halftoner=Ordered.label))
     host.set_params('optimise', replace(host.graph['optimise'].params, enabled=False))
-    assert settle(host)[-4:] == ['prepare', 'select', 'halftone', 'optimise'] and not host.errors
+    assert settle(host)[-5:] == ['prepare', 'select', 'mixsnap', 'halftone', 'optimise'] and not host.errors
     host.set_params('optimise', replace(host.graph['optimise'].params, structure=0.2))
     assert settle(host) == ['optimise']
     host.set_params('select', replace(host.graph['select'].params, coherence=1.0))
-    assert settle(host) == ['select', 'halftone', 'optimise']
+    assert settle(host) == ['select', 'mixsnap', 'halftone', 'optimise']
     before = host.result('detail')
     host.set_params('contrast', replace(host.graph['contrast'].params, contrast=30.0))
     assert host.result('detail') is None and host.shown('detail') is before   # the old picture stays up meanwhile
-    assert settle(host) == ['contrast', 'color', 'snap', 'detail', 'prepare', 'select', 'halftone', 'optimise']
+    assert settle(host) == ['contrast', 'color', 'snap', 'detail', 'prepare', 'select', 'mixsnap', 'halftone', 'optimise']
     assert host.shown('detail') is host.result('detail') is not before
     host.set_params('target', replace(host.graph['target'].params, mode='C64 hires', palette='Bright only'))
     settle(host)

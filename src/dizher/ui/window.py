@@ -41,7 +41,7 @@ VIEWS = {'Screen': 'The conversion as the machine shows it', 'Bitmap': 'Ink pixe
          'Attrs': "Each cell's paper with a disc of its ink"}   # ToolZX's screen views
 DEBUG = {   # view -> (tooltip, the stage it needs, its image from that stage's Converter or a running stage's snapshot)
     'Projected': ("What the halftoner aims at: each pixel moved to the nearest mix of its cell's pair",
-                  'select', lambda c: c.projected_target()),
+                  'mixsnap', lambda c: c.projected_target()),
     'Unoptimised': ("The halftoner's result, what the optimiser started from",   # a Select pairs snapshot has none yet
                     'halftone', lambda c: c.dithered_result if c.halftoned is None else np.where(c.halftoned[..., None] > 0, c.best_ink, c.best_paper)),
     'Eye': ('Both images as the eye model sees them: what the energy compares',
