@@ -130,3 +130,59 @@ def detail(rgb: np.ndarray, texture: float = 0.0, sharpen: float = 0.0, radius: 
         L = L + sharpen / 100 * (L - cv2.GaussianBlur(L, (0, 0), radius))
     lab[..., 0] = np.clip(L, 0, 100)
     return np.clip(lab2rgb(lab), 0, 1).astype(np.float32)
+
+
+
+SNAP_WINDOW = 4         # px, half the box of the base and of the flatness test: half a cell, so a cell is one surface
+SNAP_SHARPNESS = 0.3    # width of the hand-over between two targets, in units of the radius: the nearest one wins
+MIX_COST = 0.15         # CIELAB distance a mix target counts as further away per unit of its pair's own distance
+
+
+def snap_targets(palette, mixes: bool = True):
+    """The colours a flat surface dithers cleanly with, as (K, 3) CIELAB and (K,) extra distance: every colour an
+    allowed pair uses (a solid cell, no extra) and, with mixes, the half-and-half mix of each allowed pair in
+    linear light, a checkerboard, counted MIX_COST of its pair's CIELAB distance further away: black and white
+    dots are a harsher texture than two close reds."""
+    rgb = palette.as_float()
+    pairs = np.array(list(palette.iter_idxs_pairs()))
+    solid = np.unique(pairs)
+    lab = lambda c: rgb2lab(np.asarray(c, np.float32)[None])[0]
+    targets, extra = [lab(rgb[solid])], [np.zeros(len(solid), np.float32)]
+    if mixes:
+        pairs = pairs[pairs[:, 0] != pairs[:, 1]]
+        targets.append(lab(((rgb[pairs[:, 0]] ** GAMMA + rgb[pairs[:, 1]] ** GAMMA) / 2) ** (1 / GAMMA)))
+        extra.append(MIX_COST * np.linalg.norm(lab(rgb[pairs[:, 0]]) - lab(rgb[pairs[:, 1]]), axis=-1))
+    targets, extra = np.concatenate(targets), np.concatenate(extra)
+    _, first = np.unique(targets.round(2), axis=0, return_index=True)   # coinciding mixes: keep the cheapest listed first
+    return targets[np.sort(first)], extra[np.sort(first)]
+
+
+def snap(rgb: np.ndarray, targets, strength: float = 0.0, radius: float = 10.0) -> np.ndarray:
+    """Flat surfaces pulled onto the targets (snap_targets): a colour a few CIELAB units off one dithers as sparse
+    stray dots, the most visible halftone texture, where on the target it is a solid or checkerboard cell. The pull
+    moves the base (a self-guided filter of the Lab image, keeping steps over `radius`) and carries the detail on
+    it along, as tone mapping does (Durand and Dorsey 2002). With d_i the distance of the base b to target t_i
+    (plus the target's extra) and d the least of them, b goes to
+        (b + K sum_i p_i t_i) / (1 + K),   K = k exp(-d^2 / 2 radius^2),   p = softmax(-d_i^2 / 2 (SNAP_SHARPNESS radius)^2),
+    towards the nearest target, handed over smoothly where a surface lies between two, and monotone along a line
+    through one. k = strength / (1 - strength): at a target the base's deviation shrinks by `strength`. k is scaled
+    by the flatness of the window, exp(-var / 2 radius^2) of the image, so texture and edges keep their colours."""
+    if not strength:
+        return rgb
+    targets, extra = targets
+    lab = rgb2lab(rgb.astype(np.float32))
+    box = lambda x: cv2.boxFilter(x, -1, (2 * SNAP_WINDOW + 1,) * 2)
+    mean = box(lab)
+    var = box(lab * lab) - mean ** 2
+    a = var / (var + radius ** 2)
+    base = box(a) * lab + box(mean - a * mean)
+    k = min(strength, 0.99) / (1 - min(strength, 0.99)) * np.exp(-var.sum(-1) / (2 * radius ** 2)).reshape(-1, 1)
+    b = base.reshape(-1, 3)
+    d2 = (b * b).sum(1)[:, None] - 2 * b @ targets.T + (targets * targets).sum(1)[None]
+    d2 = (np.sqrt(np.maximum(d2, 0)) + extra[None]) ** 2
+    nearest = d2.min(1, keepdims=True)
+    p = np.exp(-(d2 - nearest) / (2 * (SNAP_SHARPNESS * radius) ** 2))
+    K = k * np.exp(-nearest / (2 * radius ** 2))
+    pulled = (b + K * (p @ targets) / p.sum(1, keepdims=True)) / (1 + K)
+    lab = lab + (pulled - b).reshape(lab.shape)
+    return np.clip(lab2rgb(lab), 0, 1).astype(np.float32)

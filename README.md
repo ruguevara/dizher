@@ -40,7 +40,7 @@ Two optimisers in a row, both minimising the same eye-model error, each with its
 The GUI group that owns each knob is in brackets.
 
 ```
- source image ──► Tune (framing, light, levels, contrast, colour) ──► sRGB 256x192
+ source image ──► Tune (framing, light, levels, local tone, contrast, colour, palette snap, detail) ──► sRGB 256x192
                                                                         │
                        gamma 2.2 ──► linear RGB ──► opponent O1 O2 O3 (luma, red-green, blue-yellow)
                                                     scaled by sqrt(weights)         [Metric: chroma]
@@ -97,6 +97,20 @@ The GUI group that owns each knob is in brackets.
 Views in the Preview tab show what each stage sees: Projected is the stage-2 target, Unoptimised the
 halftone the optimiser started from, Eye is target and result through h, Error is their difference, Energy is the stage-1 loss per block (own, seam,
 coherence), Seams is where edge disables the coherence prior.
+
+### Palette snap
+
+A colour a few CIELAB units off a palette colour dithers as sparse stray dots, the most visible halftone
+texture: with the default eye model DBS rounds a mix below ~4% to solid, but from there to ~15% it places
+isolated dots, which the blurred error prefers to the tone error of a solid fill. Pixel artists snap such
+surfaces instead. The Palette snap stage (Tune) pulls flat surfaces onto the colours that dither cleanly:
+every palette colour (a solid cell) and the 50% mix of each allowed pair in linear light (a checkerboard),
+a mix counted further away the more its two colours differ. Only the base moves, a self-guided filter of
+the Lab image that keeps steps over the radius, and the detail on it goes along (Durand and Dorsey 2002); the
+pull is a soft mean shift towards the nearest target (as colour harmonization pulls hues to a template,
+Cohen-Or et al. 2006), continuous where a surface lies between two targets and monotone through one, and it
+fades with the local variance so texture and edges keep their colours. Strength is the share of the
+deviation taken off, radius the CIELAB distance it reaches.
 
 ### Eye model
 
@@ -183,7 +197,7 @@ Done:
 * [x] Colour selection as one eye-model energy with a coherence prior
 * [x] Adjustable metric weights (luma, chroma, coherence) and eye-model parameters
 * [x] Selectable dithering methods
-* [x] Tune stages: framing (fill or fit, scale, rotation, pixel shift and per-edge nudges onto the cell grid), exposure and white balance (temperature, tint), Photoshop-style Levels with Auto and histogram, local tone (local contrast, shadows, highlights and clarity on an edge-preserving base layer), contrast, vibrance and saturation, texture and sharpen (unsharp mask at the screen's size)
+* [x] Tune stages: framing (fill or fit, scale, rotation, pixel shift and per-edge nudges onto the cell grid), exposure and white balance (temperature, tint), Photoshop-style Levels with Auto and histogram, local tone (local contrast, shadows, highlights and clarity on an edge-preserving base layer), contrast, vibrance and saturation, palette snap (flat surfaces onto palette colours and 50% mixes), texture and sharpen (unsharp mask at the screen's size)
 * [x] Palette subsets: bright only, not bright only, grayscale, black and white
 * [x] Python installation package
 * [x] Save as SCR and PNG
