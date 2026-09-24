@@ -27,17 +27,18 @@ class Ditherer:
         raise NotImplementedError()
 
 class ThresholdDitherer(Ditherer):
-    def __call__(self, luma, paper, ink, **eye):
-        return self.threshold(duo_levels(luma, paper, ink))
+    def __call__(self, luma, paper, ink, origin=(0, 0), **eye):
+        return self.threshold(duo_levels(luma, paper, ink), origin)
 
-    def threshold(self, levels: np.ndarray) -> np.ndarray:
+    def threshold(self, levels: np.ndarray, origin=(0, 0)) -> np.ndarray:
         raise NotImplementedError()
 
 class DBS(Ditherer):
     label = 'DBS'
 
-    def __call__(self, luma, paper, ink, scale=1.4, alpha=2.0, structure=0.06, kernels=None, noise=0, on_step=None, **eye):
-        return dbs_duo(luma, paper, ink, init=noise_dither(duo_levels(luma, paper, ink)),
+    def __call__(self, luma, paper, ink, scale=1.4, alpha=2.0, structure=0.06, kernels=None, noise=0, on_step=None,
+                 origin=(0, 0), **eye):
+        return dbs_duo(luma, paper, ink, init=noise_dither(duo_levels(luma, paper, ink), origin=origin),
                        scale=scale, alpha=alpha, structure=structure, kernels=kernels, noise=noise, on_step=on_step)
 
 class EDStucki(Ditherer):
@@ -49,11 +50,11 @@ class EDStucki(Ditherer):
 class OrderedBayer(ThresholdDitherer):
     label = 'Ordered Bayer'
 
-    def threshold(self, levels):
+    def threshold(self, levels, origin=(0, 0)):
         return ordered_dither(levels, 2) > 0
 
 class Stohastic(ThresholdDitherer):
     label = 'Stohastic'
 
-    def threshold(self, levels):
-        return noise_dither(levels)
+    def threshold(self, levels, origin=(0, 0)):
+        return noise_dither(levels, origin=origin)

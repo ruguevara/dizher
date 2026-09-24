@@ -26,6 +26,7 @@ class Converter:
             luma_noise: float = 0.0,
             chroma_noise: float = 0.05,
             structure: float = 0.06,
+            noise_origin=(0, 0),
     ):
         self.mode = mode
         self.size = mode.size
@@ -40,6 +41,7 @@ class Converter:
         self.edge = edge            # step of the original across a seam that counts as a real edge, see energy.py
         self.coherence = coherence  # cost of a pair change between neighbours where the original is smooth, see energy.py
         self.structure = structure  # weight of the contrast-weighted SSIM term in the DBS halftoner, see halftoning/dbs.py
+        self.noise_origin = noise_origin  # (y, x) roll of the blue-noise tile under the candidates and the DBS start
         self.energy = SelectionEnergy(self, weights)
         self.image_rgb = None
         self.ditherer = None
@@ -99,7 +101,7 @@ class Converter:
         report_stage(f'fitting {len(self.color_pairs)} pairs')
         self.levels = self.fit_duocolors()
         # candidates are scored on a blue-noise dither: cheap for all pairs, right noise amplitude for choosing them
-        self.bitmaps = Stohastic().threshold(self.levels)
+        self.bitmaps = Stohastic().threshold(self.levels, self.noise_origin)
         paper = self.color_pairs[:, 0, np.newaxis, np.newaxis, :]
         ink = self.color_pairs[:, 1, np.newaxis, np.newaxis, :]
         self.realized = np.where(self.bitmaps[..., np.newaxis], ink, paper).astype(np.float32)
@@ -178,7 +180,7 @@ class Converter:
         self.dithered_bitmap = self.ditherer(self.halftone_target(paper, ink), paper, ink,
             scale=self.luma_scale, alpha=self.luma_alpha, structure=self.structure,
             kernels=self.eye_kernels(), noise=(self.luma_noise, self.chroma_noise, self.chroma_noise),
-            on_step=lambda b: report_progress(lambda: self.snapshot(bitmap=b))).astype(np.float32)
+            on_step=lambda b: report_progress(lambda: self.snapshot(bitmap=b)), origin=self.noise_origin).astype(np.float32)
         self.dithered_result = np.where(self.dithered_bitmap[..., np.newaxis], self.best_ink, self.best_paper)
 
     def halftone_target(self, paper, ink):

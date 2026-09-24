@@ -19,6 +19,7 @@ from .converter import eye as eye_model
 from .converter.converter import Converter
 from .converter.energy import EDGE_SIGMA
 from .converter.dither import DBS, EDStucki, OrderedBayer, Stohastic
+from .halftoning.noise.noise import BLUE_NOISE_RESOLUTION
 from .platforms import Mode, c64, zxspectrum
 from . import tone
 from .progress import reporting
@@ -130,10 +131,15 @@ def eye(luma_alpha: Annotated[float, meta(min=0.5, max=2.0)] = eye_model.LUMA_AL
     return Eye(luma_alpha, luma_scale, chroma_alpha, chroma_scale)
 
 
-def prepare(picture: np.ndarray, target: Mode, metric: Metric, eye: Eye, progress=None) -> Converter:
+NOISE = meta(min=0, max=BLUE_NOISE_RESOLUTION - 1, help="px the blue-noise tile is rolled: another start for "
+                                                        "pair selection and DBS, which settle in local optima")
+
+def prepare(picture: np.ndarray, target: Mode, metric: Metric, eye: Eye,
+            noise_x: Annotated[int, NOISE] = 0, noise_y: Annotated[int, NOISE] = 0, progress=None) -> Converter:
     """Every pair fitted per pixel, blue-noise candidates and the selection energy."""
     c = Converter({'Luma': 1.0, 'Chroma': metric.chroma}, target, luma_alpha=eye.luma_alpha,
-                  luma_scale=eye.luma_scale, chroma_alpha=eye.chroma_alpha, chroma_scale=eye.chroma_scale)
+                  luma_scale=eye.luma_scale, chroma_alpha=eye.chroma_alpha, chroma_scale=eye.chroma_scale,
+                  noise_origin=(noise_y, noise_x))
     with reporting(progress):
         c.set_image(picture)
     return c

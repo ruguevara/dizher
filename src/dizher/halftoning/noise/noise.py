@@ -61,5 +61,6 @@ def add_noise(image, noise, noise_range=1):
     return np.clip(image, 0, 1)
 
 
-def noise_dither(image, noise_range=1, noise=blue_noise):
-    return add_noise(image, noise, noise_range=noise_range) >= 0.5
+def noise_dither(image, noise_range=1, noise=blue_noise, origin=(0, 0)):
+    """origin (y, x) rolls the tile: another start for what optimises from this dither."""
+    return add_noise(image, np.roll(noise, origin, axis=(0, 1)), noise_range=noise_range) >= 0.5

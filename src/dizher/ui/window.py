@@ -9,6 +9,7 @@ import subprocess
 import sys
 import time
 from contextlib import contextmanager
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -202,6 +203,11 @@ class Window:
                 self.editors[nid].draw(params, app.shown(inputs[0]), on_change, id=nid)
             elif params is not None:
                 params_editor(params, on_change, id=nid, help='tooltip')
+            if nid == 'prepare':
+                if imgui.button('Random'):
+                    x, y = np.random.randint(ops.BLUE_NOISE_RESOLUTION, size=2)
+                    self.app.set_params(nid, replace(params, noise_x=int(x), noise_y=int(y)))
+                imgui.set_item_tooltip('Restart from a random blue-noise origin')
             if nid == 'halftone':
                 imgui.begin_disabled(self.result is None)
                 if imgui.button('Save…'):

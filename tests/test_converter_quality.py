@@ -141,6 +141,22 @@ def test_stages_preview_snapshots():
                                                                   converter.best_ink, converter.best_paper))
 
 
+
+def test_noise_origin_restarts_both_stages():
+    """The noise origin rolls the blue-noise tile under the pair candidates and the DBS start alike."""
+    rng = np.random.default_rng(3)
+    mode = Mode('small', (16, 24), (8, 8), ZXPalette())
+    image = rng.random((*mode.size, 3), dtype=np.float32)
+    runs = []
+    for origin in ((0, 0), (5, 7)):
+        converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, mode, noise_origin=origin)
+        converter.set_image(image)
+        runs.append((converter.bitmaps.copy(), converter.dither(DBS()).copy()))
+    (b0, r0), (b1, r1) = runs
+    assert (b0 != b1).any(), 'candidates must follow the origin'
+    np.testing.assert_array_equal(b1, Stohastic().threshold(converter.levels, (5, 7)))
+    assert (r0 != r1).any(), 'the DBS start must follow the origin'
+
 if __name__ == '__main__':
     test_equal_luminance_colour_edge()
     test_selection_matches_full_convolution()
@@ -148,4 +164,5 @@ if __name__ == '__main__':
     test_halftone_target_is_reachable()
     test_colour_diffusion_preserves_scalar_projection()
     test_stages_preview_snapshots()
+    test_noise_origin_restarts_both_stages()
     print('ok')
