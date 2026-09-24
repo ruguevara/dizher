@@ -12,7 +12,7 @@ dithered with yellow dots is plainly a cell even when the mean colours agree, an
 tie the noise of the realisation picks one per block at random. So a coherence term charges a
 pair change between 4-neighbours by how different the two pairs look (CIELUV distance of the
 papers plus of the inks), scaled down where the original itself has an edge across that seam:
-    coherence * SEAM_COST * sum_{b~b'} V[p_b, p_b'] * exp(-|x_b - x_b'|^2 / 2 EDGE_SIGMA^2)
+    coherence * SEAM_COST * sum_{b~b'} V[p_b, p_b'] * exp(-|x_b - x_b'|^2 / 2 edge^2)
 This is the contrast-sensitive Potts prior of MRF segmentation. It is graded, so the bright
 variant of the same colours is nearly free, and a change along a real edge costs nothing.
 
@@ -56,7 +56,10 @@ LRGB2OPP = LRGB2OPP * (_palette_std[0] / _palette_std)[:, None]
 
 GROUPS = OrderedDict(Luma=[0], Chroma=[1, 2])   # weight name -> opponent channels
 OFFSETS = [(0, 1), (1, 0), (1, 1), (1, -1)]      # unordered neighbour pairs, block units
-EDGE_SIGMA = 0.05   # step of the original's block means (weighted opponent units) that counts as a real edge
+# Default step of the original's block means (weighted opponent units) that counts as a real edge (Converter.edge).
+# The test is per seam, so it cannot tell an edge from a steep smooth gradient; at 0.05 a red-to-yellow sky (0.03..0.07
+# per block in linear light) read as edges on every row and lost its coherence, real outlines step by 0.2 and more.
+EDGE_SIGMA = 0.1
 SEAM_COST = 0.1     # energy of one seam between totally different pairs at coherence 1; a block's own cost is ~0.2
 
 def autocorrelation(h: np.ndarray) -> np.ndarray:
@@ -153,7 +156,7 @@ class SelectionEnergy:
         Lh: (R-1, C) between (r, c) and (r+1, c); Lv: (R, C-1) between (r, c) and (r, c+1)."""
         w = self.weights
         X = np.concatenate([np.sqrt(w[g]) * self.X[g] for g in GROUPS], axis=-1)
-        step = lambda d: np.exp(-(d ** 2).sum(-1) / (2 * EDGE_SIGMA ** 2)).astype(np.float32)
+        step = lambda d: np.exp(-(d ** 2).sum(-1) / (2 * self.converter.edge ** 2)).astype(np.float32)
         return step(X[1:] - X[:-1]), step(X[:, 1:] - X[:, :-1])
 
     def energy(self, labels: np.ndarray) -> float:

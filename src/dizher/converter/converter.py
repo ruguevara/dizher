@@ -9,7 +9,7 @@ from .palette import Palette
 from .colors import convert_color, lrgb2luminance, gray2rgb
 from .dither import Ditherer, Stohastic, duo_levels
 from .eye import LUMA_ALPHA, LUMA_SCALE, CHROMA_ALPHA, CHROMA_SCALE, eye_kernel
-from .energy import SelectionEnergy, pair_dissimilarity, LRGB2OPP
+from .energy import SelectionEnergy, pair_dissimilarity, LRGB2OPP, EDGE_SIGMA
 from ..progress import report_progress, report_stage
 
 class Converter:
@@ -22,6 +22,7 @@ class Converter:
             chroma_alpha: float = CHROMA_ALPHA,
             chroma_scale: float = CHROMA_SCALE,
             coherence: float = 2.0,
+            edge: float = EDGE_SIGMA,
             luma_noise: float = 0.0,
             chroma_noise: float = 0.05,
             structure: float = 0.06,
@@ -36,6 +37,7 @@ class Converter:
         self.chroma_scale = chroma_scale
         self.luma_noise = luma_noise      # weights of the unblurred error: dot noise the low-pass eye model would miss, see energy.py
         self.chroma_noise = chroma_noise
+        self.edge = edge            # step of the original across a seam that counts as a real edge, see energy.py
         self.coherence = coherence  # cost of a pair change between neighbours where the original is smooth, see energy.py
         self.structure = structure  # weight of the contrast-weighted SSIM term in the DBS halftoner, see halftoning/dbs.py
         self.energy = SelectionEnergy(self, weights)

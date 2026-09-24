@@ -17,6 +17,7 @@ from mokit.types import Image
 
 from .converter import eye as eye_model
 from .converter.converter import Converter
+from .converter.energy import EDGE_SIGMA
 from .converter.dither import DBS, EDStucki, OrderedBayer, Stohastic
 from .platforms import Mode, c64, zxspectrum
 from . import tone
@@ -140,11 +141,13 @@ def prepare(picture: np.ndarray, target: Mode, metric: Metric, eye: Eye, progres
 
 def select_pairs(prepared: Converter,
                  coherence: Annotated[float, meta(min=0.0, max=8.0)] = 2.0,
+                 edge: Annotated[float, meta(min=0.02, max=0.4, help="step of the original across a seam that "
+                                             "counts as an edge, where a pair change costs no coherence")] = EDGE_SIGMA,
                  luma_noise: Annotated[float, meta(min=0.0, max=0.5)] = 0.0,
                  chroma_noise: Annotated[float, meta(min=0.0, max=0.5)] = 0.05,
                  progress=None) -> Converter:
     """One (paper, ink) pair per cell; the noise weights also reach the DBS halftoner."""
-    c = prepared.copy(coherence=coherence, luma_noise=luma_noise, chroma_noise=chroma_noise)
+    c = prepared.copy(coherence=coherence, edge=edge, luma_noise=luma_noise, chroma_noise=chroma_noise)
     with reporting(progress):
         c.set_labels(c.energy.apply())
     return c

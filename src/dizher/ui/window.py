@@ -40,7 +40,7 @@ DEBUG = {   # view -> (tooltip, the stage it needs, its image from that stage's 
     'Energy': ("Each cell's energy: red its own error, green the eye-model seams, blue coherence",
                'select', views.energy_view),
     'Seams': ('Cell seams the original has an edge across, bright: there a pair change costs no coherence',
-              'prepare', views.seam_view)}
+              'select', views.seam_view)}
 GRID = imgui.ImVec4(0.5, 0.5, 0.5, 0.6)   # grey reads over black and white alike
 
 
