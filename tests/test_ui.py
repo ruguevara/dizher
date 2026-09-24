@@ -110,7 +110,7 @@ def test_block_reset(ctx):
 def test_views_and_grid(ctx):
     wait(ctx, lambda: ui.app.result('halftone') is not None, 'a conversion to view')
     ctx.set_ref('//Preview')
-    for view in ('Bitmap', 'Attrs'):
+    for view in ('Bitmap', 'Attrs', 'Projected', 'Eye', 'Error', 'Energy', 'Seams'):
         ctx.item_click(f'**/{view}')
         ctx.yield_(2)
         assert ui.view == view and ui._converted().shape == (192, 256, 3), view

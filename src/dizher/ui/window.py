@@ -23,12 +23,24 @@ from mokit.ui.style import Palette
 from .. import ops
 from .app import Pipeline
 from .levels import LevelsEditor
+from . import views
 
 HEADER_TINT = dict(running=Palette.warn, error=Palette.error)   # header background of a running or failed stage
 NO_RESET = {'source'}   # resetting would drop the image
 LABELS = {nid: label for nid, label, _, _ in ops.PIPELINE}
 VIEWS = {'Screen': 'The conversion as the machine shows it', 'Bitmap': 'Ink pixels white, paper black',
          'Attrs': "Each cell's paper with a disc of its ink"}   # ToolZX's screen views
+DEBUG = {   # view -> (tooltip, the stage it needs, its image from that stage's Converter)
+    'Projected': ("What the halftoner aims at: each pixel moved to the nearest mix of its cell's pair",
+                  'select', lambda c: c.projected_target()),
+    'Eye': ('Both images as the eye model sees them: what the energy compares',
+            'halftone', lambda c: c.eye_view(c.dithered_result)),
+    'Error': ('Result minus target through the eye model, around grey: lighter/darker is luma error, '
+              'the tint is the colour the result adds', 'halftone', views.error_view),
+    'Energy': ("Each cell's energy: red its own error, green the eye-model seams, blue coherence",
+               'select', views.energy_view),
+    'Seams': ('Cell seams the original has an edge across, bright: there a pair change costs no coherence',
+              'prepare', views.seam_view)}
 GRID = imgui.ImVec4(0.5, 0.5, 0.5, 0.6)   # grey reads over black and white alike
 
 
@@ -80,6 +92,7 @@ class Window:
         self.expanded = {}     # node id -> block open; imgui keeps no header state in its ini
         self.editors = {'levels': LevelsEditor()}   # node id -> custom params editor
         self.view, self.grid = 'Screen', False     # the conversion's view and the cell grid; not persisted
+        self._debug = {}       # image key -> (the Converter it came from, the image)
 
     def runner_params(self, persist: bool = True) -> hello_imgui.RunnerParams:
         immvision.use_rgb_color_order()
@@ -205,10 +218,10 @@ class Window:
         imgui.end_disabled()
 
     def _view_bar(self) -> None:
-        for view in VIEWS:
+        for view, tip in [*VIEWS.items(), *((v, d[0]) for v, d in DEBUG.items())]:
             if widgets.toggle_button(view, self.view == view):
                 self.view = view
-            imgui.set_item_tooltip(VIEWS[view])
+            imgui.set_item_tooltip(tip)
             imgui.same_line(0, 0)
         imgui.same_line()
         imgui.push_id('grid')   # the bare '#' label would read as an id marker
@@ -222,11 +235,23 @@ class Window:
         if self.view == 'Screen':
             live = job.image if job is not None and job.node_id in ('select', 'halftone') else None
             return live if live is not None else (result.dithered_result if result is not None else None)
+        if self.view in DEBUG:
+            return self._debug_image(self.view, *DEBUG[self.view][1:])
         if result is None:
             return None
         if self.view == 'Bitmap':
             return np.repeat(result.dithered_bitmap[..., None], 3, axis=2)
         return np.where(cell_icon(result.cell, result.size)[..., None], result.best_ink, result.best_paper)
+
+    def _debug_image(self, key: str, stage: str, fn):
+        """fn of the stage's shown Converter, computed once per Converter."""
+        c = self.app.shown(stage)
+        if c is None:
+            return None
+        hit = self._debug.get(key)
+        if hit is None or hit[0] is not c:
+            hit = self._debug[key] = (c, fn(c))
+        return hit[1]
 
     def _cell_grid(self, cell, zoom: int) -> None:
         """Cell boundaries over the image just drawn."""
@@ -240,7 +265,9 @@ class Window:
 
     def _preview(self) -> None:
         self._view_bar()
-        tuned, converted = self.app.shown(ops.TUNED), self._converted()
+        tuned = (self._debug_image('eye target', 'prepare', lambda c: c.eye_view(c.image_rgb)) if self.view == 'Eye'
+                 else self.app.shown(ops.TUNED))
+        converted = self._converted()
         shown = [(key, image) for key, image in (('tuned', tuned), ('converted', converted)) if image is not None]
         if not shown:
             return

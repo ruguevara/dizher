@@ -142,12 +142,15 @@ class Converter:
         idx = self.expand_cells(labels)
         return self.realized[(idx,) + tuple(np.indices(idx.shape))]
 
-    def eye_view(self, rgb):
-        """What the selection energy compares: each opponent channel blurred with its eye kernel, back to sRGB."""
+    def eye_opponent(self, rgb):
+        """What the selection energy compares: each opponent channel blurred with its eye kernel, unweighted."""
         opp = (rgb.astype(np.float32) ** self.gamma) @ LRGB2OPP.T
-        blurred = np.stack([cv2.filter2D(np.ascontiguousarray(opp[..., k]), -1, h, borderType=cv2.BORDER_REFLECT_101)
-                            for k, h in enumerate(self.eye_kernels())], axis=-1)
-        return (blurred @ np.linalg.inv(LRGB2OPP).T).clip(0, 1) ** (1 / self.gamma)
+        return np.stack([cv2.filter2D(np.ascontiguousarray(opp[..., k]), -1, h, borderType=cv2.BORDER_REFLECT_101)
+                         for k, h in enumerate(self.eye_kernels())], axis=-1)
+
+    def eye_view(self, rgb):
+        """eye_opponent back in sRGB."""
+        return (self.eye_opponent(rgb) @ np.linalg.inv(LRGB2OPP).T).clip(0, 1) ** (1 / self.gamma)
 
     def set_labels(self, attr_indexes):
         self.best_attr_indexes = attr_indexes
@@ -172,6 +175,12 @@ class Converter:
         cancel. The pair optimiser already owns the unreachable part (energy.py)."""
         target = self.opponent(self.image_lrgb)
         return paper + duo_levels(target, paper, ink)[..., None] * (ink - paper)
+
+    def projected_target(self):
+        """halftone_target in sRGB, for display: the opponent map is linear, so the same mix in linear RGB."""
+        paper, ink = self.best_paper ** self.gamma, self.best_ink ** self.gamma
+        t = duo_levels(self.opponent(self.image_lrgb), self.opponent(paper), self.opponent(ink))[..., None]
+        return (paper + t * (ink - paper)) ** (1 / self.gamma)
 
     def save(self, filename: str) -> None:
         """The mode's native extension writes its screen file; any other extension writes the composite through OpenCV."""

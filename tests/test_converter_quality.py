@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 
 from dizher.converter.converter import Converter
+from dizher.converter.energy import SEAM_COST
 from dizher.converter.dither import DBS, EDStucki, OrderedBayer, Stohastic, duo_levels
 from dizher.halftoning.dbs import _Structure, CONTRAST_GAIN
 from dizher.halftoning.error_distribution import stucki_duo
@@ -53,7 +54,14 @@ def test_selection_matches_full_convolution():
         np.testing.assert_allclose(converter.energy.energy(labels), direct, rtol=2e-6)
         assert direct >= 0
 
-    converter.luma_noise = converter.chroma_noise = 0
+    converter.coherence = 1.5   # the coherence cost, seam by seam
+    Lh, Lv = converter.energy.seam_smoothness()
+    V = converter.pair_dissimilarity
+    seams = sum(Lh[r, c] * V[labels[r, c], labels[r + 1, c]] for r in range(2) for c in range(4)) + \
+        sum(Lv[r, c] * V[labels[r, c], labels[r, c + 1]] for r in range(3) for c in range(3))
+    np.testing.assert_allclose(converter.energy.energy(labels), direct + 1.5 * SEAM_COST * seams, rtol=2e-6)
+
+    converter.luma_noise = converter.chroma_noise = converter.coherence = 0
     converter.set_image(np.full((*mode.size, 3), 0.5 ** (1 / converter.gamma), np.float32))
     converter.dither(Stohastic())
     assert (converter.best_attr_indexes == 1).all(), 'Uniform grey must not become solid block stripes'

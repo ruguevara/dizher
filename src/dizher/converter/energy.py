@@ -158,20 +158,32 @@ class SelectionEnergy:
 
     def energy(self, labels: np.ndarray) -> float:
         """Total energy of a labelling (for checks)."""
+        return float(self.cell_energies(labels).sum())
+
+    def cell_energies(self, labels: np.ndarray) -> np.ndarray:
+        """(R, C, 3) a labelling's energy per block: its own term, the eye-model seam terms (negative where the
+        neighbours' errors cancel) and the coherence cost; each seam split half and half between its blocks."""
         w = self.weights
         P, R, C = next(iter(self.D.values())).shape
         ri, ci = np.indices((R, C))
-        total = self.unary()[labels, ri, ci].sum()
+        own, seam, coherence = self.unary()[labels, ri, ci], np.zeros((R, C)), np.zeros((R, C))
         for (dr, dc) in OFFSETS:
             rs, cs = _ranges(dr, dc, R, C)
-            me, nb = labels[rs, cs], labels[rs.start + dr:rs.stop + dr, cs.start + dc:cs.stop + dc]
+            ns = slice(rs.start + dr, rs.stop + dr), slice(cs.start + dc, cs.stop + dc)
+            me, nb = labels[rs, cs], labels[ns]
             i, j = np.indices(me.shape)
-            total += sum(w[g] * self.S[g][(dr, dc)][i, j, me, nb].sum() for g in GROUPS)
+            half = sum(w[g] * self.S[g][(dr, dc)][i, j, me, nb] for g in GROUPS) / 2
+            seam[rs, cs] += half
+            seam[ns] += half
         Lh, Lv = self.seam_smoothness()
-        V = self.converter.pair_dissimilarity
-        total += self.converter.coherence * SEAM_COST * (
-            (Lh * V[labels[1:], labels[:-1]]).sum() + (Lv * V[labels[:, 1:], labels[:, :-1]]).sum())
-        return float(total)
+        V, k = self.converter.pair_dissimilarity, self.converter.coherence * SEAM_COST / 2
+        half = k * Lh * V[labels[1:], labels[:-1]]
+        coherence[1:] += half
+        coherence[:-1] += half
+        half = k * Lv * V[labels[:, 1:], labels[:, :-1]]
+        coherence[:, 1:] += half
+        coherence[:, :-1] += half
+        return np.stack([own, seam, coherence], axis=-1)
 
 def _transpose(D, S, Lh, Lv):
     """The same problem with rows and columns swapped."""
