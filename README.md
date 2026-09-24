@@ -34,6 +34,63 @@ Dizher turns a full-colour picture into a ZX Spectrum screen: 256x192 pixels whe
 block may use only two colours out of the 15-colour palette. The conversion is one optimisation
 problem in two stages, colour selection and halftoning, both judged by the same model of the eye.
 
+### Pipeline
+
+Two optimisers in a row, both minimising the same eye-model error, each with its own extra term.
+The GUI group that owns each knob is in brackets.
+
+```
+ source image ──► Tune (framing, light, levels, contrast, colour) ──► sRGB 256x192
+                                                                        │
+                       gamma 2.2 ──► linear RGB ──► opponent O1 O2 O3 (luma, red-green, blue-yellow)
+                                                    scaled by sqrt(weights)         [Metric: chroma]
+                                                                        │
+   ┌────────────────────────────────────────────────────────────────────┼─────────────────────────┐
+   │ Stage 1: SELECT PAIRS                one paper/ink pair per 8x8 block                          │
+   │                                                                                                │
+   │  candidates: for every allowed pair, project the block onto the paper-ink segment, blue-noise │
+   │  dither it                                    [Target: palette subset]  [Prepare: noise x, y]  │
+   │                                                                                                │
+   │  loss(labels) = Σ_ch || h_ch ∗ (composite − target) ||²    eye-blurred error, exact quadratic  │
+   │               + Σ_ch noise_ch · || composite − target ||²  unblurred dot contrast              │
+   │               + coherence · Σ_seams V(pair, pair') · exp(−step² / 2 edge²)   Potts prior       │
+   │                                                                                                │
+   │     h_ch      [Eye model: luma/chroma alpha, blur px]  support capped at 4 px (half a cell)    │
+   │     noise_ch  [Select pairs: luma noise, chroma noise]                                         │
+   │     V         CIELUV distance of papers + inks, fixed by the palette                           │
+   │     coherence, edge  [Select pairs: coherence, edge]                                           │
+   │                                                                                                │
+   │  solver: rows then columns re-solved exactly by dynamic programming, until no label changes    │
+   └──────────────────────────────────────────┬─────────────────────────────────────────────────────┘
+                                              │ paper, ink per block
+                                              ▼
+   ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+   │ Stage 2: HALFTONE                  one bit per pixel: paper or ink                             │
+   │                                                                                                │
+   │  target: each pixel projected onto its block's paper-ink segment (the unreachable part is     │
+   │  already paid for by stage 1, so it is not chased across seams)                                │
+   │  start: blue-noise dither of that target                              [Prepare: noise x, y]    │
+   │                                                                                                │
+   │  loss(bitmap) = Σ_ch || h_ch ∗ (result − target) ||²    same kernels and noise weights         │
+   │               + Σ_ch noise_ch · || result − target ||²                                         │
+   │               + structure · Σ_p c_p (1 − SSIM_p(result, target))   luma only, 7x7 windows,     │
+   │                                                                     c_p = local contrast       │
+   │     structure  [Halftone: structure]                                                           │
+   │                                                                                                │
+   │  solver (DBS): every pixel tries a toggle and a swap with each of 8 neighbours, keeps the      │
+   │  move that lowers the loss most; deltas are exact from running error and window statistics;   │
+   │  a lattice of non-interacting pixels moves at once; stops when fewer than 0.1% of pixels move  │
+   │  Alternatives for comparison  [Halftone: halftoner]: Stucki, ordered Bayer, stochastic         │
+   └──────────────────────────────────────────┬─────────────────────────────────────────────────────┘
+                                              │ bitmap + attributes
+                                              ▼
+                                  screen file (.scr) or PNG
+```
+
+Views in the Preview tab show what each stage sees: Projected is the stage-2 target, Eye is target
+and result through h, Error is their difference, Energy is the stage-1 loss per block (own, seam,
+coherence), Seams is where edge disables the coherence prior.
+
 ### Eye model
 
 A screen viewed from a normal distance is blurred by the eye, so a fine mix of two colours reads
@@ -73,10 +130,12 @@ only, not bright only, grayscale, or black and white.
 With paper and ink fixed per block, each pixel is set to one of them so that the blurred result
 matches the blurred image. All halftoners consume the same colour-aware inputs. The default,
 Direct Binary Search (DBS), starts from a blue-noise dither, then
-repeatedly visit every pixel and flip it if the flip lowers the eye-model error, until no flip
-helps. The error change of a flip is computed exactly from a running error image, so a pass costs
-a few convolutions. Pixels farther apart than the kernel do not interact, so a whole lattice of
-pixels is flipped at once.
+repeatedly visits every pixel and either flips it or swaps it with one of its 8 neighbours,
+whichever lowers the eye-model error most, until no move helps. A swap moves a dot without
+changing the local tone; with flips alone the search stalls at about twice the error. The error
+change of a move is computed exactly from a running error image, so a pass costs a few
+convolutions. Pixels farther apart than the kernel do not interact, so a whole lattice of
+pixels moves at once.
 
 DBS uses the same per-channel blur and noise terms as colour selection, with SSIM applied to the
 luminance channel.
@@ -84,7 +143,7 @@ luminance channel.
 Plain DBS reproduces tone but blurs faint edges and texture. Following structure-aware halftoning
 (Pang et al. 2008), the energy also includes a structural similarity term (SSIM) between the
 halftone and the image in small windows, weighted by the local contrast of the image (Jiang et al.
-2023) so that flat areas do not grow holes. Its contribution to every flip is also computed
+2023) so that flat areas do not grow holes. Its contribution to every move is also computed
 exactly, and the weight is a GUI slider. Ordered Bayer, Stucki error diffusion and plain
 stochastic dithering remain available for comparison.
 
