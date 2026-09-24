@@ -110,7 +110,7 @@ Done:
 * [x] Colour selection as one eye-model energy with a coherence prior
 * [x] Adjustable metric weights (luma, chroma, coherence) and eye-model parameters
 * [x] Selectable dithering methods
-* [x] Tune stages: crop anchor, exposure and white balance (temperature, tint), Photoshop-style Levels with Auto and histogram, contrast, vibrance and saturation
+* [x] Tune stages: framing (fill or fit, scale, rotation, pixel shift and per-edge nudges onto the cell grid), exposure and white balance (temperature, tint), Photoshop-style Levels with Auto and histogram, contrast, vibrance and saturation
 * [x] Palette subsets: bright only, not bright only, grayscale, black and white
 * [x] Python installation package
 * [x] Save as SCR and PNG
@@ -121,7 +121,6 @@ Planned:
 * [ ] Highlights / Shadows (local tone mapping, Lightroom-style)
 * [ ] Clarity (local contrast) and Sharpen (unsharp mask after the resize; matters at 256x192)
 * [ ] Levels per channel (R, G, B) like Photoshop's channel menu
-* [ ] Crop zoom and free framing (now: cover the screen, anchor only)
 * [ ] Custom ZX Spectrum palettes (ZX Spectrum Next or another hardware enhanceds)
 * [ ] ZX Spectrum MultiColor, GigaScreen and MultiGigaScreen software mode
 * [ ] Commodore 64 HiRes: native file format (Art Studio)

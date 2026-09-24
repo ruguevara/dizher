@@ -76,6 +76,22 @@ def test_host_reruns_only_downstream_of_an_edit():
     host.close()
 
 
+def test_framing_geometry():
+    from types import SimpleNamespace
+    from dizher.platforms import zxspectrum
+    mode = zxspectrum.STANDARD
+    src = np.random.default_rng(0).uniform(0, 1, (192, 256, 3)).astype(np.float32)
+    frame = lambda rgb, **p: ops.framing(SimpleNamespace(rgb=[rgb]), mode, **p)
+    np.testing.assert_array_equal(frame(src), src)                                  # screen-sized: a plain copy
+    shifted = frame(src, shift_x=3, shift_y=-2)
+    np.testing.assert_array_equal(shifted[:-2, 3:], src[2:, :-3])
+    assert not shifted[:, :3].any() and not shifted[-2:].any()                       # black where nothing lands
+    np.testing.assert_array_equal(frame(src, left=8, right=-8), frame(src, shift_x=-8))   # edges move independently
+    np.testing.assert_allclose(frame(src, rotation=180.0), src[::-1, ::-1], atol=1e-5)    # about the centre
+    wide = frame(np.ones((64, 512, 3), np.float32), fit='Fit')                       # letterboxed: 256x32 in the middle
+    assert wide[80:112].all() and not wide[:80].any() and not wide[112:].any()
+
+
 def test_tone_semantics():
     from dizher import tone
     rng = np.random.default_rng(0)
@@ -98,6 +114,7 @@ def test_tone_semantics():
 
 
 if __name__ == '__main__':
+    test_framing_geometry()
     test_tone_semantics()
     test_pipeline_converts_and_reuses_upstream()
     test_pipeline_matches_single_converter()

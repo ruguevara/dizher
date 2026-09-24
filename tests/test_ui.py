@@ -90,12 +90,12 @@ def test_levels_auto(ctx):
 
 def test_block_collapses_and_expands(ctx):
     ctx.set_ref('//Tune')
-    ctx.item_click('**/###crop')
+    ctx.item_click('**/###framing')
     ctx.yield_(2)
-    assert ui.expanded['crop'] is False
-    ctx.item_click('**/###crop')
+    assert ui.expanded['framing'] is False
+    ctx.item_click('**/###framing')
     ctx.yield_(2)
-    assert ui.expanded['crop'] is True
+    assert ui.expanded['framing'] is True
 
 
 def test_block_reset(ctx):
@@ -105,6 +105,18 @@ def test_block_reset(ctx):
     ctx.item_click('**/Reset##light')
     ctx.yield_(2)
     assert params('light') == type(params('light'))(), params('light')
+
+
+def test_views_and_grid(ctx):
+    wait(ctx, lambda: ui.app.result('halftone') is not None, 'a conversion to view')
+    ctx.set_ref('//Preview')
+    for view in ('Bitmap', 'Attrs'):
+        ctx.item_click(f'**/{view}')
+        ctx.yield_(2)
+        assert ui.view == view and ui._converted().shape == (192, 256, 3), view
+    ctx.item_click('**/grid/#')
+    ctx.yield_(2)
+    assert ui.grid
 
 
 def test_capture_layout(ctx):   # keep last: a picture of the default layout for review
@@ -124,6 +136,7 @@ TESTS = [
     ('ui', 'levels_auto', test_levels_auto),
     ('ui', 'block_collapses_and_expands', test_block_collapses_and_expands),
     ('ui', 'block_reset', test_block_reset),
+    ('ui', 'views_and_grid', test_views_and_grid),
     ('ui', 'capture_layout', test_capture_layout),
 ]
 

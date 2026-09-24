@@ -27,6 +27,17 @@ from .levels import LevelsEditor
 HEADER_TINT = dict(running=Palette.warn, error=Palette.error)   # header background of a running or failed stage
 NO_RESET = {'source'}   # resetting would drop the image
 LABELS = {nid: label for nid, label, _, _ in ops.PIPELINE}
+VIEWS = {'Screen': 'The conversion as the machine shows it', 'Bitmap': 'Ink pixels white, paper black',
+         'Attrs': "Each cell's paper with a disc of its ink"}   # ToolZX's screen views
+GRID = imgui.ImVec4(0.5, 0.5, 0.5, 0.6)   # grey reads over black and white alike
+
+
+def cell_icon(cell, size) -> np.ndarray:
+    """ToolZX's attrs view: a disc of ink in every cell, (H, W) bool."""
+    h, w = cell
+    y, x = np.mgrid[:h, :w]
+    disc = (x - (w - 1) / 2) ** 2 + (y - (h - 1) / 2) ** 2 <= (min(h, w) * 3 / 8) ** 2
+    return np.tile(disc, (size[0] // h, size[1] // w))
 
 
 def save_dialog(title: str, folder: str, name: str) -> str:
@@ -68,6 +79,7 @@ class Window:
         self.images = {}       # immvision params per preview
         self.expanded = {}     # node id -> block open; imgui keeps no header state in its ini
         self.editors = {'levels': LevelsEditor()}   # node id -> custom params editor
+        self.view, self.grid = 'Screen', False     # the conversion's view and the cell grid; not persisted
 
     def runner_params(self, persist: bool = True) -> hello_imgui.RunnerParams:
         immvision.use_rgb_color_order()
@@ -192,11 +204,43 @@ class Window:
             self.app.set_params(nid, default)
         imgui.end_disabled()
 
+    def _view_bar(self) -> None:
+        for view in VIEWS:
+            if widgets.toggle_button(view, self.view == view):
+                self.view = view
+            imgui.set_item_tooltip(VIEWS[view])
+            imgui.same_line(0, 0)
+        imgui.same_line()
+        imgui.push_id('grid')   # the bare '#' label would read as an id marker
+        if widgets.toggle_button('#', self.grid):
+            self.grid = not self.grid
+        imgui.set_item_tooltip('Cell grid over both previews')
+        imgui.pop_id()
+
+    def _converted(self):
+        result, job = self.result, self.app.job
+        if self.view == 'Screen':
+            live = job.image if job is not None and job.node_id in ('select', 'halftone') else None
+            return live if live is not None else (result.dithered_result if result is not None else None)
+        if result is None:
+            return None
+        if self.view == 'Bitmap':
+            return np.repeat(result.dithered_bitmap[..., None], 3, axis=2)
+        return np.where(cell_icon(result.cell, result.size)[..., None], result.best_ink, result.best_paper)
+
+    def _cell_grid(self, cell, zoom: int) -> None:
+        """Cell boundaries over the image just drawn."""
+        lo, hi = imgui.get_item_rect_min(), imgui.get_item_rect_max()
+        x0, y0, x1, y1 = lo.x, lo.y, hi.x, hi.y
+        draw, col = imgui.get_window_draw_list(), imgui.get_color_u32(GRID)
+        for x in np.arange(x0, x1 + 1, cell[1] * zoom):
+            draw.add_line(imgui.ImVec2(x, y0), imgui.ImVec2(x, y1), col)
+        for y in np.arange(y0, y1 + 1, cell[0] * zoom):
+            draw.add_line(imgui.ImVec2(x0, y), imgui.ImVec2(x1, y), col)
+
     def _preview(self) -> None:
-        tuned, result = self.app.shown(ops.TUNED), self.result
-        job = self.app.job
-        live = job.image if job is not None and job.node_id in ('select', 'halftone') else None
-        converted = live if live is not None else (result.dithered_result if result is not None else None)
+        self._view_bar()
+        tuned, converted = self.app.shown(ops.TUNED), self._converted()
         shown = [(key, image) for key, image in (('tuned', tuned), ('converted', converted)) if image is not None]
         if not shown:
             return
@@ -209,6 +253,8 @@ class Window:
         for key, image in shown:
             ih, iw = image.shape[:2]
             immvision.image(f'##{key}', as_ubyte(image), widgets.image_params(self.images, key, (iw * zoom, ih * zoom)))
+            if self.grid:
+                self._cell_grid(ops.MODES[self.app.graph['target'].params.mode].cell, zoom)
             if side >= stacked:
                 imgui.same_line()
 

@@ -49,17 +49,39 @@ def target(mode: Annotated[str, meta(choices=tuple(MODES))] = zxspectrum.STANDAR
     return replace(m, palette=m.palette.with_subset(palette))
 
 
-def crop(frames: Image, target: Mode,
-         anchor_x: Annotated[float, meta(min=0.0, max=1.0, help="0 left, 1 right")] = 0.5,
-         anchor_y: Annotated[float, meta(min=0.0, max=1.0, help="0 top, 1 bottom")] = 0.5) -> np.ndarray:
-    """First frame scaled to cover the screen (area averaging), cropped at the anchor: float RGB in 0..1."""
+PX = meta(min=-512, max=512, step=1)
+
+
+def framing(frames: Image, target: Mode,
+            fit: Annotated[str, meta(choices=('Fill', 'Fit'), help="Fill covers the screen, Fit shows the whole image")] = 'Fill',
+            scale: Annotated[float, meta(min=0.25, max=4.0, help="1 is the fit's size")] = 1.0,
+            rotation: Annotated[float, meta(min=-45.0, max=45.0, help="degrees, + counter-clockwise")] = 0.0,
+            shift_x: Annotated[int, meta(**PX, help="px, + right")] = 0,
+            shift_y: Annotated[int, meta(**PX, help="px, + down")] = 0,
+            left: Annotated[int, meta(**PX, help="px the left edge moves out")] = 0,
+            top: Annotated[int, meta(**PX, help="px the top edge moves out")] = 0,
+            right: Annotated[int, meta(**PX, help="px the right edge moves out")] = 0,
+            bottom: Annotated[int, meta(**PX, help="px the bottom edge moves out")] = 0) -> np.ndarray:
+    """First frame placed on the screen: scaled to fill or fit it and centred, shifted, each edge pulled out or in
+    by whole pixels to land the composition on the cell grid, rotated about the placed centre. Outside is black.
+    Float RGB in 0..1."""
     rgb = img_as_float(frames.rgb[0]).astype(np.float32)
-    h, w = target.size
-    f = max(h / rgb.shape[0], w / rgb.shape[1])
-    size = max(w, round(rgb.shape[1] * f)), max(h, round(rgb.shape[0] * f))
-    scaled = cv2.resize(rgb, size, interpolation=cv2.INTER_AREA)
-    y0, x0 = round((scaled.shape[0] - h) * anchor_y), round((scaled.shape[1] - w) * anchor_x)
-    return scaled[y0:y0 + h, x0:x0 + w]
+    H, W = target.size
+    h, w = rgb.shape[:2]
+    f = (max if fit == 'Fill' else min)(H / h, W / w) * scale
+    sw, sh = round(w * f), round(h * f)
+    # the placed rectangle, on whole pixels so that without rotation the warp is a plain copy
+    x0, y0 = (W - sw) // 2 + shift_x - left, (H - sh) // 2 + shift_y - top
+    rw, rh = sw + left + right, sh + top + bottom
+    if rw < 1 or rh < 1:
+        raise ValueError(f"the edges leave a {rw}x{rh} px image")
+    scaled = cv2.resize(rgb, (rw, rh), interpolation=cv2.INTER_AREA if rw * rh < w * h else cv2.INTER_LINEAR)
+    a = np.radians(rotation)
+    rot = np.array([[np.cos(a), np.sin(a)], [-np.sin(a), np.cos(a)]])   # y down: + turns counter-clockwise
+    c = (np.array([rw, rh]) - 1) / 2   # the rectangle's centre in its own pixel coordinates
+    t = np.array([x0, y0]) + c - rot @ c
+    return cv2.warpAffine(scaled, np.hstack([rot, t[:, None]]), (W, H), flags=cv2.INTER_LINEAR,
+                          borderMode=cv2.BORDER_CONSTANT, borderValue=0)
 
 
 def light(picture: np.ndarray,
@@ -141,8 +163,8 @@ def halftone(selection: Converter,
 
 TUNE = (   # (node id, block label, op, inputs): the left column's blocks, top to bottom
     ('source', 'Source', 'mokit.ops:load_media', ()),
-    ('crop', 'Crop', 'dizher.ops:crop', ('source', 'target')),
-    ('light', 'Light', 'dizher.ops:light', ('crop',)),
+    ('framing', 'Framing', 'dizher.ops:framing', ('source', 'target')),
+    ('light', 'Light', 'dizher.ops:light', ('framing',)),
     ('levels', 'Levels', 'dizher.ops:levels', ('light',)),
     ('contrast', 'Contrast', 'dizher.ops:contrast', ('levels',)),
     ('color', 'Color', 'dizher.ops:color', ('contrast',)),
