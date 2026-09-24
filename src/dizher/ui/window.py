@@ -136,6 +136,7 @@ class Window:
         self.view, self.grid = 'Screen', False     # the conversion's view and the cell grid; not persisted
         self._debug = {}       # image key -> (the Converter it came from, the image)
         self._steps = 0        # history length last frame: the History list follows a new step
+        self._after_close = None   # what waits for the unsaved changes dialog: opening another image
 
     def runner_params(self, persist: bool = True) -> hello_imgui.RunnerParams:
         immvision.use_rgb_color_order()
@@ -230,6 +231,7 @@ class Window:
             self.app.redo()
         if self.autosave and self.project and self.app.graph != self.saved and not imgui.is_any_item_active():
             self._save_project()   # once a drag is let go, not every frame of it
+        self._unsaved_dialog()
         self.app.update()
         hello_imgui.get_runner_params().fps_idling.enable_idling = not self.app.busy
 
@@ -512,7 +514,37 @@ class Window:
         source = self._source()
         path = widgets.native_pick('file', 'Open image', str(source.parent if source else Path.home()))
         if path:
-            self._open_image(path)
+            self._close(lambda: self._open_image(path))
+
+    def _close(self, then) -> None:
+        """then() once the project is closed: at once when it is saved, else after the unsaved changes dialog.
+        Quitting does not ask: the session keeps the unsaved edits for the next start."""
+        if self.project and self.app.graph != self.saved:
+            self._after_close = then
+        else:
+            then()
+
+    def _unsaved_dialog(self) -> None:
+        if self._after_close is None:
+            return
+        imgui.open_popup('Unsaved changes')   # imgui keeps it open when asked again
+        if not imgui.begin_popup_modal('Unsaved changes', None, imgui.WindowFlags_.always_auto_resize.value)[0]:
+            return
+        imgui.text(f'Save the changes to {self.project.name}?')
+        then, choice = self._after_close, None
+        for label in ('Save', "Don't save", 'Cancel'):
+            if imgui.button(label):
+                choice = label
+            imgui.same_line()
+        imgui.new_line()
+        if choice == 'Save':
+            self._save_project()
+        if choice:
+            self._after_close = None
+            imgui.close_current_popup()
+        imgui.end_popup()
+        if choice == "Don't save" or choice == 'Save' and self.app.graph == self.saved:   # not when the save failed
+            then()
 
     def _open_image(self, path) -> None:
         """Its project when it has one, else a new one beside it, written by the first save."""

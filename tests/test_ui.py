@@ -122,6 +122,22 @@ def test_autosave(ctx):
         ui.project, ui.autosave = folder, False
     reset('contrast')
 
+
+def test_unsaved_dialog(ctx):
+    """Opening another image over unsaved edits asks first; with nothing unsaved it does not."""
+    opened = []
+    ui.saved = ui.app.graph
+    ui._close(lambda: opened.append(1))
+    assert opened == [1]
+    ui.app.set_params('contrast', replace(params('contrast'), contrast=15.0))
+    for button, result in (('Cancel', [1]), ("Don't save", [1, 1])):
+        ui._close(lambda: opened.append(1))
+        ctx.yield_(2)
+        ctx.item_click(f'//Unsaved changes/{button}')
+        ctx.yield_(2)
+        assert opened == result and ui._after_close is None, (button, opened)
+    reset('contrast')
+
 def test_block_collapses_and_expands(ctx):
     ctx.set_ref('//Tune')
     ctx.item_click('**/###framing')
@@ -205,6 +221,7 @@ TESTS = [
     ('ui', 'levels_auto', test_levels_auto),
     ('ui', 'history_panel', test_history_panel),
     ('ui', 'autosave', test_autosave),
+    ('ui', 'unsaved_dialog', test_unsaved_dialog),
     ('ui', 'block_collapses_and_expands', test_block_collapses_and_expands),
     ('ui', 'block_reset', test_block_reset),
     ('ui', 'views_and_grid', test_views_and_grid),
