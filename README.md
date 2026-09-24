@@ -191,12 +191,17 @@ Done:
 
 Planned:
 
-* [ ] Undo/R
+* [ ] Undo/Redo, history panel
+* [ ] Starred/named selected shaphots panel to compare between and choose from
+* [ ] Linking an image to a project, the Lightroom way
+* [ ] Global presets of selected stages
+* [ ] Recent images-projects in File menu
+* [ ] Closing unsaved project should ask to save
 * [ ] Curves (tone curve editor; subsumes Contrast)
 * [ ] Levels per channel (R, G, B) like Photoshop's channel menu
+* [ ] Overpaint attrs, bright
 * [ ] Custom ZX Spectrum palettes (ZX Spectrum Next or another hardware enhanceds)
 * [ ] ZX Spectrum MultiColor, GigaScreen and MultiGigaScreen software mode
 * [ ] Commodore 64 LowRes 160x200 mode with 4 colors per character block
-* [ ] Overpaint bitmap, attrs, bright
 * [ ] Standalone binary package with PyInstaller for macOS, Windows, Linux
 * [ ] Ability to save and load conversion projects with an image, settings and overpaint layers
