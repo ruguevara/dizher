@@ -61,6 +61,14 @@ def test_selection_matches_full_convolution():
         sum(Lv[r, c] * V[labels[r, c], labels[r, c + 1]] for r in range(3) for c in range(3))
     np.testing.assert_allclose(converter.energy.energy(labels), direct + 1.5 * SEAM_COST * seams, rtol=2e-6)
 
+    for r, c in ((1, 1), (0, 3), (2, 0)):   # the inspector's per-cell scores, inside and on the corners
+        costs = converter.energy.cell_candidates(labels, r, c).sum(1)
+        totals = []
+        for p in range(len(costs)):
+            labels[r, c] = p
+            totals.append(converter.energy.energy(labels))
+        np.testing.assert_allclose(np.array(totals) - costs, totals[0] - costs[0], atol=1e-5)
+
     converter.luma_noise = converter.chroma_noise = converter.coherence = 0
     converter.set_image(np.full((*mode.size, 3), 0.5 ** (1 / converter.gamma), np.float32))
     converter.dither(Stohastic())

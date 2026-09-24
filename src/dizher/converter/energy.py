@@ -188,6 +188,27 @@ class SelectionEnergy:
         coherence[:, :-1] += half
         return np.stack([own, seam, coherence], axis=-1)
 
+    def cell_candidates(self, labels: np.ndarray, r: int, c: int) -> np.ndarray:
+        """(P, 3) every pair's cost at block (r, c) with the other labels fixed: its own term, its eye-model seams
+        and its coherence with the neighbours, each seam whole, as a line solve trades them. The sum differs from
+        the total energy of the labelling with that pair at (r, c) by one constant for all pairs."""
+        w, R, C = self.weights, *labels.shape
+        own, seam, coherence = self.unary()[:, r, c], 0, 0
+        for dr, dc in OFFSETS:
+            rs, cs = _ranges(dr, dc, R, C)
+            S = lambda i, j, p, q: sum(w[g] * self.S[g][(dr, dc)][i - rs.start, j - cs.start, p, q] for g in GROUPS)
+            if rs.start <= r < rs.stop and cs.start <= c < cs.stop:                   # the neighbour at (r+dr, c+dc)
+                seam = seam + S(r, c, slice(None), labels[r + dr, c + dc])
+            if rs.start <= r - dr < rs.stop and cs.start <= c - dc < cs.stop:         # the one at (r-dr, c-dc)
+                seam = seam + S(r - dr, c - dc, labels[r - dr, c - dc], slice(None))
+        Lh, Lv = self.seam_smoothness()
+        V = self.converter.pair_dissimilarity
+        for near, L in (((r - 1, c), Lh[r - 1, c] if r > 0 else 0), ((r + 1, c), Lh[r, c] if r < R - 1 else 0),
+                        ((r, c - 1), Lv[r, c - 1] if c > 0 else 0), ((r, c + 1), Lv[r, c] if c < C - 1 else 0)):
+            if L:
+                coherence = coherence + L * V[:, labels[near]]
+        return np.stack(np.broadcast_arrays(own, seam, self.converter.coherence * SEAM_COST * coherence), axis=-1)
+
 def _transpose(D, S, Lh, Lv):
     """The same problem with rows and columns swapped."""
     St = {(1, 0): S[(0, 1)].transpose(1, 0, 2, 3),

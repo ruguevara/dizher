@@ -50,6 +50,7 @@ DEBUG = {   # view -> (tooltip, the stage it needs, its image from that stage's 
     'Seams': ('Cell seams the original has an edge across, bright: there a pair change costs no coherence',
               'select', views.seam_view)}
 GRID = imgui.ImVec4(0.5, 0.5, 0.5, 0.6)   # grey reads over black and white alike
+INSPECT_CELLS, INSPECT_ZOOM, INSPECT_PAIRS = 3, 10, 8   # the hover tooltip: cells a side, its zoom, pairs listed
 
 
 def cell_icon(cell, size) -> np.ndarray:
@@ -272,10 +273,14 @@ class Window:
         imgui.set_item_tooltip('Cell grid over both previews')
         imgui.pop_id()
 
+    def _live(self):
+        """The running pair selection's or optimiser's latest snapshot."""
+        job = self.app.job
+        return job.image if job is not None and job.node_id in ('select', 'optimise') else None
+
     def _converted(self):
         """The view of the running stage's live snapshot, else of the last finished result."""
-        job = self.app.job
-        live = job.image if job is not None and job.node_id in ('select', 'optimise') else None
+        live = self._live()
         if self.view in DEBUG:
             _, stage, fn = DEBUG[self.view]
             return self._debug_image(self.view, live if live is not None else self.app.shown(stage), fn)
@@ -321,13 +326,77 @@ class Window:
         side = min((avail.x - spacing.x) / (2 * w), avail.y / h)
         stacked = min(avail.x / w, (avail.y - spacing.y) / (2 * h))
         zoom = max(1, int(max(side, stacked)))
+        cell, hovered = ops.MODES[self.app.graph['target'].params.mode].cell, None
         for key, image in shown:
             ih, iw = image.shape[:2]
             immvision.image(f'##{key}', as_ubyte(image), widgets.image_params(self.images, key, (iw * zoom, ih * zoom), (iw, ih)))
+            if imgui.is_item_hovered():
+                m, lo = imgui.get_mouse_pos(), imgui.get_item_rect_min()
+                hovered = min(int(m.y - lo.y) // zoom, ih - 1), min(int(m.x - lo.x) // zoom, iw - 1)
             if self.grid:
-                self._cell_grid(ops.MODES[self.app.graph['target'].params.mode].cell, zoom)
+                self._cell_grid(cell, zoom)
             if side >= stacked:
                 imgui.same_line()
+        if hovered is not None and all(i.shape == shown[0][1].shape for _, i in shown):   # not mid mode switch
+            self._inspect(hovered, cell, shown)
+
+    def _inspect(self, pixel, cell, shown) -> None:
+        """The hover tooltip: the cells around the one under the cursor zoomed in every preview, that cell outlined,
+        and the pairs the selection energy scores best there, the other cells' pairs fixed."""
+        (h, w), (H, W), z = cell, shown[0][1].shape[:2], INSPECT_ZOOM
+        r, c = pixel[0] // h, pixel[1] // w
+        # the block of cells centred on the hovered one, moved inside at the image's edges
+        r0, c0 = (max(0, min(i - INSPECT_CELLS // 2, n - INSPECT_CELLS)) for i, n in ((r, H // h), (c, W // w)))
+        size = INSPECT_CELLS * w, INSPECT_CELLS * h
+        imgui.begin_tooltip()
+        for key, image in shown:
+            crop = image[r0 * h:r0 * h + size[1], c0 * w:c0 * w + size[0]]
+            immvision.image(f'##inspect {key}', as_ubyte(crop),
+                            widgets.image_params(self.images, f'inspect {key}', (size[0] * z, size[1] * z), size))
+            self._cell_grid(cell, z)
+            lo = imgui.get_item_rect_min()
+            a = imgui.ImVec2(lo.x + (c - c0) * w * z, lo.y + (r - r0) * h * z)
+            imgui.get_window_draw_list().add_rect(a, imgui.ImVec2(a.x + w * z, a.y + h * z),
+                                                  imgui.get_color_u32(Palette.warn), thickness=2)
+            imgui.same_line()
+        imgui.new_line()
+        self._candidates(r, c)
+        imgui.end_tooltip()
+
+    def _candidates(self, r: int, c: int) -> None:
+        """The inspector's table: the best pairs at block (r, c) by SelectionEnergy.cell_candidates, and the chosen
+        one (>) when it is not among them: selection stops after a sweep limit, a live snapshot mid-sweep."""
+        conv = self._live()
+        conv = conv if conv is not None else self.result
+        labels = None if conv is None else conv.best_attr_indexes
+        if labels is None or r >= labels.shape[0] or c >= labels.shape[1]:   # nothing selected, or another mode's
+            return
+        costs = conv.energy.cell_candidates(labels, r, c)
+        total, chosen = costs.sum(1), labels[r, c]
+        order = list(np.argsort(total)[:INSPECT_PAIRS])
+        if chosen not in order:
+            order.append(chosen)
+        idx = list(conv.palette.iter_idxs_pairs())
+        imgui.text(f'Cell {c}, {r}: pair scores with the neighbours as they are')
+        if not imgui.begin_table('pairs', 6, imgui.TableFlags_.row_bg.value | imgui.TableFlags_.sizing_fixed_fit.value):
+            return
+        for name in ('', 'paper/ink', 'total', 'own', 'seams', 'coherence'):
+            imgui.table_setup_column(name)
+        imgui.table_headers_row()
+        swatch = imgui.ImVec2(imgui.get_text_line_height(), imgui.get_text_line_height())
+        for p in order:
+            imgui.table_next_row()
+            imgui.table_next_column()
+            imgui.text('>' if p == chosen else '')
+            imgui.table_next_column()
+            for k, rgb in enumerate(conv.color_pairs[p]):
+                imgui.color_button(f'##{p}.{k}', imgui.ImVec4(*map(float, rgb), 1.0), imgui.ColorEditFlags_.no_tooltip.value, swatch)
+                imgui.same_line()
+            imgui.text('%d/%d' % idx[p])
+            for v in (total[p], *costs[p]):
+                imgui.table_next_column()
+                imgui.text(f'{v:.4f}')
+        imgui.end_table()
 
     def _menus(self) -> None:
         if imgui.begin_menu('File'):

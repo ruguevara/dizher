@@ -141,6 +141,20 @@ def test_mode_switch_refits_previews(ctx):
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the Spectrum conversion again')
 
 
+def test_hover_inspector(ctx):
+    from imgui_bundle.imgui.test_engine import CaptureFlags_
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'a conversion to inspect')
+    ui.view = 'Screen'
+    r = rect(ctx, '//Preview', '**/Screen')   # the display-only images have no item id: the first is under the bar
+    ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x + 100, r.max.y + 100))
+    ctx.yield_(4)
+    tooltip = imgui.internal.find_window_by_name('##Tooltip_00')
+    assert tooltip is not None and tooltip.active and tooltip.size.y > 300, 'no inspector tooltip'
+    ctx.capture_set_filename('/tmp/dizher_inspect.png')
+    ctx.capture_screenshot(CaptureFlags_.hide_mouse_cursor.value)
+    ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x - 50, r.min.y - 50))
+
+
 def test_capture_layout(ctx):   # keep last: a picture of the default layout for review
     from imgui_bundle.imgui.test_engine import CaptureFlags_
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the conversion to settle')
@@ -160,6 +174,7 @@ TESTS = [
     ('ui', 'block_reset', test_block_reset),
     ('ui', 'views_and_grid', test_views_and_grid),
     ('ui', 'mode_switch_refits_previews', test_mode_switch_refits_previews),
+    ('ui', 'hover_inspector', test_hover_inspector),
     ('ui', 'capture_layout', test_capture_layout),
 ]
 
