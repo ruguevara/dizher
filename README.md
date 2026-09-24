@@ -80,7 +80,7 @@ The GUI group that owns each knob is in brackets.
    │  solver (DBS): every pixel tries a toggle and a swap with each of 8 neighbours, keeps the      │
    │  move that lowers the loss most; deltas are exact from running error and window statistics;    │
    │  a lattice of non-interacting pixels moves at once; stops when fewer than 0.1% of pixels move  │
-   │  Alternatives for comparison  [Halftone: halftoner]: Stucki, ordered (matrix), stochastic      │
+   │  Also [Halftone: halftoner]: diffusion (kernel), ordered (matrix), stochastic                  │
    └──────────────────────────────────────────┬─────────────────────────────────────────────────────┘
                                               │ bitmap + attributes
                                               ▼
@@ -146,8 +146,9 @@ halftone and the image in small windows, weighted by the local contrast of the i
 2023) so that flat areas do not grow holes. Its contribution to every move is also computed
 exactly, and the weight is a GUI slider. Ordered dithering with a choice of 39 threshold matrices
 (Bayer, dispersed and clustered dots, line screens and magic squares, the non-Bayer ones from
-libdither), Stucki error diffusion and plain stochastic dithering remain available for comparison
-and for their look; the Halftone block shows only the controls of the chosen method.
+libdither), error diffusion with 19 kernels (Floyd-Steinberg to Stevenson-Arce, also from libdither) and
+plain stochastic dithering remain available for comparison and for their look; the Halftone block shows
+only the controls of the chosen method.
 
 ## Installation
 

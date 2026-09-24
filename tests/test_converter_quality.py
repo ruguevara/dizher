@@ -4,9 +4,9 @@ import numpy as np
 
 from dizher.converter.converter import Converter
 from dizher.converter.energy import SEAM_COST
-from dizher.converter.dither import DBS, EDStucki, Ordered, Stohastic, duo_levels
+from dizher.converter.dither import DBS, ErrorDiffusion, Ordered, Stohastic, duo_levels
 from dizher.halftoning.dbs import _Structure, CONTRAST_GAIN
-from dizher.halftoning.error_distribution import stucki_duo
+from dizher.halftoning.error_distribution import ed_dither_duo, stucki_duo
 from dizher.platforms import Mode
 from dizher.platforms.zxspectrum import ZXPalette
 
@@ -32,7 +32,7 @@ def test_equal_luminance_colour_edge():
     expected = np.zeros_like(image)
     expected[..., 1] = 1
     expected[:, 4:, 2] = 1
-    for halftoner in (Stohastic(), Ordered(), EDStucki(), DBS()):
+    for halftoner in (Stohastic(), Ordered(), ErrorDiffusion(), DBS()):
         converter.set_image(image)
         np.testing.assert_allclose(converter.image_luma, 0.7152, atol=1e-7)
         np.testing.assert_array_equal(converter.dither(halftoner), expected)
@@ -126,6 +126,15 @@ def test_ordered_matrices_cover_tone():
     flat = np.full((16, 16), 0.5, np.float32)
     assert (ordered_dither(flat, 'Bayer 4x4', (0, 0)) != ordered_dither(flat, 'Bayer 4x4', (1, 0))).any()
 
+def test_error_diffusion_kernels_spread_error():
+    """Every kernel: a flat mid grey between black and white comes out about half ink, the lossy ones a bit under."""
+    from dizher.halftoning.error_distribution.kernels import KERNELS
+    image = np.full((24, 32), 0.5, dtype=np.float32)
+    paper, ink = np.zeros_like(image), np.ones_like(image)
+    for kernel in KERNELS:
+        coverage = ed_dither_duo(image, paper, ink, kernel).mean()
+        assert 0.35 < coverage < 0.6, (kernel, coverage)
+
 def test_stages_preview_snapshots():
     """Live previews are Converter snapshots, so every view can draw the running stage: pair selection sends its
     labels with their blue-noise composite, the halftoner its bitmap; each a copy of what the stage mutates."""
@@ -175,6 +184,7 @@ if __name__ == '__main__':
     test_halftone_target_is_reachable()
     test_colour_diffusion_preserves_scalar_projection()
     test_ordered_matrices_cover_tone()
+    test_error_diffusion_kernels_spread_error()
     test_stages_preview_snapshots()
     test_noise_origin_restarts_both_stages()
     print('ok')

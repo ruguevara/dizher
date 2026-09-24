@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..halftoning.error_distribution import stucki_duo
+from ..halftoning.error_distribution import ed_dither_duo
 from ..halftoning.ordered import ordered_dither
 from ..halftoning.noise import noise_dither
 from ..halftoning.dbs import dbs_duo
@@ -43,11 +43,15 @@ class DBS(Ditherer):
         return dbs_duo(luma, paper, ink, init=noise_dither(duo_levels(luma, paper, ink), origin=origin),
                        scale=scale, alpha=alpha, structure=structure, kernels=kernels, noise=noise, on_step=on_step)
 
-class EDStucki(Ditherer):
-    label = 'ED Stucki'
+class ErrorDiffusion(Ditherer):
+    label = 'Error diffusion'
+    controls = ('kernel',)
+
+    def __init__(self, kernel='Stucki', **kwargs):
+        self.kernel = kernel
 
     def __call__(self, luma, paper, ink, **eye):
-        return stucki_duo(luma, paper, ink)
+        return ed_dither_duo(luma, paper, ink, self.kernel)
 
 class Ordered(ThresholdDitherer):
     label = 'Ordered'

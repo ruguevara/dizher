@@ -18,16 +18,17 @@ from mokit.types import Image
 from .converter import eye as eye_model
 from .converter.converter import Converter
 from .converter.energy import EDGE_SIGMA
-from .converter.dither import DBS, EDStucki, Ordered, Stohastic
+from .converter.dither import DBS, ErrorDiffusion, Ordered, Stohastic
 from .halftoning.noise.noise import BLUE_NOISE_RESOLUTION
 from .halftoning.ordered.matrices import MATRICES
+from .halftoning.error_distribution.kernels import KERNELS
 from .platforms import Mode, c64, zxspectrum
 from . import tone
 from .progress import reporting
 
 MODES = {m.name: m for m in (zxspectrum.STANDARD, c64.HIRES)}
 SUBSETS = tuple(dict.fromkeys(s for m in MODES.values() for s in m.palette.SUBSETS))
-HALFTONERS = {cls.label: cls for cls in (DBS, Ordered, EDStucki, Stohastic)}
+HALFTONERS = {cls.label: cls for cls in (DBS, Ordered, ErrorDiffusion, Stohastic)}
 
 
 @dataclass(frozen=True)
@@ -164,10 +165,11 @@ def halftone(selection: Converter,
              halftoner: Annotated[str, meta(choices=tuple(HALFTONERS))] = DBS.label,
              structure: Annotated[float, meta(min=0.0, max=0.5, help="weight of the SSIM term")] = 0.06,
              matrix: Annotated[str, meta(choices=tuple(MATRICES))] = 'Bayer 4x4',
+             kernel: Annotated[str, meta(choices=tuple(KERNELS))] = 'Stucki',
              progress=None) -> Converter:
     """Each pixel quantised to its cell's paper or ink. Each method reads its own params (Ditherer.controls):
-    DBS the structure weight, Ordered the threshold matrix."""
-    c = selection.copy(ditherer=HALFTONERS[halftoner](matrix=matrix), structure=structure)
+    DBS the structure weight, Ordered the threshold matrix, Error diffusion the kernel."""
+    c = selection.copy(ditherer=HALFTONERS[halftoner](matrix=matrix, kernel=kernel), structure=structure)
     with reporting(progress):
         c.halftone()
     return c
