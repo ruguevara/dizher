@@ -72,6 +72,11 @@ class Pipeline:
         self._deadline = time.monotonic() + DEBOUNCE
         self._sync()
 
+    def new(self) -> None:
+        """The default graph with nothing shown from before."""
+        self.set_graph(ops.make_graph())
+        self._latest.clear()
+
     def restore(self, graph) -> None:
         """The params of a saved graph on the current pipeline: a node it lacks keeps its defaults, one the pipeline
         lacks or has with another op is dropped, so a project from before a stage was added or removed still opens."""

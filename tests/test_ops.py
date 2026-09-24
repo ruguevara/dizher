@@ -68,14 +68,16 @@ def test_host_reruns_only_downstream_of_an_edit():
     assert settle(host) == ['optimise']
     host.set_params('select', replace(host.graph['select'].params, coherence=1.0))
     assert settle(host) == ['select', 'halftone', 'optimise']
-    before = host.result('color')
+    before = host.result('detail')
     host.set_params('contrast', replace(host.graph['contrast'].params, contrast=30.0))
-    assert host.result('color') is None and host.shown('color') is before   # the old picture stays up meanwhile
-    assert settle(host) == ['contrast', 'color', 'prepare', 'select', 'halftone', 'optimise']
-    assert host.shown('color') is host.result('color') is not before
+    assert host.result('detail') is None and host.shown('detail') is before   # the old picture stays up meanwhile
+    assert settle(host) == ['contrast', 'color', 'detail', 'prepare', 'select', 'halftone', 'optimise']
+    assert host.shown('detail') is host.result('detail') is not before
     host.set_params('target', replace(host.graph['target'].params, mode='C64 hires', palette='Bright only'))
     settle(host)
     assert 'target' in host.errors                   # C64 has no bright subset: an error on its block
+    host.new()
+    assert host.shown('detail') is None and host.shown('optimise') is None and not host.errors   # nothing left on screen
     host.close()
 
 
@@ -124,7 +126,7 @@ def test_tone_semantics():
     rng = np.random.default_rng(0)
     rgb = rng.uniform(0.1, 0.9, (8, 8, 3)).astype(np.float32)
     grey = np.full((1, 1, 3), 0.5, np.float32)
-    for f in (tone.light, tone.levels, tone.contrast, tone.color):
+    for f in (tone.light, tone.levels, tone.contrast, tone.color, tone.local_tone, tone.detail):
         assert f(rgb) is rgb                                          # neutral settings are the identity
     assert np.allclose(tone.light(grey, exposure=1.0), 2 ** (1 / 2.2) * 0.5, atol=1e-6)   # +1 stop in linear light
     warm = tone.light(grey, temperature=50.0)[0, 0]
@@ -138,6 +140,29 @@ def test_tone_semantics():
     assert np.all(np.diff(more) >= 0) and np.all(np.diff(less) >= 0)   # monotone both ways
     assert more[2] < ramp[2, 0, 0] and more[8] > ramp[8, 0, 0] and less[2] > ramp[2, 0, 0]
     assert np.allclose(tone.color(rgb, saturation=-100.0), tone.color(rgb, saturation=-100.0)[..., :1], atol=0.02)   # greyed out
+    step = np.full((16, 32, 3), 0.3, np.float32)
+    step[:, 16:] = 0.7
+    sharp = tone.detail(step, sharpen=100.0)[8, :, 0]
+    assert sharp[15] < 0.3 < 0.7 < sharp[16] and np.allclose(sharp[:8], 0.3, atol=1e-3)   # overshoot at the edge only
+    texture = (0.5 + 0.03 * np.sign(np.sin(np.arange(64) / 2)))[None, :, None].repeat(64, 0).repeat(3, 2).astype(np.float32)
+    assert tone.detail(texture, texture=100.0).std() > 1.5 * texture.std() > 1.5 * tone.detail(texture, texture=-100.0).std()
+    assert np.allclose(tone.detail(grey, texture=100.0, sharpen=100.0), grey, atol=1e-4)   # flat stays flat
+    # local tone: a broad ramp (the lighting) with a fine texture on it
+    fine_texture = 0.03 * np.sign(np.sin(np.arange(256) / 2))
+    lit = (np.linspace(0.1, 0.9, 256) + fine_texture)[None, :, None].repeat(64, 0).repeat(3, 2).astype(np.float32)
+    L = lambda x: tone.rgb2lab(x)[32, :, 0]
+    flat = L(tone.local_tone(lit, local_contrast=100.0))
+    assert np.ptp(flat) < 0.3 * np.ptp(L(lit))                                     # the broad ramp is taken off...
+    fine = lambda x: np.ptp(x[100:112] - np.convolve(x, np.ones(12) / 12, 'same')[100:112])
+    assert abs(fine(flat) - fine(L(lit))) < 0.2 * fine(L(lit))                     # ...the texture on it kept
+    assert fine(L(tone.local_tone(lit, clarity=100.0))) > 1.5 * fine(L(lit))
+    patch = lambda v, **p: tone.local_tone(np.full((4, 4, 3), v, np.float32), **p)[0, 0, 0]   # flat: the base is the pixel
+    greys = np.linspace(0, 1, 41)
+    for sh in (-100.0, 100.0):
+        for hi in (-100.0, 100.0):
+            curved = np.array([patch(v, shadows=sh, highlights=hi) for v in greys])
+            assert np.all(np.diff(curved) > 0) and np.allclose(curved[[0, -1]], [0, 1], atol=1e-3)   # monotone, ends fixed
+    assert patch(0.3, shadows=100.0) > 0.3 and patch(0.7, highlights=-100.0) < 0.7
 
 
 def test_project_round_trip_and_restore():

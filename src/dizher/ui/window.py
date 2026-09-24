@@ -278,7 +278,7 @@ class Window:
     def _live(self):
         """The running pair selection's or optimiser's latest snapshot."""
         job = self.app.job
-        return job.image if job is not None and job.node_id in ('select', 'optimise') else None
+        return job.image if job is not None and job.node_id in ('select', 'optimise') and not job.cancel.is_set() else None
 
     def _converted(self):
         """The view of the running stage's live snapshot, else of the last finished result."""
@@ -403,7 +403,7 @@ class Window:
     def _menus(self) -> None:
         if imgui.begin_menu('File'):
             if imgui.menu_item_simple('New project'):
-                self.app.set_graph(ops.make_graph())
+                self.app.new()
                 self.project, self.saved = None, self.app.graph
             if imgui.menu_item_simple('Open project…'):
                 folder = widgets.native_pick('folder', 'Open project', str(self.project.parent if self.project else Path.home()))

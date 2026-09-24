@@ -1,0 +1,174 @@
+{
+  "format": "mokit-graph/1",
+  "nodes": {
+    "source": {
+      "op": "mokit.ops:load_media",
+      "params": {
+        "path": "../rocket-rackoon.png"
+      },
+      "inputs": []
+    },
+    "framing": {
+      "op": "dizher.ops:framing",
+      "params": {
+        "fit": "Fill",
+        "scale": 1.0,
+        "rotation": 0.0,
+        "shift_x": 5,
+        "shift_y": 0,
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "inputs": [
+        "source",
+        "target"
+      ]
+    },
+    "light": {
+      "op": "dizher.ops:light",
+      "params": {
+        "exposure": 0.0,
+        "temperature": 0.0,
+        "tint": 0.0
+      },
+      "inputs": [
+        "framing"
+      ]
+    },
+    "levels": {
+      "op": "dizher.ops:levels",
+      "params": {
+        "in_black": 0,
+        "in_white": 239,
+        "gamma": 1.0,
+        "out_black": 0,
+        "out_white": 255
+      },
+      "inputs": [
+        "light"
+      ]
+    },
+    "local": {
+      "op": "dizher.ops:local_tone",
+      "params": {
+        "local_contrast": -51.65700149536133,
+        "shadows": 0.5529999732971191,
+        "highlights": -4.144000053405762,
+        "clarity": -57.18199920654297
+      },
+      "inputs": [
+        "levels"
+      ]
+    },
+    "contrast": {
+      "op": "dizher.ops:contrast",
+      "params": {
+        "contrast": 0.0
+      },
+      "inputs": [
+        "local"
+      ]
+    },
+    "color": {
+      "op": "dizher.ops:color",
+      "params": {
+        "vibrance": 0.0,
+        "saturation": 0.0
+      },
+      "inputs": [
+        "contrast"
+      ]
+    },
+    "detail": {
+      "op": "dizher.ops:detail",
+      "params": {
+        "texture": -70.99400329589844,
+        "sharpen": 150.82899475097656,
+        "radius": 0.6639999747276306
+      },
+      "inputs": [
+        "color"
+      ]
+    },
+    "target": {
+      "op": "dizher.ops:target",
+      "params": {
+        "mode": "ZX Spectrum standard",
+        "palette": "All colours"
+      },
+      "inputs": []
+    },
+    "metric": {
+      "op": "dizher.ops:metric",
+      "params": {
+        "chroma": 1.0,
+        "flare": 0.1
+      },
+      "inputs": []
+    },
+    "eye": {
+      "op": "dizher.ops:eye",
+      "params": {
+        "luma_alpha": 2.0,
+        "luma_scale": 1.4,
+        "chroma_alpha": 2.0,
+        "chroma_scale": 1.4
+      },
+      "inputs": []
+    },
+    "halftoner": {
+      "op": "dizher.ops:halftoner",
+      "params": {
+        "halftoner": "Ordered",
+        "matrix": "Void dispersed dots",
+        "kernel": "Shiau-Fan 3",
+        "noise_x": 0,
+        "noise_y": 0
+      },
+      "inputs": []
+    },
+    "prepare": {
+      "op": "dizher.ops:prepare",
+      "params": null,
+      "inputs": [
+        "detail",
+        "target",
+        "metric",
+        "eye",
+        "halftoner"
+      ]
+    },
+    "select": {
+      "op": "dizher.ops:select_pairs",
+      "params": {
+        "coherence": 2.0,
+        "edge": 0.1,
+        "luma_noise": 0.0,
+        "chroma_noise": 0.05
+      },
+      "inputs": [
+        "prepare"
+      ]
+    },
+    "halftone": {
+      "op": "dizher.ops:halftone",
+      "params": null,
+      "inputs": [
+        "select"
+      ]
+    },
+    "optimise": {
+      "op": "dizher.ops:optimise",
+      "params": {
+        "enabled": true,
+        "structure": 0.06
+      },
+      "inputs": [
+        "halftone"
+      ]
+    }
+  },
+  "view": {}
+}

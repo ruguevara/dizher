@@ -183,7 +183,7 @@ Done:
 * [x] Colour selection as one eye-model energy with a coherence prior
 * [x] Adjustable metric weights (luma, chroma, coherence) and eye-model parameters
 * [x] Selectable dithering methods
-* [x] Tune stages: framing (fill or fit, scale, rotation, pixel shift and per-edge nudges onto the cell grid), exposure and white balance (temperature, tint), Photoshop-style Levels with Auto and histogram, contrast, vibrance and saturation
+* [x] Tune stages: framing (fill or fit, scale, rotation, pixel shift and per-edge nudges onto the cell grid), exposure and white balance (temperature, tint), Photoshop-style Levels with Auto and histogram, local tone (local contrast, shadows, highlights and clarity on an edge-preserving base layer), contrast, vibrance and saturation, texture and sharpen (unsharp mask at the screen's size)
 * [x] Palette subsets: bright only, not bright only, grayscale, black and white
 * [x] Python installation package
 * [x] Save as SCR and PNG
@@ -191,13 +191,11 @@ Done:
 
 Planned:
 
+* [ ] Undo/R
 * [ ] Curves (tone curve editor; subsumes Contrast)
-* [ ] Highlights / Shadows (local tone mapping, Lightroom-style)
-* [ ] Clarity (local contrast) and Sharpen (unsharp mask after the resize; matters at 256x192)
 * [ ] Levels per channel (R, G, B) like Photoshop's channel menu
 * [ ] Custom ZX Spectrum palettes (ZX Spectrum Next or another hardware enhanceds)
 * [ ] ZX Spectrum MultiColor, GigaScreen and MultiGigaScreen software mode
-* [ ] Commodore 64 HiRes: native file format (Art Studio)
 * [ ] Commodore 64 LowRes 160x200 mode with 4 colors per character block
 * [ ] Overpaint bitmap, attrs, bright
 * [ ] Standalone binary package with PyInstaller for macOS, Windows, Linux

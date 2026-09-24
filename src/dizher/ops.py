@@ -108,6 +108,18 @@ def levels(picture: np.ndarray,
     return tone.levels(picture, in_black, in_white, gamma, out_black, out_white)
 
 
+def local_tone(picture: np.ndarray,
+               local_contrast: Annotated[float, meta(min=-100.0, max=100.0, help="+ takes off the broad lighting, "
+                                                     "so contrast goes to detail; - adds it")] = 0.0,
+               shadows: Annotated[float, meta(min=-100.0, max=100.0, help="+ lifts dark regions")] = 0.0,
+               highlights: Annotated[float, meta(min=-100.0, max=100.0, help="- recovers bright regions")] = 0.0,
+               clarity: Annotated[float, meta(min=-100.0, max=100.0, help="contrast of everything smaller than the "
+                                              "broad lighting")] = 0.0) -> np.ndarray:
+    """Local tone mapping: the broad lighting (an edge-preserving blur of lightness) compressed and curved,
+    the detail on it scaled."""
+    return tone.local_tone(picture, local_contrast, shadows, highlights, clarity)
+
+
 def contrast(picture: np.ndarray, contrast: Annotated[float, meta(min=-100.0, max=100.0)] = 0.0) -> np.ndarray:
     """S-curve on lightness around mid grey."""
     return tone.contrast(picture, contrast)
@@ -118,6 +130,14 @@ def color(picture: np.ndarray,
           saturation: Annotated[float, meta(min=-100.0, max=100.0)] = 0.0) -> np.ndarray:
     """Chroma in CIELAB."""
     return tone.color(picture, vibrance, saturation)
+
+
+def detail(picture: np.ndarray,
+           texture: Annotated[float, meta(min=-100.0, max=100.0, help="contrast of fine texture")] = 0.0,
+           sharpen: Annotated[float, meta(min=0.0, max=300.0, help="% of the fine detail added back")] = 0.0,
+           radius: Annotated[float, meta(min=0.3, max=3.0, help="px, the size of the detail sharpen boosts")] = 1.0) -> np.ndarray:
+    """Texture and unsharp mask on lightness at the screen's size, last so nothing after it softens the edges."""
+    return tone.detail(picture, texture, sharpen, radius)
 
 
 def metric(chroma: Annotated[float, meta(min=0.0, max=4.0, help="weight of chroma error; luma error weighs 1")] = 1.0,
@@ -204,15 +224,17 @@ TUNE = (   # (node id, block label, op, inputs): the left column's blocks, top t
     ('framing', 'Framing', 'dizher.ops:framing', ('source', 'target')),
     ('light', 'Light', 'dizher.ops:light', ('framing',)),
     ('levels', 'Levels', 'dizher.ops:levels', ('light',)),
-    ('contrast', 'Contrast', 'dizher.ops:contrast', ('levels',)),
+    ('local', 'Local tone', 'dizher.ops:local_tone', ('levels',)),
+    ('contrast', 'Contrast', 'dizher.ops:contrast', ('local',)),
     ('color', 'Color', 'dizher.ops:color', ('contrast',)),
+    ('detail', 'Detail', 'dizher.ops:detail', ('color',)),
 )
 CONVERT = (   # the right column's
     ('target', 'Target', 'dizher.ops:target', ()),
     ('metric', 'Metric', 'dizher.ops:metric', ()),
     ('eye', 'Eye model', 'dizher.ops:eye', ()),
     ('halftoner', 'Halftoner', 'dizher.ops:halftoner', ()),
-    ('prepare', 'Prepare', 'dizher.ops:prepare', ('color', 'target', 'metric', 'eye', 'halftoner')),
+    ('prepare', 'Prepare', 'dizher.ops:prepare', ('detail', 'target', 'metric', 'eye', 'halftoner')),
     ('select', 'Select pairs', 'dizher.ops:select_pairs', ('prepare',)),
     ('halftone', 'Halftone', 'dizher.ops:halftone', ('select',)),
     ('optimise', 'Optimise', 'dizher.ops:optimise', ('halftone',)),
