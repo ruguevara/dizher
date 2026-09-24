@@ -187,6 +187,7 @@ Done:
 * [x] Palette subsets: bright only, not bright only, grayscale, black and white
 * [x] Python installation package
 * [x] Save as SCR and PNG
+* [x] Projects: a folder with `project.json` (every stage's params, the image path relative to the folder; mokit's format, as AmaZX), exports default to its `build/`; the last session, unsaved edits included, comes back on start
 
 Planned:
 

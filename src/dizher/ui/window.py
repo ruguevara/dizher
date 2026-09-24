@@ -2,7 +2,11 @@
 on the right, each with one collapsible block per stage in pipeline order (mokit's params editor inside, or a
 custom one), and the Preview dock between them with the tuned image and the conversion. A block header shows its
 stage's state: plain when done, tinted while it runs or after it failed, muted while waiting to run. hello_imgui's
-ini keeps the dock layout, its user prefs which blocks are open."""
+ini keeps the dock layout, its user prefs which blocks are open and the session: the project folder and the params,
+unsaved edits included, restored on the next start when no path is given.
+
+A project is AmaZX's mokit folder: project.json holds every node's params, the source path relative to the folder;
+exports default to its build/."""
 import json
 import signal
 import subprocess
@@ -16,9 +20,10 @@ import numpy as np
 from imgui_bundle import hello_imgui, imgui, immapp, immvision
 from imgui_bundle import portable_file_dialogs as pfd
 
+from mokit import project
 from mokit.ui import style, widgets
 from mokit.ui.params import params_editor
-from mokit.graph import Op
+from mokit.graph import GraphError, Op
 from mokit.ui.style import Palette
 
 from .. import ops
@@ -99,7 +104,12 @@ class HalftoneEditor:
 class Window:
     def __init__(self, path=None) -> None:
         self.app = Pipeline()
-        if path:
+        self.project = None                # the open project's folder
+        self.saved = self.app.graph        # the graph as last saved or opened: another one is unsaved
+        self.restore_session = path is None
+        if path and (Path(path) / project.PROJECT_FILE).exists():
+            self._open_project(path)
+        elif path:
             self.app.open(path)
         self.images = {}       # immvision params per preview
         self.expanded = {}     # node id -> block open; imgui keeps no header state in its ini
@@ -123,8 +133,8 @@ class Window:
         p.callbacks.show_gui = self._frame
         p.callbacks.show_menus = self._menus
         p.callbacks.show_status = self._status
-        p.callbacks.post_init = lambda: self.expanded.update(json.loads(hello_imgui.load_user_pref('expanded') or '{}'))
-        p.callbacks.before_exit = lambda: hello_imgui.save_user_pref('expanded', json.dumps(self.expanded))
+        p.callbacks.post_init = self._load_prefs
+        p.callbacks.before_exit = self._save_prefs
         style.install(p)
         p.imgui_window_params.default_imgui_window_type = hello_imgui.DefaultImGuiWindowType.provide_full_screen_dock_space
         p.docking_params.docking_splits = [
@@ -321,6 +331,18 @@ class Window:
 
     def _menus(self) -> None:
         if imgui.begin_menu('File'):
+            if imgui.menu_item_simple('New project'):
+                self.app.set_graph(ops.make_graph())
+                self.project, self.saved = None, self.app.graph
+            if imgui.menu_item_simple('Open project…'):
+                folder = widgets.native_pick('folder', 'Open project', str(self.project.parent if self.project else Path.home()))
+                if folder:
+                    self._open_project(folder)
+            if imgui.menu_item_simple('Save project'):
+                self._save_project(self.project) if self.project else self._save_project_as()
+            if imgui.menu_item_simple('Save project as…'):
+                self._save_project_as()
+            imgui.separator()
             if imgui.menu_item_simple('Open image…'):
                 self._open()
             if imgui.menu_item_simple('Save conversion…', enabled=self.result is not None):
@@ -328,6 +350,9 @@ class Window:
             imgui.end_menu()
 
     def _status(self) -> None:
+        imgui.text(f"{self.project.name if self.project else 'untitled'}{' *' if self.app.graph != self.saved else ''}")
+        imgui.set_item_tooltip(str(self.project) if self.project else 'Not saved as a project')
+        imgui.same_line()
         job = self.app.job
         if job is not None:
             imgui.text(f'{LABELS[job.node_id]}: {job.text} · {time.monotonic() - job.started:.1f} s')
@@ -363,7 +388,60 @@ class Window:
         """ext picks the format (Converter.save); by default the mode's screen file, else PNG."""
         source, mode = self._source(), self.result.mode
         ext = ext or (mode.file_type[1].lstrip('*') if mode.file_type else '.png')
-        path = save_dialog('Save conversion', str(source.parent if source else Path.home()),
-                           (source.stem if source else 'conversion') + ext)
+        folder = source.parent if source else Path.home()
+        if self.project:
+            folder = self.project / 'build'
+            folder.mkdir(exist_ok=True)
+        path = save_dialog('Save conversion', str(folder), (source.stem if source else 'conversion') + ext)
         if path:
             self.result.save(path)
+
+    def _open_project(self, folder) -> None:
+        try:
+            p = project.load_project(folder)
+        except (OSError, ValueError, GraphError) as e:   # json's decode error is a ValueError
+            self.app.errors['project'] = f'cannot open {folder}: {e}'
+            return
+        self.app.restore(p.graph)
+        self.project, self.saved = p.folder, self.app.graph
+
+    def _save_project(self, folder) -> None:
+        folder = Path(folder).absolute()
+        try:
+            if (folder / project.PROJECT_FILE).exists():
+                project.save_project(folder, self.app.graph)
+            else:
+                project.create_project(folder, self.app.graph)
+        except OSError as e:
+            self.app.errors['project'] = f'cannot save {folder}: {e}'
+            return
+        self.project, self.saved = folder, self.app.graph
+
+    def _save_project_as(self) -> None:
+        """ToolZX's "name the project, not a file": the typed name is the project's folder."""
+        source = self._source()
+        where = self.project.parent if self.project else source.parent if source else Path.home()
+        name = self.project.name if self.project else source.stem if source else 'untitled'
+        folder = save_dialog('Save project as (the name is its folder)', str(where), name)
+        if folder:
+            self._save_project(folder)
+
+    def _load_prefs(self) -> None:
+        self.expanded.update(json.loads(hello_imgui.load_user_pref('expanded') or '{}'))
+        if not self.restore_session:
+            return
+        try:
+            session = json.loads(hello_imgui.load_user_pref('session') or '{}')
+            graph = project.graph_from_json(session['graph'], None)[0] if 'graph' in session else None
+        except (ValueError, KeyError, TypeError, GraphError):
+            return   # a session from an incompatible version: start blank
+        if session.get('project') and (Path(session['project']) / project.PROJECT_FILE).exists():
+            self._open_project(session['project'])
+        if graph is not None:
+            self.app.restore(graph)   # the unsaved edits over the project
+
+    def _save_prefs(self) -> None:
+        hello_imgui.save_user_pref('expanded', json.dumps(self.expanded))
+        hello_imgui.save_user_pref('session', json.dumps({
+            'project': str(self.project) if self.project else None,
+            'graph': project.graph_to_json(self.app.graph, None, None)}))

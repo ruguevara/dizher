@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Optional
 
 from mokit.graph import MISSING, Digests, GraphError, Memo, ready_steps, run_step
+from mokit.project import Unresolved
 
 from .. import ops
 
@@ -63,10 +64,22 @@ class Pipeline:
     # ----- commands --------------------------------------------------------------------------------
 
     def set_params(self, node_id: str, params) -> None:
-        self.graph = self.graph.with_params(node_id, params)
+        self.set_graph(self.graph.with_params(node_id, params))
+
+    def set_graph(self, graph) -> None:
+        self.graph = graph
         self.errors, self.cancelled = {}, False
         self._deadline = time.monotonic() + DEBOUNCE
         self._sync()
+
+    def restore(self, graph) -> None:
+        """The params of a saved graph on the current pipeline: a node it lacks keeps its defaults, one the pipeline
+        lacks or has with another op is dropped, so a project from before a stage was added or removed still opens."""
+        g = ops.make_graph()
+        for nid, node in graph.nodes:
+            if nid in g and node.op == g[nid].op and not isinstance(node.params, Unresolved):
+                g = g.with_params(nid, node.params)
+        self.set_graph(g)
 
     def open(self, path) -> None:
         self.set_params('source', replace(self.graph['source'].params, path=Path(path)))

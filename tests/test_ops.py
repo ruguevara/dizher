@@ -140,6 +140,30 @@ def test_tone_semantics():
     assert np.allclose(tone.color(rgb, saturation=-100.0), tone.color(rgb, saturation=-100.0)[..., :1], atol=0.02)   # greyed out
 
 
+def test_project_round_trip_and_restore():
+    import json
+    from mokit import project
+    from mokit.graph import Node
+    from dizher.ui.app import Pipeline
+    host = Pipeline()
+    image = Path(__file__).parent / 'images' / 'lena.png'
+    host.open(image)
+    host.set_params('contrast', replace(host.graph['contrast'].params, contrast=25.0))
+    with tempfile.TemporaryDirectory() as tmp:
+        project.create_project(Path(tmp) / 'p', host.graph)
+        stored = json.loads((Path(tmp) / 'p' / 'project.json').read_text())['nodes']['source']['params']['path']
+        assert not Path(stored).is_absolute()   # relative to the folder: the project moves with its images
+        loaded = Pipeline()
+        loaded.restore(project.load_project(Path(tmp) / 'p').graph)
+    assert loaded.graph == host.graph
+    # an older project lacks a stage, a newer one has an unknown one: defaults for the first, the second dropped
+    older = host.graph.without('metric').with_node('future', Node('dizher.ops:metric', None, ()))
+    loaded.restore(older)
+    assert loaded.graph['metric'] == ops.make_graph()['metric'] and 'future' not in loaded.graph
+    assert loaded.graph['contrast'].params.contrast == 25.0
+    host.close(), loaded.close()
+
+
 if __name__ == '__main__':
     test_framing_geometry()
     test_tone_semantics()
@@ -147,4 +171,5 @@ if __name__ == '__main__':
     test_pipeline_matches_single_converter()
     test_host_reruns_only_downstream_of_an_edit()
     test_host_discards_stale_completions()
+    test_project_round_trip_and_restore()
     print('ok')
