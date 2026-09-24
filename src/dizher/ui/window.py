@@ -122,6 +122,8 @@ class Window:
             hello_imgui.DockableWindow('Convert', 'ConvertSpace', lambda: self._column(ops.CONVERT)),
             hello_imgui.DockableWindow('Preview', 'MainDockSpace', self._preview)]
         if not persist:   # tests: the default layout in an ini of their own, the user's stays untouched
+            p.app_window_params.window_geometry.size = (1100, 1000)   # narrow: C64 fits at a smaller zoom than ZX
+            p.app_window_params.restore_previous_geometry = False
             p.ini_folder_type = hello_imgui.IniFolderType.temp_folder
             p.docking_params.layout_condition = hello_imgui.DockingLayoutCondition.application_start
             p.callbacks.post_init = p.callbacks.before_exit = lambda: None
@@ -279,7 +281,7 @@ class Window:
         zoom = max(1, int(max(side, stacked)))
         for key, image in shown:
             ih, iw = image.shape[:2]
-            immvision.image(f'##{key}', as_ubyte(image), widgets.image_params(self.images, key, (iw * zoom, ih * zoom)))
+            immvision.image(f'##{key}', as_ubyte(image), widgets.image_params(self.images, key, (iw * zoom, ih * zoom), (iw, ih)))
             if self.grid:
                 self._cell_grid(ops.MODES[self.app.graph['target'].params.mode].cell, zoom)
             if side >= stacked:
