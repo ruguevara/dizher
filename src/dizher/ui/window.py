@@ -1,6 +1,7 @@
 """imgui_bundle window over the pipeline host, in AmaZX's layout: the Tune dock on the left and the Convert dock
 on the right, each with one collapsible block per stage in pipeline order (mokit's params editor inside, or a
-custom one), and the Preview dock between them with the tuned image and the conversion. A block header shows its
+custom one), the Preview dock between them with the tuned image and the conversion, and the History dock under
+Convert's with every undo step. A block header shows its
 stage's state: plain when done, tinted while it runs or after it failed, muted while waiting to run. hello_imgui's
 ini keeps the dock layout, its user prefs which blocks are open and the session: the project folder and the params,
 unsaved edits included, restored on the next start when no path is given.
@@ -13,6 +14,7 @@ import subprocess
 import sys
 import time
 from contextlib import contextmanager
+from functools import lru_cache
 from dataclasses import asdict, field, fields, make_dataclass, replace
 from pathlib import Path
 
@@ -51,7 +53,21 @@ DEBUG = {   # view -> (tooltip, the stage it needs, its image from that stage's 
               'select', views.seam_view)}
 GRID = imgui.ImVec4(0.5, 0.5, 0.5, 0.6)   # grey reads over black and white alike
 INSPECT_CELLS, INSPECT_ZOOM, INSPECT_PAIRS = 3, 10, 8   # the hover tooltip: cells a side, its zoom, pairs listed
+UNDO, REDO = imgui.Key.mod_ctrl | imgui.Key.z, imgui.Key.mod_ctrl | imgui.Key.mod_shift | imgui.Key.z   # Cmd on macOS
 
+
+@lru_cache(maxsize=1024)
+def change(before, after) -> str:
+    """A history step's label: the params that differ between two graphs, with their new values."""
+    def show(v):
+        return f'{v:.3g}' if isinstance(v, float) else v.name if isinstance(v, Path) else str(v)
+    parts = []
+    for nid, node in after.nodes:
+        old, new = before[nid].params, node.params
+        if old != new:
+            diff = [f'{f.name} {show(getattr(new, f.name))}' for f in fields(new) if getattr(new, f.name) != getattr(old, f.name)]
+            parts.append(f"{LABELS[nid]}: {', '.join(diff)}")
+    return '; '.join(parts)
 
 def cell_icon(cell, size) -> np.ndarray:
     """ToolZX's attrs view: a disc of ink in every cell, (H, W) bool."""
@@ -117,6 +133,7 @@ class Window:
         self.editors = {'levels': LevelsEditor(), 'halftoner': HalftoneEditor()}   # node id -> custom params editor
         self.view, self.grid = 'Screen', False     # the conversion's view and the cell grid; not persisted
         self._debug = {}       # image key -> (the Converter it came from, the image)
+        self._steps = 0        # history length last frame: the History list follows a new step
 
     def runner_params(self, persist: bool = True) -> hello_imgui.RunnerParams:
         immvision.use_rgb_color_order()
@@ -125,7 +142,7 @@ class Window:
         p.app_window_params.window_geometry.size = (1600, 1000)
         p.app_window_params.restore_previous_geometry = True
         p.imgui_window_params.show_menu_bar = True
-        p.imgui_window_params.show_menu_app = False    # File, View, About drawn in _menus
+        p.imgui_window_params.show_menu_app = False    # File, Edit, View, About drawn in _menus
         p.imgui_window_params.show_menu_view = False
         p.imgui_window_params.show_status_bar = True
         p.imgui_window_params.show_status_fps = False
@@ -142,11 +159,13 @@ class Window:
         p.imgui_window_params.default_imgui_window_type = hello_imgui.DefaultImGuiWindowType.provide_full_screen_dock_space
         p.docking_params.docking_splits = [
             hello_imgui.DockingSplit('MainDockSpace', 'TuneSpace', imgui.Dir.left, 0.22),
-            hello_imgui.DockingSplit('MainDockSpace', 'ConvertSpace', imgui.Dir.right, 0.28)]
+            hello_imgui.DockingSplit('MainDockSpace', 'ConvertSpace', imgui.Dir.right, 0.28),
+            hello_imgui.DockingSplit('ConvertSpace', 'HistorySpace', imgui.Dir.down, 0.25)]
         p.docking_params.dockable_windows = [
             hello_imgui.DockableWindow('Tune', 'TuneSpace', lambda: self._column(ops.TUNE)),
             hello_imgui.DockableWindow('Convert', 'ConvertSpace', lambda: (self._column(ops.CONVERT), self._export())),
-            hello_imgui.DockableWindow('Preview', 'MainDockSpace', self._preview)]
+            hello_imgui.DockableWindow('Preview', 'MainDockSpace', self._preview),
+            hello_imgui.DockableWindow('History', 'HistorySpace', self._history)]
         if not persist:   # tests: the default layout in an ini of their own, the user's stays untouched
             p.app_window_params.window_geometry.size = (1100, 1000)   # narrow: C64 fits at a smaller zoom than ZX
             p.app_window_params.restore_previous_geometry = False
@@ -200,6 +219,13 @@ class Window:
 
     def _frame(self) -> None:
         style.sync()
+        if not imgui.is_any_item_active():
+            self.app.release()
+        # global routing: a focused text field keeps its own Cmd+Z
+        if imgui.shortcut(UNDO, imgui.InputFlags_.route_global.value):
+            self.app.undo()
+        if imgui.shortcut(REDO, imgui.InputFlags_.route_global.value):
+            self.app.redo()
         self.app.update()
         hello_imgui.get_runner_params().fps_idling.enable_idling = not self.app.busy
 
@@ -223,7 +249,7 @@ class Window:
                     imgui.text_wrapped(app.errors[nid])
             if not is_open:
                 continue
-            on_change = lambda p, n=nid: app.set_params(n, p)
+            on_change = lambda p, n=nid: app.set_params(n, p, held=imgui.is_any_item_active())
             if nid in self.editors:
                 self.editors[nid].draw(params, app.shown(inputs[0]) if inputs else None, on_change, id=nid)
             elif params is not None:
@@ -234,6 +260,27 @@ class Window:
                     self.app.set_params(nid, replace(params, noise_x=int(x), noise_y=int(y)))
                 imgui.set_item_tooltip('Restart from a random tile origin')
             widgets.gap()
+
+    def _history(self) -> None:
+        """Every step, the newest first, the current one selected and the undone ones muted; a click undoes or redoes
+        to it."""
+        app = self.app
+        steps = app.past + [app.graph] + app.future[::-1]
+        here = len(app.past)
+        for i in reversed(range(len(steps))):
+            label = change(steps[i - 1], steps[i]) if i else 'Start'
+            with style.text_color(Palette.muted if i > here else imgui.get_style_color_vec4(imgui.Col_.text)):
+                clicked = imgui.selectable(f'{label}##{i}', i == here)[0]
+            imgui.set_item_tooltip(label)
+            if i == here and len(steps) != self._steps:
+                imgui.set_scroll_here_y()   # follow a new step
+            if clicked:
+                for _ in range(here - i):
+                    app.undo()
+                for _ in range(i - here):
+                    app.redo()
+                break
+        self._steps = len(steps)
 
     def _export(self) -> None:
         """The block under Convert's: not a graph node, it saves the last finished result."""
@@ -421,6 +468,13 @@ class Window:
             imgui.separator()
             if imgui.menu_item_simple('Quit'):
                 hello_imgui.get_runner_params().app_shall_exit = True
+            imgui.end_menu()
+        if imgui.begin_menu('Edit'):
+            if imgui.menu_item_simple('Undo', 'Cmd+Z' if sys.platform == 'darwin' else 'Ctrl+Z', enabled=bool(self.app.past)):
+                self.app.undo()
+            if imgui.menu_item_simple('Redo', 'Shift+Cmd+Z' if sys.platform == 'darwin' else 'Ctrl+Shift+Z',
+                                      enabled=bool(self.app.future)):
+                self.app.redo()
             imgui.end_menu()
         hello_imgui.show_view_menu(hello_imgui.get_runner_params())
         if imgui.begin_menu('About'):

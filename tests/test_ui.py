@@ -8,7 +8,7 @@ from imgui_bundle import imgui
 
 from dizher import tone
 from dizher.converter.dither import Ordered
-from dizher.ui.window import Window
+from dizher.ui.window import REDO, UNDO, Window
 
 IMAGE = Path(__file__).parent / 'images' / 'lena.png'
 ui = Window(IMAGE)
@@ -56,11 +56,19 @@ def test_conversion_lands(ctx):
 def test_slider_drag_moves_param(ctx):
     r = rect(ctx, '//Tune', '**/contrast/contrast')   # the slider, under params_editor's push_id; '**/contrast' is the header
     y = (r.min.y + r.max.y) / 2
+    steps = len(ui.app.past)
     drag(ctx, imgui.ImVec2((r.min.x + r.max.x) / 2, y), imgui.ImVec2((r.min.x + r.max.x) / 2 + 60, y))
     moved = params('contrast').contrast
     assert moved > 0, f'contrast slider did not move: {moved}'
     ctx.yield_(5)
     assert params('contrast').contrast == moved, 'the slider fell back'
+    assert len(ui.app.past) == steps + 1, 'a drag is one undo step'
+    ctx.key_press(UNDO)
+    ctx.yield_(2)
+    assert params('contrast').contrast == 0.0, 'undo'
+    ctx.key_press(REDO)
+    ctx.yield_(2)
+    assert params('contrast').contrast == moved, 'redo'
     reset('contrast')
 
 
@@ -88,6 +96,17 @@ def test_levels_auto(ctx):
     assert (p.in_black, p.in_white) == tone.auto_levels(ui.app.result('light')), p
     reset('levels')
 
+
+
+def test_history_panel(ctx):
+    ui.app.set_params('contrast', replace(params('contrast'), contrast=10.0))
+    ui.app.set_params('contrast', replace(params('contrast'), contrast=20.0))
+    ctx.yield_(2)
+    ctx.set_ref('//History')
+    ctx.item_click(f'**/Contrast: contrast 10##{len(ui.app.past) - 1}')
+    ctx.yield_(2)
+    assert params('contrast').contrast == 10.0 and len(ui.app.future) == 1, params('contrast')
+    reset('contrast')
 
 def test_block_collapses_and_expands(ctx):
     ctx.set_ref('//Tune')
@@ -170,6 +189,7 @@ TESTS = [
     ('ui', 'slider_drag_moves_param', test_slider_drag_moves_param),
     ('ui', 'levels_handles_drag', test_levels_handles_drag),
     ('ui', 'levels_auto', test_levels_auto),
+    ('ui', 'history_panel', test_history_panel),
     ('ui', 'block_collapses_and_expands', test_block_collapses_and_expands),
     ('ui', 'block_reset', test_block_reset),
     ('ui', 'views_and_grid', test_views_and_grid),

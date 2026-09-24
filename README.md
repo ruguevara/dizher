@@ -188,10 +188,10 @@ Done:
 * [x] Python installation package
 * [x] Save as SCR and PNG
 * [x] Projects: a folder with `project.json` (every stage's params, the image path relative to the folder; mokit's format, as AmaZX), exports default to its `build/`; the last session, unsaved edits included, comes back on start
+* [x] Undo/Redo (Edit menu, Cmd+Z / Shift+Cmd+Z): a slider drag is one step; New and opening a project start the history over. History panel: every step, the newest on top, named by the params it changed, a click goes back or forward to it
 
 Planned:
 
-* [ ] Undo/Redo, history panel
 * [ ] Starred/named selected shaphots panel to compare between and choose from
 * [ ] Linking an image to a project, the Lightroom way
 * [ ] Global presets of selected stages

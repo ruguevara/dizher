@@ -14,6 +14,8 @@ from mokit.project import Unresolved
 from .. import ops
 
 DEBOUNCE = 0.3   # s from the last edit to the next start, so a dragged slider does not restart a stage every frame
+HISTORY = 200    # undo steps kept
+CACHED = 5       # graphs on each side of the current one in the history whose results stay in RAM: undo shows them at once
 
 
 class Cancelled(Exception):
@@ -47,6 +49,8 @@ class Pipeline:
         self.memo = Memo()
         self.digests = Digests()
         self.errors = {}          # node id -> message of its failed run; cleared by the next edit
+        self.past, self.future = [], []   # graphs undo and redo go to, the nearest last
+        self._held = False        # the last edit came from a widget still held: the next one folds into its step
         self._latest = {}         # node id -> its last finished result, shown while an edit recomputes it
         self.job: Optional[Job] = None
         self.cancelled = False    # a user cancel holds everything until the next edit
@@ -63,28 +67,54 @@ class Pipeline:
 
     # ----- commands --------------------------------------------------------------------------------
 
-    def set_params(self, node_id: str, params) -> None:
-        self.set_graph(self.graph.with_params(node_id, params))
+    def set_params(self, node_id: str, params, held: bool = False) -> None:
+        self.set_graph(self.graph.with_params(node_id, params), held)
 
-    def set_graph(self, graph) -> None:
+    def set_graph(self, graph, held: bool = False) -> None:
+        """An edit, one undo step. held: made by a widget still held (a dragged slider, a typed field), so the edits
+        until release() fold into one step."""
+        if graph != self.graph:
+            if not self._held:
+                self.past = (self.past + [self.graph])[-HISTORY:]
+            self.future.clear()
+            self._held = held   # not on a no-op: a press that moves nothing yet must not fold into the last step
+        self._apply(graph)
+
+    def release(self) -> None:
+        """No widget holds the edit any more: the next one is a new step."""
+        self._held = False
+
+    def undo(self) -> None:
+        if self.past:
+            self.future.append(self.graph)
+            self._apply(self.past.pop())
+
+    def redo(self) -> None:
+        if self.future:
+            self.past.append(self.graph)
+            self._apply(self.future.pop())
+
+    def _apply(self, graph) -> None:
         self.graph = graph
         self.errors, self.cancelled = {}, False
         self._deadline = time.monotonic() + DEBOUNCE
         self._sync()
 
     def new(self) -> None:
-        """The default graph with nothing shown from before."""
-        self.set_graph(ops.make_graph())
+        """The default graph with nothing shown from before, and no history."""
+        self.restore(ops.make_graph())
         self._latest.clear()
 
     def restore(self, graph) -> None:
         """The params of a saved graph on the current pipeline: a node it lacks keeps its defaults, one the pipeline
-        lacks or has with another op is dropped, so a project from before a stage was added or removed still opens."""
+        lacks or has with another op is dropped, so a project from before a stage was added or removed still opens.
+        The history starts over."""
         g = ops.make_graph()
         for nid, node in graph.nodes:
             if nid in g and node.op == g[nid].op and not isinstance(node.params, Unresolved):
                 g = g.with_params(nid, node.params)
-        self.set_graph(g)
+        self.past, self.future, self._held = [], [], False   # a new document
+        self._apply(g)
 
     def open(self, path) -> None:
         self.set_params('source', replace(self.graph['source'].params, path=Path(path)))
@@ -133,9 +163,17 @@ class Pipeline:
                     pass
                 except Exception as e:
                     self.errors[job.node_id] = str(e) if isinstance(e, (ValueError, FileNotFoundError)) else f'{type(e).__name__}: {e}'
-            self.memo.forget_ram(keep=self.keys.values())
+            self.memo.forget_ram(keep=self._kept())
         if self.job is None and not self.cancelled and time.monotonic() >= self._deadline:
             self._start_next()
+
+    def _kept(self) -> set:
+        """Keys of the current graph's results and of the nearest ones in the history."""
+        kept = set(self.keys.values())
+        for g in self.past[-CACHED:] + self.future[-CACHED:]:
+            cache = {}
+            kept.update(g.key(nid, self.digests, cache) for nid in g.order())
+        return kept
 
     def _start_next(self) -> None:
         nodes = [n for n in self.graph.ids() if n not in self.errors]

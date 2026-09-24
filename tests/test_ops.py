@@ -189,6 +189,38 @@ def test_project_round_trip_and_restore():
     host.close(), loaded.close()
 
 
+
+def test_undo_redo():
+    from dizher.ui.app import Pipeline
+    host = Pipeline()
+    start = host.graph
+    contrast = lambda: host.graph['contrast'].params.contrast
+    set_ = lambda v, held=False: host.set_params('contrast', replace(host.graph['contrast'].params, contrast=v), held)
+    set_(10.0)
+    for v in (20.0, 30.0, 40.0):   # a dragged slider: one step
+        set_(v, held=True)
+    host.release()
+    set_(40.0, held=True)          # a press that changes nothing yet
+    set_(50.0, held=True)          # a new drag after the release is a step of its own
+    host.release()
+    assert len(host.past) == 3
+    host.undo()
+    assert contrast() == 40.0
+    host.undo()
+    assert contrast() == 10.0
+    host.redo()
+    assert contrast() == 40.0
+    set_(5.0)                      # an edit drops the redo branch
+    assert not host.future and contrast() == 5.0
+    for _ in range(5):
+        host.undo()
+    assert host.graph == start and not host.past
+    host.redo()
+    host.new()                     # a new document has no history
+    assert not host.past and not host.future
+    host.close()
+
+
 if __name__ == '__main__':
     test_framing_geometry()
     test_tone_semantics()
@@ -197,4 +229,5 @@ if __name__ == '__main__':
     test_host_reruns_only_downstream_of_an_edit()
     test_host_discards_stale_completions()
     test_project_round_trip_and_restore()
+    test_undo_redo()
     print('ok')
