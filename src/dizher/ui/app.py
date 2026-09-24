@@ -108,12 +108,13 @@ class Pipeline:
         job = self.job
         if job is not None and job.future.done():
             self.job = None
-            try:
-                self._latest[job.node_id] = job.future.result()
-            except Cancelled:
-                pass
-            except Exception as e:
-                self.errors[job.node_id] = str(e) if isinstance(e, (ValueError, FileNotFoundError)) else f'{type(e).__name__}: {e}'
+            if job.key == self.keys[job.node_id]:
+                try:
+                    self._latest[job.node_id] = job.future.result()
+                except Cancelled:
+                    pass
+                except Exception as e:
+                    self.errors[job.node_id] = str(e) if isinstance(e, (ValueError, FileNotFoundError)) else f'{type(e).__name__}: {e}'
             self.memo.forget_ram(keep=self.keys.values())
         if self.job is None and not self.cancelled and time.monotonic() >= self._deadline:
             self._start_next()

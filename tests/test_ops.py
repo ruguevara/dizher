@@ -76,6 +76,30 @@ def test_host_reruns_only_downstream_of_an_edit():
     host.close()
 
 
+def test_host_discards_stale_completions():
+    from concurrent.futures import Future
+    from dizher.ui.app import Job, Pipeline
+
+    for failed in (False, True):
+        host = Pipeline()
+        try:
+            job = Job('target', host.keys['target'])
+            job.future = Future()
+            if failed:
+                job.future.set_exception(ValueError('old settings'))
+            else:
+                job.future.set_result('old result')
+            host.job = job
+            host.set_params('target', replace(host.graph['target'].params, mode='C64 hires'))
+            host.update()
+            assert not host.errors
+            assert host.shown('target') is None
+            settle(host)
+            assert host.result('target').name == 'C64 hires'
+        finally:
+            host.close()
+
+
 def test_framing_geometry():
     from types import SimpleNamespace
     from dizher.platforms import zxspectrum
@@ -119,4 +143,5 @@ if __name__ == '__main__':
     test_pipeline_converts_and_reuses_upstream()
     test_pipeline_matches_single_converter()
     test_host_reruns_only_downstream_of_an_edit()
+    test_host_discards_stale_completions()
     print('ok')
