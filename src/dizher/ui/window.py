@@ -26,7 +26,7 @@ from mokit.ui.params import params_editor
 from mokit.graph import GraphError, Op
 from mokit.ui.style import Palette
 
-from .. import ops
+from .. import __version__, ops
 from .app import Pipeline
 from .levels import LevelsEditor
 from . import views
@@ -125,6 +125,8 @@ class Window:
         p.app_window_params.window_geometry.size = (1600, 1000)
         p.app_window_params.restore_previous_geometry = True
         p.imgui_window_params.show_menu_bar = True
+        p.imgui_window_params.show_menu_app = False    # File, View, About drawn in _menus
+        p.imgui_window_params.show_menu_view = False
         p.imgui_window_params.show_status_bar = True
         p.imgui_window_params.show_status_fps = False
         p.imgui_window_params.remember_status_bar_settings = False
@@ -416,6 +418,14 @@ class Window:
                 self._open()
             if imgui.menu_item_simple('Save conversion…', enabled=self.result is not None):
                 self._save()
+            imgui.separator()
+            if imgui.menu_item_simple('Quit'):
+                hello_imgui.get_runner_params().app_shall_exit = True
+            imgui.end_menu()
+        hello_imgui.show_view_menu(hello_imgui.get_runner_params())
+        if imgui.begin_menu('About'):
+            imgui.text(f'Dizher {__version__}')
+            imgui.text('Images to 8-bit screens through an eye model')
             imgui.end_menu()
 
     def _status(self) -> None:
