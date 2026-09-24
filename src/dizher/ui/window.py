@@ -34,10 +34,12 @@ VIEWS = {'Screen': 'The conversion as the machine shows it', 'Bitmap': 'Ink pixe
 DEBUG = {   # view -> (tooltip, the stage it needs, its image from that stage's Converter or a running stage's snapshot)
     'Projected': ("What the halftoner aims at: each pixel moved to the nearest mix of its cell's pair",
                   'select', lambda c: c.projected_target()),
+    'Unoptimised': ("The halftoner's result, what the optimiser started from",   # a Select pairs snapshot has none yet
+                    'halftone', lambda c: c.dithered_result if c.halftoned is None else np.where(c.halftoned[..., None] > 0, c.best_ink, c.best_paper)),
     'Eye': ('Both images as the eye model sees them: what the energy compares',
-            'halftone', lambda c: c.eye_view(c.dithered_result)),
+            'optimise', lambda c: c.eye_view(c.dithered_result)),
     'Error': ('Result minus target through the eye model, around grey: lighter/darker is luma error, '
-              'the tint is the colour the result adds', 'halftone', views.error_view),
+              'the tint is the colour the result adds', 'optimise', views.error_view),
     'Energy': ("Each cell's energy: red its own error, green the eye-model seams, blue coherence",
                'select', views.energy_view),
     'Seams': ('Cell seams the original has an edge across, bright: there a pair change costs no coherence',
@@ -101,7 +103,7 @@ class Window:
             self.app.open(path)
         self.images = {}       # immvision params per preview
         self.expanded = {}     # node id -> block open; imgui keeps no header state in its ini
-        self.editors = {'levels': LevelsEditor(), 'halftone': HalftoneEditor()}   # node id -> custom params editor
+        self.editors = {'levels': LevelsEditor(), 'halftoner': HalftoneEditor()}   # node id -> custom params editor
         self.view, self.grid = 'Screen', False     # the conversion's view and the cell grid; not persisted
         self._debug = {}       # image key -> (the Converter it came from, the image)
 
@@ -130,7 +132,7 @@ class Window:
             hello_imgui.DockingSplit('MainDockSpace', 'ConvertSpace', imgui.Dir.right, 0.28)]
         p.docking_params.dockable_windows = [
             hello_imgui.DockableWindow('Tune', 'TuneSpace', lambda: self._column(ops.TUNE)),
-            hello_imgui.DockableWindow('Convert', 'ConvertSpace', lambda: self._column(ops.CONVERT)),
+            hello_imgui.DockableWindow('Convert', 'ConvertSpace', lambda: (self._column(ops.CONVERT), self._export())),
             hello_imgui.DockableWindow('Preview', 'MainDockSpace', self._preview)]
         if not persist:   # tests: the default layout in an ini of their own, the user's stays untouched
             p.app_window_params.window_geometry.size = (1100, 1000)   # narrow: C64 fits at a smaller zoom than ZX
@@ -210,20 +212,25 @@ class Window:
                 continue
             on_change = lambda p, n=nid: app.set_params(n, p)
             if nid in self.editors:
-                self.editors[nid].draw(params, app.shown(inputs[0]), on_change, id=nid)
+                self.editors[nid].draw(params, app.shown(inputs[0]) if inputs else None, on_change, id=nid)
             elif params is not None:
                 params_editor(params, on_change, id=nid, help='tooltip')
-            if nid == 'prepare':
+            if nid == 'halftoner' and 'noise_x' in ops.HALFTONERS[params.halftoner].controls:
                 if imgui.button('Random'):
                     x, y = np.random.randint(ops.BLUE_NOISE_RESOLUTION, size=2)
                     self.app.set_params(nid, replace(params, noise_x=int(x), noise_y=int(y)))
-                imgui.set_item_tooltip('Restart from a random blue-noise origin')
-            if nid == 'halftone':
-                imgui.begin_disabled(self.result is None)
-                if imgui.button('Save…'):
-                    self._save()
-                imgui.end_disabled()
+                imgui.set_item_tooltip('Restart from a random tile origin')
             widgets.gap()
+
+    def _export(self) -> None:
+        """The block under Convert's: not a graph node, it saves the last finished result."""
+        imgui.set_next_item_open(self.expanded.get('export', True), imgui.Cond_.once.value)
+        self.expanded['export'] = imgui.collapsing_header('Export')
+        if self.expanded['export']:
+            imgui.begin_disabled(self.result is None)
+            if imgui.button('Save…'):
+                self._save()
+            imgui.end_disabled()
 
     def _reset_button(self, nid: str, params, right: float) -> None:
         """At the right end of the block header; disabled while every param is at its default."""
@@ -251,7 +258,7 @@ class Window:
     def _converted(self):
         """The view of the running stage's live snapshot, else of the last finished result."""
         job = self.app.job
-        live = job.image if job is not None and job.node_id in ('select', 'halftone') else None
+        live = job.image if job is not None and job.node_id in ('select', 'optimise') else None
         if self.view in DEBUG:
             _, stage, fn = DEBUG[self.view]
             return self._debug_image(self.view, live if live is not None else self.app.shown(stage), fn)
@@ -334,7 +341,7 @@ class Window:
     @property
     def result(self):
         """The conversion on screen and in Save: the last one finished."""
-        return self.app.shown('halftone')
+        return self.app.shown('optimise')
 
     def _source(self):
         return self.app.graph['source'].params.path

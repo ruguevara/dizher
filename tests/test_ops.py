@@ -13,22 +13,24 @@ from dizher.converter.dither import Ordered
 IMAGE = Path(__file__).parent / 'images' / 'lena.png'
 
 
-def pipeline(**halftone):
+def pipeline(**optimise):
+    """Ordered halftone, the optimiser off: fast."""
     graph = ops.make_graph()
     graph = graph.with_params('source', replace(graph['source'].params, path=IMAGE))
-    return graph.with_params('halftone', replace(graph['halftone'].params, halftoner=Ordered.label, **halftone))
+    graph = graph.with_params('halftoner', replace(graph['halftoner'].params, halftoner=Ordered.label))
+    return graph.with_params('optimise', replace(graph['optimise'].params, enabled=False, **optimise))
 
 
 def test_pipeline_converts_and_reuses_upstream():
     memo = Memo()
     graph = pipeline()
-    result = evaluate(graph, 'halftone', memo)
+    result = evaluate(graph, 'optimise', memo)
     assert result.dithered_result.shape == (192, 256, 3)
     prepared = evaluate(graph, 'prepare', memo)
     changed = pipeline(structure=0.2)
-    assert changed.key('prepare') == graph.key('prepare') and changed.key('halftone') != graph.key('halftone')
-    again = evaluate(changed, 'halftone', memo)
-    assert evaluate(changed, 'prepare', memo) is prepared                 # a halftone edit reuses the setup
+    assert changed.key('prepare') == graph.key('prepare') and changed.key('optimise') != graph.key('optimise')
+    again = evaluate(changed, 'optimise', memo)
+    assert evaluate(changed, 'prepare', memo) is prepared                 # an optimiser edit reuses the setup
     assert again.best_attr_indexes is result.best_attr_indexes            # ...and the pair selection
     assert prepared.best_attr_indexes is None and prepared.dithered_result is None   # stages never mutate upstream
 
@@ -37,9 +39,9 @@ def test_pipeline_matches_single_converter():
     """The staged ops give the one-shot Converter.dither."""
     memo = Memo()
     graph = pipeline()
-    result = evaluate(graph, 'halftone', memo)
+    result = evaluate(graph, 'optimise', memo)
     direct = evaluate(graph, 'prepare', memo).copy()
-    np.testing.assert_array_equal(direct.dither(Ordered()), result.dithered_result)
+    np.testing.assert_array_equal(direct.dither(Ordered('Void dispersed dots')), result.dithered_result)
 
 
 def settle(host):
@@ -58,17 +60,18 @@ def settle(host):
 def test_host_reruns_only_downstream_of_an_edit():
     from dizher.ui.app import Pipeline
     host = Pipeline()
-    host.set_params('halftone', replace(host.graph['halftone'].params, halftoner=Ordered.label))
+    host.set_params('halftoner', replace(host.graph['halftoner'].params, halftoner=Ordered.label))
+    host.set_params('optimise', replace(host.graph['optimise'].params, enabled=False))
     host.open(IMAGE)
-    assert settle(host)[-3:] == ['prepare', 'select', 'halftone'] and not host.errors
-    host.set_params('halftone', replace(host.graph['halftone'].params, structure=0.2))
-    assert settle(host) == ['halftone']
+    assert settle(host)[-4:] == ['prepare', 'select', 'halftone', 'optimise'] and not host.errors
+    host.set_params('optimise', replace(host.graph['optimise'].params, structure=0.2))
+    assert settle(host) == ['optimise']
     host.set_params('select', replace(host.graph['select'].params, coherence=1.0))
-    assert settle(host) == ['select', 'halftone']
+    assert settle(host) == ['select', 'halftone', 'optimise']
     before = host.result('color')
     host.set_params('contrast', replace(host.graph['contrast'].params, contrast=30.0))
     assert host.result('color') is None and host.shown('color') is before   # the old picture stays up meanwhile
-    assert settle(host) == ['contrast', 'color', 'prepare', 'select', 'halftone']
+    assert settle(host) == ['contrast', 'color', 'prepare', 'select', 'halftone', 'optimise']
     assert host.shown('color') is host.result('color') is not before
     host.set_params('target', replace(host.graph['target'].params, mode='C64 hires', palette='Bright only'))
     settle(host)

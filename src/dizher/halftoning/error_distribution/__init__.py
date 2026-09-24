@@ -1,1 +1,1 @@
-from .distribution import ed_dither_duo, stucki_duo
+from .distribution import ed_dither_duo, ed_dither_levels, stucki_duo

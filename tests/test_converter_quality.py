@@ -4,7 +4,7 @@ import numpy as np
 
 from dizher.converter.converter import Converter
 from dizher.converter.energy import SEAM_COST
-from dizher.converter.dither import DBS, ErrorDiffusion, Ordered, Stohastic, duo_levels
+from dizher.converter.dither import ErrorDiffusion, Ordered, Stohastic, duo_levels
 from dizher.halftoning.dbs import _Structure, CONTRAST_GAIN
 from dizher.halftoning.error_distribution import ed_dither_duo, stucki_duo
 from dizher.platforms import Mode
@@ -32,10 +32,10 @@ def test_equal_luminance_colour_edge():
     expected = np.zeros_like(image)
     expected[..., 1] = 1
     expected[:, 4:, 2] = 1
-    for halftoner in (Stohastic(), Ordered(), ErrorDiffusion(), DBS()):
+    for halftoner, optimise in ((Stohastic(), False), (Ordered(), False), (ErrorDiffusion(), False), (Stohastic(), True)):
         converter.set_image(image)
         np.testing.assert_allclose(converter.image_luma, 0.7152, atol=1e-7)
-        np.testing.assert_array_equal(converter.dither(halftoner), expected)
+        np.testing.assert_array_equal(converter.dither(halftoner, optimise), expected)
 
 
 def test_selection_matches_full_convolution():
@@ -84,8 +84,10 @@ def test_dbs_lowers_complete_colour_objective():
             return colour_error(converter, result) + structure * float((s.c * (1 - s.ssim)).sum())
 
         before = objective(seed)
-        result = converter.dither(DBS())
+        result = converter.dither(Stohastic(), optimise=True)
         assert objective(result) < before
+        np.testing.assert_array_equal(np.where(converter.halftoned[..., None] > 0, converter.best_ink, converter.best_paper),
+                                      seed, err_msg='the start must stay for the Unoptimised view')
         assert np.logical_or(np.all(result == converter.best_paper, axis=-1),
                              np.all(result == converter.best_ink, axis=-1)).all()
 
@@ -135,6 +137,22 @@ def test_error_diffusion_kernels_spread_error():
         coverage = ed_dither_duo(image, paper, ink, kernel).mean()
         assert 0.35 < coverage < 0.6, (kernel, coverage)
 
+def test_candidates_follow_the_halftoner():
+    """Pair candidates are painted by the converter's ditherer; the batched scalar diffusion matches the colour
+    one pair by pair, so 72 candidates cost one raster pass."""
+    from dizher.halftoning.error_distribution import ed_dither_duo, ed_dither_levels
+    rng = np.random.default_rng(5)
+    levels = rng.random((3, 16, 24), dtype=np.float32)
+    batched = ed_dither_levels(levels, 'Shiau-Fan 3')
+    for l, b in zip(levels, batched):
+        np.testing.assert_array_equal(b, ed_dither_duo(l, np.zeros_like(l), np.ones_like(l), 'Shiau-Fan 3'))
+    mode = Mode('small', (16, 24), (8, 8), ZXPalette())
+    converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, mode, ditherer=ErrorDiffusion('Shiau-Fan 3'))
+    converter.set_image(rng.random((*mode.size, 3), dtype=np.float32))
+    np.testing.assert_array_equal(converter.bitmaps, ed_dither_levels(converter.levels, 'Shiau-Fan 3'))
+    assert (converter.bitmaps != Stohastic().threshold(converter.levels)).any()
+
+
 def test_stages_preview_snapshots():
     """Live previews are Converter snapshots, so every view can draw the running stage: pair selection sends its
     labels with their blue-noise composite, the halftoner its bitmap; each a copy of what the stage mutates."""
@@ -148,7 +166,7 @@ def test_stages_preview_snapshots():
     interval, live.PROGRESS_INTERVAL = live.PROGRESS_INTERVAL, 0
     try:
         with live.reporting(report):
-            converter.dither(DBS())
+            converter.dither(Stohastic(), optimise=True)
     finally:
         live.PROGRESS_INTERVAL = interval
     select = [s for s in shots if s.best_attr_indexes is not converter.best_attr_indexes]
@@ -169,12 +187,12 @@ def test_noise_origin_restarts_both_stages():
     image = rng.random((*mode.size, 3), dtype=np.float32)
     runs = []
     for origin in ((0, 0), (5, 7)):
-        converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, mode, noise_origin=origin)
+        converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, mode, ditherer=Stohastic(origin=origin))
         converter.set_image(image)
-        runs.append((converter.bitmaps.copy(), converter.dither(DBS()).copy()))
+        runs.append((converter.bitmaps.copy(), converter.dither(Stohastic(), optimise=True).copy()))
     (b0, r0), (b1, r1) = runs
     assert (b0 != b1).any(), 'candidates must follow the origin'
-    np.testing.assert_array_equal(b1, Stohastic().threshold(converter.levels, (5, 7)))
+    np.testing.assert_array_equal(b1, Stohastic(origin=(5, 7)).threshold(converter.levels))
     assert (r0 != r1).any(), 'the DBS start must follow the origin'
 
 if __name__ == '__main__':
@@ -183,6 +201,7 @@ if __name__ == '__main__':
     test_dbs_lowers_complete_colour_objective()
     test_halftone_target_is_reachable()
     test_colour_diffusion_preserves_scalar_projection()
+    test_candidates_follow_the_halftoner()
     test_ordered_matrices_cover_tone()
     test_error_diffusion_kernels_spread_error()
     test_stages_preview_snapshots()

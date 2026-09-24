@@ -48,8 +48,8 @@ The GUI group that owns each knob is in brackets.
    ┌────────────────────────────────────────────────────────────────────┼───────────────────────────┐
    │ Stage 1: SELECT PAIRS                one paper/ink pair per 8x8 block                          │
    │                                                                                                │
-   │  candidates: for every allowed pair, project the block onto the paper-ink segment, blue-noise  │
-   │  dither it                                    [Target: palette subset]  [Prepare: noise x, y]  │
+   │  candidates: for every allowed pair, project the block onto the paper-ink segment, halftone   │
+   │  it as stage 2 will          [Target: palette subset]  [Halftoner: halftoner, matrix, kernel]  │
    │                                                                                                │
    │  loss(labels) = Σ_ch || h_ch ∗ (composite − target) ||²    eye-blurred error, exact quadratic  │
    │               + Σ_ch noise_ch · || composite − target ||²  unblurred dot contrast              │
@@ -69,26 +69,33 @@ The GUI group that owns each knob is in brackets.
    │                                                                                                │
    │  target: each pixel projected onto its block's paper-ink segment (the unreachable part is      │
    │  already paid for by stage 1, so it is not chased across seams)                                │
-   │  start: blue-noise dither of that target                              [Prepare: noise x, y]    │
+   │  [Halftoner: halftoner] ordered (matrix; void-and-cluster dispersed dots by default, a fair    │
+   │  stand-in for the DBS result), error diffusion (kernel), stochastic (blue noise); the tile     │
+   │  is rolled by [Halftoner: noise x, y]                                                          │
+   └──────────────────────────────────────────┬─────────────────────────────────────────────────────┘
+                                              │ bitmap
+                                              ▼
+   ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+   │ Stage 3: OPTIMISE                  [Optimise: enabled]  off passes the halftone through        │
    │                                                                                                │
    │  loss(bitmap) = Σ_ch || h_ch ∗ (result − target) ||²    same kernels and noise weights         │
    │               + Σ_ch noise_ch · || result − target ||²                                         │
    │               + structure · Σ_p c_p (1 − SSIM_p(result, target))   luma only, 7x7 windows,     │
    │                                                                     c_p = local contrast       │
-   │     structure  [Halftone: structure]                                                           │
+   │     structure  [Optimise: structure]                                                           │
    │                                                                                                │
-   │  solver (DBS): every pixel tries a toggle and a swap with each of 8 neighbours, keeps the      │
-   │  move that lowers the loss most; deltas are exact from running error and window statistics;    │
-   │  a lattice of non-interacting pixels moves at once; stops when fewer than 0.1% of pixels move  │
-   │  Also [Halftone: halftoner]: diffusion (kernel), ordered (matrix), stochastic                  │
+   │  solver (DBS): from the halftone, every pixel tries a toggle and a swap with each of 8         │
+   │  neighbours, keeps the move that lowers the loss most; deltas are exact from running error     │
+   │  and window statistics; a lattice of non-interacting pixels moves at once; stops when fewer    │
+   │  than 0.1% of pixels move                                                                      │
    └──────────────────────────────────────────┬─────────────────────────────────────────────────────┘
                                               │ bitmap + attributes
                                               ▼
                                   screen file (.scr) or PNG
 ```
 
-Views in the Preview tab show what each stage sees: Projected is the stage-2 target, Eye is target
-and result through h, Error is their difference, Energy is the stage-1 loss per block (own, seam,
+Views in the Preview tab show what each stage sees: Projected is the stage-2 target, Unoptimised the
+halftone the optimiser started from, Eye is target and result through h, Error is their difference, Energy is the stage-1 loss per block (own, seam,
 coherence), Seams is where edge disables the coherence prior.
 
 ### Eye model
@@ -111,7 +118,8 @@ deliberately truncated.
 
 For every block and every allowed pair of palette colours (72 pairs on the Spectrum), a candidate
 block is realised by projecting the source onto the paper/ink segment in weighted linear opponent
-colour space, then blue-noise dithering that mixture. The whole
+colour space, then halftoning that mixture with the chosen halftoner, so the pairs are chosen for
+the dots they will get (error diffusion is batched over all pairs, one raster pass). The whole
 screen is then the sum of one candidate per block, and the eye-model error of that composite is a
 quadratic function of the block labels: a cost per block, plus a pairwise cost for every pair of
 neighbouring blocks that measures the visible seam their two candidates paint across the border.
@@ -128,8 +136,14 @@ only, not bright only, grayscale, or black and white.
 ### Halftoning
 
 With paper and ink fixed per block, each pixel is set to one of them so that the blurred result
-matches the blurred image. All halftoners consume the same colour-aware inputs. The default,
-Direct Binary Search (DBS), starts from a blue-noise dither, then
+matches the blurred image. All halftoners consume the same colour-aware inputs: ordered with a
+choice of 39 threshold matrices (Bayer, dispersed and clustered dots, line screens and magic
+squares, the non-Bayer ones from libdither; the void-and-cluster dispersed dots by default), error
+diffusion with 19 kernels (Floyd-Steinberg to Stevenson-Arce, also from libdither) and stochastic
+(blue noise); the Halftoner
+block shows only the controls of the chosen method, and the same method paints the pair candidates.
+
+The Optimise stage, on by default, then runs Direct Binary Search (DBS) from that halftone: it
 repeatedly visits every pixel and either flips it or swaps it with one of its 8 neighbours,
 whichever lowers the eye-model error most, until no move helps. A swap moves a dot without
 changing the local tone; with flips alone the search stalls at about twice the error. The error
@@ -144,11 +158,8 @@ Plain DBS reproduces tone but blurs faint edges and texture. Following structure
 (Pang et al. 2008), the energy also includes a structural similarity term (SSIM) between the
 halftone and the image in small windows, weighted by the local contrast of the image (Jiang et al.
 2023) so that flat areas do not grow holes. Its contribution to every move is also computed
-exactly, and the weight is a GUI slider. Ordered dithering with a choice of 39 threshold matrices
-(Bayer, dispersed and clustered dots, line screens and magic squares, the non-Bayer ones from
-libdither), error diffusion with 19 kernels (Floyd-Steinberg to Stevenson-Arce, also from libdither) and
-plain stochastic dithering remain available for comparison and for their look; the Halftone block shows
-only the controls of the chosen method.
+exactly, and the weight is a GUI slider. With the optimiser off the halftone is the result, for
+its own look or to compare; the Unoptimised view shows the start under the optimised result.
 
 ## Installation
 
@@ -168,7 +179,7 @@ Run the GUI (imgui_bundle; the pipeline stages are mokit nodes):
 Done:
 
 * [x] Error diffusion respecting the two colours of each character block
-* [x] Direct Binary Search halftoner under the eye model, with a structure-aware (SSIM) term
+* [x] Direct Binary Search optimiser under the eye model from any halftone, with a structure-aware (SSIM) term
 * [x] Colour selection as one eye-model energy with a coherence prior
 * [x] Adjustable metric weights (luma, chroma, coherence) and eye-model parameters
 * [x] Selectable dithering methods

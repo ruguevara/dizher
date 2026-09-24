@@ -1,9 +1,8 @@
 import numpy as np
 
-from ..halftoning.error_distribution import ed_dither_duo
+from ..halftoning.error_distribution import ed_dither_duo, ed_dither_levels
 from ..halftoning.ordered import ordered_dither
 from ..halftoning.noise import noise_dither
-from ..halftoning.dbs import dbs_duo
 
 def duo_levels(luma, paper, ink):
     """Project an (H, W) scalar or (H, W, channels) colour image onto its paper/ink segment."""
@@ -27,21 +26,16 @@ class Ditherer:
     def __call__(self, luma: np.ndarray, paper: np.ndarray, ink: np.ndarray, **eye) -> np.ndarray:
         raise NotImplementedError()
 
-class ThresholdDitherer(Ditherer):
-    def __call__(self, luma, paper, ink, origin=(0, 0), **eye):
-        return self.threshold(duo_levels(luma, paper, ink), origin)
-
-    def threshold(self, levels: np.ndarray, origin=(0, 0)) -> np.ndarray:
+    def threshold(self, levels: np.ndarray) -> np.ndarray:
+        """Levels in 0..1 with any leading axes to a bitmap: the pair candidates (Converter.set_image)."""
         raise NotImplementedError()
 
-class DBS(Ditherer):
-    label = 'DBS'
-    controls = ('structure',)
+class ThresholdDitherer(Ditherer):
+    def __init__(self, origin=(0, 0), **kwargs):
+        self.origin = origin   # (y, x) roll of the tile: another start for pair selection and DBS, which settle in local optima
 
-    def __call__(self, luma, paper, ink, scale=1.4, alpha=2.0, structure=0.06, kernels=None, noise=0, on_step=None,
-                 origin=(0, 0), **eye):
-        return dbs_duo(luma, paper, ink, init=noise_dither(duo_levels(luma, paper, ink), origin=origin),
-                       scale=scale, alpha=alpha, structure=structure, kernels=kernels, noise=noise, on_step=on_step)
+    def __call__(self, luma, paper, ink, **eye):
+        return self.threshold(duo_levels(luma, paper, ink))
 
 class ErrorDiffusion(Ditherer):
     label = 'Error diffusion'
@@ -53,18 +47,23 @@ class ErrorDiffusion(Ditherer):
     def __call__(self, luma, paper, ink, **eye):
         return ed_dither_duo(luma, paper, ink, self.kernel)
 
+    def threshold(self, levels):
+        return ed_dither_levels(levels, self.kernel)
+
 class Ordered(ThresholdDitherer):
     label = 'Ordered'
     controls = ('matrix',)
 
     def __init__(self, matrix='Bayer 4x4', **kwargs):
+        super().__init__(**kwargs)
         self.matrix = matrix
 
-    def threshold(self, levels, origin=(0, 0)):
-        return ordered_dither(levels, self.matrix, origin)
+    def threshold(self, levels):
+        return ordered_dither(levels, self.matrix, self.origin)
 
 class Stohastic(ThresholdDitherer):
     label = 'Stohastic'
+    controls = ('noise_x', 'noise_y')
 
-    def threshold(self, levels, origin=(0, 0)):
-        return noise_dither(levels, origin=origin)
+    def threshold(self, levels):
+        return noise_dither(levels, origin=self.origin)

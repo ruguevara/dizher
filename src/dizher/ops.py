@@ -1,7 +1,8 @@
 """Dizher's conversion stages as mokit ops, one graph node per stage in PIPELINE order.
 
 A node's mokit key covers its params and everything upstream, so an edit reruns only the stages after it:
-the halftoner reruns Halftone, coherence reruns Select pairs and Halftone, the eye model or the metric rerun
+the structure weight reruns Optimise, coherence reruns from Select pairs, the halftoner, the eye model or the
+metric rerun
 from Prepare (the ~1 s candidate and selection-energy setup). Converter results are shallow copies sharing
 the upstream arrays, which no stage mutates.
 """
@@ -18,7 +19,7 @@ from mokit.types import Image
 from .converter import eye as eye_model
 from .converter.converter import Converter
 from .converter.energy import EDGE_SIGMA
-from .converter.dither import DBS, ErrorDiffusion, Ordered, Stohastic
+from .converter.dither import Ditherer, ErrorDiffusion, Ordered, Stohastic
 from .halftoning.noise.noise import BLUE_NOISE_RESOLUTION
 from .halftoning.ordered.matrices import MATRICES
 from .halftoning.error_distribution.kernels import KERNELS
@@ -28,7 +29,7 @@ from .progress import reporting
 
 MODES = {m.name: m for m in (zxspectrum.STANDARD, c64.HIRES)}
 SUBSETS = tuple(dict.fromkeys(s for m in MODES.values() for s in m.palette.SUBSETS))
-HALFTONERS = {cls.label: cls for cls in (DBS, Ordered, ErrorDiffusion, Stohastic)}
+HALFTONERS = {cls.label: cls for cls in (Stohastic, Ordered, ErrorDiffusion)}
 
 
 @dataclass(frozen=True)
@@ -133,15 +134,24 @@ def eye(luma_alpha: Annotated[float, meta(min=0.5, max=2.0)] = eye_model.LUMA_AL
     return Eye(luma_alpha, luma_scale, chroma_alpha, chroma_scale)
 
 
-NOISE = meta(min=0, max=BLUE_NOISE_RESOLUTION - 1, help="px the blue-noise tile is rolled: another start for "
-                                                        "pair selection and DBS, which settle in local optima")
+NOISE = meta(min=0, max=BLUE_NOISE_RESOLUTION - 1, help="px the tile is rolled: another start for pair selection "
+                                                        "and DBS, which settle in local optima")
 
-def prepare(picture: np.ndarray, target: Mode, metric: Metric, eye: Eye,
-            noise_x: Annotated[int, NOISE] = 0, noise_y: Annotated[int, NOISE] = 0, progress=None) -> Converter:
-    """Every pair fitted per pixel, blue-noise candidates and the selection energy."""
+def halftoner(halftoner: Annotated[str, meta(choices=tuple(HALFTONERS))] = Ordered.label,
+              matrix: Annotated[str, meta(choices=tuple(MATRICES))] = 'Void dispersed dots',
+              kernel: Annotated[str, meta(choices=tuple(KERNELS))] = 'Shiau-Fan 3',
+              noise_x: Annotated[int, NOISE] = 0, noise_y: Annotated[int, NOISE] = 0) -> Ditherer:
+    """The method that paints the pair candidates and then the result (each cell's paper or ink per pixel);
+    each reads its own params (Ditherer.controls): Ordered the threshold matrix, Error diffusion the kernel,
+    the tiled ones their origin."""
+    return HALFTONERS[halftoner](matrix=matrix, kernel=kernel, origin=(noise_y, noise_x))
+
+
+def prepare(picture: np.ndarray, target: Mode, metric: Metric, eye: Eye, halftoner: Ditherer, progress=None) -> Converter:
+    """Every pair fitted per pixel and halftoned into a candidate, and the selection energy."""
     c = Converter({'Luma': 1.0, 'Chroma': metric.chroma}, target, luma_alpha=eye.luma_alpha,
                   luma_scale=eye.luma_scale, chroma_alpha=eye.chroma_alpha, chroma_scale=eye.chroma_scale,
-                  noise_origin=(noise_y, noise_x))
+                  ditherer=halftoner)
     with reporting(progress):
         c.set_image(picture)
     return c
@@ -154,24 +164,33 @@ def select_pairs(prepared: Converter,
                  luma_noise: Annotated[float, meta(min=0.0, max=0.5)] = 0.0,
                  chroma_noise: Annotated[float, meta(min=0.0, max=0.5)] = 0.05,
                  progress=None) -> Converter:
-    """One (paper, ink) pair per cell; the noise weights also reach the DBS halftoner."""
+    """One (paper, ink) pair per cell; the noise weights also reach the DBS optimiser."""
     c = prepared.copy(coherence=coherence, edge=edge, luma_noise=luma_noise, chroma_noise=chroma_noise)
     with reporting(progress):
         c.set_labels(c.energy.apply())
     return c
 
 
-def halftone(selection: Converter,
-             halftoner: Annotated[str, meta(choices=tuple(HALFTONERS))] = DBS.label,
-             structure: Annotated[float, meta(min=0.0, max=0.5, help="weight of the SSIM term")] = 0.06,
-             matrix: Annotated[str, meta(choices=tuple(MATRICES))] = 'Bayer 4x4',
-             kernel: Annotated[str, meta(choices=tuple(KERNELS))] = 'Stucki',
-             progress=None) -> Converter:
-    """Each pixel quantised to its cell's paper or ink. Each method reads its own params (Ditherer.controls):
-    DBS the structure weight, Ordered the threshold matrix, Error diffusion the kernel."""
-    c = selection.copy(ditherer=HALFTONERS[halftoner](matrix=matrix, kernel=kernel), structure=structure)
+def halftone(selection: Converter, progress=None) -> Converter:
+    """Each pixel quantised to its cell's paper or ink by the Halftoner: the start of the optimiser, or the result
+    when it is off."""
+    c = selection.copy()
     with reporting(progress):
         c.halftone()
+    return c
+
+
+def optimise(halftone: Converter,
+             enabled: Annotated[bool, meta(help="Direct binary search from the halftone")] = True,
+             structure: Annotated[float, meta(min=0.0, max=0.5, help="weight of the SSIM term")] = 0.06,
+             progress=None) -> Converter:
+    """Every pixel toggled or swapped with a neighbour while the eye-model error drops (halftoning/dbs.py),
+    from the halftone as the start. Off passes the halftone through."""
+    if not enabled:
+        return halftone
+    c = halftone.copy(structure=structure)
+    with reporting(progress):
+        c.optimise()
     return c
 
 
@@ -187,9 +206,11 @@ CONVERT = (   # the right column's
     ('target', 'Target', 'dizher.ops:target', ()),
     ('metric', 'Metric', 'dizher.ops:metric', ()),
     ('eye', 'Eye model', 'dizher.ops:eye', ()),
-    ('prepare', 'Prepare', 'dizher.ops:prepare', ('color', 'target', 'metric', 'eye')),
+    ('halftoner', 'Halftoner', 'dizher.ops:halftoner', ()),
+    ('prepare', 'Prepare', 'dizher.ops:prepare', ('color', 'target', 'metric', 'eye', 'halftoner')),
     ('select', 'Select pairs', 'dizher.ops:select_pairs', ('prepare',)),
     ('halftone', 'Halftone', 'dizher.ops:halftone', ('select',)),
+    ('optimise', 'Optimise', 'dizher.ops:optimise', ('halftone',)),
 )
 PIPELINE = TUNE + CONVERT
 TUNED = TUNE[-1][0]   # the node whose result the converter takes

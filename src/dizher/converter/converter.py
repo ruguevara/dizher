@@ -8,6 +8,7 @@ from skimage import img_as_float
 from .palette import Palette
 from .colors import convert_color, lrgb2luminance, gray2rgb
 from .dither import Ditherer, Stohastic, duo_levels
+from ..halftoning.dbs import dbs_duo
 from .eye import LUMA_ALPHA, LUMA_SCALE, CHROMA_ALPHA, CHROMA_SCALE, eye_kernel
 from .energy import SelectionEnergy, pair_dissimilarity, LRGB2OPP, EDGE_SIGMA
 from ..progress import report_progress, report_stage
@@ -26,7 +27,7 @@ class Converter:
             luma_noise: float = 0.0,
             chroma_noise: float = 0.05,
             structure: float = 0.06,
-            noise_origin=(0, 0),
+            ditherer: Ditherer = None,   # halftones the pair candidates and, after selection, the result
     ):
         self.mode = mode
         self.size = mode.size
@@ -40,11 +41,10 @@ class Converter:
         self.chroma_noise = chroma_noise
         self.edge = edge            # step of the original across a seam that counts as a real edge, see energy.py
         self.coherence = coherence  # cost of a pair change between neighbours where the original is smooth, see energy.py
-        self.structure = structure  # weight of the contrast-weighted SSIM term in the DBS halftoner, see halftoning/dbs.py
-        self.noise_origin = noise_origin  # (y, x) roll of the blue-noise tile under the candidates and the DBS start
+        self.structure = structure  # weight of the contrast-weighted SSIM term in the DBS optimiser, see halftoning/dbs.py
+        self.ditherer = ditherer or Stohastic()
         self.energy = SelectionEnergy(self, weights)
         self.image_rgb = None
-        self.ditherer = None
         self.set_palette(mode.palette)
 
     def copy(self, **attrs) -> 'Converter':
@@ -79,6 +79,7 @@ class Converter:
     def invalidate_result(self):
         self.best_paper = None
         self.best_ink = None
+        self.halftoned = None       # the halftoner's bitmap, kept when optimise() replaces dithered_bitmap
         self.dithered_bitmap = None
         self.dithered_result = None
 
@@ -92,7 +93,7 @@ class Converter:
         return image_rgb
 
     def set_image(self, image_rgb: np.ndarray) -> None:
-        """The ~1 s setup: every pair fitted per pixel, blue-noise candidates, the selection energy."""
+        """The ~1 s setup: every pair fitted per pixel, its candidate halftoned, the selection energy."""
         image_rgb = self.preprocess_image(image_rgb)
         self.invalidate()
         self.image_rgb = image_rgb
@@ -100,8 +101,8 @@ class Converter:
         self.image_luma = lrgb2luminance(self.image_lrgb)
         report_stage(f'fitting {len(self.color_pairs)} pairs')
         self.levels = self.fit_duocolors()
-        # candidates are scored on a blue-noise dither: cheap for all pairs, right noise amplitude for choosing them
-        self.bitmaps = Stohastic().threshold(self.levels, self.noise_origin)
+        # candidates are scored as the halftoner would paint them: the pairs are chosen for the dots they will get
+        self.bitmaps = self.ditherer.threshold(self.levels)
         paper = self.color_pairs[:, 0, np.newaxis, np.newaxis, :]
         ink = self.color_pairs[:, 1, np.newaxis, np.newaxis, :]
         self.realized = np.where(self.bitmaps[..., np.newaxis], ink, paper).astype(np.float32)
@@ -168,20 +169,32 @@ class Converter:
             c.set_labels(labels.copy())
             idx = c.expand_cells(c.best_attr_indexes)
             bitmap = self.bitmaps[(idx,) + tuple(np.indices(idx.shape))]
-        c.dithered_bitmap = np.array(bitmap, dtype=np.float32)
-        c.dithered_result = np.where(c.dithered_bitmap[..., None] > 0, c.best_ink, c.best_paper)
+        c.set_bitmap(np.array(bitmap, dtype=np.float32))
         return c
 
     def halftone(self):
         """Run the chosen halftoner once on the final composite, quantising each pixel to its block's paper or ink."""
-        paper = self.opponent(self.best_paper ** self.gamma)
-        ink = self.opponent(self.best_ink ** self.gamma)
+        paper, ink = self._duo()
         report_stage(self.ditherer.label)
-        self.dithered_bitmap = self.ditherer(self.halftone_target(paper, ink), paper, ink,
+        self.set_bitmap(self.ditherer(self.halftone_target(paper, ink), paper, ink))
+        self.halftoned = self.dithered_bitmap
+
+    def optimise(self):
+        """Direct binary search from the halftone bitmap under the eye model (halftoning/dbs.py); the start
+        stays in halftoned."""
+        paper, ink = self._duo()
+        report_stage('DBS')
+        self.set_bitmap(dbs_duo(self.halftone_target(paper, ink), paper, ink, init=self.dithered_bitmap,
             scale=self.luma_scale, alpha=self.luma_alpha, structure=self.structure,
             kernels=self.eye_kernels(), noise=(self.luma_noise, self.chroma_noise, self.chroma_noise),
-            on_step=lambda b: report_progress(lambda: self.snapshot(bitmap=b)), origin=self.noise_origin).astype(np.float32)
-        self.dithered_result = np.where(self.dithered_bitmap[..., np.newaxis], self.best_ink, self.best_paper)
+            on_step=lambda b: report_progress(lambda: self.snapshot(bitmap=b))))
+
+    def _duo(self):
+        return self.opponent(self.best_paper ** self.gamma), self.opponent(self.best_ink ** self.gamma)
+
+    def set_bitmap(self, bitmap):
+        self.dithered_bitmap = np.asarray(bitmap, dtype=np.float32)
+        self.dithered_result = np.where(self.dithered_bitmap[..., np.newaxis] > 0, self.best_ink, self.best_paper)
 
     def halftone_target(self, paper, ink):
         """The halftoner minimises blurred error over the whole image, so the part of a cell's target its
@@ -208,11 +221,13 @@ class Converter:
         else:
             assert cv2.imwrite(filename, convert_color((self.dithered_result * 255).round().astype(np.uint8), 'RGB', 'BGR')), filename
 
-    def dither(self, ditherer: Ditherer) -> np.ndarray:
-        """Pair selection (once per image) then the halftoner, in one call for tests and scripts; the UI runs
-        them as separate stages (ops.py)."""
+    def dither(self, ditherer: Ditherer, optimise: bool = False) -> np.ndarray:
+        """Pair selection (once per image), the halftoner and optionally DBS from its result, in one call for
+        tests and scripts; the UI runs them as separate stages (ops.py)."""
         if self.best_attr_indexes is None:
             self.set_labels(self.energy.apply())
         self.ditherer = ditherer
         self.halftone()
+        if optimise:
+            self.optimise()
         return self.dithered_result

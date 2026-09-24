@@ -12,7 +12,8 @@ from dizher.ui.window import Window
 
 IMAGE = Path(__file__).parent / 'images' / 'lena.png'
 ui = Window(IMAGE)
-ui.app.set_params('halftone', replace(ui.app.graph['halftone'].params, halftoner=Ordered.label))  # fast
+ui.app.set_params('halftoner', replace(ui.app.graph['halftoner'].params, halftoner=Ordered.label))  # fast
+ui.app.set_params('optimise', replace(ui.app.graph['optimise'].params, enabled=False))
 
 
 def params(nid):
@@ -48,7 +49,7 @@ def rect(ctx, window, item):
 
 
 def test_conversion_lands(ctx):
-    wait(ctx, lambda: ui.app.result('halftone') is not None, 'the first conversion')
+    wait(ctx, lambda: ui.app.result('optimise') is not None, 'the first conversion')
     assert not ui.app.errors, ui.app.errors
 
 
@@ -108,7 +109,7 @@ def test_block_reset(ctx):
 
 
 def test_views_and_grid(ctx):
-    wait(ctx, lambda: ui.app.result('halftone') is not None, 'a conversion to view')
+    wait(ctx, lambda: ui.app.result('optimise') is not None, 'a conversion to view')
     ctx.set_ref('//Preview')
     for view in ('Bitmap', 'Attrs', 'Projected', 'Eye', 'Error', 'Energy', 'Seams'):
         ctx.item_click(f'**/{view}')
@@ -124,11 +125,11 @@ def test_mode_switch_refits_previews(ctx):
     zoom 2 matrix, showing its top-left quarter."""
     from imgui_bundle import immvision
     from dizher import ops
-    wait(ctx, lambda: not ui.app.busy and ui.app.result('halftone') is not None, 'the Spectrum conversion')
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the Spectrum conversion')
     ctx.yield_(2)
     zx = ui.images['tuned'].image_display_size
     ui.app.set_params('target', replace(params('target'), mode=ops.c64.HIRES.name))
-    wait(ctx, lambda: not ui.app.busy and ui.app.result('halftone') is not None, 'the C64 conversion')
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the C64 conversion')
     ctx.yield_(2)
     c64 = ui.images['tuned'].image_display_size
     assert zx[0] // 256 > c64[0] // 320, ('the zoom must drop to test this', zx, c64)
@@ -137,12 +138,12 @@ def test_mode_switch_refits_previews(ctx):
         assert p.zoom_pan_matrix == immvision.make_zoom_pan_matrix_full_view((320, 200), p.image_display_size), \
             (key, p.zoom_pan_matrix)
     reset('target')
-    wait(ctx, lambda: not ui.app.busy and ui.app.result('halftone') is not None, 'the Spectrum conversion again')
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the Spectrum conversion again')
 
 
 def test_capture_layout(ctx):   # keep last: a picture of the default layout for review
     from imgui_bundle.imgui.test_engine import CaptureFlags_
-    wait(ctx, lambda: not ui.app.busy and ui.app.result('halftone') is not None, 'the conversion to settle')
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the conversion to settle')
     ctx.set_ref('//Tune')
     ctx.item_info('**/##in')
     ctx.yield_(4)

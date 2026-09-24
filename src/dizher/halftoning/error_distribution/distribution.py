@@ -39,5 +39,27 @@ def ed_dither_duo(luma, paper, ink, kernel='Stucki'):
             padded[i:i + down + 1, j:j + 2 * side + 1] += d * kernel
     return out
 
+def ed_dither_levels(levels, kernel='Stucki'):
+    """Binary error diffusion of levels in 0..1 with a named kernel, batched over leading axes: the raster
+    loop runs once for every pair's candidate at a time (Converter.set_image), so 72 pairs cost one pass."""
+    positions, weights, divisor = KERNELS[kernel]
+    positions = np.asarray(positions)
+    down, side = positions[:, 0].max(), np.abs(positions[:, 1]).max()
+    k = np.zeros((down + 1, 2 * side + 1), dtype=np.float32)
+    for (di, dj), w in zip(positions, weights):
+        k[di, dj + side] = w / divisor
+    levels = np.asarray(levels, dtype=np.float32)
+    *lead, rows, cols = levels.shape
+    padded = np.zeros((*lead, rows + down, cols + 2 * side), dtype=np.float32)
+    padded[..., :rows, side:side + cols] = levels
+    out = np.zeros(levels.shape, dtype=bool)
+    for i in range(rows):
+        for j in range(cols):
+            level = padded[..., i, j + side].clip(0, 1)
+            is_ink = level >= 0.5
+            out[..., i, j] = is_ink
+            padded[..., i:i + down + 1, j:j + 2 * side + 1] += (level - is_ink)[..., None, None] * k
+    return out
+
 def stucki_duo(luma, paper, ink):
     return ed_dither_duo(luma, paper, ink, 'Stucki')
