@@ -1,8 +1,9 @@
 """Colour-pair selection as one eye-model energy over the whole composite image.
 
-E(labels) = sum_ch w_ch || h_ch * (Y_ch - X_ch) ||^2   in a linear opponent space (S-CIELAB's
+E(labels) = sum_ch w_ch || h_ch * (g (Y_ch - X_ch)) ||^2   in a linear opponent space (S-CIELAB's
 O1 luminance, O2 red-green, O3 blue-yellow), Y the realised composite, X the target, h_ch the
-eye kernel of the channel's group (Luma: O1, Chroma: O2 and O3). Because the composite is a sum
+eye kernel of the channel's group (Luma: O1, Chroma: O2 and O3), g the per-pixel lightness gain
+(lightness_gain: linear-light error weighted as CIELAB sees it at the target). Because the composite is a sum
 of per-block candidates, E splits exactly into a per-block term D[p, b] and pairwise terms
 S[p, q, b, b'] = 2 e_p[b]^T K e_q[b'] with K = h (*) h the kernel autocorrelation. The pairwise
 term is the visible seam a pair change paints, in the same units as D, with no extra knob.
@@ -62,6 +63,18 @@ OFFSETS = [(0, 1), (1, 0), (1, 1), (1, -1)]      # unordered neighbour pairs, bl
 EDGE_SIGMA = 0.1
 SEAM_COST = 0.1     # energy of one seam between totally different pairs at coherence 1; a block's own cost is ~0.2
 
+LIGHTNESS_REF = 0.18   # mid grey's luminance: its error keeps weight 1
+
+def lightness_gain(luminance: np.ndarray, flare: float) -> np.ndarray:
+    """(H, W, 1) per-pixel gain of the opponent error: dL*/dY at the target's luminance over mid grey's, the eye's
+    sensitivity to an error in linear light, in CIELAB ~7x higher at black than at mid grey and ~3x lower at white.
+    Errors are scaled by it before the eye blur: within a flat area mixing stays linear, while a brown patch in a
+    black shadow costs about what it looks like instead of its ~4% of luminance. Chroma takes the same gain, as
+    CIELAB's a* b* do: on luma alone, dim red dots won dark greys from sparse white ones, their colour error left
+    cheap. flare, stray light on the screen in units of white, flattens the gain towards plain linear light."""
+    slope = lambda y: np.where(y > (6 / 29) ** 3, np.cbrt(np.maximum(y, 1e-6)) ** -2 / 3, (29 / 6) ** 2 / 3)
+    return (slope(luminance + flare) / slope(LIGHTNESS_REF + flare))[..., None].astype(np.float32)
+
 def autocorrelation(h: np.ndarray) -> np.ndarray:
     r = h.shape[0] // 2
     return cv2.filter2D(np.pad(h, r), -1, h, borderType=cv2.BORDER_CONSTANT)
@@ -113,7 +126,7 @@ class SelectionEnergy:
         c = self.converter
         X = c.image_lrgb.astype(np.float32) @ LRGB2OPP.T
         Y = (c.realized ** c.gamma) @ LRGB2OPP.T
-        E = Y - X                                                         # (P, H, W, 3)
+        E = (Y - X) * c.gain                                               # (P, H, W, 3)
         P, H, W, _ = E.shape
         h, w = c.cell
         R, C = H // h, W // w

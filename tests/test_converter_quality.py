@@ -12,7 +12,7 @@ from dizher.platforms.zxspectrum import ZXPalette
 
 
 def colour_error(converter, image):
-    error = converter.opponent(image ** converter.gamma - converter.image_lrgb)
+    error = converter.opponent(image ** converter.gamma - converter.image_lrgb) * converter.gain
     noise = (converter.luma_noise, converter.chroma_noise, converter.chroma_noise)
     total = 0.0
     for channel, kernel in enumerate(converter.eye_kernels()):
@@ -197,7 +197,7 @@ def test_noise_origin_restarts_both_stages():
     for origin in ((0, 0), (5, 7)):
         converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, mode, ditherer=Stohastic(origin=origin))
         converter.set_image(image)
-        runs.append((converter.bitmaps.copy(), converter.dither(Stohastic(), optimise=True).copy()))
+        runs.append((converter.bitmaps.copy(), converter.dither(Stohastic(origin=origin), optimise=True).copy()))
     (b0, r0), (b1, r1) = runs
     assert (b0 != b1).any(), 'candidates must follow the origin'
     np.testing.assert_array_equal(b1, Stohastic(origin=(5, 7)).threshold(converter.levels))

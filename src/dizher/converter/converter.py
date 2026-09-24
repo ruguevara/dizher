@@ -10,7 +10,7 @@ from .colors import convert_color, lrgb2luminance, gray2rgb
 from .dither import Ditherer, Stohastic, duo_levels
 from ..halftoning.dbs import dbs_duo
 from .eye import LUMA_ALPHA, LUMA_SCALE, CHROMA_ALPHA, CHROMA_SCALE, eye_kernel
-from .energy import SelectionEnergy, pair_dissimilarity, LRGB2OPP, EDGE_SIGMA
+from .energy import SelectionEnergy, pair_dissimilarity, lightness_gain, LRGB2OPP, EDGE_SIGMA
 from ..progress import report_progress, report_stage
 
 class Converter:
@@ -28,6 +28,7 @@ class Converter:
             chroma_noise: float = 0.05,
             structure: float = 0.06,
             ditherer: Ditherer = None,   # halftones the pair candidates and, after selection, the result
+            flare: float = 0.1,
     ):
         self.mode = mode
         self.size = mode.size
@@ -43,6 +44,7 @@ class Converter:
         self.coherence = coherence  # cost of a pair change between neighbours where the original is smooth, see energy.py
         self.structure = structure  # weight of the contrast-weighted SSIM term in the DBS optimiser, see halftoning/dbs.py
         self.ditherer = ditherer or Stohastic()
+        self.flare = flare          # flattens the per-pixel lightness gain of the error, see energy.lightness_gain
         self.energy = SelectionEnergy(self, weights)
         self.image_rgb = None
         self.set_palette(mode.palette)
@@ -99,6 +101,7 @@ class Converter:
         self.image_rgb = image_rgb
         self.image_lrgb = self.image_rgb ** self.gamma
         self.image_luma = lrgb2luminance(self.image_lrgb)
+        self.gain = lightness_gain(self.image_luma, self.flare)
         report_stage(f'fitting {len(self.color_pairs)} pairs')
         self.levels = self.fit_duocolors()
         # candidates are scored as the halftoner would paint them: the pairs are chosen for the dots they will get
@@ -181,10 +184,12 @@ class Converter:
 
     def optimise(self):
         """Direct binary search from the halftone bitmap under the eye model (halftoning/dbs.py); the start
-        stays in halftoned."""
+        stays in halftoned. Target and colours are scaled by the lightness gain, so it minimises the selection's
+        metric (its SSIM term then compares gained luma)."""
         paper, ink = self._duo()
+        g = self.gain
         report_stage('DBS')
-        self.set_bitmap(dbs_duo(self.halftone_target(paper, ink), paper, ink, init=self.dithered_bitmap,
+        self.set_bitmap(dbs_duo(self.halftone_target(paper, ink) * g, paper * g, ink * g, init=self.dithered_bitmap,
             scale=self.luma_scale, alpha=self.luma_alpha, structure=self.structure,
             kernels=self.eye_kernels(), noise=(self.luma_noise, self.chroma_noise, self.chroma_noise),
             on_step=lambda b: report_progress(lambda: self.snapshot(bitmap=b))))

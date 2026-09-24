@@ -35,6 +35,7 @@ HALFTONERS = {cls.label: cls for cls in (Stohastic, Ordered, ErrorDiffusion)}
 @dataclass(frozen=True)
 class Metric:
     chroma: float   # weight of the chroma error against luma's 1
+    flare: float    # flattens the lightness gain of the error, see converter/energy.py
 
 
 @dataclass(frozen=True)
@@ -119,10 +120,14 @@ def color(picture: np.ndarray,
     return tone.color(picture, vibrance, saturation)
 
 
-def metric(chroma: Annotated[float, meta(min=0.0, max=4.0, help="weight of chroma error; luma error weighs 1")] = 1.0) -> Metric:
-    """Balance of chroma against luma error in the eye-model energy. One weight: scaling both would only
-    duplicate coherence (the seam cost has no weight), shift the edge threshold and the DBS structure term."""
-    return Metric(chroma)
+def metric(chroma: Annotated[float, meta(min=0.0, max=4.0, help="weight of chroma error; luma error weighs 1")] = 1.0,
+           flare: Annotated[float, meta(min=0.0, max=1.0, help="stray light on the screen, in units of white: 0 weighs "
+                                        "errors as CIELAB lightness does, ~7x more in black than in mid grey; "
+                                        "higher flattens that towards plain linear light")] = 0.1) -> Metric:
+    """Balance of chroma against luma error in the eye-model energy, and how much more an error counts in the
+    shadows. One chroma weight: scaling both would only duplicate coherence (the seam cost has no weight), shift
+    the edge threshold and the DBS structure term."""
+    return Metric(chroma, flare)
 
 
 def eye(luma_alpha: Annotated[float, meta(min=0.5, max=2.0)] = eye_model.LUMA_ALPHA,
@@ -151,7 +156,7 @@ def prepare(picture: np.ndarray, target: Mode, metric: Metric, eye: Eye, halfton
     """Every pair fitted per pixel and halftoned into a candidate, and the selection energy."""
     c = Converter({'Luma': 1.0, 'Chroma': metric.chroma}, target, luma_alpha=eye.luma_alpha,
                   luma_scale=eye.luma_scale, chroma_alpha=eye.chroma_alpha, chroma_scale=eye.chroma_scale,
-                  ditherer=halftoner)
+                  ditherer=halftoner, flare=metric.flare)
     with reporting(progress):
         c.set_image(picture)
     return c
