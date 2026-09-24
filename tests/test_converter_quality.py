@@ -4,7 +4,7 @@ import numpy as np
 
 from dizher.converter.converter import Converter
 from dizher.converter.energy import SEAM_COST
-from dizher.converter.dither import DBS, EDStucki, OrderedBayer, Stohastic, duo_levels
+from dizher.converter.dither import DBS, EDStucki, Ordered, Stohastic, duo_levels
 from dizher.halftoning.dbs import _Structure, CONTRAST_GAIN
 from dizher.halftoning.error_distribution import stucki_duo
 from dizher.platforms import Mode
@@ -32,7 +32,7 @@ def test_equal_luminance_colour_edge():
     expected = np.zeros_like(image)
     expected[..., 1] = 1
     expected[:, 4:, 2] = 1
-    for halftoner in (Stohastic(), OrderedBayer(), EDStucki(), DBS()):
+    for halftoner in (Stohastic(), Ordered(), EDStucki(), DBS()):
         converter.set_image(image)
         np.testing.assert_allclose(converter.image_luma, 0.7152, atol=1e-7)
         np.testing.assert_array_equal(converter.dither(halftoner), expected)
@@ -115,6 +115,17 @@ def test_colour_diffusion_preserves_scalar_projection():
     assert 0 < actual.sum() < actual.size
 
 
+def test_ordered_matrices_cover_tone():
+    """Every matrix: no ink at level 0, all ink at level 1, coverage never falls as the level rises, the origin rolls it."""
+    from dizher.halftoning.ordered import ordered_dither
+    from dizher.halftoning.ordered.matrices import MATRICES
+    for name, (m, _) in MATRICES.items():
+        coverage = np.array([ordered_dither(np.full(m.shape, level, np.float32), name).mean()
+                             for level in np.linspace(0, 1, 65)])   # one whole tile per level
+        assert coverage[0] == 0 and coverage[-1] == 1 and (np.diff(coverage) >= 0).all(), name
+    flat = np.full((16, 16), 0.5, np.float32)
+    assert (ordered_dither(flat, 'Bayer 4x4', (0, 0)) != ordered_dither(flat, 'Bayer 4x4', (1, 0))).any()
+
 def test_stages_preview_snapshots():
     """Live previews are Converter snapshots, so every view can draw the running stage: pair selection sends its
     labels with their blue-noise composite, the halftoner its bitmap; each a copy of what the stage mutates."""
@@ -163,6 +174,7 @@ if __name__ == '__main__':
     test_dbs_lowers_complete_colour_objective()
     test_halftone_target_is_reachable()
     test_colour_diffusion_preserves_scalar_projection()
+    test_ordered_matrices_cover_tone()
     test_stages_preview_snapshots()
     test_noise_origin_restarts_both_stages()
     print('ok')

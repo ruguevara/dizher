@@ -8,7 +8,7 @@ import numpy as np
 from mokit.graph import Memo, evaluate
 
 from dizher import ops
-from dizher.converter.dither import OrderedBayer
+from dizher.converter.dither import Ordered
 
 IMAGE = Path(__file__).parent / 'images' / 'lena.png'
 
@@ -16,7 +16,7 @@ IMAGE = Path(__file__).parent / 'images' / 'lena.png'
 def pipeline(**halftone):
     graph = ops.make_graph()
     graph = graph.with_params('source', replace(graph['source'].params, path=IMAGE))
-    return graph.with_params('halftone', replace(graph['halftone'].params, halftoner=OrderedBayer.label, **halftone))
+    return graph.with_params('halftone', replace(graph['halftone'].params, halftoner=Ordered.label, **halftone))
 
 
 def test_pipeline_converts_and_reuses_upstream():
@@ -39,7 +39,7 @@ def test_pipeline_matches_single_converter():
     graph = pipeline()
     result = evaluate(graph, 'halftone', memo)
     direct = evaluate(graph, 'prepare', memo).copy()
-    np.testing.assert_array_equal(direct.dither(OrderedBayer()), result.dithered_result)
+    np.testing.assert_array_equal(direct.dither(Ordered()), result.dithered_result)
 
 
 def settle(host):
@@ -58,7 +58,7 @@ def settle(host):
 def test_host_reruns_only_downstream_of_an_edit():
     from dizher.ui.app import Pipeline
     host = Pipeline()
-    host.set_params('halftone', replace(host.graph['halftone'].params, halftoner=OrderedBayer.label))
+    host.set_params('halftone', replace(host.graph['halftone'].params, halftoner=Ordered.label))
     host.open(IMAGE)
     assert settle(host)[-3:] == ['prepare', 'select', 'halftone'] and not host.errors
     host.set_params('halftone', replace(host.graph['halftone'].params, structure=0.2))

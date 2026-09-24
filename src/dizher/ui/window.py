@@ -9,7 +9,7 @@ import subprocess
 import sys
 import time
 from contextlib import contextmanager
-from dataclasses import replace
+from dataclasses import asdict, field, fields, make_dataclass, replace
 from pathlib import Path
 
 import numpy as np
@@ -84,6 +84,16 @@ def as_ubyte(rgb: np.ndarray) -> np.ndarray:
     return (np.clip(rgb, 0, 1) * 255).round().astype(np.uint8)
 
 
+class HalftoneEditor:
+    """The halftoner combo plus only the params that method uses (Ditherer.controls), as a narrowed params view."""
+
+    def draw(self, params, picture, on_change, id: str) -> None:
+        names = ('halftoner',) + ops.HALFTONERS[params.halftoner].controls
+        view = make_dataclass('halftone', [(f.name, f.type, field(default=f.default, metadata=f.metadata))
+                                           for f in fields(params) if f.name in names], frozen=True)
+        params_editor(view(**{n: getattr(params, n) for n in names}),
+                      lambda v: on_change(replace(params, **asdict(v))), id=id, help='tooltip')
+
 class Window:
     def __init__(self, path=None) -> None:
         self.app = Pipeline()
@@ -91,7 +101,7 @@ class Window:
             self.app.open(path)
         self.images = {}       # immvision params per preview
         self.expanded = {}     # node id -> block open; imgui keeps no header state in its ini
-        self.editors = {'levels': LevelsEditor()}   # node id -> custom params editor
+        self.editors = {'levels': LevelsEditor(), 'halftone': HalftoneEditor()}   # node id -> custom params editor
         self.view, self.grid = 'Screen', False     # the conversion's view and the cell grid; not persisted
         self._debug = {}       # image key -> (the Converter it came from, the image)
 

@@ -19,6 +19,7 @@ class Ditherer:
     paper and ink are per-pixel values in the same space as the target.
     eye: eye-model parameters (scale = luminance blur in pixels, alpha = kernel shape, see eye.py)."""
     label = 'You can not get label of an abstract base Ditherer class'
+    controls = ()   # names of the halftone op's params this method uses; the UI shows only those
 
     def __init__(self, **kwargs) -> None:
         pass
@@ -35,6 +36,7 @@ class ThresholdDitherer(Ditherer):
 
 class DBS(Ditherer):
     label = 'DBS'
+    controls = ('structure',)
 
     def __call__(self, luma, paper, ink, scale=1.4, alpha=2.0, structure=0.06, kernels=None, noise=0, on_step=None,
                  origin=(0, 0), **eye):
@@ -47,11 +49,15 @@ class EDStucki(Ditherer):
     def __call__(self, luma, paper, ink, **eye):
         return stucki_duo(luma, paper, ink)
 
-class OrderedBayer(ThresholdDitherer):
-    label = 'Ordered Bayer'
+class Ordered(ThresholdDitherer):
+    label = 'Ordered'
+    controls = ('matrix',)
+
+    def __init__(self, matrix='Bayer 4x4', **kwargs):
+        self.matrix = matrix
 
     def threshold(self, levels, origin=(0, 0)):
-        return ordered_dither(levels, 2) > 0
+        return ordered_dither(levels, self.matrix, origin)
 
 class Stohastic(ThresholdDitherer):
     label = 'Stohastic'

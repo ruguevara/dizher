@@ -45,10 +45,10 @@ The GUI group that owns each knob is in brackets.
                        gamma 2.2 ──► linear RGB ──► opponent O1 O2 O3 (luma, red-green, blue-yellow)
                                                     scaled by sqrt(weights)         [Metric: chroma]
                                                                         │
-   ┌────────────────────────────────────────────────────────────────────┼─────────────────────────┐
+   ┌────────────────────────────────────────────────────────────────────┼───────────────────────────┐
    │ Stage 1: SELECT PAIRS                one paper/ink pair per 8x8 block                          │
    │                                                                                                │
-   │  candidates: for every allowed pair, project the block onto the paper-ink segment, blue-noise │
+   │  candidates: for every allowed pair, project the block onto the paper-ink segment, blue-noise  │
    │  dither it                                    [Target: palette subset]  [Prepare: noise x, y]  │
    │                                                                                                │
    │  loss(labels) = Σ_ch || h_ch ∗ (composite − target) ||²    eye-blurred error, exact quadratic  │
@@ -67,7 +67,7 @@ The GUI group that owns each knob is in brackets.
    ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
    │ Stage 2: HALFTONE                  one bit per pixel: paper or ink                             │
    │                                                                                                │
-   │  target: each pixel projected onto its block's paper-ink segment (the unreachable part is     │
+   │  target: each pixel projected onto its block's paper-ink segment (the unreachable part is      │
    │  already paid for by stage 1, so it is not chased across seams)                                │
    │  start: blue-noise dither of that target                              [Prepare: noise x, y]    │
    │                                                                                                │
@@ -78,9 +78,9 @@ The GUI group that owns each knob is in brackets.
    │     structure  [Halftone: structure]                                                           │
    │                                                                                                │
    │  solver (DBS): every pixel tries a toggle and a swap with each of 8 neighbours, keeps the      │
-   │  move that lowers the loss most; deltas are exact from running error and window statistics;   │
+   │  move that lowers the loss most; deltas are exact from running error and window statistics;    │
    │  a lattice of non-interacting pixels moves at once; stops when fewer than 0.1% of pixels move  │
-   │  Alternatives for comparison  [Halftone: halftoner]: Stucki, ordered Bayer, stochastic         │
+   │  Alternatives for comparison  [Halftone: halftoner]: Stucki, ordered (matrix), stochastic      │
    └──────────────────────────────────────────┬─────────────────────────────────────────────────────┘
                                               │ bitmap + attributes
                                               ▼
@@ -144,8 +144,10 @@ Plain DBS reproduces tone but blurs faint edges and texture. Following structure
 (Pang et al. 2008), the energy also includes a structural similarity term (SSIM) between the
 halftone and the image in small windows, weighted by the local contrast of the image (Jiang et al.
 2023) so that flat areas do not grow holes. Its contribution to every move is also computed
-exactly, and the weight is a GUI slider. Ordered Bayer, Stucki error diffusion and plain
-stochastic dithering remain available for comparison.
+exactly, and the weight is a GUI slider. Ordered dithering with a choice of 39 threshold matrices
+(Bayer, dispersed and clustered dots, line screens and magic squares, the non-Bayer ones from
+libdither), Stucki error diffusion and plain stochastic dithering remain available for comparison
+and for their look; the Halftone block shows only the controls of the chosen method.
 
 ## Installation
 

@@ -7,12 +7,12 @@ from pathlib import Path
 from imgui_bundle import imgui
 
 from dizher import tone
-from dizher.converter.dither import OrderedBayer
+from dizher.converter.dither import Ordered
 from dizher.ui.window import Window
 
 IMAGE = Path(__file__).parent / 'images' / 'lena.png'
 ui = Window(IMAGE)
-ui.app.set_params('halftone', replace(ui.app.graph['halftone'].params, halftoner=OrderedBayer.label))  # fast
+ui.app.set_params('halftone', replace(ui.app.graph['halftone'].params, halftoner=Ordered.label))  # fast
 
 
 def params(nid):
