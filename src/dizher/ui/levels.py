@@ -67,20 +67,22 @@ class LevelsEditor:
         imgui.pop_id()
 
     def _histogram(self, picture, width: float) -> None:
-        pos, height = imgui.get_cursor_screen_pos(), em_size(HIST_HEIGHT)
+        pos, height, pad = imgui.get_cursor_screen_pos(), em_size(HIST_HEIGHT), em_size(HANDLE)
+        # bin v centred over the handle at v in _strip, so a handle can be set under a chosen bar
+        bin_w = (width - 2 * pad) / 255
+        x_of = lambda v: pos.x + pad + v * bin_w
         draw = imgui.get_window_draw_list()
-        draw.add_rect_filled(pos, imgui.ImVec2(pos.x + width, pos.y + height), grey(0.1))
+        draw.add_rect_filled(imgui.ImVec2(x_of(-0.5), pos.y), imgui.ImVec2(x_of(255.5), pos.y + height), grey(0.1))
         if picture is not None:
             if self._hist[0] is not picture:
                 self._hist = (picture, tone.histogram(picture))
             counts = self._hist[1]
             top = max(counts[1:255].max(), 1)   # the end bins are often clipped spikes; they may overflow
-            bin_w = width / 256
             for i, n in enumerate(counts):
                 if n:
                     h = min(n / top, 1.0) * height
-                    draw.add_rect_filled(imgui.ImVec2(pos.x + i * bin_w, pos.y + height - h),
-                                         imgui.ImVec2(pos.x + (i + 1) * bin_w, pos.y + height), grey(0.75))
+                    draw.add_rect_filled(imgui.ImVec2(x_of(i - 0.5), pos.y + height - h),
+                                         imgui.ImVec2(x_of(i + 0.5), pos.y + height), grey(0.75))
         imgui.dummy(imgui.ImVec2(width, height))
 
     def _strip(self, id: str, width: float, handles: dict):

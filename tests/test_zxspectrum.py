@@ -31,5 +31,17 @@ def test_c64_subsets():
     assert (2, 1) in list(p.iter_idxs_pairs())
 
 
+def test_c64_art():
+    from dizher.platforms.c64 import HIRES
+    bitmap = np.zeros(HIRES.size, dtype=bool)
+    bitmap[8, 8] = True   # cell (1, 1), its first row, leftmost pixel
+    idx = np.zeros((25, 40, 2), dtype=int)
+    idx[1, 1] = 6, 14     # paper blue, ink light blue
+    data = HIRES.encode(bitmap, idx)
+    assert len(data) == 9009 and data[:2] == b'\x00\x20'
+    assert data[2 + (40 + 1) * 8] == 0x80 and sum(data[2:8002]) == 0x80
+    assert data[8002 + 41] == 0xE6
+
+
 if __name__ == '__main__':
-    test_palette(); test_mode(); test_c64_subsets(); print('ok')
+    test_palette(); test_mode(); test_c64_subsets(); test_c64_art(); print('ok')

@@ -227,9 +227,16 @@ class Window:
         imgui.set_next_item_open(self.expanded.get('export', True), imgui.Cond_.once.value)
         self.expanded['export'] = imgui.collapsing_header('Export')
         if self.expanded['export']:
-            imgui.begin_disabled(self.result is None)
-            if imgui.button('Save…'):
-                self._save()
+            result = self.result
+            native = result.mode.file_type[1].lstrip('*') if result is not None and result.mode.file_type else None
+            imgui.begin_disabled(result is None)
+            if imgui.button('Save PNG…'):
+                self._save('.png')
+            imgui.end_disabled()
+            imgui.same_line()
+            imgui.begin_disabled(native is None)
+            if imgui.button(f'Save {(native or ".scr")[1:].upper()}…'):
+                self._save(native)
             imgui.end_disabled()
 
     def _reset_button(self, nid: str, params, right: float) -> None:
@@ -352,9 +359,10 @@ class Window:
         if path:
             self.app.open(path)
 
-    def _save(self) -> None:
+    def _save(self, ext: str = None) -> None:
+        """ext picks the format (Converter.save); by default the mode's screen file, else PNG."""
         source, mode = self._source(), self.result.mode
-        ext = mode.file_type[1].lstrip('*') if mode.file_type else '.png'
+        ext = ext or (mode.file_type[1].lstrip('*') if mode.file_type else '.png')
         path = save_dialog('Save conversion', str(source.parent if source else Path.home()),
                            (source.stem if source else 'conversion') + ext)
         if path:

@@ -1,4 +1,6 @@
 """Commodore 64: 16 fixed colours, hires bitmap 320x200 with any two colours per 8x8 cell."""
+import numpy as np
+
 from .. import Mode
 from ...converter.palette import Palette
 
@@ -23,4 +25,16 @@ class C64Palette(Palette):
         super().__init__(PEPTO, subset)
 
 
-HIRES = Mode('C64 hires', size=(200, 320), cell=(8, 8), palette=C64Palette())
+def to_art(bitmap: np.ndarray, idx_pairs: np.ndarray) -> bytes:
+    """Art Studio hires file, the common one: load address $2000, the bitmap cell by cell (8 bytes each, top row
+    first), screen RAM (high nibble the colour of set bits, low nibble of clear ones), border colour, 6 spare bytes.
+    bitmap (200, 320) truthy = ink; idx_pairs (25, 40, 2) as (paper, ink) VIC-II colour numbers."""
+    assert bitmap.shape == (200, 320) and idx_pairs.shape == (25, 40, 2)
+    rows = np.packbits(bitmap.astype(bool), axis=1)   # (200, 40), bit 7 is the leftmost pixel
+    cells = rows.reshape(25, 8, 40).transpose(0, 2, 1)   # (row, column, byte within the cell)
+    screen = (idx_pairs[..., 1] << 4 | idx_pairs[..., 0]).astype(np.uint8)
+    return b'\x00\x20' + cells.tobytes() + screen.tobytes() + bytes(7)   # border black
+
+
+HIRES = Mode('C64 hires', size=(200, 320), cell=(8, 8), palette=C64Palette(),
+             file_type=('Art Studio hires', '*.art'), encode=to_art)
