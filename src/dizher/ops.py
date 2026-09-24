@@ -132,18 +132,6 @@ def color(picture: np.ndarray,
     return tone.color(picture, vibrance, saturation)
 
 
-def snap(picture: np.ndarray, target: Mode,
-         strength: Annotated[float, meta(min=0.0, max=1.0, help="share of a flat colour's distance to the nearest "
-                                         "target taken off: 1 lands on it")] = 0.0,
-         radius: Annotated[float, meta(min=1.0, max=20.0, help="CIELAB distance within which a colour is pulled; "
-                                       "texture and edges stronger than it are left alone")] = 10.0,
-         mixes: Annotated[bool, meta(help="also pull to the half-and-half mix of each pair (a checkerboard), "
-                                    "not only to the palette's solid colours")] = True) -> np.ndarray:
-    """Flat surfaces pulled onto colours that dither cleanly: the palette's own (a solid cell) and the 50% mixes of
-    its pairs, instead of sparse stray dots just off them."""
-    return tone.snap(picture, tone.snap_targets(target.palette, mixes), strength, radius)
-
-
 def detail(picture: np.ndarray,
            texture: Annotated[float, meta(min=-100.0, max=100.0, help="contrast of fine texture")] = 0.0,
            sharpen: Annotated[float, meta(min=0.0, max=300.0, help="% of the fine detail added back")] = 0.0,
@@ -239,8 +227,7 @@ TUNE = (   # (node id, block label, op, inputs): the left column's blocks, top t
     ('local', 'Local tone', 'dizher.ops:local_tone', ('levels',)),
     ('contrast', 'Contrast', 'dizher.ops:contrast', ('local',)),
     ('color', 'Color', 'dizher.ops:color', ('contrast',)),
-    ('snap', 'Palette snap', 'dizher.ops:snap', ('color', 'target')),
-    ('detail', 'Detail', 'dizher.ops:detail', ('snap',)),
+    ('detail', 'Detail', 'dizher.ops:detail', ('color',)),
 )
 CONVERT = (   # the right column's
     ('target', 'Target', 'dizher.ops:target', ()),

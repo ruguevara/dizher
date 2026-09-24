@@ -71,7 +71,7 @@ def test_host_reruns_only_downstream_of_an_edit():
     before = host.result('detail')
     host.set_params('contrast', replace(host.graph['contrast'].params, contrast=30.0))
     assert host.result('detail') is None and host.shown('detail') is before   # the old picture stays up meanwhile
-    assert settle(host) == ['contrast', 'color', 'snap', 'detail', 'prepare', 'select', 'halftone', 'optimise']
+    assert settle(host) == ['contrast', 'color', 'detail', 'prepare', 'select', 'halftone', 'optimise']
     assert host.shown('detail') is host.result('detail') is not before
     host.set_params('target', replace(host.graph['target'].params, mode='C64 hires', palette='Bright only'))
     settle(host)
@@ -163,18 +163,6 @@ def test_tone_semantics():
             curved = np.array([patch(v, shadows=sh, highlights=hi) for v in greys])
             assert np.all(np.diff(curved) > 0) and np.allclose(curved[[0, -1]], [0, 1], atol=1e-3)   # monotone, ends fixed
     assert patch(0.3, shadows=100.0) > 0.3 and patch(0.7, highlights=-100.0) < 0.7
-    # palette snap: flat colours land on the palette or a mix, texture and ramps keep theirs
-    from dizher.platforms import zxspectrum
-    targets = tone.snap_targets(zxspectrum.STANDARD.palette)
-    assert len(targets[0]) == 53 and len(tone.snap_targets(zxspectrum.STANDARD.palette, mixes=False)[0]) == 15
-    assert tone.snap(rgb, targets) is rgb
-    red = zxspectrum.STANDARD.palette.as_float()[10]                               # bright red
-    near = np.full((16, 16, 3), red * 0.95 + 0.02, np.float32)
-    assert np.abs(tone.snap(near, targets, 0.9) - red).max() < 0.2 * np.abs(near - red).max()
-    rough = np.clip(near + rng.normal(0, 0.2, near.shape), 0, 1).astype(np.float32)
-    assert np.abs(tone.snap(rough, targets, 0.9) - rough).mean() < 0.2 * np.abs(rough - near).mean()   # texture: left
-    ramp = np.repeat(np.linspace(0, 1, 256, dtype=np.float32)[None, :, None], 16, 0).repeat(3, 2)
-    assert np.all(np.diff(tone.rgb2lab(tone.snap(ramp, targets, 0.9))[8, :, 0]) > -0.05)   # a grey ramp stays monotone
 
 
 def test_project_round_trip_and_restore():
