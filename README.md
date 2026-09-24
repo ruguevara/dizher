@@ -187,13 +187,12 @@ Done:
 * [x] Palette subsets: bright only, not bright only, grayscale, black and white
 * [x] Python installation package
 * [x] Save as SCR and PNG
-* [x] Projects: a folder with `project.json` (every stage's params, the image path relative to the folder; mokit's format, as AmaZX), exports default to its `build/`; the last session, unsaved edits included, comes back on start. Every image has one, the Lightroom way: File → Open image opens the project folder beside it named as the image, or starts one there; autosave (File menu, on by default) writes it after every edit; off, opening another image over unsaved edits asks to save them
+* [x] Projects: a folder with `project.json` (every stage's params, the image path relative to the folder; mokit's format, as AmaZX), exports default to its `build/`; the last session, unsaved edits included, comes back on start. Every image has one, the Lightroom way: File → Open image opens the project folder beside it named as the image, or starts one there; autosave (File menu, on by default) writes it after every edit; off, opening another image over unsaved edits asks to save them; File → Open recent lists the last 20 images
 * [x] Undo/Redo (Edit menu, Cmd+Z / Shift+Cmd+Z): a slider drag is one step; opening an image starts the history over. History panel: every step, the newest on top, named by the params it changed, a click goes back or forward to it
 
 Planned:
 
 * [ ] Starred/named selected shaphots panel to compare between and choose from
-* [ ] Recent images-projects in File menu
 * [ ] Global presets of selected stages
 * [ ] Curves (tone curve editor; subsumes Contrast)
 * [ ] Levels per channel (R, G, B) like Photoshop's channel menu

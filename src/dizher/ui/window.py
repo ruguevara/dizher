@@ -53,6 +53,7 @@ DEBUG = {   # view -> (tooltip, the stage it needs, its image from that stage's 
     'Seams': ('Cell seams the original has an edge across, bright: there a pair change costs no coherence',
               'select', views.seam_view)}
 GRID = imgui.ImVec4(0.5, 0.5, 0.5, 0.6)   # grey reads over black and white alike
+RECENT = 20   # images in File > Open recent
 INSPECT_CELLS, INSPECT_ZOOM, INSPECT_PAIRS = 3, 10, 8   # the hover tooltip: cells a side, its zoom, pairs listed
 UNDO, REDO = imgui.Key.mod_ctrl | imgui.Key.z, imgui.Key.mod_ctrl | imgui.Key.mod_shift | imgui.Key.z   # Cmd on macOS
 
@@ -125,6 +126,7 @@ class Window:
         self.project = None                # the open image's project folder, written or not yet
         self.saved = self.app.graph        # the graph as last saved or opened: another one is unsaved
         self.autosave = False              # the user pref, on by default, comes with the prefs: tests never write
+        self.recent = []                   # images opened, the latest first; a user pref
         self.restore_session = path is None
         if path and (Path(path) / project.PROJECT_FILE).exists():
             self._open_project(path)
@@ -457,6 +459,12 @@ class Window:
         if imgui.begin_menu('File'):
             if imgui.menu_item_simple('Open image…'):
                 self._open()
+            if imgui.begin_menu('Open recent', bool(self.recent)):
+                for i, path in enumerate(self.recent):
+                    if imgui.menu_item_simple(f'{path.name}##{i}', enabled=path.exists()):
+                        self._close(lambda p=path: self._open_image(p))
+                    imgui.set_item_tooltip(str(path))
+                imgui.end_menu()
             if imgui.menu_item_simple('Save project', enabled=self.project is not None and self.app.graph != self.saved):
                 self._save_project()
             self.autosave = imgui.menu_item('Autosave project', '', self.autosave)[1]
@@ -547,13 +555,23 @@ class Window:
             then()
 
     def _open_image(self, path) -> None:
-        """Its project when it has one, else a new one beside it, written by the first save."""
+        """Its project when it has one, else a new one beside it: autosave writes it at once, else the first save."""
         folder = project_folder(path)
         if (folder / project.PROJECT_FILE).exists():
             self._open_project(folder)
         else:
             self.app.open(path)
-            self.project, self.saved = folder, None
+            self.project, self.saved = folder, self.app.graph   # nothing to ask about until an edit
+            if self.autosave:
+                self._save_project()
+            self._remember()
+
+    def _remember(self) -> None:
+        """The open image first in the recent ones."""
+        source = self._source()
+        if source is not None:
+            source = Path(source).resolve()
+            self.recent = [source] + [p for p in self.recent if p != source][:RECENT - 1]
 
     def _save(self, ext: str = None) -> None:
         """ext picks the format (Converter.save); by default the mode's screen file, else PNG."""
@@ -575,6 +593,7 @@ class Window:
             return
         self.app.restore(p.graph)
         self.project, self.saved = p.folder, self.app.graph
+        self._remember()
 
     def _save_project(self) -> None:
         graph = self.app.graph
@@ -592,6 +611,8 @@ class Window:
     def _load_prefs(self) -> None:
         self.expanded.update(json.loads(hello_imgui.load_user_pref('expanded') or '{}'))
         self.autosave = json.loads(hello_imgui.load_user_pref('autosave') or 'true')
+        saved = [Path(p) for p in json.loads(hello_imgui.load_user_pref('recent') or '[]')]
+        self.recent = (self.recent + [p for p in saved if p not in self.recent])[:RECENT]   # after an image given at start
         if not self.restore_session:
             return
         try:
@@ -610,6 +631,7 @@ class Window:
     def _save_prefs(self) -> None:
         hello_imgui.save_user_pref('expanded', json.dumps(self.expanded))
         hello_imgui.save_user_pref('autosave', json.dumps(self.autosave))
+        hello_imgui.save_user_pref('recent', json.dumps([str(p) for p in self.recent]))
         hello_imgui.save_user_pref('session', json.dumps({
             'project': str(self.project) if self.project else None,
             'graph': project.graph_to_json(self.app.graph, None, None)}))

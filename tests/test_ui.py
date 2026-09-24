@@ -138,6 +138,19 @@ def test_unsaved_dialog(ctx):
         assert opened == result and ui._after_close is None, (button, opened)
     reset('contrast')
 
+
+def test_recent_images(ctx):
+    assert ui.recent == [IMAGE.resolve()]              # the image given at start
+    images = sorted(IMAGE.parent.glob('*.*'))
+    for image in images * 2:                           # more than fit, each twice
+        ui._open_image(image)
+    assert ui.recent == [p.resolve() for p in images[::-1]][:20]   # the latest first, no repeats
+    ctx.menu_click('//##MainMenuBar/File/Open recent/lena.png##' + str(ui.recent.index(IMAGE.resolve())))
+    ctx.yield_(2)
+    assert ui._source() == IMAGE.resolve() and ui.recent[0] == IMAGE.resolve()
+    ui.app.set_params('halftoner', replace(params('halftoner'), halftoner=Ordered.label))
+    ui.app.set_params('optimise', replace(params('optimise'), enabled=False))
+
 def test_block_collapses_and_expands(ctx):
     ctx.set_ref('//Tune')
     ctx.item_click('**/###framing')
@@ -222,6 +235,7 @@ TESTS = [
     ('ui', 'history_panel', test_history_panel),
     ('ui', 'autosave', test_autosave),
     ('ui', 'unsaved_dialog', test_unsaved_dialog),
+    ('ui', 'recent_images', test_recent_images),
     ('ui', 'block_collapses_and_expands', test_block_collapses_and_expands),
     ('ui', 'block_reset', test_block_reset),
     ('ui', 'views_and_grid', test_views_and_grid),
