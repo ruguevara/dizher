@@ -112,6 +112,9 @@ def test_halftone_target_is_reachable():
     np.testing.assert_allclose(target[..., 1:], 0, atol=1e-6)               # chroma the pair cannot paint is dropped
     raw = converter.opponent(converter.image_lrgb)
     np.testing.assert_allclose(duo_levels(target, paper, ink), duo_levels(raw, paper, ink), atol=1e-6)   # same mixture
+    converter.project = False                                               # off: the image itself
+    np.testing.assert_array_equal(converter.halftone_target(paper, ink), raw)
+    np.testing.assert_array_equal(converter.projected_target(), converter.image_rgb)
 
 
 def test_colour_diffusion_preserves_scalar_projection():

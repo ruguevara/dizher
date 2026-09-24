@@ -29,6 +29,7 @@ class Converter:
             structure: float = 0.06,
             ditherer: Ditherer = None,   # halftones the pair candidates and, after selection, the result
             flare: float = 0.1,
+            project: bool = True,
     ):
         self.mode = mode
         self.size = mode.size
@@ -45,6 +46,7 @@ class Converter:
         self.structure = structure  # weight of the contrast-weighted SSIM term in the DBS optimiser, see halftoning/dbs.py
         self.ditherer = ditherer or Stohastic()
         self.flare = flare          # flattens the per-pixel lightness gain of the error, see energy.lightness_gain
+        self.project = project      # halftone and optimise the target projected onto each cell's pair, see halftone_target
         self.energy = SelectionEnergy(self, weights)
         self.image_rgb = None
         self.set_palette(mode.palette)
@@ -206,12 +208,17 @@ class Converter:
         pair cannot reach would be cancelled by the neighbour's ink along the seam: a line of white dots on
         the attribute grid, plainest in smooth backgrounds. Each pixel is given the reachable projection
         of its target instead, so a cell's residual is zero-mean and there is nothing for the neighbour to
-        cancel. The pair optimiser already owns the unreachable part (energy.py)."""
+        cancel. The pair optimiser already owns the unreachable part (energy.py). With project off the target
+        is the image itself."""
         target = self.opponent(self.image_lrgb)
+        if not self.project:
+            return target
         return paper + duo_levels(target, paper, ink)[..., None] * (ink - paper)
 
     def projected_target(self):
         """halftone_target in sRGB, for display: the opponent map is linear, so the same mix in linear RGB."""
+        if not self.project:
+            return self.image_rgb
         paper, ink = self.best_paper ** self.gamma, self.best_ink ** self.gamma
         t = duo_levels(self.opponent(self.image_lrgb), self.opponent(paper), self.opponent(ink))[..., None]
         return (paper + t * (ink - paper)) ** (1 / self.gamma)

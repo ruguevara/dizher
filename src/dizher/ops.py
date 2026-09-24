@@ -196,10 +196,14 @@ def select_pairs(prepared: Converter,
     return c
 
 
-def halftone(selection: Converter, progress=None) -> Converter:
+def halftone(selection: Converter,
+             project: Annotated[bool, meta(help="aim at the image projected onto each cell's pair, so the part the "
+                                          "pair cannot paint is not chased across seams by the neighbours; off aims "
+                                          "at the image itself (the optimiser too)")] = True,
+             progress=None) -> Converter:
     """Each pixel quantised to its cell's paper or ink by the Halftoner: the start of the optimiser, or the result
     when it is off."""
-    c = selection.copy()
+    c = selection.copy(project=project)
     with reporting(progress):
         c.halftone()
     return c
