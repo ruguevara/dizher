@@ -27,7 +27,7 @@ class Job:
         self.cancel = threading.Event()
         self.started = time.monotonic()
         self.text = ''
-        self.image = None     # latest preview the op sent (progress.report_progress)
+        self.image = None     # latest preview the op sent (progress.report_progress): a Converter.snapshot
         self.future = None
 
     def __call__(self, fraction, text) -> None:

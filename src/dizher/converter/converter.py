@@ -158,6 +158,18 @@ class Converter:
         self.best_attr_indexes = attr_indexes
         self.best_paper, self.best_ink = self.best_paper_ink(self.best_attr_indexes)
 
+    def snapshot(self, labels=None, bitmap=None) -> 'Converter':
+        """A running stage's state so far, for live previews: pair selection's labels (their blue-noise composite
+        standing in for the halftone) or the halftoner's bitmap. Copied, the stage keeps mutating its arrays."""
+        c = self.copy()
+        if labels is not None:
+            c.set_labels(labels.copy())
+            idx = c.expand_cells(c.best_attr_indexes)
+            bitmap = self.bitmaps[(idx,) + tuple(np.indices(idx.shape))]
+        c.dithered_bitmap = np.array(bitmap, dtype=np.float32)
+        c.dithered_result = np.where(c.dithered_bitmap[..., None] > 0, c.best_ink, c.best_paper)
+        return c
+
     def halftone(self):
         """Run the chosen halftoner once on the final composite, quantising each pixel to its block's paper or ink."""
         paper = self.opponent(self.best_paper ** self.gamma)
@@ -166,7 +178,7 @@ class Converter:
         self.dithered_bitmap = self.ditherer(self.halftone_target(paper, ink), paper, ink,
             scale=self.luma_scale, alpha=self.luma_alpha, structure=self.structure,
             kernels=self.eye_kernels(), noise=(self.luma_noise, self.chroma_noise, self.chroma_noise),
-            on_step=lambda b: report_progress(lambda: np.where(b[..., None], self.best_ink, self.best_paper))).astype(np.float32)
+            on_step=lambda b: report_progress(lambda: self.snapshot(bitmap=b))).astype(np.float32)
         self.dithered_result = np.where(self.dithered_bitmap[..., np.newaxis], self.best_ink, self.best_paper)
 
     def halftone_target(self, paper, ink):

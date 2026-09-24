@@ -30,7 +30,7 @@ NO_RESET = {'source'}   # resetting would drop the image
 LABELS = {nid: label for nid, label, _, _ in ops.PIPELINE}
 VIEWS = {'Screen': 'The conversion as the machine shows it', 'Bitmap': 'Ink pixels white, paper black',
          'Attrs': "Each cell's paper with a disc of its ink"}   # ToolZX's screen views
-DEBUG = {   # view -> (tooltip, the stage it needs, its image from that stage's Converter)
+DEBUG = {   # view -> (tooltip, the stage it needs, its image from that stage's Converter or a running stage's snapshot)
     'Projected': ("What the halftoner aims at: each pixel moved to the nearest mix of its cell's pair",
                   'select', lambda c: c.projected_target()),
     'Eye': ('Both images as the eye model sees them: what the energy compares',
@@ -233,21 +233,23 @@ class Window:
         imgui.pop_id()
 
     def _converted(self):
-        result, job = self.result, self.app.job
-        if self.view == 'Screen':
-            live = job.image if job is not None and job.node_id in ('select', 'halftone') else None
-            return live if live is not None else (result.dithered_result if result is not None else None)
+        """The view of the running stage's live snapshot, else of the last finished result."""
+        job = self.app.job
+        live = job.image if job is not None and job.node_id in ('select', 'halftone') else None
         if self.view in DEBUG:
-            return self._debug_image(self.view, *DEBUG[self.view][1:])
-        if result is None:
+            _, stage, fn = DEBUG[self.view]
+            return self._debug_image(self.view, live if live is not None else self.app.shown(stage), fn)
+        c = live if live is not None else self.result
+        if c is None:
             return None
+        if self.view == 'Screen':
+            return c.dithered_result
         if self.view == 'Bitmap':
-            return np.repeat(result.dithered_bitmap[..., None], 3, axis=2)
-        return np.where(cell_icon(result.cell, result.size)[..., None], result.best_ink, result.best_paper)
+            return np.repeat(c.dithered_bitmap[..., None], 3, axis=2)
+        return np.where(cell_icon(c.cell, c.size)[..., None], c.best_ink, c.best_paper)
 
-    def _debug_image(self, key: str, stage: str, fn):
-        """fn of the stage's shown Converter, computed once per Converter."""
-        c = self.app.shown(stage)
+    def _debug_image(self, key: str, c, fn):
+        """fn of a Converter, computed once per Converter."""
         if c is None:
             return None
         hit = self._debug.get(key)
@@ -267,7 +269,7 @@ class Window:
 
     def _preview(self) -> None:
         self._view_bar()
-        tuned = (self._debug_image('eye target', 'prepare', lambda c: c.eye_view(c.image_rgb)) if self.view == 'Eye'
+        tuned = (self._debug_image('eye target', self.app.shown('prepare'), lambda c: c.eye_view(c.image_rgb)) if self.view == 'Eye'
                  else self.app.shown(ops.TUNED))
         converted = self._converted()
         shown = [(key, image) for key, image in (('tuned', tuned), ('converted', converted)) if image is not None]

@@ -115,10 +115,37 @@ def test_colour_diffusion_preserves_scalar_projection():
     assert 0 < actual.sum() < actual.size
 
 
+def test_stages_preview_snapshots():
+    """Live previews are Converter snapshots, so every view can draw the running stage: pair selection sends its
+    labels with their blue-noise composite, the halftoner its bitmap; each a copy of what the stage mutates."""
+    from dizher import progress as live
+    rng = np.random.default_rng(7)
+    mode = Mode('small', (16, 24), (8, 8), ZXPalette())
+    converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, mode)
+    converter.set_image(rng.random((*mode.size, 3), dtype=np.float32))
+    shots, report = [], lambda fraction, text: None
+    report.preview = shots.append
+    interval, live.PROGRESS_INTERVAL = live.PROGRESS_INTERVAL, 0
+    try:
+        with live.reporting(report):
+            converter.dither(DBS())
+    finally:
+        live.PROGRESS_INTERVAL = interval
+    select = [s for s in shots if s.best_attr_indexes is not converter.best_attr_indexes]
+    assert select and len(select) < len(shots), 'both stages must send snapshots'
+    for s in select:
+        np.testing.assert_array_equal(s.dithered_result, s.render_labels(s.best_attr_indexes))
+    final = shots[-1]
+    assert final.dithered_bitmap is not converter.dithered_bitmap and final.dithered_bitmap.shape == mode.size
+    np.testing.assert_array_equal(final.dithered_result, np.where(final.dithered_bitmap[..., None] > 0,
+                                                                  converter.best_ink, converter.best_paper))
+
+
 if __name__ == '__main__':
     test_equal_luminance_colour_edge()
     test_selection_matches_full_convolution()
     test_dbs_lowers_complete_colour_objective()
     test_halftone_target_is_reachable()
     test_colour_diffusion_preserves_scalar_projection()
+    test_stages_preview_snapshots()
     print('ok')

@@ -148,7 +148,7 @@ class SelectionEnergy:
         S = {off: sum(w[g] * self.S[g][off] for g in GROUPS) for off in OFFSETS}
         Lh, Lv = self.seam_smoothness()
         V = self.converter.pair_dissimilarity
-        preview = lambda labels: report_progress(lambda: self.converter.eye_view(self.converter.render_labels(labels)))
+        preview = lambda labels: report_progress(lambda: self.converter.snapshot(labels=labels))
         return optimise(D, S, V, Lh, Lv, self.converter.coherence, on_step=preview)
 
     def seam_smoothness(self):
