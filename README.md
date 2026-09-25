@@ -191,15 +191,27 @@ Done:
 * [x] Undo/Redo (Edit menu, Cmd+Z / Shift+Cmd+Z): a slider drag is one step; opening an image starts the history over. History panel: every step, the newest on top, named by the params it changed, a click goes back or forward to it
 * [x] Overpaint attrs, bright
 
-Planned:
+### Alpha
 
+Criticals:
+
+* [ ] Standalone binary package with PyInstaller for macOS, Windows, Linux
+* [ ] App Icon
+* [ ] dmg for MacOS
 * [ ] Fix middle column width, make it width of display preview + padding
-* [ ] About dialog
+* [ ] About dialog with github and web links, greets, version auto bumping
+
+### Beta
+
+* [ ] Better pair selection loss function, use overpaint data to tune
+* [ ] Palette snapping prototype
 * [ ] Starred/named selected shaphots panel to compare between and choose from
 * [ ] Global presets of selected stages/params
-* [ ] Standalone binary package with PyInstaller for macOS, Windows, Linux
 * [ ] Curves (tone curve editor; subsumes Contrast)
 * [ ] Levels per channel (R, G, B) like Photoshop's channel menu
+
+### Future versions
+
 * [ ] Custom ZX Spectrum palettes (ZX Spectrum Next or another hardware enhanceds)
 * [ ] ZX Spectrum MultiColor, GigaScreen and MultiGigaScreen software mode
 * [ ] Commodore 64 LowRes 160x200 mode with 4 colors per character block
