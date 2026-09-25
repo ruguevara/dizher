@@ -5,6 +5,8 @@
 # PyAV (mokit.media's video path) stays out: dizher opens still images only.
 set -e
 cd "$(dirname "$0")/.."
+python -m dizher.version   # the version About shows, frozen into src/dizher/_build.py for this build only
+trap 'rm -f src/dizher/_build.py' EXIT
 python -m PyInstaller --noconfirm --windowed --name Dizher \
   --osx-bundle-identifier ru.ruguevara.dizher \
   --collect-submodules dizher --collect-submodules mokit \

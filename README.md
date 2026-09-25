@@ -1,22 +1,9 @@
 # Dizher
 
-Dizher (and AvtoDizher) is an image converter for 8-bit computers with colour-restricted
+Dizher is a smart image converter for 8-bit retrocomputers with colour-restricted
 graphics modes, such as the ZX Spectrum and the Commodore 64.
 
 Turn on, tune in, drop out.
-
-## Goal
-
-A research prototype: can a converter driven by a model of the eye beat the existing tools?
-
-It is done when:
-
-* On three reference images, DBS with the eye model visibly beats the known converters
-  (ZX-Paintbrush, image2zx, img2spec) in both dithering and colour selection.
-* The UI concept is clear and usable: adjustment layers for preprocessing, and a processing
-  pipeline with a preview at each stage.
-
-Out of scope: animation, non-8-bit platforms, compression.
 
 ## Supported platforms and modes
 
@@ -24,10 +11,6 @@ Out of scope: animation, non-8-bit platforms, compression.
   * Standard mode: 256x192, 15 colours, two colours per 8x8 character block. No flash attribute.
 * Commodore 64
   * Hires mode: 320x200, 16 colours, two colours per 8x8 character block. PNG output only for now.
-
-A mode is a `platforms.Mode`: screen size, attribute cell size, palette (with its allowed
-paper/ink pairs) and the writer of the native screen file. The converter is generic over these;
-the ZX Spectrum specifics live in `platforms/zxspectrum`.
 
 ## Installation
 
@@ -50,8 +33,8 @@ Run the GUI:
     pip install pyinstaller
     ./packaging/build.sh
 
-GitHub Actions builds it for macOS (Apple Silicon and Intel), Windows and Linux on every push,
-and a `v*` tag publishes the four archives as a release.
+GitHub Actions builds it for macOS (Apple Silicon), Windows and Linux on every push,
+and a `v*` tag publishes the three archives as a release.
 
 ### Tests
 
@@ -62,8 +45,7 @@ and a `v*` tag publishes the four archives as a release.
 ### Layout
 
 * `src/dizher`: the converter (colour selection, halftoning, eye model), the platforms and the GUI.
-* `src/mokit`: the node graph, project files and UI widgets the GUI is built on; a copy of the
-  Python part of mokit, the author's ZX Spectrum toolkit.
+* `src/mokit`: the node graph, project files and UI widgets the GUI is built on.
 
 ## How it works
 

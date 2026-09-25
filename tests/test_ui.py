@@ -151,6 +151,18 @@ def test_recent_images(ctx):
     ui.app.set_params('halftoner', replace(params('halftoner'), halftoner=Ordered.label))
     ui.app.set_params('optimise', replace(params('optimise'), enabled=False))
 
+def test_about(ctx):
+    """Help > About Dizher opens the dialog with the version; Cool closes it."""
+    from imgui_bundle.imgui.test_engine import CaptureFlags_
+    ctx.menu_click('//##MainMenuBar/Help/About Dizher…')
+    ctx.yield_(2)
+    assert ctx.item_exists('//About Dizher/Cool'), 'no About dialog'
+    ctx.capture_set_filename('/tmp/dizher_about.png')
+    ctx.capture_screenshot(CaptureFlags_.hide_mouse_cursor.value)
+    ctx.item_click('//About Dizher/Cool')
+    ctx.yield_(2)
+    assert not ctx.item_exists('//About Dizher/Cool'), 'About still open'
+
 def test_block_collapses_and_expands(ctx):
     ctx.set_ref('//Tune')
     ctx.item_click('**/###framing')
@@ -364,6 +376,7 @@ TESTS = [
     ('ui', 'autosave', test_autosave),
     ('ui', 'unsaved_dialog', test_unsaved_dialog),
     ('ui', 'recent_images', test_recent_images),
+    ('ui', 'about', test_about),
     ('ui', 'block_collapses_and_expands', test_block_collapses_and_expands),
     ('ui', 'block_reset', test_block_reset),
     ('ui', 'views_and_grid', test_views_and_grid),

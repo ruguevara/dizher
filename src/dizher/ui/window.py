@@ -11,6 +11,7 @@ exports default to its build/. Every image has one, as a sidecar: opening an ima
 as the image (app.project_folder), or starts it there. Autosave (on by default) writes it after every edit; off, Save
 project does, without asking where."""
 import json
+import platform
 import signal
 import subprocess
 import sys
@@ -21,7 +22,8 @@ from dataclasses import asdict, field, fields, make_dataclass, replace
 from pathlib import Path
 
 import numpy as np
-from imgui_bundle import hello_imgui, imgui, immapp, immvision
+import imgui_bundle
+from imgui_bundle import em_size, hello_imgui, imgui, immapp, immvision
 from imgui_bundle import portable_file_dialogs as pfd
 
 from mokit import project
@@ -30,7 +32,7 @@ from mokit.ui.params import params_editor
 from mokit.graph import GraphError, Op
 from mokit.ui.style import Palette
 
-from .. import __version__, ops
+from .. import ops, version
 from .app import Pipeline, project_folder
 from .levels import LevelsEditor
 from . import views
@@ -243,6 +245,7 @@ class Window:
         self._debug = {}       # image key -> (the Converter it came from, the image)
         self._steps = 0        # history length last frame: the History list follows a new step
         self._after_close = None   # what waits for the unsaved changes dialog: opening another image
+        self._about = False        # Help > About was chosen: the dialog opens next frame, outside the menu
         self._cell = None          # (row, column) the cell popup shows
         self._stroke = False       # a paint stroke is on: pressed over a preview in Paint mode, not let go yet
 
@@ -253,7 +256,7 @@ class Window:
         p.app_window_params.window_geometry.size = (1600, 1000)
         p.app_window_params.restore_previous_geometry = True
         p.imgui_window_params.show_menu_bar = True
-        p.imgui_window_params.show_menu_app = False    # File, Edit, View, About drawn in _menus
+        p.imgui_window_params.show_menu_app = False    # File, Edit, View, Help drawn in _menus
         p.imgui_window_params.show_menu_view = False
         p.imgui_window_params.show_status_bar = True
         p.imgui_window_params.show_status_fps = False
@@ -346,6 +349,7 @@ class Window:
         if self.autosave and self.project and self.app.graph != self.saved and not held:
             self._save_project()   # once a drag is let go, not every frame of it
         self._unsaved_dialog()
+        self._about_dialog()
         self.app.update()
         hello_imgui.get_runner_params().fps_idling.enable_idling = not self.app.busy
 
@@ -711,9 +715,9 @@ class Window:
                 self.app.redo()
             imgui.end_menu()
         hello_imgui.show_view_menu(hello_imgui.get_runner_params())
-        if imgui.begin_menu('About'):
-            imgui.text(f'Dizher {__version__}')
-            imgui.text('Images to 8-bit screens through an eye model')
+        if imgui.begin_menu('Help'):
+            if imgui.menu_item_simple('About Dizher…'):
+                self._about = True
             imgui.end_menu()
 
     def _status(self) -> None:
@@ -780,6 +784,52 @@ class Window:
         imgui.end_popup()
         if choice == "Don't save" or choice == 'Save' and self.app.graph == self.saved:   # not when the save failed
             then()
+
+    def _about_dialog(self) -> None:
+        """uZX's About: the name and site, the version (a dev build's commit and build time), what it is built on and
+        includes, the greets."""
+        if self._about:
+            imgui.open_popup('About Dizher')
+            self._about = False
+        imgui.set_next_window_size(imgui.ImVec2(em_size(36), 0), imgui.Cond_.always.value)   # height fits the text
+        flags = imgui.WindowFlags_.no_resize.value | imgui.WindowFlags_.no_saved_settings.value
+        if not imgui.begin_popup_modal('About Dizher', None, flags)[0]:
+            return
+
+        def centred(width):
+            imgui.set_cursor_pos_x((imgui.get_window_width() - width) / 2)
+
+        def line(text=''):
+            centred(imgui.calc_text_size(text).x)
+            imgui.text(text)
+
+        build = version.current()
+        with style.font('bold', 2.4):
+            line('Dizher')
+        with style.muted():
+            line('Images to 8-bit screens through a model of the eye')
+        site = 'github.com/ruguevara/dizher'
+        centred(imgui.calc_text_size(site).x)
+        imgui.text_link_open_url(site, f'https://{site}')
+        line()
+        line(f'Version {build.display}')
+        line(f'Built at {build.built}' if build.built else 'Running from source')
+        line(f'Powered by Dear ImGui Bundle {imgui_bundle.__version__} and Python {platform.python_version()}')
+        line('Includes libdither by Robert Kist, blue noise by Christoph Peters')
+        line('and the ZX Spectrum colours measured by Jari Komppa')
+        line()
+        line('Greets to:')
+        line('diver, spke, pator, megus, sq, bfox, n1k-o, fatalsnipe, grongy,')
+        line('dalthon, jammerC64, wbcbz7, kowalski, volutar, tmk, true-grue')
+        line('and all pixel artists and demosceners!')
+        line()
+        with style.muted():
+            line(f'© 2021–{build.built[:4] or time.strftime("%Y")} Ruguevara and Co')
+        line()
+        centred(em_size(8))
+        if imgui.button('Cool', imgui.ImVec2(em_size(8), 0)) or imgui.is_key_pressed(imgui.Key.escape):
+            imgui.close_current_popup()
+        imgui.end_popup()
 
     def _open_image(self, path) -> None:
         """Its project when it has one, else a new one beside it: autosave writes it at once, else the first save."""
