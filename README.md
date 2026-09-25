@@ -242,7 +242,8 @@ Critical:
 
 ### Code and data
 
-* [libdither](https://github.com/robertkist/libdither) by Robert Kist (MIT): the non-Bayer
+* [libdither](https://github.com/robertkist/libdither) by Robert Kist (BSD-style licence, in
+  `src/dizher/halftoning/libdither-LICENSE.txt`): the non-Bayer
   threshold matrices and the error-diffusion kernels.
 * [Free blue noise textures](https://momentsingraphics.de/BlueNoise.html) by Christoph Peters
   (CC0): the blue noise.
@@ -284,4 +285,4 @@ Wbcbz7, Kowalski, Volutar, Tmk, True-grue, and all retroscene pixel artists and 
 
 ## License
 
-GNU General Public License v3.0 or later; see [LICENSE](LICENSE).
+MIT; see [LICENSE](LICENSE).

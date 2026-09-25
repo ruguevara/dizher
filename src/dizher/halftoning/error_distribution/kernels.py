@@ -2,8 +2,8 @@
 current pixel; weights / divisor is the share of its error each receives. Atkinson's and Steve Pigeon's divisors
 exceed their weights' sum on purpose: they drop part of the error for a crisper look.
 
-Copied from libdither (Robert Kist, MIT licence, https://github.com/robertkist/libdither, dither_errordiff_data.h),
-in img2spec's menu order.
+Copied from libdither (Copyright (C) 2022-2025 Robert Kist, BSD-style licence in halftoning/libdither-LICENSE.txt,
+https://github.com/robertkist/libdither, dither_errordiff_data.h), in img2spec's menu order.
 """
 
 KERNELS = {}

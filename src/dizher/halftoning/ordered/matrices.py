@@ -1,7 +1,8 @@
 """Ordered dither threshold matrices: (rows, divisor); a pixel is ink where its level > (entry + 0.5) / divisor.
 
-Bayer matrices are generated. The rest are copied from libdither (Robert Kist, MIT licence,
-https://github.com/robertkist/libdither, dither_ordered_data.h), in img2spec's menu order: dispersed
+Bayer matrices are generated. The rest are copied from libdither (Copyright (C) 2022-2025 Robert Kist,
+BSD-style licence in halftoning/libdither-LICENSE.txt, https://github.com/robertkist/libdither,
+dither_ordered_data.h), in img2spec's menu order: dispersed
 dots, line screens (non-rectangular), clustered dots, magic squares.
 """
 import numpy as np
