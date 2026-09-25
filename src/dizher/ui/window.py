@@ -41,7 +41,7 @@ VIEWS = {'Screen': 'The conversion as the machine shows it', 'Bitmap': 'Ink pixe
          'Attrs': "Each cell's paper with a disc of its ink"}   # ToolZX's screen views
 DEBUG = {   # view -> (tooltip, the stage it needs, its image from that stage's Converter or a running stage's snapshot)
     'Projected': ("What the halftoner aims at: each pixel moved to the nearest mix of its cell's pair",
-                  'select', lambda c: c.projected_target()),
+                  'overpaint', lambda c: c.projected_target()),
     'Unoptimised': ("The halftoner's result, what the optimiser started from",   # a Select pairs snapshot has none yet
                     'halftone', lambda c: c.dithered_result if c.halftoned is None else np.where(c.halftoned[..., None] > 0, c.best_ink, c.best_paper)),
     'Eye': ('Both images as the eye model sees them: what the energy compares',
@@ -49,7 +49,7 @@ DEBUG = {   # view -> (tooltip, the stage it needs, its image from that stage's 
     'Error': ('Result minus target through the eye model, around grey: lighter/darker is luma error, '
               'the tint is the colour the result adds', 'optimise', views.error_view),
     'Energy': ("Each cell's energy: red its own error, green the eye-model seams, blue coherence",
-               'select', views.energy_view),
+               'overpaint', views.energy_view),
     'Seams': ('Cell seams the original has an edge across, bright: there a pair change costs no coherence',
               'select', views.seam_view)}
 GRID = imgui.ImVec4(0.5, 0.5, 0.5, 0.6)   # grey reads over black and white alike
@@ -62,6 +62,8 @@ UNDO, REDO = imgui.Key.mod_ctrl | imgui.Key.z, imgui.Key.mod_ctrl | imgui.Key.mo
 def change(before, after) -> str:
     """A history step's label: the params that differ between two graphs, with their new values."""
     def show(v):
+        if isinstance(v, tuple) and v and isinstance(v[0], tuple):   # Overpaint's cells: a count, not a wall of numbers
+            return f'{len(v)} cells'
         return f'{v:.3g}' if isinstance(v, float) else v.name if isinstance(v, Path) else str(v)
     parts = []
     for nid, node in after.nodes:
@@ -121,6 +123,38 @@ class HalftoneEditor:
                       lambda v: on_change(replace(params, **asdict(v))), id=id, help='tooltip')
 
 
+def palette_grid(palette, click, tip, marks={}, transparent=False) -> None:
+    """The palette as 2 rows of 8 swatches edge to edge; click(i, button) on a left or right click, tip(i) the tooltip,
+    marks {i: '✓' for imgui's tick, else a letter or two}. Colours the palette has off are disabled. transparent ends
+    the first row with a checkered swatch, index -1."""
+    side = min(1.5 * imgui.get_text_line_height(), imgui.get_content_region_avail().x / (8 + transparent))   # fits a narrow dock
+    size = imgui.ImVec2(side, side)
+    imgui.push_style_var(imgui.StyleVar_.item_spacing, imgui.ImVec2(0, 0))   # cells edge to edge
+    cells = [(i, (*map(float, rgb), 1.0)) for i, rgb in enumerate(palette.as_float())]
+    if transparent:
+        cells.insert(8, (-1, (0.0, 0.0, 0.0, 0.0)))
+    for n, (i, rgba) in enumerate(cells):
+        if n % (8 + transparent):
+            imgui.same_line()
+        imgui.begin_disabled(i >= 0 and i not in palette.enabled)
+        flags = imgui.ColorEditFlags_.no_tooltip.value   # alpha 0 shows imgui's checkerboard
+        if imgui.color_button(f'##colour{i}', imgui.ImVec4(*rgba), flags, size):
+            click(i, imgui.MouseButton_.left)
+        if imgui.is_item_clicked(imgui.MouseButton_.right):
+            click(i, imgui.MouseButton_.right)
+        imgui.end_disabled()
+        imgui.set_item_tooltip(tip(i))
+        mark, lo = marks.get(i), imgui.get_item_rect_min()
+        ink = imgui.IM_COL32(*(3 * (0 if i >= 0 and np.dot(rgba[:3], (0.299, 0.587, 0.114)) > 0.5 else 255,)), 255)
+        if mark == '✓':   # imgui's checkbox tick, black on light colours, white on dark
+            pad = side / 5
+            imgui.internal.render_check_mark(imgui.get_window_draw_list(), imgui.ImVec2(lo.x + pad, lo.y + pad), ink, side - 2 * pad)
+        elif mark:
+            t = imgui.calc_text_size(mark)
+            imgui.get_window_draw_list().add_text(imgui.ImVec2(lo.x + (side - t.x) / 2, lo.y + (side - t.y) / 2), ink, mark)
+    imgui.pop_style_var()
+
+
 class TargetEditor:
     """The mode, and its palette: a combo of the named subsets over the colours, 2 rows of 8 toggles, on ticked; a set
     no subset names shows as Custom. A mode switch carries a named subset over by name, else turns every colour on."""
@@ -135,21 +169,52 @@ class TargetEditor:
         widgets.combo('mode', params.mode, list(ops.MODES), mode)
         widgets.combo('palette', name, list(palette.subsets),
                       lambda n: on_change(replace(params, colours=tuple(sorted(palette.subsets[n])))))
-        side = min(1.5 * imgui.get_text_line_height(), imgui.get_content_region_avail().x / 8)   # a row of 8 fits a narrow dock
-        size = imgui.ImVec2(side, side)
-        imgui.push_style_var(imgui.StyleVar_.item_spacing, imgui.ImVec2(0, 0))   # cells edge to edge
-        for i, rgb in enumerate(palette.as_float()):
-            if i % 8:
-                imgui.same_line()
-            on = i in params.colours
-            if imgui.color_button(f'##colour{i}', imgui.ImVec4(*map(float, rgb), 1.0), imgui.ColorEditFlags_.no_tooltip.value, size):
-                on_change(replace(params, colours=tuple(sorted(set(params.colours) ^ {i}))))
-            imgui.set_item_tooltip(f"Colour {i}, {'on' if on else 'off'}: a click turns it {'off' if on else 'on'}")
-            if on:   # imgui's checkbox tick, black on light colours, white on dark
-                pad, lo = side / 5, imgui.get_item_rect_min()
-                tick = imgui.IM_COL32(*(3 * (0 if rgb @ (0.299, 0.587, 0.114) > 0.5 else 255,)), 255)
-                imgui.internal.render_check_mark(imgui.get_window_draw_list(), imgui.ImVec2(lo.x + pad, lo.y + pad), tick, side - 2 * pad)
-        imgui.pop_style_var()
+        on = set(params.colours)
+        palette_grid(palette, lambda i, _: on_change(replace(params, colours=tuple(sorted(on ^ {i})))),
+                     lambda i: f"Colour {i}, {'on' if i in on else 'off'}: a click turns it {'off' if i in on else 'on'}",
+                     {i: '✓' for i in on})
+        imgui.pop_id()
+
+
+def role_marks(paper: int, ink: int) -> dict:
+    """palette_grid's marks for a cell's or the brush's colours: I the ink, P the paper, IP one colour as both."""
+    return {paper: 'P', ink: 'IP' if ink == paper else 'I'}
+
+
+class OverpaintEditor:
+    """Paint mode, Art Studio's attribute brush: an ink and a paper, each a palette index or -1, transparent, which
+    keeps the cell's own. A left click on a swatch picks the ink, a right click the paper (Multipaint's and MS
+    Paint's buttons), and turns Paint mode on. In the preview a left drag paints cells with the brush, a right drag
+    gives them back to Select pairs (Window._paint). Clear drops every painted cell."""
+
+    def __init__(self) -> None:
+        self.on, self.ink, self.paper = False, 15, -1   # bright white on the Spectrum, light grey on the C64
+
+    def draw(self, params, selection, on_change, id: str) -> None:
+        imgui.push_id(id)
+        if widgets.toggle_button('Paint', self.on):
+            self.on = not self.on
+        imgui.set_item_tooltip('Paint cells in the preview; Esc ends')
+        imgui.same_line()
+        imgui.begin_disabled(not params.overrides)
+        if imgui.small_button('Clear'):
+            on_change(replace(params, overrides=()))
+        imgui.end_disabled()
+        imgui.set_item_tooltip('Give every painted cell back to Select pairs')
+        imgui.same_line()
+        imgui.text(f'{len(params.overrides)} cells painted')
+        if selection is not None:
+            def pick(i, button):   # picking a colour is picking up the brush: Paint mode goes on
+                if button == imgui.MouseButton_.left:
+                    self.ink = i
+                else:
+                    self.paper = i
+                self.on = True
+            name = lambda i: f'Colour {i}' if i >= 0 else 'Transparent, the cell keeps its own'
+            palette_grid(selection.palette, pick, lambda i: f'{name(i)}: left click for the ink, right for the paper',
+                         role_marks(self.paper, self.ink), transparent=True)
+        if self.on:
+            widgets.hint('Left drag paints cells, right drag gives them back')
         imgui.pop_id()
 
 
@@ -167,11 +232,14 @@ class Window:
             self._open_image(path)
         self.images = {}       # immvision params per preview
         self.expanded = {}     # node id -> block open; imgui keeps no header state in its ini
-        self.editors = {'levels': LevelsEditor(), 'halftoner': HalftoneEditor(), 'target': TargetEditor()}   # node id -> custom params editor
+        self.editors = {'levels': LevelsEditor(), 'halftoner': HalftoneEditor(), 'target': TargetEditor(),
+                        'overpaint': OverpaintEditor()}   # node id -> custom params editor
         self.view, self.grid = 'Screen', False     # the conversion's view and the cell grid; not persisted
         self._debug = {}       # image key -> (the Converter it came from, the image)
         self._steps = 0        # history length last frame: the History list follows a new step
         self._after_close = None   # what waits for the unsaved changes dialog: opening another image
+        self._cell = None          # (row, column) the cell popup shows
+        self._stroke = False       # a paint stroke is on: pressed over a preview in Paint mode, not let go yet
 
     def runner_params(self, persist: bool = True) -> hello_imgui.RunnerParams:
         immvision.use_rgb_color_order()
@@ -257,14 +325,20 @@ class Window:
 
     def _frame(self) -> None:
         style.sync()
-        if not imgui.is_any_item_active():
+        brush = self.editors['overpaint']
+        if brush.on and imgui.is_key_pressed(imgui.Key.escape):
+            brush.on = False
+        if not (imgui.is_mouse_down(0) or imgui.is_mouse_down(1)):
+            self._stroke = False
+        held = imgui.is_any_item_active() or self._stroke   # a paint stroke is one undo step, like a dragged slider
+        if not held:
             self.app.release()
         # global routing: a focused text field keeps its own Cmd+Z
         if imgui.shortcut(UNDO, imgui.InputFlags_.route_global.value):
             self.app.undo()
         if imgui.shortcut(REDO, imgui.InputFlags_.route_global.value):
             self.app.redo()
-        if self.autosave and self.project and self.app.graph != self.saved and not imgui.is_any_item_active():
+        if self.autosave and self.project and self.app.graph != self.saved and not held:
             self._save_project()   # once a drag is let go, not every frame of it
         self._unsaved_dialog()
         self.app.update()
@@ -417,6 +491,7 @@ class Window:
         stacked = min(avail.x / w, (avail.y - spacing.y) / (2 * h))
         zoom = max(1, int(max(side, stacked)))
         cell, hovered = ops.MODES[self.app.graph['target'].params.mode].cell, None
+        painting = self.editors['overpaint'].on
         for key, image in shown:
             ih, iw = image.shape[:2]
             immvision.image(f'##{key}', as_ubyte(image), widgets.image_params(self.images, key, (iw * zoom, ih * zoom), (iw, ih)))
@@ -425,20 +500,91 @@ class Window:
                 hovered = min(int(m.y - lo.y) // zoom, ih - 1), min(int(m.x - lo.x) // zoom, iw - 1)
             if self.grid:
                 self._cell_grid(cell, zoom)
+            if painting:
+                self._painted_cells(cell, zoom, (ih // cell[0], iw // cell[1]))
             if side >= stacked:
                 imgui.same_line()
-        if hovered is not None and all(i.shape == shown[0][1].shape for _, i in shown):   # not mid mode switch
-            self._inspect(hovered, cell, shown)
+        same = all(i.shape == shown[0][1].shape for _, i in shown)   # not mid mode switch
+        if hovered is not None and same:
+            at = hovered[0] // cell[0], hovered[1] // cell[1]
+            if painting:
+                self._paint(at, lo, cell, zoom)
+            elif imgui.is_mouse_clicked(imgui.MouseButton_.right):
+                self._cell = at
+                imgui.open_popup('cell')
+            else:
+                imgui.begin_tooltip()
+                self._zoom(at, cell, shown)
+                self._candidates(*at)
+                imgui.end_tooltip()
+        if imgui.begin_popup('cell'):
+            (H, W), (h, w) = shown[0][1].shape[:2], cell
+            if same and self._cell[0] < H // h and self._cell[1] < W // w:
+                self._cell_popup(cell, shown)
+            else:
+                imgui.close_current_popup()
+            imgui.end_popup()
 
-    def _inspect(self, pixel, cell, shown) -> None:
-        """The hover tooltip: the cells around the one under the cursor zoomed in every preview, that cell outlined,
-        and the pairs the selection energy scores best there, the other cells' pairs fixed."""
+    def _painted(self, r: int, c: int) -> tuple:
+        """The cell's painted (paper, ink), -1 where it keeps the selection's."""
+        return next((o[2:] for o in self.app.graph['overpaint'].params.overrides if o[:2] == (r, c)), (-1, -1))
+
+    def _set_cell(self, r: int, c: int, pair, held: bool = False) -> None:
+        """Paint the cell (paper, ink), -1 keeping the selection's colour; None, or both -1, gives it back."""
+        params = self.app.graph['overpaint'].params
+        rest = tuple(o for o in params.overrides if o[:2] != (r, c))
+        new = rest if pair is None or tuple(pair) == (-1, -1) else tuple(sorted(rest + ((r, c, *pair),)))
+        if new != params.overrides:
+            self.app.set_params('overpaint', replace(params, overrides=new), held=held)
+
+    def _paint(self, at, lo, cell, zoom) -> None:
+        """Paint mode over a preview whose top-left is lo: the cursor is the brush, ink over paper as Photoshop's colour
+        swatches, a hollow square with a slash where transparent, and the cell under it is outlined. A left drag
+        paints the cells it crosses, a right drag gives them back."""
+        brush, (h, w), (r, c) = self.editors['overpaint'], cell, at
+        if imgui.is_mouse_clicked(imgui.MouseButton_.left) or imgui.is_mouse_clicked(imgui.MouseButton_.right):
+            self._stroke = True
+        if self._stroke and imgui.is_mouse_down(imgui.MouseButton_.left):
+            old = self._painted(r, c)
+            self._set_cell(r, c, (brush.paper if brush.paper >= 0 else old[0], brush.ink if brush.ink >= 0 else old[1]), held=True)
+        elif self._stroke and imgui.is_mouse_down(imgui.MouseButton_.right):
+            self._set_cell(r, c, None, held=True)
+        imgui.set_mouse_cursor(imgui.MouseCursor_.none)
+        draw, black, white = imgui.get_foreground_draw_list(), imgui.IM_COL32(0, 0, 0, 255), imgui.IM_COL32(255, 255, 255, 255)
+        a = imgui.ImVec2(lo.x + c * w * zoom, lo.y + r * h * zoom)
+        b = imgui.ImVec2(a.x + w * zoom, a.y + h * zoom)
+        draw.add_rect(a, b, black, thickness=3)
+        draw.add_rect(a, b, white)
+        selection = self.app.shown('overpaint')
+        if selection is None:
+            return
+        rgb, m, s = selection.palette.as_float(), imgui.get_mouse_pos(), imgui.get_text_line_height() * 0.8
+        for i, (x, y) in ((brush.paper, (s / 2, s / 2)), (brush.ink, (0, 0))):
+            p, q = imgui.ImVec2(m.x + x, m.y + y), imgui.ImVec2(m.x + x + s, m.y + y + s)
+            if i >= 0:
+                draw.add_rect_filled(p, q, imgui.IM_COL32(*(int(v * 255) for v in rgb[i]), 255))
+            else:
+                draw.add_rect_filled(p, q, imgui.IM_COL32(128, 128, 128, 255))
+                draw.add_line(imgui.ImVec2(p.x, q.y), imgui.ImVec2(q.x, p.y), imgui.IM_COL32(220, 40, 40, 255), 2)
+            draw.add_rect(p, q, black)
+
+    def _painted_cells(self, cell, zoom: int, cells) -> None:
+        """Paint mode: the painted cells outlined over the image just drawn, cells its (rows, columns)."""
+        lo, (h, w), col = imgui.get_item_rect_min(), cell, imgui.get_color_u32(Palette.warn)
+        for r, c, *_ in self.app.graph['overpaint'].params.overrides:
+            if r < cells[0] and c < cells[1]:
+                a = imgui.ImVec2(lo.x + c * w * zoom, lo.y + r * h * zoom)
+                imgui.get_window_draw_list().add_rect(a, imgui.ImVec2(a.x + w * zoom, a.y + h * zoom), col)
+
+    def _zoom(self, at, cell, shown):
+        """The inspector's zoom: the cells around at in every preview, that cell outlined. The cell clicked in it,
+        else None."""
         (h, w), (H, W), z = cell, shown[0][1].shape[:2], INSPECT_ZOOM
-        r, c = pixel[0] // h, pixel[1] // w
-        # the block of cells centred on the hovered one, moved inside at the image's edges
+        r, c = at
+        # the block of cells centred on this one, moved inside at the image's edges
         r0, c0 = (max(0, min(i - INSPECT_CELLS // 2, n - INSPECT_CELLS)) for i, n in ((r, H // h), (c, W // w)))
         size = INSPECT_CELLS * w, INSPECT_CELLS * h
-        imgui.begin_tooltip()
+        clicked = None
         for key, image in shown:
             crop = image[r0 * h:r0 * h + size[1], c0 * w:c0 * w + size[0]]
             immvision.image(f'##inspect {key}', as_ubyte(crop),
@@ -448,19 +594,47 @@ class Window:
             a = imgui.ImVec2(lo.x + (c - c0) * w * z, lo.y + (r - r0) * h * z)
             imgui.get_window_draw_list().add_rect(a, imgui.ImVec2(a.x + w * z, a.y + h * z),
                                                   imgui.get_color_u32(Palette.warn), thickness=2)
+            if imgui.is_item_hovered() and imgui.is_mouse_clicked(imgui.MouseButton_.left):
+                m = imgui.get_mouse_pos()
+                clicked = r0 + min(int(m.y - lo.y) // (h * z), INSPECT_CELLS - 1), c0 + min(int(m.x - lo.x) // (w * z), INSPECT_CELLS - 1)
             imgui.same_line()
         imgui.new_line()
-        self._candidates(r, c)
-        imgui.end_tooltip()
+        return clicked
 
-    def _candidates(self, r: int, c: int) -> None:
+    def _cell_popup(self, cell, shown) -> None:
+        """The right-click popup: the hover inspector, live. A click on a cell in the zoom moves to it; a pair in the
+        table paints the cell (the Overpaint block), and so does the palette as Paint mode's brush does: a left click
+        the ink, a right click the paper, transparent the selection's. Auto gives the cell back to the selection."""
+        self._cell = self._zoom(self._cell, cell, shown) or self._cell
+        (r, c), painted = self._cell, self._painted(*self._cell)
+        conv = self._candidates(r, c, lambda pair: self._set_cell(r, c, pair))
+        if conv is None:
+            return
+        paper, ink = list(conv.palette.iter_idxs_pairs())[conv.best_attr_indexes[r, c]]
+        if paper == painted[1] >= 0 or ink == painted[0] >= 0:   # shown as painted: a painted colour keeps its role
+            paper, ink = ink, paper
+
+        def pick(i, button):
+            self._set_cell(r, c, (painted[0], i) if button == imgui.MouseButton_.left else (i, painted[1]))
+
+        name = lambda i: f'Colour {i}' if i >= 0 else "Transparent, the selection's colour"
+        palette_grid(conv.palette, pick, lambda i: f'{name(i)}: left click for the ink, right for the paper',
+                     role_marks(paper, ink), transparent=True)
+        imgui.begin_disabled(painted == (-1, -1))
+        if imgui.button('Auto'):
+            self._set_cell(r, c, None)
+        imgui.end_disabled()
+        imgui.set_item_tooltip('Give the cell back to Select pairs')
+
+    def _candidates(self, r: int, c: int, pick=None):
         """The inspector's table: the best pairs at block (r, c) by SelectionEnergy.cell_candidates, and the chosen
-        one (>) when it is not among them: selection stops after a sweep limit, a live snapshot mid-sweep."""
+        one (>) when it is not among them: selection stops after a sweep limit, a live snapshot mid-sweep. With pick,
+        a click on a row calls pick((paper, ink)). The Converter it shows, None when there is none."""
         conv = self._live()
         conv = conv if conv is not None else self.result
         labels = None if conv is None else conv.best_attr_indexes
         if labels is None or r >= labels.shape[0] or c >= labels.shape[1]:   # nothing selected, or another mode's
-            return
+            return None
         costs = conv.energy.cell_candidates(labels, r, c)
         total, chosen = costs.sum(1), labels[r, c]
         order = list(np.argsort(total)[:INSPECT_PAIRS])
@@ -469,7 +643,7 @@ class Window:
         idx = list(conv.palette.iter_idxs_pairs())
         imgui.text(f'Cell {c}, {r}: pair scores with the neighbours as they are')
         if not imgui.begin_table('pairs', 6, imgui.TableFlags_.row_bg.value | imgui.TableFlags_.sizing_fixed_fit.value):
-            return
+            return conv
         for name in ('', 'paper/ink', 'total', 'own', 'seams', 'coherence'):
             imgui.table_setup_column(name)
         imgui.table_headers_row()
@@ -477,7 +651,11 @@ class Window:
         for p in order:
             imgui.table_next_row()
             imgui.table_next_column()
-            imgui.text('>' if p == chosen else '')
+            if pick is None:
+                imgui.text('>' if p == chosen else '')
+            elif imgui.selectable(f"{'>' if p == chosen else ''}###pair{p}", bool(p == chosen),
+                                  imgui.SelectableFlags_.span_all_columns.value | imgui.SelectableFlags_.no_auto_close_popups.value)[0]:
+                pick(idx[p])
             imgui.table_next_column()
             for k, rgb in enumerate(conv.color_pairs[p]):
                 imgui.color_button(f'##{p}.{k}', imgui.ImVec4(*map(float, rgb), 1.0), imgui.ColorEditFlags_.no_tooltip.value, swatch)
@@ -487,6 +665,7 @@ class Window:
                 imgui.table_next_column()
                 imgui.text(f'{v:.4f}')
         imgui.end_table()
+        return conv
 
     def _menus(self) -> None:
         if imgui.begin_menu('File'):

@@ -242,6 +242,92 @@ def test_hover_inspector(ctx):
     ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x - 50, r.min.y - 50))
 
 
+def test_cell_popup(ctx):
+    """Right-click a cell: a row of the pair table paints it, a click in the zoom moves to a neighbour, a right click
+    on a swatch paints that one's paper, Auto gives it back."""
+    from imgui_bundle.imgui.test_engine import CaptureFlags_
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'a conversion to overpaint')
+    ui.view = 'Screen'
+    r = rect(ctx, '//Preview', '**/Screen')
+    ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x + 100, r.max.y + 100))
+    ctx.yield_(2)
+    ctx.mouse_click(1)
+    ctx.yield_(2)
+    row, col = ui._cell
+    labels = ui.result.best_attr_indexes
+    order = ui.result.energy.cell_candidates(labels, row, col).sum(1).argsort()
+    other = int(order[order != labels[row, col]][0])   # a listed pair not chosen
+    ctx.set_ref('//$FOCUSED')
+    pair = list(ui.result.palette.iter_idxs_pairs())[other]
+    ctx.item_click(f'**/###pair{other}')
+    ctx.yield_(2)
+    assert params("overpaint").overrides == ((row, col, *pair),), (params("overpaint"), row, col, pair)
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the overpainted conversion')
+    assert ui.result.best_attr_indexes[row, col] == other
+    ctx.capture_set_filename('/tmp/dizher_cell_popup.png')
+    ctx.capture_screenshot(CaptureFlags_.hide_mouse_cursor.value)
+    popup = ctx.get_window_by_ref('//$FOCUSED')
+    pad = imgui.get_style().window_padding
+    ctx.mouse_move_to_pos(imgui.ImVec2(popup.pos.x + pad.x + 5, popup.pos.y + pad.y + 5))   # the zoom's top-left cell
+    ctx.mouse_click(0)
+    ctx.yield_(2)
+    R, C = labels.shape
+    corner = max(0, min(row - 1, R - 3)), max(0, min(col - 1, C - 3))
+    assert ui._cell == corner, (ui._cell, corner)
+    ctx.set_ref(f'//{popup.name}')
+    ctx.item_click('##colour2', imgui.MouseButton_.right)
+    ctx.yield_(2)
+    assert (*corner, 2, -1) in params('overpaint').overrides, params('overpaint')
+    ctx.item_click('**/Auto')
+    ctx.yield_(2)
+    assert params("overpaint").overrides == ((row, col, *pair),), (params("overpaint"), row, col, pair)
+    ctx.key_press(imgui.Key.escape)
+    ctx.yield_(2)
+    reset('overpaint')
+    ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x - 50, r.min.y - 50))
+
+
+def test_paint(ctx):
+    """Paint mode: a left click on a swatch picks the ink, a right click the paper, either turns it on; a left drag over the preview
+    paints the cells it crosses, one undo step; a right drag gives them back; Esc ends it; Clear drops every cell."""
+    from imgui_bundle.imgui.test_engine import CaptureFlags_
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'a conversion to paint')
+    brush = ui.editors['overpaint']
+    ctx.set_ref('//Convert')
+    ctx.scroll_to_item('overpaint/Paint', imgui.internal.Axis.y)   # item_click's own scroll misses it by a pixel
+    ctx.item_click('overpaint/##colour2')   # picking a colour turns Paint on
+    ctx.item_click('overpaint/##colour5', imgui.MouseButton_.right)
+    ctx.yield_(2)
+    assert brush.on and (brush.ink, brush.paper) == (2, 5), vars(brush)
+    r = rect(ctx, '//Preview', '**/Screen')
+    a, b = imgui.ImVec2(r.min.x + 100, r.max.y + 100), imgui.ImVec2(r.min.x + 160, r.max.y + 100)
+    steps = len(ui.app.past)
+    for button, cells in ((0, lambda n: n >= 2), (1, lambda n: n == 0)):
+        ctx.mouse_move_to_pos(a)
+        ctx.mouse_down(button)
+        for t in range(1, 7):   # frame by frame: every cell on the way
+            ctx.mouse_move_to_pos(imgui.ImVec2(a.x + (b.x - a.x) * t / 6, a.y))
+        if button == 0:
+            ctx.capture_set_filename('/tmp/dizher_paint.png')
+            ctx.capture_screenshot(CaptureFlags_.none.value)
+        ctx.mouse_up(button)
+        ctx.yield_(2)
+        overrides = params('overpaint').overrides
+        assert cells(len(overrides)) and all(o[2:] == (5, 2) for o in overrides), overrides
+    assert len(ui.app.past) == steps + 2, 'a stroke is one undo step'
+    ctx.key_press(UNDO)
+    ctx.yield_(2)
+    assert len(params('overpaint').overrides) >= 2
+    ctx.key_press(imgui.Key.escape)
+    ctx.yield_(2)
+    assert not brush.on
+    ctx.set_ref('//Convert')
+    ctx.item_click('overpaint/Clear')
+    ctx.yield_(2)
+    assert params('overpaint').overrides == ()
+    ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x - 50, r.min.y - 50))
+
+
 def test_capture_layout(ctx):   # keep last: a picture of the default layout for review
     from imgui_bundle.imgui.test_engine import CaptureFlags_
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the conversion to settle')
@@ -267,6 +353,8 @@ TESTS = [
     ('ui', 'mode_switch_refits_previews', test_mode_switch_refits_previews),
     ('ui', 'custom_palette', test_custom_palette),
     ('ui', 'hover_inspector', test_hover_inspector),
+    ('ui', 'cell_popup', test_cell_popup),
+    ('ui', 'paint', test_paint),
     ('ui', 'capture_layout', test_capture_layout),
 ]
 

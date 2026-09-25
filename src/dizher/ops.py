@@ -1,10 +1,9 @@
 """Dizher's conversion stages as mokit ops, one graph node per stage in PIPELINE order.
 
 A node's mokit key covers its params and everything upstream, so an edit reruns only the stages after it:
-the structure weight reruns Optimise, coherence reruns from Select pairs, the halftoner, the eye model or the
-metric rerun
-from Prepare (the ~1 s candidate and selection-energy setup). Converter results are shallow copies sharing
-the upstream arrays, which no stage mutates.
+the structure weight reruns Optimise, a painted cell from Overpaint, coherence from Select pairs, the halftoner,
+the eye model or the metric from Prepare (the ~1 s candidate and selection-energy setup). Converter results are
+shallow copies sharing the upstream arrays, which no stage mutates.
 """
 from dataclasses import dataclass, replace
 from typing import Annotated
@@ -197,6 +196,36 @@ def select_pairs(prepared: Converter,
     return c
 
 
+def overpaint(selection: Converter,
+              overrides: Annotated[tuple[tuple[int, int, int, int], ...],
+                                   meta(help="cells painted by hand: (row, column, paper, ink), palette indexes, "
+                                             "-1 keeping the selection's colour")] = ()
+              ) -> Converter:
+    """Cells painted by hand over the selection (the UI's Paint mode and right-click popup); the neighbours keep their
+    pairs. A paper and ink the Target palette does not pair become the nearest pair it does, the painted colours
+    kept first: on the Spectrum a bright ink over a dim paper brightens the paper. A cell off the screen is skipped."""
+    if not overrides:
+        return selection
+    labels = selection.best_attr_indexes.copy()
+    pairs = np.array(list(selection.palette.iter_idxs_pairs()))   # (P, 2) paper, ink
+    rgb = selection.palette.as_float()
+    R, C = labels.shape
+    for r, c, *paint in overrides:
+        if r >= R or c >= C:
+            continue
+        want = [p if p >= 0 else a for p, a in zip(paint, pairs[labels[r, c]])]
+        weight = [PAINTED if p >= 0 else 1 for p in paint]
+        far = lambda i, j: sum(w * np.linalg.norm(rgb[pairs[:, k]] - rgb[x], axis=-1)
+                               for k, x, w in zip((i, j), want, weight))
+        labels[r, c] = np.minimum(far(0, 1), far(1, 0)).argmin()   # a pair is unordered: paper may be the brighter
+    painted = selection.copy()
+    painted.set_labels(labels)
+    return painted
+
+
+PAINTED = 1e3   # a painted colour's distance against a kept one's: the nearest pair keeps the painted colours first
+
+
 def halftone(selection: Converter, progress=None) -> Converter:
     """Each pixel quantised to its cell's paper or ink by the Halftoner: the start of the optimiser, or the result
     when it is off."""
@@ -237,7 +266,8 @@ CONVERT = (   # the right column's
     ('halftoner', 'Halftoner', 'dizher.ops:halftoner', ()),
     ('prepare', 'Prepare', 'dizher.ops:prepare', ('detail', 'target', 'metric', 'eye', 'halftoner')),
     ('select', 'Select pairs', 'dizher.ops:select_pairs', ('prepare',)),
-    ('halftone', 'Halftone', 'dizher.ops:halftone', ('select',)),
+    ('overpaint', 'Overpaint', 'dizher.ops:overpaint', ('select',)),
+    ('halftone', 'Halftone', 'dizher.ops:halftone', ('overpaint',)),
     ('optimise', 'Optimise', 'dizher.ops:optimise', ('halftone',)),
 )
 PIPELINE = TUNE + CONVERT

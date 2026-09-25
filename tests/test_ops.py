@@ -57,21 +57,46 @@ def settle(host):
         host.job.future.exception()
 
 
+def test_overpaint():
+    """Painted cells take their colours, in either order, and only they change; -1 keeps the selection's colour; a
+    pair the Spectrum cannot show becomes the nearest it can, the painted colour kept; a cell off the screen is
+    skipped; the cells survive a project round trip."""
+    from mokit import project
+    memo = Memo()
+    graph = pipeline()
+    selected = evaluate(graph, 'select', memo).best_attr_indexes
+    pairs = list(evaluate(graph, 'select', memo).palette.iter_idxs_pairs())
+    dim = next((r, c) for r, c in np.ndindex(selected.shape) if r > 5 and pairs[selected[r, c]][1] < 8)   # a dim pair, not one above
+    cells = ((0, 0, 7, 1), (3, 5, -1, 14), (*dim, -1, 10), (99, 0, 0, 7))   # 10 is bright red
+    graph = graph.with_params('overpaint', replace(graph['overpaint'].params, overrides=cells))
+    painted = evaluate(graph, 'overpaint', memo).best_attr_indexes
+    assert set(pairs[painted[0, 0]]) == {1, 7}
+    assert set(pairs[painted[3, 5]]) == {pairs[selected[3, 5]][0] | 8, 14}   # the kept paper, bright as the ink
+    assert set(pairs[painted[dim]]) == {pairs[selected[dim]][0] + 8, 10}      # its paper brightened
+    changed = painted != selected
+    changed[0, 0] = changed[3, 5] = changed[dim] = False
+    assert not changed.any()
+    assert evaluate(graph, 'select', memo).best_attr_indexes is selected   # upstream untouched
+    with tempfile.TemporaryDirectory() as tmp:
+        project.create_project(Path(tmp) / 'p', graph)
+        assert project.load_project(Path(tmp) / 'p').graph['overpaint'].params.overrides == cells
+
+
 def test_host_reruns_only_downstream_of_an_edit():
     from dizher.ui.app import Pipeline
     host = Pipeline()
     host.open(IMAGE)
     host.set_params('halftoner', replace(host.graph['halftoner'].params, halftoner=Ordered.label))
     host.set_params('optimise', replace(host.graph['optimise'].params, enabled=False))
-    assert settle(host)[-4:] == ['prepare', 'select', 'halftone', 'optimise'] and not host.errors
+    assert settle(host)[-5:] == ['prepare', 'select', 'overpaint', 'halftone', 'optimise'] and not host.errors
     host.set_params('optimise', replace(host.graph['optimise'].params, structure=0.2))
     assert settle(host) == ['optimise']
     host.set_params('select', replace(host.graph['select'].params, coherence=1.0))
-    assert settle(host) == ['select', 'halftone', 'optimise']
+    assert settle(host) == ['select', 'overpaint', 'halftone', 'optimise']
     before = host.result('detail')
     host.set_params('contrast', replace(host.graph['contrast'].params, contrast=30.0))
     assert host.result('detail') is None and host.shown('detail') is before   # the old picture stays up meanwhile
-    assert settle(host) == ['contrast', 'color', 'detail', 'prepare', 'select', 'halftone', 'optimise']
+    assert settle(host) == ['contrast', 'color', 'detail', 'prepare', 'select', 'overpaint', 'halftone', 'optimise']
     assert host.shown('detail') is host.result('detail') is not before
     host.set_params('target', replace(host.graph['target'].params, mode='C64 hires', colours=(16,)))
     settle(host)
@@ -245,6 +270,7 @@ if __name__ == '__main__':
     test_tone_semantics()
     test_pipeline_converts_and_reuses_upstream()
     test_pipeline_matches_single_converter()
+    test_overpaint()
     test_host_reruns_only_downstream_of_an_edit()
     test_host_discards_stale_completions()
     test_project_round_trip_and_restore()

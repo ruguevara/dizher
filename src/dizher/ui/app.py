@@ -152,7 +152,10 @@ class Pipeline:
     def shown(self, node_id: str):
         """The current result, else the last finished one: what to display while the node recomputes."""
         value = self.result(node_id)
-        return self._latest.get(node_id) if value is None else value
+        if value is None:
+            return self._latest.get(node_id)
+        self._latest[node_id] = value   # a memo hit finishes no job: without this an edit would show an older result
+        return value
 
     def status(self, node_id: str) -> str:
         if self.job is not None and self.job.node_id == node_id:
