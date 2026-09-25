@@ -10,7 +10,7 @@ from mokit.graph import Memo, evaluate
 from dizher import ops
 from dizher.converter.dither import Ordered
 
-IMAGE = Path(__file__).parent / 'images' / 'lena.png'
+IMAGE = Path(__file__).parent / 'images' / 'goldhill-256.png'
 
 
 def pipeline(**optimise):
@@ -196,7 +196,7 @@ def test_project_round_trip_and_restore():
     from mokit.graph import Node
     from dizher.ui.app import Pipeline
     host = Pipeline()
-    image = Path(__file__).parent / 'images' / 'lena.png'
+    image = Path(__file__).parent / 'images' / 'goldhill-256.png'
     host.open(image)
     host.set_params('contrast', replace(host.graph['contrast'].params, contrast=25.0))
     with tempfile.TemporaryDirectory() as tmp:
@@ -241,7 +241,7 @@ def test_undo_redo():
         host.undo()
     assert host.graph == start and not host.past
     host.redo()
-    host.open(Path(__file__).parent / 'images' / 'lena.png')   # a new document has no history
+    host.open(Path(__file__).parent / 'images' / 'goldhill-256.png')   # a new document has no history
     assert not host.past and not host.future
     host.close()
 

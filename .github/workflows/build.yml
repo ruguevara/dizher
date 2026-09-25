@@ -4,9 +4,9 @@ on:
   push:
     branches: [main]
     tags: ['v*']
-    paths-ignore: ['**.md', 'notebooks/**', 'papers/**']
+    paths-ignore: ['**.md', 'notebooks/**']
   pull_request:
-    paths-ignore: ['**.md', 'notebooks/**', 'papers/**']
+    paths-ignore: ['**.md', 'notebooks/**']
   workflow_dispatch:
 
 concurrency:   # a newer push to the same ref cancels the running build
