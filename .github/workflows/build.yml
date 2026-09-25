@@ -1,0 +1,81 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+    paths-ignore: ['**.md', 'notebooks/**', 'papers/**']
+  pull_request:
+    paths-ignore: ['**.md', 'notebooks/**', 'papers/**']
+  workflow_dispatch:
+
+concurrency:   # a newer push to the same ref cancels the running build
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: macos-15, name: macos-arm64}
+          - {os: macos-15-intel, name: macos-x86_64}
+          - {os: windows-latest, name: windows-x64}
+          - {os: ubuntu-22.04, name: linux-x64}   # the older glibc runs on more distros
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Access to the private mokit repo
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.MOKIT_DEPLOY_KEY }}
+      - run: git config --global url."git@github.com:ruguevara/".insteadOf "https://github.com/ruguevara/"
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.13'
+          activate-environment: true
+          enable-cache: true
+          cache-dependency-glob: setup.cfg
+
+      - run: uv pip install -e . pyinstaller
+      - run: ./packaging/build.sh
+
+      - name: Archive
+        run: |
+          out="Dizher-${{ matrix.name }}"
+          case "$RUNNER_OS" in
+            macOS)   ditto -c -k --keepParent dist/Dizher.app "$out.zip" ;;   # keeps the bundle's symlinks
+            Windows) (cd dist && 7z a -bd "../$out.zip" Dizher) ;;
+            Linux)   tar -C dist -czf "$out.tar.gz" Dizher ;;
+          esac
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Dizher-${{ matrix.name }}
+          path: Dizher-${{ matrix.name }}.*
+          compression-level: 0   # already compressed
+          retention-days: 14
+
+  release:   # a v* tag publishes the four archives as a GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          merge-multiple: true
+      - run: gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --generate-notes Dizher-*
+        env:
+          GH_TOKEN: ${{ github.token }}
