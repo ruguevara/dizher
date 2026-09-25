@@ -189,16 +189,17 @@ Done:
 * [x] Save as SCR and PNG
 * [x] Projects: a folder with `project.json` (every stage's params, the image path relative to the folder; mokit's format, as AmaZX), exports default to its `build/`; the last session, unsaved edits included, comes back on start. Every image has one, the Lightroom way: File → Open image opens the project folder beside it named as the image, or starts one there; autosave (File menu, on by default) writes it after every edit; off, opening another image over unsaved edits asks to save them; File → Open recent lists the last 20 images
 * [x] Undo/Redo (Edit menu, Cmd+Z / Shift+Cmd+Z): a slider drag is one step; opening an image starts the history over. History panel: every step, the newest on top, named by the params it changed, a click goes back or forward to it
+* [x] Overpaint attrs, bright
 
 Planned:
 
-* [ ] Overpaint attrs, bright
+* [ ] Fix middle column width, make it width of display preview + padding
+* [ ] About dialog
 * [ ] Starred/named selected shaphots panel to compare between and choose from
-* [ ] Global presets of selected stages
+* [ ] Global presets of selected stages/params
+* [ ] Standalone binary package with PyInstaller for macOS, Windows, Linux
 * [ ] Curves (tone curve editor; subsumes Contrast)
 * [ ] Levels per channel (R, G, B) like Photoshop's channel menu
 * [ ] Custom ZX Spectrum palettes (ZX Spectrum Next or another hardware enhanceds)
 * [ ] ZX Spectrum MultiColor, GigaScreen and MultiGigaScreen software mode
 * [ ] Commodore 64 LowRes 160x200 mode with 4 colors per character block
-* [ ] Standalone binary package with PyInstaller for macOS, Windows, Linux
-* [ ] Ability to save and load conversion projects with an image, settings and overpaint layers
