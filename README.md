@@ -222,8 +222,6 @@ Critical:
 * [ ] App icon
 * [ ] .dmg for macOS
 * [ ] Fix the middle column's width: the width of the preview plus padding
-* [ ] Versioning
-* [ ] About dialog with GitHub and web links, greetings, and automatic version bumping
 
 ### Beta
 
