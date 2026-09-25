@@ -16,13 +16,12 @@ PEPTO = [
 class C64Palette(Palette):
     # 0 black, 1 white, 11 dark grey, 12 grey, 15 light grey
     SUBSETS = {
-        'All colours': lambda i1, i2: True,
-        'Grayscale': lambda i1, i2: {i1, i2} <= {0, 11, 12, 15, 1},
-        'Mono': lambda i1, i2: {i1, i2} <= {0, 1},
+        'Grayscale': frozenset({0, 11, 12, 15, 1}),
+        'Mono': frozenset({0, 1}),
     }
 
-    def __init__(self, subset='All colours'):
-        super().__init__(PEPTO, subset)
+    def __init__(self):
+        super().__init__(PEPTO)
 
 
 def to_art(bitmap: np.ndarray, idx_pairs: np.ndarray) -> bytes:

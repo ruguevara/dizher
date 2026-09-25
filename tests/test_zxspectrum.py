@@ -10,7 +10,7 @@ def test_palette():
     assert (p[15] == 255).all() and (p[7] == 205).all()
     pairs = list(p.iter_idxs_pairs())
     assert len(pairs) == 72 and all((i1 >= 8) == (i2 >= 8) for i1, i2 in pairs)
-    assert len(list(p.with_subset('Mono').iter_idxs_pairs())) == 3 and p.subset == 'All colours'
+    assert len(list(p.with_subset('Mono').iter_idxs_pairs())) == 3 and p.enabled == set(range(16))
 
 
 def test_mode():

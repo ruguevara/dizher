@@ -203,6 +203,31 @@ def test_mode_switch_refits_previews(ctx):
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the Spectrum conversion again')
 
 
+def pick(ctx, combo, item):
+    """combo_click wants a popup it does not find behind widgets.combo: open it, click the item in the popup."""
+    ctx.item_click(combo)
+    ctx.yield_(2)
+    ctx.item_click(f'//##Combo_00/{item}')
+
+
+def test_custom_palette(ctx):
+    """A toggled colour makes the palette Custom; a named subset turns its colours on and carries over a mode switch."""
+    from dizher import ops
+    ctx.set_ref('//Convert')
+    ctx.item_click('target/##colour1')
+    ctx.yield_(2)
+    assert params('target').colours == (0, *range(2, 16))
+    assert ops.MODES[params('target').mode].palette.subset_name(params('target').colours) == 'Custom'
+    pick(ctx, 'target/palette', 'Grayscale')
+    ctx.yield_(2)
+    assert params('target').colours == (0, 7, 8, 15), params('target')
+    pick(ctx, 'target/mode', ops.c64.HIRES.name)
+    ctx.yield_(2)
+    assert params('target') == replace(params('target'), mode=ops.c64.HIRES.name, colours=(0, 1, 11, 12, 15)), params('target')
+    reset('target')
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the Spectrum conversion again')
+
+
 def test_hover_inspector(ctx):
     from imgui_bundle.imgui.test_engine import CaptureFlags_
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'a conversion to inspect')
@@ -240,6 +265,7 @@ TESTS = [
     ('ui', 'block_reset', test_block_reset),
     ('ui', 'views_and_grid', test_views_and_grid),
     ('ui', 'mode_switch_refits_previews', test_mode_switch_refits_previews),
+    ('ui', 'custom_palette', test_custom_palette),
     ('ui', 'hover_inspector', test_hover_inspector),
     ('ui', 'capture_layout', test_capture_layout),
 ]

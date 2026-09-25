@@ -184,7 +184,7 @@ Done:
 * [x] Adjustable metric weights (luma, chroma, coherence) and eye-model parameters
 * [x] Selectable dithering methods
 * [x] Tune stages: framing (fill or fit, scale, rotation, pixel shift and per-edge nudges onto the cell grid), exposure and white balance (temperature, tint), Photoshop-style Levels with Auto and histogram, local tone (local contrast, shadows, highlights and clarity on an edge-preserving base layer), contrast, vibrance and saturation, texture and sharpen (unsharp mask at the screen's size)
-* [x] Palette subsets: bright only, not bright only, grayscale, black and white
+* [x] Palette subsets: bright only, not bright only, grayscale, black and white; a custom one, any colours toggled on or off
 * [x] Python installation package
 * [x] Save as SCR and PNG
 * [x] Projects: a folder with `project.json` (every stage's params, the image path relative to the folder; mokit's format, as AmaZX), exports default to its `build/`; the last session, unsaved edits included, comes back on start. Every image has one, the Lightroom way: File → Open image opens the project folder beside it named as the image, or starts one there; autosave (File menu, on by default) writes it after every edit; off, opening another image over unsaved edits asks to save them; File → Open recent lists the last 20 images
@@ -192,11 +192,11 @@ Done:
 
 Planned:
 
+* [ ] Overpaint attrs, bright
 * [ ] Starred/named selected shaphots panel to compare between and choose from
 * [ ] Global presets of selected stages
 * [ ] Curves (tone curve editor; subsumes Contrast)
 * [ ] Levels per channel (R, G, B) like Photoshop's channel menu
-* [ ] Overpaint attrs, bright
 * [ ] Custom ZX Spectrum palettes (ZX Spectrum Next or another hardware enhanceds)
 * [ ] ZX Spectrum MultiColor, GigaScreen and MultiGigaScreen software mode
 * [ ] Commodore 64 LowRes 160x200 mode with 4 colors per character block

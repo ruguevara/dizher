@@ -40,7 +40,7 @@ def test_equal_luminance_colour_edge():
 
 def test_selection_matches_full_convolution():
     rng = np.random.default_rng(4)
-    mode = Mode('small', (24, 32), (8, 8), ZXPalette(subset='Mono'))
+    mode = Mode('small', (24, 32), (8, 8), ZXPalette().with_subset('Mono'))
     converter = Converter({'Luma': 0.7, 'Chroma': 0.9}, mode, coherence=0,
                           luma_noise=0.13, chroma_noise=0.07)
     for alpha, scale in ((2.0, 1.4), (0.5, 8.0)):
@@ -101,7 +101,7 @@ def test_dbs_lowers_complete_colour_objective():
 
 
 def test_halftone_target_is_reachable():
-    mode = Mode('two cells', (8, 16), (8, 8), ZXPalette(subset='Mono'))
+    mode = Mode('two cells', (8, 16), (8, 8), ZXPalette().with_subset('Mono'))
     converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, mode)
     image = np.full((*mode.size, 3), (0.5, 0.2, 0.2), dtype=np.float32)   # red: off the black-white segment
     image[:, 8:] = (0.2, 0.2, 0.5)

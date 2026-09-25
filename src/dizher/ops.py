@@ -28,7 +28,6 @@ from . import tone
 from .progress import reporting
 
 MODES = {m.name: m for m in (zxspectrum.STANDARD, c64.HIRES)}
-SUBSETS = tuple(dict.fromkeys(s for m in MODES.values() for s in m.palette.SUBSETS))
 HALFTONERS = {cls.label: cls for cls in (Stohastic, Ordered, ErrorDiffusion)}
 
 
@@ -47,12 +46,14 @@ class Eye:
 
 
 def target(mode: Annotated[str, meta(choices=tuple(MODES))] = zxspectrum.STANDARD.name,
-           palette: Annotated[str, meta(choices=SUBSETS)] = 'All colours') -> Mode:
-    """Screen mode, its palette narrowed to the pairs a cell may use."""
+           colours: Annotated[tuple[int, ...], meta(help="palette indexes a cell may pair")] = tuple(range(16))) -> Mode:
+    """Screen mode, its palette narrowed to the colours a cell may use; the UI draws it with TargetEditor."""
     m = MODES[mode]
-    if palette not in m.palette.SUBSETS:
-        raise ValueError(f"{mode} has no palette subset {palette!r}")
-    return replace(m, palette=m.palette.with_subset(palette))
+    if not colours:
+        raise ValueError("no colours enabled")
+    if not set(colours) <= set(range(len(m.palette))):
+        raise ValueError(f"{mode} has {len(m.palette)} colours, not {max(colours) + 1}")
+    return replace(m, palette=m.palette.with_colours(colours))
 
 
 PX = meta(min=-512, max=512, step=1)

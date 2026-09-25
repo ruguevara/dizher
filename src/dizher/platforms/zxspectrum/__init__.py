@@ -10,19 +10,18 @@ from .scr import to_scr
 class ZXPalette(Palette):
     # Indexes 0..7 not bright, 8..15 bright, 7/15 white, 0/8 black.
     SUBSETS = {
-        'All colours': lambda i1, i2: True,
-        'Bright only': lambda i1, i2: i1 >= 8,
-        'Not bright only': lambda i1, i2: i1 < 8,
-        'Grayscale': lambda i1, i2: {i1, i2} <= {0, 7, 8, 15},  # black, gray (not-bright white), white
-        'Mono': lambda i1, i2: (i1, i2) in ((8, 8), (8, 15), (15, 15)),  # black and bright white
+        'Bright only': frozenset(range(8, 16)),
+        'Not bright only': frozenset(range(8)),
+        'Grayscale': frozenset({0, 7, 8, 15}),  # the blacks, gray (not-bright white), white
+        'Mono': frozenset({8, 15}),  # black and bright white
     }
 
-    def __init__(self, not_bright_level=205, bright_level=255, subset='All colours'):
+    def __init__(self, not_bright_level=205, bright_level=255):
         # index bits: 0 blue, 1 red, 2 green; 3 bright
         i = np.arange(16)
         rgb = np.stack([(i >> 1) & 1, (i >> 2) & 1, i & 1], axis=-1)
         level = np.where(i >= 8, bright_level, not_bright_level)[:, None]
-        super().__init__(rgb * level, subset)
+        super().__init__(rgb * level)
 
     def iter_idxs_pairs(self):
         """Both colours of a cell share the bright bit."""

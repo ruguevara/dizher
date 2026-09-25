@@ -73,9 +73,9 @@ def test_host_reruns_only_downstream_of_an_edit():
     assert host.result('detail') is None and host.shown('detail') is before   # the old picture stays up meanwhile
     assert settle(host) == ['contrast', 'color', 'detail', 'prepare', 'select', 'halftone', 'optimise']
     assert host.shown('detail') is host.result('detail') is not before
-    host.set_params('target', replace(host.graph['target'].params, mode='C64 hires', palette='Bright only'))
+    host.set_params('target', replace(host.graph['target'].params, mode='C64 hires', colours=(16,)))
     settle(host)
-    assert 'target' in host.errors                   # C64 has no bright subset: an error on its block
+    assert 'target' in host.errors                   # C64 has no colour 16: an error on its block
     host.open(IMAGE.with_name('david.png'))          # another image is a new document
     assert host.shown('detail') is None and host.shown('optimise') is None and not host.errors   # nothing left on screen
     host.close()

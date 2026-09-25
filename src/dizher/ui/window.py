@@ -120,6 +120,39 @@ class HalftoneEditor:
         params_editor(view(**{n: getattr(params, n) for n in names}),
                       lambda v: on_change(replace(params, **asdict(v))), id=id, help='tooltip')
 
+
+class TargetEditor:
+    """The mode, and its palette: a combo of the named subsets over the colours, 2 rows of 8 toggles, on ticked; a set
+    no subset names shows as Custom. A mode switch carries a named subset over by name, else turns every colour on."""
+
+    def draw(self, params, picture, on_change, id: str) -> None:
+        palette = ops.MODES[params.mode].palette
+        name = palette.subset_name(params.colours)
+        def mode(m):
+            subsets = ops.MODES[m].palette.subsets
+            on_change(replace(params, mode=m, colours=tuple(sorted(subsets.get(name, subsets['All colours'])))))
+        imgui.push_id(id)
+        widgets.combo('mode', params.mode, list(ops.MODES), mode)
+        widgets.combo('palette', name, list(palette.subsets),
+                      lambda n: on_change(replace(params, colours=tuple(sorted(palette.subsets[n])))))
+        side = min(1.5 * imgui.get_text_line_height(), imgui.get_content_region_avail().x / 8)   # a row of 8 fits a narrow dock
+        size = imgui.ImVec2(side, side)
+        imgui.push_style_var(imgui.StyleVar_.item_spacing, imgui.ImVec2(0, 0))   # cells edge to edge
+        for i, rgb in enumerate(palette.as_float()):
+            if i % 8:
+                imgui.same_line()
+            on = i in params.colours
+            if imgui.color_button(f'##colour{i}', imgui.ImVec4(*map(float, rgb), 1.0), imgui.ColorEditFlags_.no_tooltip.value, size):
+                on_change(replace(params, colours=tuple(sorted(set(params.colours) ^ {i}))))
+            imgui.set_item_tooltip(f"Colour {i}, {'on' if on else 'off'}: a click turns it {'off' if on else 'on'}")
+            if on:   # imgui's checkbox tick, black on light colours, white on dark
+                pad, lo = side / 5, imgui.get_item_rect_min()
+                tick = imgui.IM_COL32(*(3 * (0 if rgb @ (0.299, 0.587, 0.114) > 0.5 else 255,)), 255)
+                imgui.internal.render_check_mark(imgui.get_window_draw_list(), imgui.ImVec2(lo.x + pad, lo.y + pad), tick, side - 2 * pad)
+        imgui.pop_style_var()
+        imgui.pop_id()
+
+
 class Window:
     def __init__(self, path=None) -> None:
         self.app = Pipeline()
@@ -134,7 +167,7 @@ class Window:
             self._open_image(path)
         self.images = {}       # immvision params per preview
         self.expanded = {}     # node id -> block open; imgui keeps no header state in its ini
-        self.editors = {'levels': LevelsEditor(), 'halftoner': HalftoneEditor()}   # node id -> custom params editor
+        self.editors = {'levels': LevelsEditor(), 'halftoner': HalftoneEditor(), 'target': TargetEditor()}   # node id -> custom params editor
         self.view, self.grid = 'Screen', False     # the conversion's view and the cell grid; not persisted
         self._debug = {}       # image key -> (the Converter it came from, the image)
         self._steps = 0        # history length last frame: the History list follows a new step
