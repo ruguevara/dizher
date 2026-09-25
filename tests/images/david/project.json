@@ -12,10 +12,10 @@
       "op": "dizher.ops:framing",
       "params": {
         "fit": "Fit",
-        "scale": 1.0,
+        "scale": 0.5199999809265137,
         "rotation": 0.0,
-        "shift_x": 0,
-        "shift_y": 0,
+        "shift_x": -1,
+        "shift_y": -4,
         "left": 0,
         "top": 0,
         "right": 0,
@@ -53,9 +53,9 @@
     "local": {
       "op": "dizher.ops:local_tone",
       "params": {
-        "local_contrast": 0.0,
-        "shadows": 0.0,
-        "highlights": 0.0,
+        "local_contrast": -22.099000930786133,
+        "shadows": -69.06099700927734,
+        "highlights": 48.34299850463867,
         "clarity": 0.0
       },
       "inputs": [
@@ -84,9 +84,9 @@
     "detail": {
       "op": "dizher.ops:detail",
       "params": {
-        "texture": 0.0,
-        "sharpen": 0.0,
-        "radius": 1.0
+        "texture": 100.0,
+        "sharpen": 151.2429962158203,
+        "radius": 0.7390000224113464
       },
       "inputs": [
         "color"
@@ -95,23 +95,9 @@
     "target": {
       "op": "dizher.ops:target",
       "params": {
-        "mode": "C64 hires",
+        "mode": "ZX Spectrum standard",
         "colours": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7,
           8,
-          9,
-          10,
-          11,
-          12,
-          13,
-          14,
           15
         ]
       },
@@ -120,8 +106,8 @@
     "metric": {
       "op": "dizher.ops:metric",
       "params": {
-        "chroma": 0.0,
-        "flare": 1.0
+        "chroma": 1.0,
+        "flare": 0.1
       },
       "inputs": []
     },
@@ -138,7 +124,7 @@
     "halftoner": {
       "op": "dizher.ops:halftoner",
       "params": {
-        "halftoner": "Ordered",
+        "halftoner": "Stohastic",
         "matrix": "Void dispersed dots",
         "kernel": "Shiau-Fan 3",
         "noise_x": 0,
@@ -172,14 +158,7 @@
     "overpaint": {
       "op": "dizher.ops:overpaint",
       "params": {
-        "overrides": [
-          [
-            12,
-            21,
-            9,
-            5
-          ]
-        ]
+        "overrides": []
       },
       "inputs": [
         "select"
@@ -195,7 +174,7 @@
     "optimise": {
       "op": "dizher.ops:optimise",
       "params": {
-        "enabled": false,
+        "enabled": true,
         "structure": 0.007000000216066837
       },
       "inputs": [
