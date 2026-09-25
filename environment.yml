@@ -11,4 +11,5 @@ dependencies:
   - py-opencv
   - pip
   - pip:
-    - -e ./mokit[ui,media]
+    - pillow
+    - imgui-bundle>=1.92.900

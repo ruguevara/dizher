@@ -4,4 +4,5 @@ scipy
 scikit-image
 opencv-python
 imageio
--e ./mokit[ui,media]
+pillow
+imgui-bundle>=1.92.900
