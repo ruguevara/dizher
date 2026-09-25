@@ -823,9 +823,9 @@ class Window:
         line('while working on this project all these years since 2020.')
         line()
         line('Greets to:')
-        line('sq, bfox, Grongy, Dalthon, Jammer, Vasyl, e!ghtbm, Gazela,')
-        line('Wbcbz7, Kowalski, Volutar, Tmk, True-grue,')
-        line('and all retroscene pixel artists and demosceners!')
+        line('sq, bfox, Nodeus, Grongy, Dalthon, Pator, Jammer, Primek,')
+        line('Vasyl, e!ghtbm, Gazela, Wbcbz7, Kowalski, Volutar, Tmk,')
+        line('and all retroscene artists and demosceners!')
         line()
         copyright, site = f'© 2021–{build.built[:4] or time.strftime("%Y")} Ru Grantez', 'pixelmatter.org'
         gap = imgui.get_style().item_spacing.x
@@ -868,8 +868,14 @@ class Window:
             folder = self.project / 'build'
             folder.mkdir(exist_ok=True)
         path = save_dialog('Save conversion', str(folder), (source.stem if source else 'conversion') + ext)
-        if path:
+        if not path:
+            return
+        if sys.platform == 'win32':   # past MAX_PATH (260) only with the \\?\ prefix; the project's build folder doubles the image's name
+            path = '\\\\?\\' + str(Path(path).resolve())
+        try:
             self.result.save(path)
+        except (OSError, AssertionError) as e:
+            self.app.errors['save'] = f'cannot save {path}: {e}'
 
     def _open_project(self, folder) -> None:
         try:

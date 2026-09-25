@@ -1,4 +1,5 @@
 """Run: python tests/test_zxspectrum.py (or pytest)."""
+import cv2
 import numpy as np
 
 from dizher.platforms.zxspectrum import ZXPalette, STANDARD
@@ -41,6 +42,19 @@ def test_c64_art():
     assert len(data) == 9009 and data[:2] == b'\x00\x20'
     assert data[2 + (40 + 1) * 8] == 0x80 and sum(data[2:8002]) == 0x80
     assert data[8002 + 41] == 0xE6
+
+
+def test_save_long_unicode_name(tmp_path):
+    from dizher.converter.converter import Converter
+    from dizher.converter.dither import Stohastic
+    converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, STANDARD)
+    converter.set_image(np.random.default_rng(0).random((*STANDARD.size, 3), dtype=np.float32))
+    converter.dither(Stohastic())
+    stem = 'очень длинное имя ' * 10
+    for ext, size in (('.scr', 6912), ('.png', None)):
+        converter.save(str(tmp_path / (stem + ext)))
+        assert size is None or (tmp_path / (stem + ext)).stat().st_size == size
+    assert cv2.imread(str(tmp_path / (stem + '.png'))).shape[:2] == STANDARD.size
 
 
 if __name__ == '__main__':

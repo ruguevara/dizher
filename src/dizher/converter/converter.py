@@ -1,4 +1,5 @@
 import copy
+from pathlib import Path
 from typing import Dict
 
 import numpy as np
@@ -221,10 +222,12 @@ class Converter:
         assert self.dithered_result is not None, "Nothing converted yet"
         if self.mode.file_type and filename.lower().endswith(self.mode.file_type[1].lstrip('*')):
             idx_pairs = np.array(list(self.palette.iter_idxs_pairs()))[self.best_attr_indexes]
-            with open(filename, 'wb') as f:
-                f.write(self.mode.encode(self.dithered_bitmap > 0.5, idx_pairs))
-        else:
-            assert cv2.imwrite(filename, convert_color((self.dithered_result * 255).round().astype(np.uint8), 'RGB', 'BGR')), filename
+            data = self.mode.encode(self.dithered_bitmap > 0.5, idx_pairs)
+        else:   # imencode and Python's open, as cv2.imwrite takes neither non-ASCII nor \\?\ long paths on Windows
+            ok, data = cv2.imencode(Path(filename).suffix, convert_color((self.dithered_result * 255).round().astype(np.uint8), 'RGB', 'BGR'))
+            assert ok, filename
+        with open(filename, 'wb') as f:
+            f.write(bytes(data))
 
     def dither(self, ditherer: Ditherer, optimise: bool = False) -> np.ndarray:
         """Pair selection (once per image), the halftoner and optionally DBS from its result, in one call for

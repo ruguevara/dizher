@@ -280,8 +280,9 @@ years since 2020.
 
 ## Greetings
 
-To sq, bfox, Grongy, Dalthon, Jammer, Vasyl, e!ghtbm, Gazela,
-Wbcbz7, Kowalski, Volutar, Tmk, True-grue, and all retroscene pixel artists and demosceners.
+To sq, bfox, Nodeus, Grongy, Dalthon, Pator, Jammer, Primek,
+Vasyl, e!ghtbm, Gazela, Wbcbz7, Kowalski, Volutar, Tmk,
+and all retroscene artists and demosceners.
 
 ## License
 
