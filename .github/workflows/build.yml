@@ -71,6 +71,8 @@ jobs:
       - uses: actions/download-artifact@v5
         with:
           merge-multiple: true
-      - run: gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --generate-notes Dizher-*
+      - run: |   # v0.2.1-alpha and the like are pre-releases
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --generate-notes \
+            $([[ "$GITHUB_REF_NAME" == *-* ]] && echo --prerelease) Dizher-*
         env:
           GH_TOKEN: ${{ github.token }}
