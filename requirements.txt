@@ -4,4 +4,4 @@ scipy
 scikit-image
 opencv-python
 imageio
-mokit[ui,media] @ git+https://github.com/ruguevara/mokit
+-e ./mokit[ui,media]

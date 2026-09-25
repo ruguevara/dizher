@@ -11,4 +11,4 @@ dependencies:
   - py-opencv
   - pip
   - pip:
-    - "mokit[ui,media] @ git+https://github.com/ruguevara/mokit"
+    - -e ./mokit[ui,media]

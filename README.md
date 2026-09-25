@@ -163,12 +163,13 @@ its own look or to compare; the Unoptimised view shows the start under the optim
 
 ## Installation
 
-Requires Python 3.10+. From the repository root:
+Requires Python 3.11+. mokit is a submodule: clone with `--recursive`, or run
+`git submodule update --init` in a clone. From the repository root:
 
     python3.13 -m venv .venv
     source .venv/bin/activate
     pip install --upgrade pip
-    pip install -e .
+    pip install -e ./mokit[ui,media] -e .
 
 Run the GUI (imgui_bundle; the pipeline stages are mokit nodes):
 

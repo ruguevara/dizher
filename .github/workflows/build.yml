@@ -34,20 +34,24 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Access to the private mokit repo
+      - name: Access to the private mokit submodule
         uses: webfactory/ssh-agent@v0.9.1
         with:
           ssh-private-key: ${{ secrets.MOKIT_DEPLOY_KEY }}
-      - run: git config --global url."git@github.com:ruguevara/".insteadOf "https://github.com/ruguevara/"
+      - run: |
+          git config --global url."git@github.com:ruguevara/".insteadOf "https://github.com/ruguevara/"
+          git submodule update --init --depth 1
 
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: '3.13'
           activate-environment: true
           enable-cache: true
-          cache-dependency-glob: setup.cfg
+          cache-dependency-glob: |
+            setup.cfg
+            mokit/pyproject.toml
 
-      - run: uv pip install -e . pyinstaller
+      - run: uv pip install -e './mokit[ui,media]' -e . pyinstaller
       - run: ./packaging/build.sh
 
       - name: Archive
