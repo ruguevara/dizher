@@ -4,17 +4,17 @@
     "source": {
       "op": "mokit.ops:load_media",
       "params": {
-        "path": "../rocket-rackoon.png"
+        "path": "../david.png"
       },
       "inputs": []
     },
     "framing": {
       "op": "dizher.ops:framing",
       "params": {
-        "fit": "Fill",
+        "fit": "Fit",
         "scale": 1.0,
         "rotation": 0.0,
-        "shift_x": 5,
+        "shift_x": 0,
         "shift_y": 0,
         "left": 0,
         "top": 0,
@@ -41,7 +41,7 @@
       "op": "dizher.ops:levels",
       "params": {
         "in_black": 0,
-        "in_white": 239,
+        "in_white": 214,
         "gamma": 1.0,
         "out_black": 0,
         "out_white": 255
@@ -81,43 +81,47 @@
         "contrast"
       ]
     },
-    "snap": {
-      "op": "dizher.ops:snap",
-      "params": {
-        "strength": 0.5920000076293945,
-        "radius": 40.0,
-        "smoothness": 2.0,
-        "mixes": false
-      },
-      "inputs": [
-        "color",
-        "target"
-      ]
-    },
     "detail": {
       "op": "dizher.ops:detail",
       "params": {
-        "texture": -70.99400329589844,
-        "sharpen": 150.82899475097656,
-        "radius": 0.6639999747276306
+        "texture": 0.0,
+        "sharpen": 0.0,
+        "radius": 1.0
       },
       "inputs": [
-        "snap"
+        "color"
       ]
     },
     "target": {
       "op": "dizher.ops:target",
       "params": {
-        "mode": "ZX Spectrum standard",
-        "palette": "All colours"
+        "mode": "C64 hires",
+        "colours": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
       },
       "inputs": []
     },
     "metric": {
       "op": "dizher.ops:metric",
       "params": {
-        "chroma": 1.0,
-        "flare": 0.1
+        "chroma": 0.0,
+        "flare": 1.0
       },
       "inputs": []
     },
@@ -156,27 +160,43 @@
     "select": {
       "op": "dizher.ops:select_pairs",
       "params": {
-        "coherence": 2.0,
-        "edge": 0.1,
+        "coherence": 0.2199999988079071,
+        "edge": 0.02,
         "luma_noise": 0.0,
-        "chroma_noise": 0.05
+        "chroma_noise": 0.0
       },
       "inputs": [
         "prepare"
+      ]
+    },
+    "overpaint": {
+      "op": "dizher.ops:overpaint",
+      "params": {
+        "overrides": [
+          [
+            12,
+            21,
+            9,
+            5
+          ]
+        ]
+      },
+      "inputs": [
+        "select"
       ]
     },
     "halftone": {
       "op": "dizher.ops:halftone",
       "params": null,
       "inputs": [
-        "select"
+        "overpaint"
       ]
     },
     "optimise": {
       "op": "dizher.ops:optimise",
       "params": {
         "enabled": false,
-        "structure": 0.06
+        "structure": 0.007000000216066837
       },
       "inputs": [
         "halftone"
