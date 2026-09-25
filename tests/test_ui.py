@@ -288,9 +288,9 @@ def test_cell_popup(ctx):
 
 
 def test_paint(ctx):
-    """Paint mode: a left click on a swatch picks the ink, a right click the paper, either turns it on; a left drag over the preview
-    paints the cells it crosses, one undo step; a right click picks a cell's colours up; Esc ends it; Clear drops
-    every cell."""
+    """Paint mode: a left click on a swatch picks the ink, a right click the paper, either turns it on; a left drag
+    over the preview paints the cells it crosses, one undo step; a right click picks a cell's colours up; Auto as
+    both erases; Esc ends it; Clear drops every cell."""
     from imgui_bundle.imgui.test_engine import CaptureFlags_
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'a conversion to paint')
     brush = ui.editors['overpaint']
@@ -322,11 +322,19 @@ def test_paint(ctx):
     assert shown == (5, 2), shown
     picked = (brush.paper, brush.ink)
     assert picked != (5, 2) and params('overpaint').overrides == overrides, (picked, params('overpaint'))
+    ctx.set_ref('//Convert')
+    ctx.item_click('overpaint/##colour-2')                             # Auto ink and paper: the eraser
+    ctx.item_click('overpaint/##colour-2', imgui.MouseButton_.right)
+    ctx.mouse_move_to_pos(a)
+    ctx.mouse_down(0)
+    for t in range(1, 7):
+        ctx.mouse_move_to_pos(imgui.ImVec2(a.x + (b.x - a.x) * t / 6, a.y))
+    ctx.mouse_up(0)
+    ctx.yield_(2)
+    assert params('overpaint').overrides == (), params('overpaint')
     ctx.key_press(UNDO)
     ctx.yield_(2)
-    assert params('overpaint').overrides == ()
-    ctx.key_press(REDO)
-    ctx.yield_(2)
+    assert params('overpaint').overrides == overrides
     ctx.key_press(imgui.Key.escape)
     ctx.yield_(2)
     assert not brush.on

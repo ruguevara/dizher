@@ -55,6 +55,8 @@ DEBUG = {   # view -> (tooltip, the stage it needs, its image from that stage's 
 GRID = imgui.ImVec4(0.5, 0.5, 0.5, 0.6)   # grey reads over black and white alike
 RECENT = 20   # images in File > Open recent
 INSPECT_CELLS, INSPECT_ZOOM, INSPECT_PAIRS = 3, 10, 8   # the hover tooltip: cells a side, its zoom, pairs listed
+TRANSPARENT, AUTO = -1, -2   # the brush's specials: keep the cell's colour, give it back to Select pairs
+SPECIAL = {TRANSPARENT: (0.0, 0.0, 0.0, 0.0), AUTO: (0.3, 0.3, 0.3, 1.0)}   # alpha 0 shows imgui's checkerboard
 UNDO, REDO = imgui.Key.mod_ctrl | imgui.Key.z, imgui.Key.mod_ctrl | imgui.Key.mod_shift | imgui.Key.z   # Cmd on macOS
 
 
@@ -123,36 +125,39 @@ class HalftoneEditor:
                       lambda v: on_change(replace(params, **asdict(v))), id=id, help='tooltip')
 
 
-def palette_grid(palette, click, tip, marks={}, transparent=False) -> None:
+def palette_grid(palette, click, tip, marks={}, specials=()) -> None:
     """The palette as 2 rows of 8 swatches edge to edge; click(i, button) on a left or right click, tip(i) the tooltip,
-    marks {i: '✓' for imgui's tick, else a letter or two}. Colours the palette has off are disabled. transparent ends
-    the first row with a checkered swatch, index -1."""
-    side = min(1.5 * imgui.get_text_line_height(), imgui.get_content_region_avail().x / (8 + transparent))   # fits a narrow dock
+    marks {i: '✓' for imgui's tick, else a letter or two}. Colours the palette has off are disabled. specials, of
+    TRANSPARENT (checkered) and AUTO (grey, A), end a row each."""
+    width = 8 + bool(specials)
+    side = min(1.5 * imgui.get_text_line_height(), imgui.get_content_region_avail().x / width)   # fits a narrow dock
     size = imgui.ImVec2(side, side)
     imgui.push_style_var(imgui.StyleVar_.item_spacing, imgui.ImVec2(0, 0))   # cells edge to edge
-    cells = [(i, (*map(float, rgb), 1.0)) for i, rgb in enumerate(palette.as_float())]
-    if transparent:
-        cells.insert(8, (-1, (0.0, 0.0, 0.0, 0.0)))
-    for n, (i, rgba) in enumerate(cells):
-        if n % (8 + transparent):
-            imgui.same_line()
-        imgui.begin_disabled(i >= 0 and i not in palette.enabled)
-        flags = imgui.ColorEditFlags_.no_tooltip.value   # alpha 0 shows imgui's checkerboard
-        if imgui.color_button(f'##colour{i}', imgui.ImVec4(*rgba), flags, size):
-            click(i, imgui.MouseButton_.left)
-        if imgui.is_item_clicked(imgui.MouseButton_.right):
-            click(i, imgui.MouseButton_.right)
-        imgui.end_disabled()
-        imgui.set_item_tooltip(tip(i))
-        mark, lo = marks.get(i), imgui.get_item_rect_min()
-        ink = imgui.IM_COL32(*(3 * (0 if i >= 0 and np.dot(rgba[:3], (0.299, 0.587, 0.114)) > 0.5 else 255,)), 255)
-        if mark == '✓':   # imgui's checkbox tick, black on light colours, white on dark
-            pad = side / 5
-            imgui.internal.render_check_mark(imgui.get_window_draw_list(), imgui.ImVec2(lo.x + pad, lo.y + pad), ink, side - 2 * pad)
-        elif mark:
-            t = imgui.calc_text_size(mark)
-            imgui.get_window_draw_list().add_text(imgui.ImVec2(lo.x + (side - t.x) / 2, lo.y + (side - t.y) / 2), ink, mark)
+    colours = [(i, (*map(float, rgb), 1.0)) for i, rgb in enumerate(palette.as_float())]
+    for row in range(2):
+        for n, (i, rgba) in enumerate(colours[8 * row:8 * row + 8] + [(k, SPECIAL[k]) for k in specials[row:row + 1]]):
+            if n:
+                imgui.same_line()
+            imgui.begin_disabled(i >= 0 and i not in palette.enabled)
+            if imgui.color_button(f'##colour{i}', imgui.ImVec4(*rgba), imgui.ColorEditFlags_.no_tooltip.value, size):
+                click(i, imgui.MouseButton_.left)
+            if imgui.is_item_clicked(imgui.MouseButton_.right):
+                click(i, imgui.MouseButton_.right)
+            imgui.end_disabled()
+            imgui.set_item_tooltip(tip(i))
+            mark, lo = marks.get(i, 'A' if i == AUTO else None), imgui.get_item_rect_min()
+            ink = imgui.IM_COL32(*(3 * (0 if i >= 0 and np.dot(rgba[:3], (0.299, 0.587, 0.114)) > 0.5 else 255,)), 255)
+            if mark == '✓':   # imgui's checkbox tick, black on light colours, white on dark
+                pad = side / 5
+                imgui.internal.render_check_mark(imgui.get_window_draw_list(), imgui.ImVec2(lo.x + pad, lo.y + pad), ink, side - 2 * pad)
+            elif mark:
+                t = imgui.calc_text_size(mark)
+                imgui.get_window_draw_list().add_text(imgui.ImVec2(lo.x + (side - t.x) / 2, lo.y + (side - t.y) / 2), ink, mark)
     imgui.pop_style_var()
+
+
+def colour_name(i: int) -> str:
+    return {TRANSPARENT: 'Transparent, the cell keeps its own', AUTO: 'Auto, the colour Select pairs chose'}.get(i, f'Colour {i}')
 
 
 class TargetEditor:
@@ -182,14 +187,14 @@ def role_marks(paper: int, ink: int) -> dict:
 
 
 class OverpaintEditor:
-    """Paint mode, Art Studio's attribute brush: an ink and a paper, each a palette index or -1, transparent, which
-    keeps the cell's own. A left click on a swatch picks the ink, a right click the paper (Multipaint's and MS
+    """Paint mode, Art Studio's attribute brush: an ink and a paper, each a palette index, TRANSPARENT, which keeps
+    the cell's own, or AUTO, which gives it back to Select pairs: an Auto ink and paper erase. A left click on a swatch picks the ink, a right click the paper (Multipaint's and MS
     Paint's buttons), and turns Paint mode on. In the preview a left drag paints cells with the brush, a right click
     picks up a cell's colours as the brush, the eyedropper (Window._paint). Clear gives every painted cell back to
     Select pairs."""
 
     def __init__(self) -> None:
-        self.on, self.ink, self.paper = False, 15, -1   # bright white on the Spectrum, light grey on the C64
+        self.on, self.ink, self.paper = False, 15, TRANSPARENT   # bright white on the Spectrum, light grey on the C64
 
     def draw(self, params, selection, on_change, id: str) -> None:
         imgui.push_id(id)
@@ -211,11 +216,10 @@ class OverpaintEditor:
                 else:
                     self.paper = i
                 self.on = True
-            name = lambda i: f'Colour {i}' if i >= 0 else 'Transparent, the cell keeps its own'
-            palette_grid(selection.palette, pick, lambda i: f'{name(i)}: left click for the ink, right for the paper',
-                         role_marks(self.paper, self.ink), transparent=True)
+            palette_grid(selection.palette, pick, lambda i: f'{colour_name(i)}: left click for the ink, right for the paper',
+                         role_marks(self.paper, self.ink), (TRANSPARENT, AUTO))
         if self.on:
-            widgets.hint("Left drag paints cells, right click picks up a cell's colours")
+            widgets.hint("Left drag paints cells, right click picks up a cell's colours; A as ink and paper erases")
         imgui.pop_id()
 
 
@@ -553,8 +557,8 @@ class Window:
         if imgui.is_mouse_clicked(imgui.MouseButton_.left):
             self._stroke = True
         if self._stroke and imgui.is_mouse_down(imgui.MouseButton_.left):
-            old = self._painted(r, c)
-            self._set_cell(r, c, (brush.paper if brush.paper >= 0 else old[0], brush.ink if brush.ink >= 0 else old[1]), held=True)
+            put = lambda b, old: old if b == TRANSPARENT else -1 if b == AUTO else b   # -1 stored: the selection's
+            self._set_cell(r, c, tuple(map(put, (brush.paper, brush.ink), self._painted(r, c))), held=True)
         painted = self.app.shown('overpaint')   # quick to redo, so it has the latest strokes
         if imgui.is_mouse_clicked(imgui.MouseButton_.right) and painted is not None:
             brush.paper, brush.ink = self._colours(painted, r, c)
@@ -572,6 +576,10 @@ class Window:
             p, q = imgui.ImVec2(m.x + x, m.y + y), imgui.ImVec2(m.x + x + s, m.y + y + s)
             if i >= 0:
                 draw.add_rect_filled(p, q, imgui.IM_COL32(*(int(v * 255) for v in rgb[i]), 255))
+            elif i == AUTO:   # its swatch: grey with an A
+                draw.add_rect_filled(p, q, imgui.IM_COL32(*(int(v * 255) for v in SPECIAL[AUTO])))
+                t = imgui.calc_text_size('A')
+                draw.add_text(imgui.ImVec2(p.x + (s - t.x) / 2, p.y + (s - t.y) / 2), white, 'A')
             else:
                 draw.add_rect_filled(p, q, imgui.IM_COL32(128, 128, 128, 255))
                 draw.add_line(imgui.ImVec2(p.x, q.y), imgui.ImVec2(q.x, p.y), imgui.IM_COL32(220, 40, 40, 255), 2)
@@ -613,7 +621,7 @@ class Window:
     def _cell_popup(self, cell, shown) -> None:
         """The right-click popup: the hover inspector, live. A click on a cell in the zoom moves to it; a pair in the
         table paints the cell (the Overpaint block), and so does the palette as Paint mode's brush does: a left click
-        the ink, a right click the paper, transparent the selection's. Auto gives the cell back to the selection."""
+        the ink, a right click the paper, Auto the selection's. The Auto button gives the whole cell back."""
         self._cell = self._zoom(self._cell, cell, shown) or self._cell
         (r, c), painted = self._cell, self._painted(*self._cell)
         conv = self._candidates(r, c, lambda pair: self._set_cell(r, c, pair))
@@ -622,11 +630,11 @@ class Window:
         paper, ink = self._colours(conv, r, c)
 
         def pick(i, button):
+            i = -1 if i == AUTO else i   # -1 stored: the selection's
             self._set_cell(r, c, (painted[0], i) if button == imgui.MouseButton_.left else (i, painted[1]))
 
-        name = lambda i: f'Colour {i}' if i >= 0 else "Transparent, the selection's colour"
-        palette_grid(conv.palette, pick, lambda i: f'{name(i)}: left click for the ink, right for the paper',
-                     role_marks(paper, ink), transparent=True)
+        palette_grid(conv.palette, pick, lambda i: f'{colour_name(i)}: left click for the ink, right for the paper',
+                     role_marks(paper, ink), (AUTO,))
         imgui.begin_disabled(painted == (-1, -1))
         if imgui.button('Auto'):
             self._set_cell(r, c, None)
