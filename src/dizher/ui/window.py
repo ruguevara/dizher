@@ -792,7 +792,8 @@ class Window:
             imgui.open_popup('About Dizher')
             self._about = False
         imgui.set_next_window_size(imgui.ImVec2(em_size(36), 0), imgui.Cond_.always.value)   # height fits the text
-        flags = imgui.WindowFlags_.no_resize.value | imgui.WindowFlags_.no_saved_settings.value
+        flags = (imgui.WindowFlags_.no_resize.value | imgui.WindowFlags_.no_saved_settings.value
+                 | imgui.WindowFlags_.no_scrollbar.value)
         if not imgui.begin_popup_modal('About Dizher', None, flags)[0]:
             return
 
@@ -818,13 +819,21 @@ class Window:
         line('Includes libdither by Robert Kist, blue noise by Christoph Peters')
         line('and the ZX Spectrum colours measured by Jari Komppa')
         line()
-        line('Greets to:')
-        line('diver, spke, pator, megus, sq, bfox, n1k-o, fatalsnipe, grongy,')
-        line('dalthon, jammerC64, wbcbz7, kowalski, volutar, tmk, true-grue')
-        line('and all pixel artists and demosceners!')
+        line('Thanks to Diver and Spke for invaluable help and motivation')
+        line('while working on this project all these years since 2020.')
         line()
+        line('Greets to:')
+        line('sq, bfox, Grongy, Dalthon, Jammer, Vasyl, e!ghtbm, Gazela,')
+        line('Wbcbz7, Kowalski, Volutar, Tmk, True-grue,')
+        line('and all retroscene pixel artists and demosceners!')
+        line()
+        copyright, site = f'© 2021–{build.built[:4] or time.strftime("%Y")} Ru Grantez', 'pixelmatter.org'
+        gap = imgui.get_style().item_spacing.x
+        centred(imgui.calc_text_size(copyright).x + gap + imgui.calc_text_size(site).x)
         with style.muted():
-            line(f'© 2021–{build.built[:4] or time.strftime("%Y")} Ruguevara and Co')
+            imgui.text(copyright)
+        imgui.same_line(0, gap)
+        imgui.text_link_open_url(site, f'http://{site}')
         line()
         centred(em_size(8))
         if imgui.button('Cool', imgui.ImVec2(em_size(8), 0)) or imgui.is_key_pressed(imgui.Key.escape):
