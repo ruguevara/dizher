@@ -289,7 +289,8 @@ def test_cell_popup(ctx):
 
 def test_paint(ctx):
     """Paint mode: a left click on a swatch picks the ink, a right click the paper, either turns it on; a left drag over the preview
-    paints the cells it crosses, one undo step; a right drag gives them back; Esc ends it; Clear drops every cell."""
+    paints the cells it crosses, one undo step; a right click picks a cell's colours up; Esc ends it; Clear drops
+    every cell."""
     from imgui_bundle.imgui.test_engine import CaptureFlags_
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'a conversion to paint')
     brush = ui.editors['overpaint']
@@ -302,22 +303,30 @@ def test_paint(ctx):
     r = rect(ctx, '//Preview', '**/Screen')
     a, b = imgui.ImVec2(r.min.x + 100, r.max.y + 100), imgui.ImVec2(r.min.x + 160, r.max.y + 100)
     steps = len(ui.app.past)
-    for button, cells in ((0, lambda n: n >= 2), (1, lambda n: n == 0)):
-        ctx.mouse_move_to_pos(a)
-        ctx.mouse_down(button)
-        for t in range(1, 7):   # frame by frame: every cell on the way
-            ctx.mouse_move_to_pos(imgui.ImVec2(a.x + (b.x - a.x) * t / 6, a.y))
-        if button == 0:
-            ctx.capture_set_filename('/tmp/dizher_paint.png')
-            ctx.capture_screenshot(CaptureFlags_.none.value)
-        ctx.mouse_up(button)
-        ctx.yield_(2)
-        overrides = params('overpaint').overrides
-        assert cells(len(overrides)) and all(o[2:] == (5, 2) for o in overrides), overrides
-    assert len(ui.app.past) == steps + 2, 'a stroke is one undo step'
+    ctx.mouse_move_to_pos(a)
+    ctx.mouse_down(0)
+    for t in range(1, 7):   # frame by frame: every cell on the way
+        ctx.mouse_move_to_pos(imgui.ImVec2(a.x + (b.x - a.x) * t / 6, a.y))
+    ctx.capture_set_filename('/tmp/dizher_paint.png')
+    ctx.capture_screenshot(CaptureFlags_.none.value)
+    ctx.mouse_up(0)
+    ctx.yield_(2)
+    overrides = params('overpaint').overrides
+    assert len(overrides) >= 2 and all(o[2:] == (5, 2) for o in overrides), overrides
+    assert len(ui.app.past) == steps + 1, 'a stroke is one undo step'
+    wait(ctx, lambda: ui.app.result('overpaint') is not None, 'the painted cells')
+    ctx.mouse_move_to_pos(imgui.ImVec2(a.x, a.y + 40))   # the eyedropper, on a cell not painted
+    ctx.mouse_click(1)
+    ctx.yield_(2)
+    shown = ui._colours(ui.app.result('overpaint'), *next(o[:2] for o in overrides))   # a painted one reads as painted
+    assert shown == (5, 2), shown
+    picked = (brush.paper, brush.ink)
+    assert picked != (5, 2) and params('overpaint').overrides == overrides, (picked, params('overpaint'))
     ctx.key_press(UNDO)
     ctx.yield_(2)
-    assert len(params('overpaint').overrides) >= 2
+    assert params('overpaint').overrides == ()
+    ctx.key_press(REDO)
+    ctx.yield_(2)
     ctx.key_press(imgui.Key.escape)
     ctx.yield_(2)
     assert not brush.on

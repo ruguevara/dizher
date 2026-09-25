@@ -184,8 +184,9 @@ def role_marks(paper: int, ink: int) -> dict:
 class OverpaintEditor:
     """Paint mode, Art Studio's attribute brush: an ink and a paper, each a palette index or -1, transparent, which
     keeps the cell's own. A left click on a swatch picks the ink, a right click the paper (Multipaint's and MS
-    Paint's buttons), and turns Paint mode on. In the preview a left drag paints cells with the brush, a right drag
-    gives them back to Select pairs (Window._paint). Clear drops every painted cell."""
+    Paint's buttons), and turns Paint mode on. In the preview a left drag paints cells with the brush, a right click
+    picks up a cell's colours as the brush, the eyedropper (Window._paint). Clear gives every painted cell back to
+    Select pairs."""
 
     def __init__(self) -> None:
         self.on, self.ink, self.paper = False, 15, -1   # bright white on the Spectrum, light grey on the C64
@@ -214,7 +215,7 @@ class OverpaintEditor:
             palette_grid(selection.palette, pick, lambda i: f'{name(i)}: left click for the ink, right for the paper',
                          role_marks(self.paper, self.ink), transparent=True)
         if self.on:
-            widgets.hint('Left drag paints cells, right drag gives them back')
+            widgets.hint("Left drag paints cells, right click picks up a cell's colours")
         imgui.pop_id()
 
 
@@ -525,6 +526,13 @@ class Window:
                 imgui.close_current_popup()
             imgui.end_popup()
 
+    def _colours(self, conv, r: int, c: int) -> tuple:
+        """The cell's (paper, ink) as conv shows it, a painted colour in its painted role: the pair is unordered, the
+        darker colour its paper."""
+        paper, ink = list(conv.palette.iter_idxs_pairs())[conv.best_attr_indexes[r, c]]
+        painted = self._painted(r, c)
+        return (ink, paper) if paper == painted[1] >= 0 or ink == painted[0] >= 0 else (paper, ink)
+
     def _painted(self, r: int, c: int) -> tuple:
         """The cell's painted (paper, ink), -1 where it keeps the selection's."""
         return next((o[2:] for o in self.app.graph['overpaint'].params.overrides if o[:2] == (r, c)), (-1, -1))
@@ -540,15 +548,16 @@ class Window:
     def _paint(self, at, lo, cell, zoom) -> None:
         """Paint mode over a preview whose top-left is lo: the cursor is the brush, ink over paper as Photoshop's colour
         swatches, a hollow square with a slash where transparent, and the cell under it is outlined. A left drag
-        paints the cells it crosses, a right drag gives them back."""
+        paints the cells it crosses; a right click makes the cell's colours as shown the brush, the eyedropper."""
         brush, (h, w), (r, c) = self.editors['overpaint'], cell, at
-        if imgui.is_mouse_clicked(imgui.MouseButton_.left) or imgui.is_mouse_clicked(imgui.MouseButton_.right):
+        if imgui.is_mouse_clicked(imgui.MouseButton_.left):
             self._stroke = True
         if self._stroke and imgui.is_mouse_down(imgui.MouseButton_.left):
             old = self._painted(r, c)
             self._set_cell(r, c, (brush.paper if brush.paper >= 0 else old[0], brush.ink if brush.ink >= 0 else old[1]), held=True)
-        elif self._stroke and imgui.is_mouse_down(imgui.MouseButton_.right):
-            self._set_cell(r, c, None, held=True)
+        painted = self.app.shown('overpaint')   # quick to redo, so it has the latest strokes
+        if imgui.is_mouse_clicked(imgui.MouseButton_.right) and painted is not None:
+            brush.paper, brush.ink = self._colours(painted, r, c)
         imgui.set_mouse_cursor(imgui.MouseCursor_.none)
         draw, black, white = imgui.get_foreground_draw_list(), imgui.IM_COL32(0, 0, 0, 255), imgui.IM_COL32(255, 255, 255, 255)
         a = imgui.ImVec2(lo.x + c * w * zoom, lo.y + r * h * zoom)
@@ -610,9 +619,7 @@ class Window:
         conv = self._candidates(r, c, lambda pair: self._set_cell(r, c, pair))
         if conv is None:
             return
-        paper, ink = list(conv.palette.iter_idxs_pairs())[conv.best_attr_indexes[r, c]]
-        if paper == painted[1] >= 0 or ink == painted[0] >= 0:   # shown as painted: a painted colour keeps its role
-            paper, ink = ink, paper
+        paper, ink = self._colours(conv, r, c)
 
         def pick(i, button):
             self._set_cell(r, c, (painted[0], i) if button == imgui.MouseButton_.left else (i, painted[1]))
