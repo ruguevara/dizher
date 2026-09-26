@@ -291,6 +291,23 @@ def test_project_folder():
         (Path(tmp) / 'other.png').write_bytes(b'')
         assert project_folder(Path(tmp) / 'other.png').name == 'other 2'   # a plain folder is not taken over
 
+
+def test_project_folder_trailing_space():
+    """Windows drops a folder name's trailing spaces and dots: the project of "sunset .png" is saved and found again."""
+    import sys
+    from mokit import project
+    from dizher.ui.app import project_folder
+    with tempfile.TemporaryDirectory() as tmp:
+        for name in ('sunset .png', 'dusk..png', ' .png'):
+            image = Path(tmp) / name
+            shutil.copy(IMAGE, image)
+            folder = project_folder(image)
+            if sys.platform == 'win32':
+                assert not folder.name.endswith((' ', '.')), folder.name
+            g = ops.make_graph()
+            project.create_project(folder, g.with_params('source', replace(g['source'].params, path=image)))
+            assert project_folder(image) == folder and project.load_project(folder).graph['source'].params.path == image.resolve()
+
 if __name__ == '__main__':
     test_framing_geometry()
     test_tone_semantics()
@@ -303,4 +320,5 @@ if __name__ == '__main__':
     test_undo_redo()
     test_host_watches_the_source_file()
     test_project_folder()
+    test_project_folder_trailing_space()
     print('ok')

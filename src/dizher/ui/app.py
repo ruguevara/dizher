@@ -2,6 +2,7 @@
 of stage results and one worker thread running the next stale stage. No imgui here; window.py polls update()
 every frame and draws from it."""
 import itertools
+import sys
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -23,10 +24,12 @@ WATCH = 0.5      # s between re-stats of the source files: an image saved over i
 
 def project_folder(image) -> Path:
     """The image's project, as a sidecar: the folder beside it named as the image, or "<name> 2", "<name> 3"... when
-    that one is taken by anything but this image's project. It may not exist yet."""
+    that one is taken by anything but this image's project. It may not exist yet. On Windows the name has no trailing
+    spaces and dots, which Windows drops from a folder's name: "sunset .png" made "sunset", then wrote into "sunset "."""
     image = Path(image).resolve()
+    stem = (image.stem.rstrip(' .') if sys.platform == 'win32' else image.stem) or image.name
     for n in itertools.count(1):
-        folder = image.with_name(image.stem if n == 1 else f'{image.stem} {n}')
+        folder = image.with_name(stem if n == 1 else f'{stem} {n}')
         if not folder.exists():
             return folder
         try:
