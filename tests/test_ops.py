@@ -299,14 +299,14 @@ def test_project_folder_trailing_space():
     from dizher.ui.app import project_folder
     with tempfile.TemporaryDirectory() as tmp:
         for name in ('sunset .png', 'dusk..png', ' .png'):
-            image = Path(tmp) / name
+            image = Path(tmp).resolve() / name   # on Windows the temp folder may come as a short name, RUNNER~1
             shutil.copy(IMAGE, image)
             folder = project_folder(image)
             if sys.platform == 'win32':
                 assert not folder.name.endswith((' ', '.')), folder.name
             g = ops.make_graph()
             project.create_project(folder, g.with_params('source', replace(g['source'].params, path=image)))
-            assert project_folder(image) == folder and project.load_project(folder).graph['source'].params.path == image.resolve()
+            assert project_folder(image) == folder and project.load_project(folder).graph['source'].params.path == image
 
 if __name__ == '__main__':
     test_framing_geometry()
