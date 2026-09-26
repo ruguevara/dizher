@@ -18,6 +18,7 @@ from .. import ops
 DEBOUNCE = 0.3   # s from the last edit to the next start, so a dragged slider does not restart a stage every frame
 HISTORY = 200    # undo steps kept
 CACHED = 5       # graphs on each side of the current one in the history whose results stay in RAM: undo shows them at once
+WATCH = 0.5      # s between re-stats of the source files: an image saved over in an editor reconverts
 
 
 def project_folder(image) -> Path:
@@ -72,6 +73,7 @@ class Pipeline:
         self.job: Optional[Job] = None
         self.cancelled = False    # a user cancel holds everything until the next edit
         self._deadline = 0.0
+        self._watched = 0.0       # monotonic time of the last source re-stat
         # ponytail: one thread and the GIL; the pair sweeps are Python loops that may stutter the UI, a process pool if so
         self._executor = ThreadPoolExecutor(1)
         self._sync()
@@ -171,6 +173,11 @@ class Pipeline:
     # ----- scheduling ------------------------------------------------------------------------------
 
     def update(self) -> None:
+        now = time.monotonic()
+        if now - self._watched >= WATCH:
+            self._watched = now
+            if self.digests.refresh():   # a source file changed on disk: an edit without an undo step
+                self._apply(self.graph)
         job = self.job
         if job is not None and job.future.done():
             self.job = None

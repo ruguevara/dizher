@@ -247,6 +247,30 @@ def test_undo_redo():
 
 
 
+def test_host_watches_the_source_file():
+    """An image saved over on disk reconverts from the source down, like an edit but with no undo step."""
+    from dizher.ui.app import Pipeline
+    with tempfile.TemporaryDirectory() as tmp:
+        image = Path(tmp) / 'pic.png'
+        image.write_bytes(IMAGE.read_bytes())
+        host = Pipeline()
+        try:
+            host.open(image)
+            host.set_params('optimise', replace(host.graph['optimise'].params, enabled=False))
+            settle(host)
+            host._watched = 0.0
+            host.update()
+            assert host.job is None and not host.busy     # an unchanged file reruns nothing
+            before = host.result('detail')
+            image.write_bytes(IMAGE.with_name('david.png').read_bytes())
+            host._watched = 0.0
+            host.update()
+            assert host.result('detail') is None and host.shown('detail') is before and len(host.past) == 1
+            assert settle(host)[0] == 'source' and host.result('detail') is not before
+        finally:
+            host.close()
+
+
 def test_project_folder():
     """An image's sidecar project: named as the image, the next free name when another image's project or
     anything else has it."""
@@ -275,5 +299,6 @@ if __name__ == '__main__':
     test_host_discards_stale_completions()
     test_project_round_trip_and_restore()
     test_undo_redo()
+    test_host_watches_the_source_file()
     test_project_folder()
     print('ok')
