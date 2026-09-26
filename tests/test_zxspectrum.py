@@ -1,4 +1,6 @@
 """Run: python tests/test_zxspectrum.py (or pytest)."""
+from pathlib import Path
+
 import cv2
 import numpy as np
 
@@ -45,16 +47,21 @@ def test_c64_art():
 
 
 def test_save_long_unicode_name(tmp_path):
-    from dizher.converter.converter import Converter
+    """As into a project's build folder, which doubles the image's name: past MAX_PATH (260) on Windows."""
+    from dizher.converter.converter import Converter, os_path
     from dizher.converter.dither import Stohastic
     converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, STANDARD)
     converter.set_image(np.random.default_rng(0).random((*STANDARD.size, 3), dtype=np.float32))
     converter.dither(Stohastic())
-    stem = 'очень длинное имя ' * 10
+    stem = 'очень длинное имя ' * 7   # 126 characters, 231 bytes: a name is at most 255 bytes on Linux, 255 characters on Windows
+    build = tmp_path / stem / 'build'
+    build.mkdir(parents=True)
+    assert len(str(build / stem)) > 260
     for ext, size in (('.scr', 6912), ('.png', None)):
-        converter.save(str(tmp_path / (stem + ext)))
-        assert size is None or (tmp_path / (stem + ext)).stat().st_size == size
-    assert cv2.imread(str(tmp_path / (stem + '.png'))).shape[:2] == STANDARD.size
+        converter.save(str(build / (stem + ext)))
+        assert size is None or Path(os_path(build / (stem + ext))).stat().st_size == size
+    png = np.fromfile(os_path(build / (stem + '.png')), np.uint8)   # cv2.imread takes no non-ASCII path on Windows
+    assert cv2.imdecode(png, cv2.IMREAD_COLOR).shape[:2] == STANDARD.size
 
 
 if __name__ == '__main__':

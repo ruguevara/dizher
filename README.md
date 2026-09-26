@@ -42,6 +42,9 @@ and a `v*` tag publishes the three archives as a release.
     pytest                       # the converter and the pipeline
     python tests/test_ui.py      # the GUI, driven by the Dear ImGui test engine
 
+GitHub Actions runs `pytest` on Windows and Linux on every push, Windows with long paths off as on
+most machines.
+
 ### Layout
 
 * `src/dizher`: the converter (colour selection, halftoning, eye model), the platforms and the GUI.

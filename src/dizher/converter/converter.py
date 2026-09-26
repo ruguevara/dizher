@@ -1,4 +1,6 @@
 import copy
+import os
+import sys
 from pathlib import Path
 from typing import Dict
 
@@ -13,6 +15,18 @@ from ..halftoning.dbs import dbs_duo
 from .eye import LUMA_ALPHA, LUMA_SCALE, CHROMA_ALPHA, CHROMA_SCALE, eye_kernel
 from .energy import SelectionEnergy, pair_dissimilarity, lightness_gain, LRGB2OPP, EDGE_SIGMA
 from ..progress import report_progress, report_stage
+
+
+def os_path(filename) -> str:
+    """filename as open() takes it on any machine: on Windows the \\\\?\\ form, which goes past MAX_PATH (260) with
+    long paths off, as they are on most machines; a project's build folder doubles the image's name."""
+    if sys.platform != 'win32':
+        return str(filename)
+    filename = os.path.abspath(filename)
+    if filename.startswith('\\\\?\\'):
+        return filename
+    return '\\\\?\\UNC\\' + filename[2:] if filename.startswith('\\\\') else '\\\\?\\' + filename
+
 
 class Converter:
     def __init__(self,
@@ -226,7 +240,7 @@ class Converter:
         else:   # imencode and Python's open, as cv2.imwrite takes neither non-ASCII nor \\?\ long paths on Windows
             ok, data = cv2.imencode(Path(filename).suffix, convert_color((self.dithered_result * 255).round().astype(np.uint8), 'RGB', 'BGR'))
             assert ok, filename
-        with open(filename, 'wb') as f:
+        with open(os_path(filename), 'wb') as f:
             f.write(bytes(data))
 
     def dither(self, ditherer: Ditherer, optimise: bool = False) -> np.ndarray:

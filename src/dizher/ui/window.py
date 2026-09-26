@@ -11,6 +11,7 @@ exports default to its build/. Every image has one, as a sidecar: opening an ima
 as the image (app.project_folder), or starts it there. Autosave (on by default) writes it after every edit; off, Save
 project does, without asking where."""
 import json
+import os
 import platform
 import signal
 import subprocess
@@ -33,6 +34,7 @@ from mokit.graph import GraphError, Op
 from mokit.ui.style import Palette
 
 from .. import ops, version
+from ..converter.converter import os_path
 from .app import Pipeline, project_folder
 from .levels import LevelsEditor
 from . import views
@@ -56,6 +58,7 @@ DEBUG = {   # view -> (tooltip, the stage it needs, its image from that stage's 
               'select', views.seam_view)}
 GRID = imgui.ImVec4(0.5, 0.5, 0.5, 0.6)   # grey reads over black and white alike
 RECENT = 20   # images in File > Open recent
+MAX_PATH = 260   # Windows' path limit, the NUL included
 INSPECT_CELLS, INSPECT_ZOOM, INSPECT_PAIRS = 3, 10, 8   # the hover tooltip: cells a side, its zoom, pairs listed
 TRANSPARENT, AUTO = -1, -2   # the brush's specials: keep the cell's colour, give it back to Select pairs
 SPECIAL = {TRANSPARENT: (0.0, 0.0, 0.0, 0.0), AUTO: (0.3, 0.3, 0.3, 1.0)}   # alpha 0 shows imgui's checkerboard
@@ -92,7 +95,19 @@ def save_dialog(title: str, folder: str, name: str) -> str:
                   f'default location POSIX file "{folder}" default name "{name}")')
         result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True)
         return result.stdout.strip() if result.returncode == 0 else ''
-    return pfd.save_file(title, str(Path(folder) / name)).result()
+    return pfd.save_file(title, dialog_default(folder, name)).result()
+
+
+def dialog_default(folder: str, name: str) -> str:
+    """The save dialog's default path. On Windows the name's stem is cut to fit MAX_PATH: past it GetSaveFileNameW
+    fails at once (FNERR_INVALIDFILENAME) and pfd gives "" as for a cancel; a project's build folder doubles the
+    image's name. A folder with no room for a name leaves the name alone, in the folder the dialog picks."""
+    path = str(Path(folder) / name)
+    if sys.platform != 'win32' or len(path) < MAX_PATH:
+        return path
+    stem, ext = os.path.splitext(name)
+    room = len(stem) - (len(path) - (MAX_PATH - 1))
+    return str(Path(folder) / (stem[:room].rstrip() + ext)) if room > 0 else name
 
 
 @contextmanager
@@ -866,12 +881,10 @@ class Window:
         folder = source.parent if source else Path.home()
         if self.project and self.project.exists():
             folder = self.project / 'build'
-            folder.mkdir(exist_ok=True)
+            Path(os_path(folder)).mkdir(exist_ok=True)
         path = save_dialog('Save conversion', str(folder), (source.stem if source else 'conversion') + ext)
         if not path:
             return
-        if sys.platform == 'win32':   # past MAX_PATH (260) only with the \\?\ prefix; the project's build folder doubles the image's name
-            path = '\\\\?\\' + str(Path(path).resolve())
         try:
             self.result.save(path)
         except (OSError, AssertionError) as e:

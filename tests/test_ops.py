@@ -1,4 +1,5 @@
 """Run: .venv/bin/python tests/test_ops.py (or pytest)."""
+import shutil
 import tempfile
 from dataclasses import replace
 from pathlib import Path
@@ -196,10 +197,11 @@ def test_project_round_trip_and_restore():
     from mokit.graph import Node
     from dizher.ui.app import Pipeline
     host = Pipeline()
-    image = Path(__file__).parent / 'images' / 'goldhill-256.png'
-    host.open(image)
-    host.set_params('contrast', replace(host.graph['contrast'].params, contrast=25.0))
     with tempfile.TemporaryDirectory() as tmp:
+        image = Path(tmp) / IMAGE.name   # beside the project: on Windows the temp folder may be on another drive, where no path is relative
+        shutil.copy(IMAGE, image)
+        host.open(image)
+        host.set_params('contrast', replace(host.graph['contrast'].params, contrast=25.0))
         project.create_project(Path(tmp) / 'p', host.graph)
         stored = json.loads((Path(tmp) / 'p' / 'project.json').read_text())['nodes']['source']['params']['path']
         assert not Path(stored).is_absolute()   # relative to the folder: the project moves with its images
