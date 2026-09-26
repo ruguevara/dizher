@@ -53,7 +53,8 @@ def test_save_long_unicode_name(tmp_path):
     converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, STANDARD)
     converter.set_image(np.random.default_rng(0).random((*STANDARD.size, 3), dtype=np.float32))
     converter.dither(Stohastic())
-    stem = 'очень длинное имя ' * 7   # 126 characters, 231 bytes: a name is at most 255 bytes on Linux, 255 characters on Windows
+    stem = ' '.join(['очень длинное имя'] * 7)   # 125 characters, 230 bytes: a name is at most 255 bytes on Linux, 255 characters on Windows;
+    # no trailing space, which Windows drops from a folder's name
     build = tmp_path / stem / 'build'
     build.mkdir(parents=True)
     assert len(str(build / stem)) > 260

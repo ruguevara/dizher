@@ -12,7 +12,7 @@ SAVE = 'import sys; from imgui_bundle import portable_file_dialogs as pfd; print
 def test_long_name_opens_the_dialog(tmp_path):
     """Into a project's build folder, which doubles the image's name: past MAX_PATH the dialog gave "" at once."""
     from dizher.ui.window import MAX_PATH, dialog_default
-    stem = 'очень длинное имя ' * 7
+    stem = ' '.join(['очень длинное имя'] * 7)   # no trailing space, which Windows drops from a folder's name
     build = tmp_path / stem / 'build'
     build.mkdir(parents=True)
     assert len(str(build / stem)) >= MAX_PATH
