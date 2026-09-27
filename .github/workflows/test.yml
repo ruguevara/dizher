@@ -3,8 +3,7 @@ name: test
 on:
   push:
     paths-ignore: ['**.md', 'notebooks/**']
-  pull_request:
-    paths-ignore: ['**.md', 'notebooks/**']
+  pull_request:   # every PR, docs too: the checks it requires must report
   workflow_dispatch:
 
 concurrency:   # a newer push to the same ref cancels the running tests
@@ -19,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest, macos-15, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     defaults:
@@ -43,3 +42,9 @@ jobs:
         run: Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem -Name LongPathsEnabled -Value 0
 
       - run: pytest -v
+
+      - name: UI tests under the Dear ImGui test engine
+        if: runner.os == 'Linux'   # a virtual display and Mesa's software OpenGL
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q xvfb libgl1 libglx-mesa0 libegl1
+          xvfb-run -a python tests/test_ui.py

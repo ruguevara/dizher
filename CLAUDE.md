@@ -20,20 +20,26 @@ A Claude session's branch is created from the default branch. Before the first c
 
 - Before every push: `pytest`. When the UI changes also `python tests/test_ui.py` (on Linux without a display:
   `xvfb-run -a python tests/test_ui.py`).
-- CI (`.github/workflows/test.yml`) runs `pytest` on Windows, with long paths off as on most machines, and on Linux, on
-  every push to any branch and on PRs. A PR merges only with both green.
+- CI (`.github/workflows/test.yml`) runs `pytest` on Windows, with long paths off as on most machines, macOS and Linux,
+  and `tests/test_ui.py` on Linux under Xvfb, on every push to any branch and on PRs. A PR merges only with all green.
 - A failing test is fixed or the change is; a test is never skipped, disabled or loosened to get green.
 
 ## Builds
 
-`.github/workflows/build.yml` builds the app with PyInstaller for macOS (Apple Silicon), Windows and Linux on pushes to
-`main`, on `v*` tags, on PRs, and by hand (Actions > build > Run workflow, on any branch). Archives are kept 14 days as
-run artifacts. Its release job runs only for a `v*` tag.
+`.github/workflows/build.yml` builds the app with PyInstaller for macOS (Apple Silicon), Windows and Linux:
+- on every push to `develop`: the dev builds the hand tests use;
+- on PRs into `main`: the packaging checked before a release or hotfix merges;
+- on `v*` tags: the release;
+- by hand on any branch (Actions > build > Run workflow): a feature branch's build, when one is needed.
+
+Archives are kept 14 days as run artifacts. The release job runs only for a `v*` tag, and publishes nothing unless the
+tag is on `main` and matches the version in the code.
 
 ## Versions and releases
 
-- The version is `__version__` (core, `MAJOR.MINOR.PATCH`) and `CHANNEL` (`alpha`, `beta`, `rc`, or empty for stable)
-  in `src/dizher/__init__.py`. A release build shows `0.2.4-alpha`, every other build `0.2.4-dev+g<hash>`.
+- The version is `__version__` (core, `MAJOR.MINOR.PATCH`) and `CHANNEL` (`alpha`, `beta`, `rc`, `demo`, or empty for
+  stable) in `src/dizher/__init__.py`. A release build shows `0.2.4-alpha` (`1.0.0` when stable), every other build
+  `0.2.4-dev+g<hash>`.
 - PATCH for fixes, MINOR for features, MAJOR from 1.0.
 - Right after a release, `develop` takes the next version, so dev builds show the version they lead to.
 - A release:
@@ -41,7 +47,7 @@ run artifacts. Its release job runs only for a `v*` tag.
   2. A PR from `develop` into `main`, merged with a merge commit once its tests and builds pass.
   3. The tag on `main`, matching the code: `v` + `__version__` + `-` + `CHANNEL` (no suffix when `CHANNEL` is empty),
      annotated: `git tag -a v0.2.4-alpha -m 0.2.4-alpha && git push origin v0.2.4-alpha`. The tag builds and publishes
-     the release; a tag with a `-` is a pre-release.
+     the release, a tag with a `-` as a pre-release; the release job refuses a tag off `main` or not matching the code.
   4. On `develop`, the next `__version__`.
 - A tag is never made on another branch, moved or reused.
 

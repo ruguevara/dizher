@@ -1,6 +1,7 @@
-"""The version as uZX shows it: a release build is `0.2.0-alpha`, every other build is dev, `0.2.0-dev+g1a2b3c4`,
-`-dirty` after either when the tree had uncommitted changes, with the time it was built. `python -m dizher.version`
-freezes this into _build.py for packaging/build.sh (DIZHER_RELEASE=1 for a release); from source, git is asked."""
+"""The version as uZX shows it: a release build is `0.2.0-alpha` (`1.0.0` when stable), every other build is dev,
+`0.2.0-dev+g1a2b3c4`, `-dirty` after either when the tree had uncommitted changes, with the time it was built.
+`python -m dizher.version` freezes this into _build.py for packaging/build.sh (DIZHER_RELEASE=1 for a release); from
+source, git is asked."""
 import os
 import subprocess
 from dataclasses import dataclass
@@ -24,7 +25,8 @@ class Build:
     @property
     def display(self) -> str:
         suffix = f'+g{self.commit}' if self.channel == 'dev' and self.commit else ''
-        return f"{self.core}-{self.channel}{suffix}{'-dirty' if self.dirty else ''}"
+        channel = f'-{self.channel}' if self.channel else ''   # none on a stable release: 1.0.0
+        return f"{self.core}{channel}{suffix}{'-dirty' if self.dirty else ''}"
 
 
 def _git(*args) -> str:
