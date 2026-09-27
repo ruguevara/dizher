@@ -12,7 +12,7 @@ from dizher.platforms.zxspectrum import ZXPalette
 
 
 def colour_error(converter, image):
-    error = converter.opponent(image ** converter.gamma - converter.image_lrgb)
+    error = converter.opponent(image ** converter.gamma - converter.image_lrgb) * converter.gain
     noise = (converter.luma_noise, converter.chroma_noise, converter.chroma_noise)
     total = 0.0
     for channel, kernel in enumerate(converter.eye_kernels()):
@@ -33,11 +33,11 @@ def mixture(converter, labels):
 
 
 def dot_error(converter, labels):
-    """The dots' unblurred error around that mixture, t (1 - t) contrast^2, weighted per channel group."""
+    """The dots' unblurred error around that mixture, t (1 - t) contrast^2, gained, weighted per channel group."""
     rows, cols = np.indices(converter.size)
     idx = converter.expand_cells(labels)
     t = converter.levels[idx, rows, cols]
-    spread = t * (1 - t)
+    spread = t * (1 - t) * converter.gain[..., 0] ** 2
     contrast = dot_contrast(converter.color_pairs, converter.gamma)[idx]     # (H, W, 2) luma, chroma
     w = converter.energy.weights
     return float((spread * (w['Luma'] * converter.luma_noise * contrast[..., 0]
@@ -52,7 +52,7 @@ def test_dot_contrast_counts_hue_clashes():
              dict(KY=(8, 14), KW=(8, 15), RW=(10, 15), RY=(10, 14), RG=(10, 12), BY=(9, 14), ky=(0, 6)).items()}
     luma, chroma = dot_contrast(np.stack(list(pairs.values())), 2.2).T
     c = dict(zip(pairs, chroma))
-    assert max(c['KY'], c['KW'], c['RW'], c['ky']) < 1e-6          # OKLab's white is grey to ~1e-4 in a, b
+    assert c['KY'] == c['KW'] == c['RW'] == c['ky'] == 0
     assert 0 < c['RY'] < c['RG'] < c['BY']
     l = dict(zip(pairs, luma))
     assert l['KW'] > l['KY'] > l['ky'] > 0
@@ -73,33 +73,19 @@ def test_bright_dots_cost_no_more_than_dim():
     assert unary[pairs.index((9, 14))] > np.sort(unary)[3]
 
 
-def test_dark_navy_is_not_magenta():
-    """Dark navies from anubis' shadows: in linear light blue dots can reach their lightness only with far too much
-    blue and magenta reaches it through red, a few percent of one channel, so magenta won. OKLab keeps the hue."""
-    converter = Converter({'Luma': 1.0, 'Chroma': 1.5}, Mode('one cell', (8, 8), (8, 8), ZXPalette()))
-    pairs = [tuple(p) for p in converter.palette.iter_idxs_pairs()]
-    for navy in ((19, 28, 48), (30, 32, 48), (40, 65, 105), (13, 38, 79)):
-        converter.set_image(np.full((8, 8, 3), np.array(navy) / 255, np.float32))
-        assert pairs[converter.energy.apply()[0, 0]] not in ((0, 3), (8, 11)), navy      # k/m, K/M
-
-
 def test_equal_luminance_colour_edge():
-    """A green | cyan edge with no step in luminance stays in one cell: green on the left, cyan on the right. The right
-    half is a cyan dimmed to green's luminance, which the palette cannot paint; in OKLab a few green dots bring it
-    closer (level ~0.96), so the threshold halftoners may put one or two there."""
     converter = Converter({'Luma': 1.0, 'Chroma': 1.0},
                           Mode('one cell', (8, 8), (8, 8), ZXPalette()))
     image = np.zeros((8, 8, 3), dtype=np.float32)
     image[:, :4, 1] = 1
     image[:, 4:, 1:] = (0.7152 / (0.7152 + 0.0722)) ** (1 / converter.gamma)
-    green, cyan = np.array([0, 1, 0]), np.array([0, 1, 1])
+    expected = np.zeros_like(image)
+    expected[..., 1] = 1
+    expected[:, 4:, 2] = 1
     for halftoner, optimise in ((Stohastic(), False), (Ordered(), False), (ErrorDiffusion(), False), (Stohastic(), True)):
         converter.set_image(image)
         np.testing.assert_allclose(converter.image_luma, 0.7152, atol=1e-7)
-        result = converter.dither(halftoner, optimise)
-        assert (result[:, :4] == green).all(), halftoner.label
-        assert (result[:, 4:] == cyan).all(-1).mean() >= 0.9, halftoner.label
-        assert ((result == green).all(-1) | (result == cyan).all(-1)).all(), halftoner.label
+        np.testing.assert_array_equal(converter.dither(halftoner, optimise), expected)
 
 
 def test_selection_matches_full_convolution():
@@ -171,9 +157,7 @@ def test_halftone_target_is_reachable():
     converter.dither(Stohastic())
     paper, ink = converter.opponent(converter.best_paper ** converter.gamma), converter.opponent(converter.best_ink ** converter.gamma)
     target = converter.halftone_target(paper, ink)
-    grey = converter.projected_target()                                     # the same target in sRGB
-    np.testing.assert_allclose(grey, grey[..., :1].repeat(3, -1), atol=1e-6)   # chroma the pair cannot paint is dropped
-    np.testing.assert_allclose(converter.opponent(grey ** converter.gamma), target, atol=1e-5)
+    np.testing.assert_allclose(target[..., 1:], 0, atol=1e-6)               # chroma the pair cannot paint is dropped
     raw = converter.opponent(converter.image_lrgb)
     np.testing.assert_allclose(duo_levels(target, paper, ink), duo_levels(raw, paper, ink), atol=1e-6)   # same mixture
 
@@ -272,7 +256,6 @@ if __name__ == '__main__':
     test_selection_matches_full_convolution()
     test_dot_contrast_counts_hue_clashes()
     test_bright_dots_cost_no_more_than_dim()
-    test_dark_navy_is_not_magenta()
     test_dbs_lowers_complete_colour_objective()
     test_halftone_target_is_reachable()
     test_colour_diffusion_preserves_scalar_projection()

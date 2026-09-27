@@ -1,21 +1,20 @@
 """Debug views of a conversion: numpy images from a Converter, no imgui."""
 import numpy as np
 
-from ..converter.energy import oklab, oklab_to_lrgb
+from ..converter.energy import LRGB2OPP
 
-ERROR_GAIN = 1.5   # the error view's contrast: weighted OKLab error added to mid grey
+ERROR_GAIN = 1.5   # the error view's contrast: weighted opponent units -> linear RGB offset from mid grey
 SEAM_DIM = 0.3     # brightness of the image under the seam view's lines
 
 
 def error_view(c) -> np.ndarray:
-    """Result minus target as the energy sees them (eye-blurred, weighted OKLab) drawn around mid grey: lighter
+    """Result minus target as the energy sees them (eye-blurred, weighted opponent) drawn around mid grey: lighter
     or darker where the luma is too high or low, tinted with the colour the result adds (its complement where it
     misses one). Mid grey is no error."""
     w = c.energy.weights
     weight = np.sqrt(np.array([w['Luma'], w['Chroma'], w['Chroma']], dtype=np.float32))
     error = (c.eye_opponent(c.dithered_result) - c.eye_opponent(c.image_rgb)) * weight * ERROR_GAIN
-    grey = oklab(np.full(3, 0.5 ** c.gamma, np.float32))
-    return oklab_to_lrgb(grey + error).clip(0, 1) ** (1 / c.gamma)
+    return (0.5 ** c.gamma + error @ np.linalg.inv(LRGB2OPP).T).clip(0, 1) ** (1 / c.gamma)
 
 
 def energy_view(c) -> np.ndarray:
