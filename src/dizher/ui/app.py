@@ -12,6 +12,7 @@ from typing import Optional
 
 from mokit.graph import MISSING, Digests, GraphError, Memo, ready_steps, run_step
 from mokit import project
+from mokit.paths import exists
 from mokit.project import Unresolved
 
 from .. import ops
@@ -30,7 +31,7 @@ def project_folder(image) -> Path:
     stem = (image.stem.rstrip(' .') if sys.platform == 'win32' else image.stem) or image.name
     for n in itertools.count(1):
         folder = image.with_name(stem if n == 1 else f'{stem} {n}')
-        if not folder.exists():
+        if not exists(folder):   # past MAX_PATH on Windows too
             return folder
         try:
             if Path(project.load_project(folder).graph['source'].params.path).resolve() == image:

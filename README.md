@@ -33,8 +33,15 @@ Run the GUI:
     pip install pyinstaller
     ./packaging/build.sh
 
-GitHub Actions builds it for macOS (Apple Silicon), Windows and Linux on every push,
-and a `v*` tag publishes the three archives as a release.
+GitHub Actions builds it for macOS (Apple Silicon), Windows and Linux on every push to `develop`, on
+pull requests into `main` and by hand (Actions > build > Run workflow); a `v*` tag on `main` publishes
+the three archives as a release. The branches (`main` for releases, `develop`, feature branches),
+versions and the release steps are in [CLAUDE.md](CLAUDE.md).
+
+The macOS app is not notarized, so macOS refuses to open a downloaded copy ("damaged" or "cannot be
+opened"). Clear the download's quarantine flag once after unpacking:
+
+    xattr -dr com.apple.quarantine Dizher.app
 
 ### Tests
 
@@ -42,8 +49,8 @@ and a `v*` tag publishes the three archives as a release.
     pytest                       # the converter and the pipeline
     python tests/test_ui.py      # the GUI, driven by the Dear ImGui test engine
 
-GitHub Actions runs `pytest` on Windows and Linux on every push, Windows with long paths off as on
-most machines.
+GitHub Actions runs `pytest` on Windows, macOS and Linux on every push, Windows with long paths off as
+on most machines, and the UI tests on Linux under Xvfb.
 
 ### Layout
 
@@ -216,19 +223,19 @@ Done:
   starts the history over. The History panel lists every step, newest on top, named after the
   params it changed; a click goes back or forward to it.
 * [x] Overpaint: attributes and brightness painted by hand
+* [x] Standalone binary packages with PyInstaller for macOS, Windows and Linux
 
 ### Alpha
 
 Critical:
 
-* [ ] Standalone binary packages with PyInstaller for macOS, Windows and Linux
 * [ ] App icon
-* [ ] .dmg for macOS
 * [ ] Fix the middle column's width: the width of the preview plus padding
 
 ### Beta
 
 * [ ] A better loss function for pair selection, tuned on real artists' overpaint data
+* [ ] .dmg for macOS
 * [ ] Palette snapping prototype
 * [ ] A panel of starred or named snapshots to compare and choose from
 * [ ] Global presets of selected stages and params

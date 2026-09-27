@@ -1,12 +1,12 @@
 import copy
-import os
-import sys
 from pathlib import Path
 from typing import Dict
 
 import numpy as np
 import cv2
 from skimage import img_as_float
+
+from mokit.paths import os_path   # also this module's name for it: the UI and tests import it from here
 
 from .palette import Palette
 from .colors import convert_color, lrgb2luminance, gray2rgb
@@ -15,17 +15,6 @@ from ..halftoning.dbs import dbs_duo
 from .eye import LUMA_ALPHA, LUMA_SCALE, CHROMA_ALPHA, CHROMA_SCALE, eye_kernel
 from .energy import SelectionEnergy, pair_dissimilarity, lightness_gain, LRGB2OPP, EDGE_SIGMA
 from ..progress import report_progress, report_stage
-
-
-def os_path(filename) -> str:
-    """filename as open() takes it on any machine: on Windows the \\\\?\\ form, which goes past MAX_PATH (260) with
-    long paths off, as they are on most machines; a project's build folder doubles the image's name."""
-    if sys.platform != 'win32':
-        return str(filename)
-    filename = os.path.abspath(filename)
-    if filename.startswith('\\\\?\\'):
-        return filename
-    return '\\\\?\\UNC\\' + filename[2:] if filename.startswith('\\\\') else '\\\\?\\' + filename
 
 
 class Converter:

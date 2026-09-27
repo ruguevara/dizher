@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image as PILImage, ImageSequence
 
+from mokit.paths import os_path
 from mokit.types import Image, Timing
 from mokit.zx.screen import Screen, load_scr
 
@@ -36,7 +37,7 @@ def _read_rgba(path: Path) -> np.ndarray:
 
 
 def read_image(path) -> Image:
-    path = Path(path)
+    path = Path(os_path(path))   # past MAX_PATH on Windows too
     suffix = path.suffix.lower()
 
     if path.is_dir():

@@ -2,12 +2,12 @@ name: build
 
 on:
   push:
-    branches: [main]
-    tags: ['v*']
+    branches: [develop]   # dev builds of what comes next, for the hand tests
+    tags: ['v*']          # a release
     paths-ignore: ['**.md', 'notebooks/**']
   pull_request:
-    paths-ignore: ['**.md', 'notebooks/**']
-  workflow_dispatch:
+    branches: [main]      # a release or hotfix PR: the packaging checked before the merge
+  workflow_dispatch:      # any branch, by hand: Actions > build > Run workflow
 
 concurrency:   # a newer push to the same ref cancels the running build
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -54,11 +54,10 @@ jobs:
             Linux)   tar -C dist -czf "$out.tar.gz" Dizher ;;
           esac
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
-          name: Dizher-${{ matrix.name }}
           path: Dizher-${{ matrix.name }}.*
-          compression-level: 0   # already compressed
+          archive: false   # the archive as is, not zipped again into a same-named zip
           retention-days: 14
 
   release:   # a v* tag publishes the three archives as a GitHub release
@@ -68,9 +67,23 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v5
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0   # every branch's history: the tag must be on main
+
+      - name: The tag is on main and matches the version in the code
+        run: |
+          v=$(sed -n "s/^__version__ = '\([^']*\)'.*/\1/p" src/dizher/__init__.py)
+          c=$(sed -n "s/^CHANNEL = '\([^']*\)'.*/\1/p" src/dizher/__init__.py)
+          want="v$v${c:+-$c}"
+          [ "$GITHUB_REF_NAME" = "$want" ] || { echo "::error::tag $GITHUB_REF_NAME, the code says $want"; exit 1; }
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main ||
+            { echo "::error::$GITHUB_REF_NAME is not on main"; exit 1; }
+
+      - uses: actions/download-artifact@v8
         with:
           merge-multiple: true
+          skip-decompress: true   # else the .zip archives are unpacked
       - run: |   # v0.2.1-alpha and the like are pre-releases
           gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --generate-notes \
             $([[ "$GITHUB_REF_NAME" == *-* ]] && echo --prerelease) Dizher-*

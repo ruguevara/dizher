@@ -1,4 +1,5 @@
 """The Windows save dialog opens under a long image name. Run: pytest tests/test_save_dialog.py (on Windows)."""
+import os
 import subprocess
 import sys
 
@@ -16,7 +17,7 @@ def test_long_name_opens_the_dialog(tmp_path):
     build = tmp_path / stem / 'build'
     build.mkdir(parents=True)
     assert len(str(build / stem)) >= MAX_PATH
-    default = dialog_default(str(build), stem + '.scr')
-    assert len(default) < MAX_PATH and default.startswith(str(build)) and default.endswith('.scr')
+    default = dialog_default(str(build), stem + '.scr')   # build by its 8.3 short name, where the volume keeps them
+    assert len(default) < MAX_PATH and default.endswith('.scr') and os.path.samefile(os.path.dirname(default), build)
     with pytest.raises(subprocess.TimeoutExpired):   # open, waiting for the user
         subprocess.run([sys.executable, '-c', SAVE, default], capture_output=True, timeout=10)
