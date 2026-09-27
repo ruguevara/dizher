@@ -125,7 +125,23 @@ class SelectionEnergy:
         report_stage('selection energy')
         c = self.converter
         X = c.image_lrgb.astype(np.float32) @ LRGB2OPP.T
-        Y = (c.realized ** c.gamma) @ LRGB2OPP.T
+        if getattr(c, 'expected', False):
+            # the exact mixture each pixel's level asks for, and the dot contrast a binary realisation adds around it
+            lin = (c.color_pairs.astype(np.float32) ** c.gamma) @ LRGB2OPP.T               # (P, 2, 3)
+            paper, span = lin[:, None, None, 0], (lin[:, 1] - lin[:, 0])[:, None, None]
+            t = c.levels.astype(np.float32)[..., None]
+            Y = paper + t * span
+            dots = t * (1 - t) * (span * c.gain) ** 2                                       # (P, H, W, 3)
+            if getattr(c, 'hue_dots', False):
+                # chroma contrast of the dots from their hues only: none for black, white or grey dots
+                ab = convert_color(c.color_pairs.astype(np.float32).reshape(1, -1, 3), 'RGB', 'LAB').reshape(-1, 2, 3)[..., 1:] / 100
+                cp, ci = ab[:, 0], ab[:, 1]
+                hue = 2 * (np.linalg.norm(cp, axis=-1) * np.linalg.norm(ci, axis=-1) - (cp * ci).sum(-1))   # (P,)
+                dots[..., 1] = t[..., 0] * (1 - t[..., 0]) * hue[:, None, None] * c.gain[..., 0] ** 2
+                dots[..., 2] = 0
+        else:
+            Y = (c.realized ** c.gamma) @ LRGB2OPP.T
+            dots = None
         E = (Y - X) * c.gain                                               # (P, H, W, 3)
         P, H, W, _ = E.shape
         h, w = c.cell
@@ -139,6 +155,8 @@ class SelectionEnergy:
             A = [np.ascontiguousarray(E[..., k]) for k in channels]         # each (R, C, P, 64)
             self.X[g] = X[..., channels].reshape(R, h, C, w, len(channels)).mean(axis=(1, 3))   # (R, C, nch) target block means
             self.N[g] = sum((a ** 2).sum(-1) for a in A).transpose(2, 0, 1)
+            if dots is not None:
+                self.N[g] = self.N[g] + dots[..., channels].sum(-1).reshape(P, R, h, C, w).sum(axis=(2, 4))
             self.D[g] = sum(np.einsum('rcpx,xy,rcpy->prc', a, K0, a, optimize=True) for a in A)
             self.S[g] = {}
             for dr, dc in OFFSETS:

@@ -33,6 +33,8 @@ class Converter:
             structure: float = 0.06,
             ditherer: Ditherer = None,   # halftones the pair candidates and, after selection, the result
             flare: float = 0.1,
+            expected: bool = False,
+            hue_dots: bool = False,
     ):
         self.mode = mode
         self.size = mode.size
@@ -48,6 +50,8 @@ class Converter:
         self.coherence = coherence  # cost of a pair change between neighbours where the original is smooth, see energy.py
         self.structure = structure  # weight of the contrast-weighted SSIM term in the DBS optimiser, see halftoning/dbs.py
         self.ditherer = ditherer or Stohastic()
+        self.expected = expected
+        self.hue_dots = hue_dots
         self.flare = flare          # flattens the per-pixel lightness gain of the error, see energy.lightness_gain
         self.energy = SelectionEnergy(self, weights)
         self.image_rgb = None

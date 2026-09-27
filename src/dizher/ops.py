@@ -34,6 +34,8 @@ HALFTONERS = {cls.label: cls for cls in (Stohastic, Ordered, ErrorDiffusion)}
 class Metric:
     chroma: float   # weight of the chroma error against luma's 1
     flare: float    # flattens the lightness gain of the error, see converter/energy.py
+    expected: bool = False
+    hue_dots: bool = False
 
 
 @dataclass(frozen=True)
@@ -141,13 +143,14 @@ def detail(picture: np.ndarray,
 
 
 def metric(chroma: Annotated[float, meta(min=0.0, max=4.0, help="weight of chroma error; luma error weighs 1")] = 1.0,
+           expected: bool = False, hue_dots: bool = False,
            flare: Annotated[float, meta(min=0.0, max=1.0, help="stray light on the screen, in units of white: 0 weighs "
                                         "errors as CIELAB lightness does, ~7x more in black than in mid grey; "
                                         "higher flattens that towards plain linear light")] = 0.1) -> Metric:
     """Balance of chroma against luma error in the eye-model energy, and how much more an error counts in the
     shadows. One chroma weight: scaling both would only duplicate coherence (the seam cost has no weight), shift
     the edge threshold and the DBS structure term."""
-    return Metric(chroma, flare)
+    return Metric(chroma, flare, expected, hue_dots)
 
 
 def eye(luma_alpha: Annotated[float, meta(min=0.5, max=2.0)] = eye_model.LUMA_ALPHA,
@@ -176,7 +179,8 @@ def prepare(picture: np.ndarray, target: Mode, metric: Metric, eye: Eye, halfton
     """Every pair fitted per pixel and halftoned into a candidate, and the selection energy."""
     c = Converter({'Luma': 1.0, 'Chroma': metric.chroma}, target, luma_alpha=eye.luma_alpha,
                   luma_scale=eye.luma_scale, chroma_alpha=eye.chroma_alpha, chroma_scale=eye.chroma_scale,
-                  ditherer=halftoner, flare=metric.flare)
+                  ditherer=halftoner, flare=metric.flare, expected=metric.expected,
+                  hue_dots=metric.hue_dots)
     with reporting(progress):
         c.set_image(picture)
     return c
