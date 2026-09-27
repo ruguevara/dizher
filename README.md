@@ -38,6 +38,11 @@ pull requests into `main` and by hand (Actions > build > Run workflow); a `v*` t
 the three archives as a release. The branches (`main` for releases, `develop`, feature branches),
 versions and the release steps are in [CLAUDE.md](CLAUDE.md).
 
+The macOS app is not notarized, so macOS refuses to open a downloaded copy ("damaged" or "cannot be
+opened"). Clear the download's quarantine flag once after unpacking:
+
+    xattr -dr com.apple.quarantine Dizher.app
+
 ### Tests
 
     pip install pytest

@@ -54,11 +54,10 @@ jobs:
             Linux)   tar -C dist -czf "$out.tar.gz" Dizher ;;
           esac
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
-          name: Dizher-${{ matrix.name }}
           path: Dizher-${{ matrix.name }}.*
-          compression-level: 0   # already compressed
+          archive: false   # the archive as is, not zipped again into a same-named zip
           retention-days: 14
 
   release:   # a v* tag publishes the three archives as a GitHub release
@@ -81,9 +80,10 @@ jobs:
           git merge-base --is-ancestor "$GITHUB_SHA" origin/main ||
             { echo "::error::$GITHUB_REF_NAME is not on main"; exit 1; }
 
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v8
         with:
           merge-multiple: true
+          skip-decompress: true   # else the .zip archives are unpacked
       - run: |   # v0.2.1-alpha and the like are pre-releases
           gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --generate-notes \
             $([[ "$GITHUB_REF_NAME" == *-* ]] && echo --prerelease) Dizher-*
