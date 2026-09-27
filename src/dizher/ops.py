@@ -34,8 +34,6 @@ HALFTONERS = {cls.label: cls for cls in (Stohastic, Ordered, ErrorDiffusion)}
 class Metric:
     chroma: float   # weight of the chroma error against luma's 1
     flare: float    # flattens the lightness gain of the error, see converter/energy.py
-    expected: bool = False
-    hue_dots: bool = False
 
 
 @dataclass(frozen=True)
@@ -142,15 +140,14 @@ def detail(picture: np.ndarray,
     return tone.detail(picture, texture, sharpen, radius)
 
 
-def metric(chroma: Annotated[float, meta(min=0.0, max=4.0, help="weight of chroma error; luma error weighs 1")] = 1.0,
-           expected: bool = False, hue_dots: bool = False,
+def metric(chroma: Annotated[float, meta(min=0.0, max=4.0, help="weight of chroma error; luma error weighs 1")] = 2.0,
            flare: Annotated[float, meta(min=0.0, max=1.0, help="stray light on the screen, in units of white: 0 weighs "
                                         "errors as CIELAB lightness does, ~7x more in black than in mid grey; "
                                         "higher flattens that towards plain linear light")] = 0.1) -> Metric:
     """Balance of chroma against luma error in the eye-model energy, and how much more an error counts in the
     shadows. One chroma weight: scaling both would only duplicate coherence (the seam cost has no weight), shift
     the edge threshold and the DBS structure term."""
-    return Metric(chroma, flare, expected, hue_dots)
+    return Metric(chroma, flare)
 
 
 def eye(luma_alpha: Annotated[float, meta(min=0.5, max=2.0)] = eye_model.LUMA_ALPHA,
@@ -162,36 +159,36 @@ def eye(luma_alpha: Annotated[float, meta(min=0.5, max=2.0)] = eye_model.LUMA_AL
     return Eye(luma_alpha, luma_scale, chroma_alpha, chroma_scale)
 
 
-NOISE = meta(min=0, max=BLUE_NOISE_RESOLUTION - 1, help="px the tile is rolled: another start for pair selection "
-                                                        "and DBS, which settle in local optima")
+NOISE = meta(min=0, max=BLUE_NOISE_RESOLUTION - 1, help="px the tile is rolled: another start for DBS, which settles "
+                                                        "in a local optimum")
 
 def halftoner(halftoner: Annotated[str, meta(choices=tuple(HALFTONERS))] = Ordered.label,
               matrix: Annotated[str, meta(choices=tuple(MATRICES))] = 'Void dispersed dots',
               kernel: Annotated[str, meta(choices=tuple(KERNELS))] = 'Shiau-Fan 3',
               noise_x: Annotated[int, NOISE] = 0, noise_y: Annotated[int, NOISE] = 0) -> Ditherer:
-    """The method that paints the pair candidates and then the result (each cell's paper or ink per pixel);
+    """The method that paints the result (each cell's paper or ink per pixel) and the pair candidates of the live preview;
     each reads its own params (Ditherer.controls): Ordered the threshold matrix, Error diffusion the kernel,
     the tiled ones their origin."""
     return HALFTONERS[halftoner](matrix=matrix, kernel=kernel, origin=(noise_y, noise_x))
 
 
 def prepare(picture: np.ndarray, target: Mode, metric: Metric, eye: Eye, halftoner: Ditherer, progress=None) -> Converter:
-    """Every pair fitted per pixel and halftoned into a candidate, and the selection energy."""
+    """Every pair fitted per pixel, halftoned for the live preview, and the selection energy."""
     c = Converter({'Luma': 1.0, 'Chroma': metric.chroma}, target, luma_alpha=eye.luma_alpha,
                   luma_scale=eye.luma_scale, chroma_alpha=eye.chroma_alpha, chroma_scale=eye.chroma_scale,
-                  ditherer=halftoner, flare=metric.flare, expected=metric.expected,
-                  hue_dots=metric.hue_dots)
+                  ditherer=halftoner, flare=metric.flare)
     with reporting(progress):
         c.set_image(picture)
     return c
 
 
 def select_pairs(prepared: Converter,
-                 coherence: Annotated[float, meta(min=0.0, max=8.0)] = 2.0,
+                 coherence: Annotated[float, meta(min=0.0, max=8.0)] = 6.0,
                  edge: Annotated[float, meta(min=0.02, max=0.4, help="step of the original across a seam that "
                                              "counts as an edge, where a pair change costs no coherence")] = EDGE_SIGMA,
-                 luma_noise: Annotated[float, meta(min=0.0, max=0.5)] = 0.0,
-                 chroma_noise: Annotated[float, meta(min=0.0, max=0.5)] = 0.05,
+                 luma_noise: Annotated[float, meta(min=0.0, max=0.5, help="cost of dot contrast in lightness")] = 0.0,
+                 chroma_noise: Annotated[float, meta(min=0.0, max=0.5, help="cost of dots of clashing hues, "
+                                                     "blue on yellow most, black or white dots none")] = 0.02,
                  progress=None) -> Converter:
     """One (paper, ink) pair per cell; the noise weights also reach the DBS optimiser."""
     c = prepared.copy(coherence=coherence, edge=edge, luma_noise=luma_noise, chroma_noise=chroma_noise)

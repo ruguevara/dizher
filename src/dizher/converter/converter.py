@@ -26,15 +26,13 @@ class Converter:
             luma_scale: float = LUMA_SCALE,
             chroma_alpha: float = CHROMA_ALPHA,
             chroma_scale: float = CHROMA_SCALE,
-            coherence: float = 2.0,
+            coherence: float = 6.0,
             edge: float = EDGE_SIGMA,
             luma_noise: float = 0.0,
-            chroma_noise: float = 0.05,
+            chroma_noise: float = 0.02,
             structure: float = 0.06,
             ditherer: Ditherer = None,   # halftones the pair candidates and, after selection, the result
             flare: float = 0.1,
-            expected: bool = False,
-            hue_dots: bool = False,
     ):
         self.mode = mode
         self.size = mode.size
@@ -44,14 +42,12 @@ class Converter:
         self.luma_scale = luma_scale
         self.chroma_alpha = chroma_alpha
         self.chroma_scale = chroma_scale
-        self.luma_noise = luma_noise      # weights of the unblurred error: dot noise the low-pass eye model would miss, see energy.py
+        self.luma_noise = luma_noise      # weights of the unblurred error: dot contrast the low-pass eye model would miss, see energy.py
         self.chroma_noise = chroma_noise
         self.edge = edge            # step of the original across a seam that counts as a real edge, see energy.py
         self.coherence = coherence  # cost of a pair change between neighbours where the original is smooth, see energy.py
         self.structure = structure  # weight of the contrast-weighted SSIM term in the DBS optimiser, see halftoning/dbs.py
         self.ditherer = ditherer or Stohastic()
-        self.expected = expected
-        self.hue_dots = hue_dots
         self.flare = flare          # flattens the per-pixel lightness gain of the error, see energy.lightness_gain
         self.energy = SelectionEnergy(self, weights)
         self.image_rgb = None
@@ -103,7 +99,8 @@ class Converter:
         return image_rgb
 
     def set_image(self, image_rgb: np.ndarray) -> None:
-        """The ~1 s setup: every pair fitted per pixel, its candidate halftoned, the selection energy."""
+        """The ~1 s setup: every pair fitted per pixel, the selection energy of its exact mixture, and its candidate
+        halftoned for the live preview of pair selection."""
         image_rgb = self.preprocess_image(image_rgb)
         self.invalidate()
         self.image_rgb = image_rgb
@@ -112,7 +109,6 @@ class Converter:
         self.gain = lightness_gain(self.image_luma, self.flare)
         report_stage(f'fitting {len(self.color_pairs)} pairs')
         self.levels = self.fit_duocolors()
-        # candidates are scored as the halftoner would paint them: the pairs are chosen for the dots they will get
         self.bitmaps = self.ditherer.threshold(self.levels)
         paper = self.color_pairs[:, 0, np.newaxis, np.newaxis, :]
         ink = self.color_pairs[:, 1, np.newaxis, np.newaxis, :]

@@ -1,29 +1,28 @@
 """Colour-pair selection as one eye-model energy over the whole composite image.
 
 E(labels) = sum_ch w_ch || h_ch * (g (Y_ch - X_ch)) ||^2   in a linear opponent space (S-CIELAB's
-O1 luminance, O2 red-green, O3 blue-yellow), Y the realised composite, X the target, h_ch the
-eye kernel of the channel's group (Luma: O1, Chroma: O2 and O3), g the per-pixel lightness gain
-(lightness_gain: linear-light error weighted as CIELAB sees it at the target). Because the composite is a sum
-of per-block candidates, E splits exactly into a per-block term D[p, b] and pairwise terms
-S[p, q, b, b'] = 2 e_p[b]^T K e_q[b'] with K = h (*) h the kernel autocorrelation. The pairwise
-term is the visible seam a pair change paints, in the same units as D, with no extra knob.
+O1 luminance, O2 red-green, O3 blue-yellow), Y the composite, X the target, h_ch the eye kernel of the
+channel's group (Luma: O1, Chroma: O2 and O3), g the per-pixel lightness gain (lightness_gain: linear-light
+error weighted as CIELAB sees it at the target). A pair's candidate on a block is the exact mixture its
+per-pixel level asks for (paper + t (ink - paper)), not one halftone of it: a halftone's noise decided near
+ties at random, block by block. Because the composite is a sum of per-block candidates, E splits exactly
+into a per-block term D[p, b] and pairwise terms S[p, q, b, b'] = 2 e_p[b]^T K e_q[b'] with K = h (*) h
+the kernel autocorrelation. The pairwise term is the visible seam a pair change paints, in the same units
+as D, with no extra knob.
+
+The dots cost apart from the mixture: each group's unblurred error, the mixture's residual plus the
+t (1 - t) contrast^2 the dots add around it (dot_contrast), weighted by luma_noise and chroma_noise.
+Chroma contrast counts hue only: blue dots on yellow, which average to a pale colour, cost the most, and
+bright yellow dots on black cost nothing, as the hand-painted references prefer them to a dim pair with
+fewer dots. Luma dot contrast has weight 0 by default for the same reason.
 
 Blurred mean-square error is blind to texture: a lone block dithered with green dots among blocks
-dithered with yellow dots is plainly a cell even when the mean colours agree, and where two pairs
-tie the noise of the realisation picks one per block at random. So a coherence term charges a
-pair change between 4-neighbours by how different the two pairs look (CIELUV distance of the
+dithered with yellow dots is plainly a cell even when the mean colours agree. So a coherence term
+charges a pair change between 4-neighbours by how different the two pairs look (CIELUV distance of the
 papers plus of the inks), scaled down where the original itself has an edge across that seam:
     coherence * SEAM_COST * sum_{b~b'} V[p_b, p_b'] * exp(-|x_b - x_b'|^2 / 2 edge^2)
 This is the contrast-sensitive Potts prior of MRF segmentation. It is graded, so the bright
 variant of the same colours is nearly free, and a change along a real edge costs nothing.
-
-The kernels are pure low-pass, so they call blue dots on yellow (the palette's largest chroma
-contrast) invisible once blurred, and then prefer that pair for a salmon target on mean colour
-alone; likewise black dots on white for a grey a palette could paint with two close greys. Real
-sensitivity does not vanish at the pixel pitch, so each kernel autocorrelation gets a delta
-component: K = h (*) h + noise * delta. Its extra energy is the unblurred squared error of the
-channel group, a per-block term with no cross-block part. The weights are luma_noise and
-chroma_noise: dot contrast the eye still sees at the viewing distance.
 The eye kernels have radius at most half the smallest cell dimension, so their autocorrelations
 couple only the 8 neighbouring blocks. No nonzero interaction is dropped.
 Labels by block coordinate descent on whole lines: each row, then each column, is
@@ -75,6 +74,17 @@ def lightness_gain(luminance: np.ndarray, flare: float) -> np.ndarray:
     slope = lambda y: np.where(y > (6 / 29) ** 3, np.cbrt(np.maximum(y, 1e-6)) ** -2 / 3, (29 / 6) ** 2 / 3)
     return (slope(luminance + flare) / slope(LIGHTNESS_REF + flare))[..., None].astype(np.float32)
 
+def dot_contrast(color_pairs: np.ndarray, gamma: float) -> np.ndarray:
+    """(P, 2, 3) gamma-encoded RGB pairs -> (P, 2) squared contrast between a pair's paper and ink dots, per GROUPS.
+    Luma: of the opponent luminance channel. Chroma: of hue alone, in CIELAB, 2 (|ab_p| |ab_i| - ab_p . ab_i) / 100^2:
+    none for black, white or grey dots on any colour, most for complementary pairs (blue on yellow, green on magenta)
+    whose mixture the eye sees as dots of both. Yellow dots on black cost no chroma: the hand-painted references
+    (tests/pair_bench.py) keep bright dots of the target's hue over a dim pair with fewer dots."""
+    lin = (color_pairs.astype(np.float32) ** gamma) @ LRGB2OPP.T
+    ab = convert_color(color_pairs.astype(np.float32).reshape(1, -1, 3), 'RGB', 'LAB').reshape(-1, 2, 3)[..., 1:] / 100
+    hue = 2 * (np.linalg.norm(ab[:, 0], axis=-1) * np.linalg.norm(ab[:, 1], axis=-1) - (ab[:, 0] * ab[:, 1]).sum(-1))
+    return np.stack([(lin[:, 1, 0] - lin[:, 0, 0]) ** 2, np.maximum(hue, 0)], axis=-1).astype(np.float32)
+
 def autocorrelation(h: np.ndarray) -> np.ndarray:
     r = h.shape[0] // 2
     return cv2.filter2D(np.pad(h, r), -1, h, borderType=cv2.BORDER_CONSTANT)
@@ -125,27 +135,16 @@ class SelectionEnergy:
         report_stage('selection energy')
         c = self.converter
         X = c.image_lrgb.astype(np.float32) @ LRGB2OPP.T
-        if getattr(c, 'expected', False):
-            # the exact mixture each pixel's level asks for, and the dot contrast a binary realisation adds around it
-            lin = (c.color_pairs.astype(np.float32) ** c.gamma) @ LRGB2OPP.T               # (P, 2, 3)
-            paper, span = lin[:, None, None, 0], (lin[:, 1] - lin[:, 0])[:, None, None]
-            t = c.levels.astype(np.float32)[..., None]
-            Y = paper + t * span
-            dots = t * (1 - t) * (span * c.gain) ** 2                                       # (P, H, W, 3)
-            if getattr(c, 'hue_dots', False):
-                # chroma contrast of the dots from their hues only: none for black, white or grey dots
-                ab = convert_color(c.color_pairs.astype(np.float32).reshape(1, -1, 3), 'RGB', 'LAB').reshape(-1, 2, 3)[..., 1:] / 100
-                cp, ci = ab[:, 0], ab[:, 1]
-                hue = 2 * (np.linalg.norm(cp, axis=-1) * np.linalg.norm(ci, axis=-1) - (cp * ci).sum(-1))   # (P,)
-                dots[..., 1] = t[..., 0] * (1 - t[..., 0]) * hue[:, None, None] * c.gain[..., 0] ** 2
-                dots[..., 2] = 0
-        else:
-            Y = (c.realized ** c.gamma) @ LRGB2OPP.T
-            dots = None
+        lin = (c.color_pairs.astype(np.float32) ** c.gamma) @ LRGB2OPP.T                  # (P, 2, 3) paper, ink
+        t = c.levels.astype(np.float32)
+        Y = lin[:, None, None, 0] + t[..., None] * (lin[:, None, None, 1] - lin[:, None, None, 0])   # the exact mixtures
         E = (Y - X) * c.gain                                               # (P, H, W, 3)
         P, H, W, _ = E.shape
         h, w = c.cell
         R, C = H // h, W // w
+        # t(1 - t) contrast^2 is the mean squared error dots add around their mixture, gained per pixel like E
+        spread = (t * (1 - t) * c.gain[..., 0] ** 2).reshape(P, R, h, C, w).sum(axis=(2, 4))   # (P, R, C)
+        dots = dict(zip(GROUPS, dot_contrast(c.color_pairs, c.gamma).T))
         E = E.reshape(P, R, h, C, w, 3).transpose(1, 3, 0, 2, 4, 5).reshape(R, C, P, h * w, 3)
         luma, chroma, _ = c.eye_kernels()
         kernels = dict(Luma=luma, Chroma=chroma)
@@ -154,9 +153,7 @@ class SelectionEnergy:
             K0 = block_kernel_matrix(cpp, 0, 0, c.cell)
             A = [np.ascontiguousarray(E[..., k]) for k in channels]         # each (R, C, P, 64)
             self.X[g] = X[..., channels].reshape(R, h, C, w, len(channels)).mean(axis=(1, 3))   # (R, C, nch) target block means
-            self.N[g] = sum((a ** 2).sum(-1) for a in A).transpose(2, 0, 1)
-            if dots is not None:
-                self.N[g] = self.N[g] + dots[..., channels].sum(-1).reshape(P, R, h, C, w).sum(axis=(2, 4))
+            self.N[g] = sum((a ** 2).sum(-1) for a in A).transpose(2, 0, 1) + dots[g][:, None, None] * spread
             self.D[g] = sum(np.einsum('rcpx,xy,rcpy->prc', a, K0, a, optimize=True) for a in A)
             self.S[g] = {}
             for dr, dc in OFFSETS:
