@@ -20,6 +20,8 @@ from dataclasses import dataclass, field, fields, is_dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+from .paths import os_path
+
 __all__ = ["Node", "Graph", "GraphError", "Op", "meta", "evaluate", "ready_steps", "next_step", "run_step", "Memo", "Digests", "UNBOUND", "discover_ops",
            "FileType", "FILE_TYPES", "register_file_type", "file_fields", "output_fields", "MISSING", "type_name", "accepts", "mro_lookup"]
 
@@ -119,7 +121,7 @@ def output_fields(params_type) -> Tuple[str, ...]:
 
 def _stat_signature(path: Path):
     try:
-        st = path.stat()
+        st = os.stat(os_path(path))
     except OSError:
         return None
     return st.st_mtime_ns, st.st_size, st.st_ino
@@ -131,7 +133,7 @@ def _list_dir(path: Path) -> List[Path]:
 
 def _digest_file(path: Path) -> str:
     h = hashlib.sha1()
-    with open(path, "rb") as f:   # ponytail: whole-file sha1; chunked/partial digest if sources get huge
+    with open(os_path(path), "rb") as f:   # ponytail: whole-file sha1; chunked/partial digest if sources get huge
         for chunk in iter(lambda: f.read(1 << 20), b""):
             h.update(chunk)
     return h.hexdigest()
@@ -166,7 +168,7 @@ class Digests:
 
     def digest(self, path) -> str:
         path = Path(path)
-        if path.is_dir():
+        if os.path.isdir(os_path(path)):
             entries = self._dirs[path] = _list_dir(path)
             h = hashlib.sha1()
             for p in entries:
