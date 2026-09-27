@@ -223,19 +223,19 @@ Done:
   starts the history over. The History panel lists every step, newest on top, named after the
   params it changed; a click goes back or forward to it.
 * [x] Overpaint: attributes and brightness painted by hand
+* [x] Standalone binary packages with PyInstaller for macOS, Windows and Linux
 
 ### Alpha
 
 Critical:
 
-* [ ] Standalone binary packages with PyInstaller for macOS, Windows and Linux
 * [ ] App icon
-* [ ] .dmg for macOS
 * [ ] Fix the middle column's width: the width of the preview plus padding
 
 ### Beta
 
 * [ ] A better loss function for pair selection, tuned on real artists' overpaint data
+* [ ] .dmg for macOS
 * [ ] Palette snapping prototype
 * [ ] A panel of starred or named snapshots to compare and choose from
 * [ ] Global presets of selected stages and params

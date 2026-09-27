@@ -5,7 +5,9 @@
 - `main`: released code only. It changes only by a PR from `develop` (a release) or from a `hotfix/*` branch, merged
   with a merge commit; every merge is followed by a release tag on it. No direct commits, no force pushes.
 - `develop`: where finished features come together; its CI stays green. It changes only by PRs from feature branches,
-  squash-merged, and by merging `main` back after a hotfix. No direct commits, no force pushes.
+  squash-merged, and by merging `main` back after a hotfix. No direct commits, no force pushes, except docs-only
+  commits (`*.md`, `notebooks/`), which the repository admin may push straight to it (the ruleset lets the admin
+  role bypass; it cannot tell docs from code, so keep code out of them).
 - Feature branches (`feature/*`, and `claude/*` for Claude sessions): from `develop`, one topic each, a PR back into
   `develop`. Temporary diagnostics (extra workflows, timing scripts) may live on a feature branch and are gone from
   it before the PR; the squash merge drops its history.
