@@ -105,6 +105,28 @@ def seams(pairs):
             np.concatenate([pairs[:-1].reshape(-1, 2), pairs[:, :-1].reshape(-1, 2)]))
 
 
+def _count(got, cells, names):
+    return sum(pair_name(*got[r, c]) in names for r, c in cells)
+
+
+def _painted_as(ref, painted, name):
+    return [(r, c) for r, c in painted if pair_name(*ref[r, c]) == name]
+
+
+# Faults the user named, counted per image: (label, function of the result's pairs, the reference, painted cells).
+SPOTS = {
+    'anubis': (('eye yellow/3', lambda got, ref, p: _count(got, ((6, 18), (7, 18), (7, 19)), ('k/Y', 'k/y'))),
+               ('magenta', lambda got, ref, p: _count(got, np.ndindex(got.shape[:2]), ('k/m', 'k/M')))),
+    'jojo': (('magenta', lambda got, ref, p: _count(got, np.ndindex(got.shape[:2]), ('k/m', 'k/M'))),
+             ('k/y faces grey', lambda got, ref, p: _count(got, _painted_as(ref, p, 'k/y'), ('k/W', 'k/w')))),
+    'rocket-rackoon': (('R/Y kept', lambda got, ref, p: _count(got, _painted_as(ref, p, 'R/Y'), ('R/Y',))),),
+}
+
+
+def spots(name, ref, got, painted) -> str:
+    return ', '.join(f'{label} {check(got, ref, painted)}' for label, check in SPOTS.get(name, ()))
+
+
 def score(ref, got, painted):
     ok = matches(ref, got)
     mask = np.zeros(ok.shape, bool)
@@ -195,8 +217,9 @@ def run(names, sets, sheets=None, memos=None, quiet=False):
         bitmap, ref_idx = read_scr(IMAGES / name / 'reference.scr')
         ref = shown(bitmap, ref_idx)
         got = label_pairs(conv, conv.best_attr_indexes)
-        s = score(ref, got, painted_cells(project_graph(name)))
-        s['name'], s['seconds'] = name, time.time() - t
+        painted = painted_cells(project_graph(name))
+        s = score(ref, got, painted)
+        s['name'], s['seconds'], s['spots'] = name, time.time() - t, spots(name, ref, got, painted)
         rows.append(s)
         if sheets:
             wrong = list(zip(*np.nonzero(~matches(ref, got))))
@@ -208,7 +231,7 @@ def run(names, sets, sheets=None, memos=None, quiet=False):
         print(f"{'image':16} {'agree':>6} {'painted':>7} {'rest':>6} {'false':>6} {'missed':>6} {'changes':>7} {'s':>5}")
         for s in rows:
             print(f"{s['name']:16} {s['agree']:6.3f} {s['painted']:7.3f} {s['rest']:6.3f} {s['false_seams']:6.3f} "
-                  f"{s['missed_seams']:6.3f} {s['pair_changes']:7d} {s['seconds']:5.1f}")
+                  f"{s['missed_seams']:6.3f} {s['pair_changes']:7d} {s['seconds']:5.1f}  {s['spots']}")
         mean = lambda k: np.nanmean([s[k] for s in rows])
         print(f"{'mean':16} {mean('agree'):6.3f} {mean('painted'):7.3f} {mean('rest'):6.3f} {mean('false_seams'):6.3f} "
               f"{mean('missed_seams'):6.3f}")
