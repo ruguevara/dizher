@@ -5,7 +5,7 @@ import time
 from contextlib import contextmanager
 from typing import Any, Callable
 
-PROGRESS_INTERVAL = 0.01  # s between preview images
+PROGRESS_INTERVAL = 0.1   # s between preview images: each is uploaded on the UI thread, which holds the GIL meanwhile
 _local = threading.local()   # .progress: the mokit progress of the op running on this thread
 
 

@@ -15,6 +15,7 @@ import sys
 from contextlib import contextmanager
 from typing import Callable, Iterable
 
+import numpy as np
 from imgui_bundle import imgui, immvision, em_size, em_to_vec2
 from imgui_bundle import portable_file_dialogs as pfd
 
@@ -151,15 +152,20 @@ def path_input(id: str, value: str, on_change: Callable[[str], None], kind: str,
 
 # ----- images --------------------------------------------------------------------------------------
 
-def image_params(cache: dict, key: str, size, image_size=None) -> immvision.ImageParams:
+def image_params(cache: dict, key: str, size, image_size=None, image=None) -> immvision.ImageParams:
     """Per-image immvision params (nearest-neighbour, display only), kept in `cache` across frames. With the image's
     (w, h) the view is pinned to the whole image every frame: immvision can keep a stale zoom after the image
-    or display size changes, and a display-only image has no zoom of its own to lose."""
+    or display size changes, and a display-only image has no zoom of its own to lose. Given the image drawn, immvision
+    uploads it only when it differs from the one last drawn under key (kept in `cache` as (key, 'shown')), else every
+    frame: an upload holds the GIL on the UI thread, and one per frame slows a worker thread that releases the GIL
+    often (numpy, OpenCV)."""
     params = cache.get(key)
     if params is None:
         params = cache[key] = immvision.factor_image_params_display_only()
         params.interpolation_mode = immvision.ImageInterpolationMode.nearest
-        params.refresh_image = True
+    shown = cache.get((key, 'shown'))
+    params.refresh_image = image is None or shown is None or shown.shape != image.shape or not np.array_equal(shown, image)
+    cache[key, 'shown'] = image
     params.image_display_size = size
     if image_size is not None:
         params.zoom_pan_matrix = immvision.make_zoom_pan_matrix_full_view(image_size, size)
