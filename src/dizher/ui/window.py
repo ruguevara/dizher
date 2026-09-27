@@ -28,6 +28,7 @@ from imgui_bundle import em_size, hello_imgui, imgui, immapp, immvision
 from imgui_bundle import portable_file_dialogs as pfd
 
 from mokit import project
+from mokit.paths import exists
 from mokit.ui import style, widgets
 from mokit.ui.params import params_editor
 from mokit.graph import GraphError, Op
@@ -99,15 +100,31 @@ def save_dialog(title: str, folder: str, name: str) -> str:
 
 
 def dialog_default(folder: str, name: str) -> str:
-    """The save dialog's default path. On Windows the name's stem is cut to fit MAX_PATH: past it GetSaveFileNameW
-    fails at once (FNERR_INVALIDFILENAME) and pfd gives "" as for a cancel; a project's build folder doubles the
-    image's name. A folder with no room for a name leaves the name alone, in the folder the dialog picks."""
+    """The save dialog's default path. On Windows it fits MAX_PATH: past it GetSaveFileNameW fails at once
+    (FNERR_INVALIDFILENAME) and pfd gives "" as for a cancel; a project's build folder doubles the image's name. The
+    folder goes by its 8.3 short name where the volume keeps them, then the name's stem is cut. A folder with no room
+    for a name leaves the name alone, in the folder the dialog picks."""
     path = str(Path(folder) / name)
     if sys.platform != 'win32' or len(path) < MAX_PATH:
+        return path
+    folder = short_path(folder)
+    path = str(Path(folder) / name)
+    if len(path) < MAX_PATH:
         return path
     stem, ext = os.path.splitext(name)
     room = len(stem) - (len(path) - (MAX_PATH - 1))
     return str(Path(folder) / (stem[:room].rstrip() + ext)) if room > 0 else name
+
+
+def short_path(path: str) -> str:
+    """path with its 8.3 short names (Windows), or path itself where the volume keeps none or it does not exist."""
+    import ctypes
+    buf = ctypes.create_unicode_buffer(32768)
+    n = ctypes.windll.kernel32.GetShortPathNameW(os_path(path), buf, len(buf))
+    if not 0 < n < len(buf):
+        return path
+    short = buf.value   # in the \\?\ form it was asked in
+    return '\\\\' + short[8:] if short.startswith('\\\\?\\UNC\\') else short[4:] if short.startswith('\\\\?\\') else short
 
 
 @contextmanager
@@ -248,7 +265,7 @@ class Window:
         self.autosave = False              # the user pref, on by default, comes with the prefs: tests never write
         self.recent = []                   # images opened, the latest first; a user pref
         self.restore_session = path is None
-        if path and (Path(path) / project.PROJECT_FILE).exists():
+        if path and exists(Path(path) / project.PROJECT_FILE):
             self._open_project(path)
         elif path:
             self._open_image(path)
@@ -707,7 +724,7 @@ class Window:
                 self._open()
             if imgui.begin_menu('Open recent', bool(self.recent)):
                 for i, path in enumerate(self.recent):
-                    if imgui.menu_item_simple(f'{path.name}##{i}', enabled=path.exists()):
+                    if imgui.menu_item_simple(f'{path.name}##{i}', enabled=exists(path)):
                         self._close(lambda p=path: self._open_image(p))
                     imgui.set_item_tooltip(str(path))
                 imgui.end_menu()
@@ -858,7 +875,7 @@ class Window:
     def _open_image(self, path) -> None:
         """Its project when it has one, else a new one beside it: autosave writes it at once, else the first save."""
         folder = project_folder(path)
-        if (folder / project.PROJECT_FILE).exists():
+        if exists(folder / project.PROJECT_FILE):
             self._open_project(folder)
         else:
             self.app.open(path)
@@ -879,7 +896,7 @@ class Window:
         source, mode = self._source(), self.result.mode
         ext = ext or (mode.file_type[1].lstrip('*') if mode.file_type else '.png')
         folder = source.parent if source else Path.home()
-        if self.project and self.project.exists():
+        if self.project and exists(self.project):
             folder = self.project / 'build'
             Path(os_path(folder)).mkdir(exist_ok=True)
         path = save_dialog('Save conversion', str(folder), (source.stem if source else 'conversion') + ext)
@@ -903,7 +920,7 @@ class Window:
     def _save_project(self) -> None:
         graph = self.app.graph
         try:
-            if (self.project / project.PROJECT_FILE).exists():
+            if exists(self.project / project.PROJECT_FILE):
                 project.save_project(self.project, graph)
             else:
                 project.create_project(self.project, graph)
@@ -926,7 +943,7 @@ class Window:
         except (ValueError, KeyError, TypeError, GraphError):
             return   # a session from an incompatible version: start blank
         folder = Path(session['project']) if session.get('project') else None
-        if folder and (folder / project.PROJECT_FILE).exists():
+        if folder and exists(folder / project.PROJECT_FILE):
             self._open_project(folder)
         elif folder:
             self.project, self.saved = folder, None   # never saved

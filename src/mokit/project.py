@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from .graph import Graph, GraphError, Node, Op, _strip_annotated, _type_hints
+from .paths import exists, os_path
 
 FORMAT = "mokit-graph/1"
 PROJECT_FILE = "project.json"
@@ -157,23 +158,23 @@ def loads(text: str, root: Optional[Path] = None) -> Tuple[Graph, dict, Tuple[st
 
 def load_project(folder) -> Project:
     folder = Path(folder).absolute()
-    graph, view, diagnostics = loads((folder / PROJECT_FILE).read_text(), folder)
+    graph, view, diagnostics = loads(Path(os_path(folder / PROJECT_FILE)).read_text(), folder)
     return Project(folder, graph, view, diagnostics)
 
 
 def save_project(folder, graph: Graph, view: Optional[dict] = None) -> Path:
     folder = Path(folder).absolute()
-    folder.mkdir(parents=True, exist_ok=True)
+    Path(os_path(folder)).mkdir(parents=True, exist_ok=True)
     path = folder / PROJECT_FILE
-    path.write_text(dumps(graph, view, folder))
+    Path(os_path(path)).write_text(dumps(graph, view, folder))
     return path
 
 
 def create_project(folder, graph: Graph = Graph(), view: Optional[dict] = None) -> Project:
     """Make a project folder with an empty (or given) graph and a .gitignore for cache/."""
     folder = Path(folder).absolute()
-    if (folder / PROJECT_FILE).exists():
+    if exists(folder / PROJECT_FILE):
         raise FileExistsError(folder / PROJECT_FILE)
     save_project(folder, graph, view)
-    (folder / ".gitignore").write_text(GITIGNORE)
+    Path(os_path(folder / ".gitignore")).write_text(GITIGNORE)
     return Project(folder, graph, dict(view or {}))
