@@ -60,6 +60,9 @@ DEBUG = {   # view -> (tooltip, the stage it needs, its image from that stage's 
 GRID = imgui.ImVec4(0.5, 0.5, 0.5, 0.6)   # grey reads over black and white alike
 RECENT = 20   # images in File > Open recent
 MAX_PATH = 260   # Windows' path limit, the NUL included
+# frame rate while a stage runs: a frame holds the GIL for some ms of Python callbacks, and the stage's thread waits
+# for it at every numpy or OpenCV call, so at a high refresh rate or with no vsync the frames starve the stage
+BUSY_FPS = 30.0
 INSPECT_CELLS, INSPECT_ZOOM, INSPECT_PAIRS = 3, 10, 8   # the hover tooltip: cells a side, its zoom, pairs listed
 TRANSPARENT, AUTO = -1, -2   # the brush's specials: keep the cell's colour, give it back to Select pairs
 SPECIAL = {TRANSPARENT: (0.0, 0.0, 0.0, 0.0), AUTO: (0.3, 0.3, 0.3, 1.0)}   # alpha 0 shows imgui's checkerboard
@@ -383,7 +386,9 @@ class Window:
         self._unsaved_dialog()
         self._about_dialog()
         self.app.update()
-        hello_imgui.get_runner_params().fps_idling.enable_idling = not self.app.busy
+        fps = hello_imgui.get_runner_params().fps_idling
+        fps.enable_idling = not self.app.busy
+        fps.fps_max = BUSY_FPS if self.app.job is not None else 0.0
 
     # ----- docks -----------------------------------------------------------------------------------
 
@@ -535,7 +540,8 @@ class Window:
         painting = self.editors['overpaint'].on
         for key, image in shown:
             ih, iw = image.shape[:2]
-            immvision.image(f'##{key}', as_ubyte(image), widgets.image_params(self.images, key, (iw * zoom, ih * zoom), (iw, ih)))
+            pixels = as_ubyte(image)
+            immvision.image(f'##{key}', pixels, widgets.image_params(self.images, key, (iw * zoom, ih * zoom), (iw, ih), pixels))
             if imgui.is_item_hovered():
                 m, lo = imgui.get_mouse_pos(), imgui.get_item_rect_min()
                 hovered = min(int(m.y - lo.y) // zoom, ih - 1), min(int(m.x - lo.x) // zoom, iw - 1)
@@ -640,8 +646,9 @@ class Window:
         clicked = None
         for key, image in shown:
             crop = image[r0 * h:r0 * h + size[1], c0 * w:c0 * w + size[0]]
-            immvision.image(f'##inspect {key}', as_ubyte(crop),
-                            widgets.image_params(self.images, f'inspect {key}', (size[0] * z, size[1] * z), size))
+            pixels = as_ubyte(crop)
+            immvision.image(f'##inspect {key}', pixels,
+                            widgets.image_params(self.images, f'inspect {key}', (size[0] * z, size[1] * z), size, pixels))
             self._cell_grid(cell, z)
             lo = imgui.get_item_rect_min()
             a = imgui.ImVec2(lo.x + (c - c0) * w * z, lo.y + (r - r0) * h * z)
