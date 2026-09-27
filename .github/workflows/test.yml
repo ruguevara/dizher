@@ -3,8 +3,7 @@ name: test
 on:
   push:
     paths-ignore: ['**.md', 'notebooks/**']
-  pull_request:
-    paths-ignore: ['**.md', 'notebooks/**']
+  pull_request:   # every PR, docs too: the checks it requires must report
   workflow_dispatch:
 
 concurrency:   # a newer push to the same ref cancels the running tests

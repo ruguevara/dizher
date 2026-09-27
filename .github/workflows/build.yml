@@ -7,7 +7,6 @@ on:
     paths-ignore: ['**.md', 'notebooks/**']
   pull_request:
     branches: [main]      # a release or hotfix PR: the packaging checked before the merge
-    paths-ignore: ['**.md', 'notebooks/**']
   workflow_dispatch:      # any branch, by hand: Actions > build > Run workflow
 
 concurrency:   # a newer push to the same ref cancels the running build
