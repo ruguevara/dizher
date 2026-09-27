@@ -33,8 +33,10 @@ Run the GUI:
     pip install pyinstaller
     ./packaging/build.sh
 
-GitHub Actions builds it for macOS (Apple Silicon), Windows and Linux on every push,
-and a `v*` tag publishes the three archives as a release.
+GitHub Actions builds it for macOS (Apple Silicon), Windows and Linux on every push to `develop`, on
+pull requests into `main` and by hand (Actions > build > Run workflow); a `v*` tag on `main` publishes
+the three archives as a release. The branches (`main` for releases, `develop`, feature branches),
+versions and the release steps are in [CLAUDE.md](CLAUDE.md).
 
 ### Tests
 
@@ -42,8 +44,8 @@ and a `v*` tag publishes the three archives as a release.
     pytest                       # the converter and the pipeline
     python tests/test_ui.py      # the GUI, driven by the Dear ImGui test engine
 
-GitHub Actions runs `pytest` on Windows and Linux on every push, Windows with long paths off as on
-most machines.
+GitHub Actions runs `pytest` on Windows, macOS and Linux on every push, Windows with long paths off as
+on most machines, and the UI tests on Linux under Xvfb.
 
 ### Layout
 
