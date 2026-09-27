@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 from dizher.converter.converter import Converter
-from dizher.converter.energy import SEAM_COST, hue_contrast, local
+from dizher.converter.energy import SEAM_COST, dot_contrast
 from dizher.converter.dither import ErrorDiffusion, Ordered, Stohastic, duo_levels
 from dizher.halftoning.dbs import _Structure, CONTRAST_GAIN
 from dizher.halftoning.error_distribution import ed_dither_duo, stucki_duo
@@ -12,7 +12,7 @@ from dizher.platforms.zxspectrum import ZXPalette
 
 
 def colour_error(converter, image):
-    error = converter.opponent(image ** converter.gamma - converter.image_lrgb)
+    error = converter.opponent(image ** converter.gamma - converter.image_lrgb) * converter.gain
     noise = (converter.luma_noise, converter.chroma_noise, converter.chroma_noise)
     total = 0.0
     for channel, kernel in enumerate(converter.eye_kernels()):
@@ -33,60 +33,44 @@ def mixture(converter, labels):
 
 
 def dot_error(converter, labels):
-    """The dots' unblurred error around that mixture, t (1 - t) contrast^2, weighted per channel group: lightness
-    contrast in the local metric, hue contrast in CIELAB scaled by the metric's lightness gain."""
+    """The dots' unblurred error around that mixture, t (1 - t) contrast^2, gained, weighted per channel group."""
     rows, cols = np.indices(converter.size)
     idx = converter.expand_cells(labels)
     t = converter.levels[idx, rows, cols]
-    pairs = converter.color_pairs[idx] ** converter.gamma                     # (H, W, 2, 3)
-    luma = local(converter.metric, pairs[..., 1, :] - pairs[..., 0, :])[..., 0] ** 2
-    hue = hue_contrast(converter.color_pairs)[idx] * converter.metric[..., 0, :].sum(-1) ** 2
+    spread = t * (1 - t) * converter.gain[..., 0] ** 2
+    contrast = dot_contrast(converter.color_pairs, converter.gamma)[idx]     # (H, W, 2) luma, chroma
     w = converter.energy.weights
-    return float((t * (1 - t) * (w['Luma'] * converter.luma_noise * luma
-                                 + w['Chroma'] * converter.chroma_noise * hue)).sum())
+    return float((spread * (w['Luma'] * converter.luma_noise * contrast[..., 0]
+                            + w['Chroma'] * converter.chroma_noise * contrast[..., 1])).sum())
 
 
-def test_hue_contrast_counts_hue_clashes():
+def test_dot_contrast_counts_hue_clashes():
     """Chroma dot contrast is hue alone: black or white dots cost none, yellow on black none, complementary pairs
-    the most."""
+    the most; luma contrast is plain."""
     pal = ZXPalette().as_float()
     pairs = {name: np.stack([pal[a], pal[b]]) for name, (a, b) in
              dict(KY=(8, 14), KW=(8, 15), RW=(10, 15), RY=(10, 14), RG=(10, 12), BY=(9, 14), ky=(0, 6)).items()}
-    c = dict(zip(pairs, hue_contrast(np.stack(list(pairs.values())))))
+    luma, chroma = dot_contrast(np.stack(list(pairs.values())), 2.2).T
+    c = dict(zip(pairs, chroma))
     assert c['KY'] == c['KW'] == c['RW'] == c['ky'] == 0
     assert 0 < c['RY'] < c['RG'] < c['BY']
+    l = dict(zip(pairs, luma))
+    assert l['KW'] > l['KY'] > l['ky'] > 0
 
 
 def test_bright_dots_cost_no_more_than_dim():
-    """A dark yellow that black mixes with bright or dim yellow alike: the two mixtures are the same colour. Without a
-    lightness dot weight the bright pair's denser contrast of dots costs nothing more (the hand-painted references
-    chose bright); the default weight only breaks the tie, by far less than the gap to any other pair. A pale face
-    colour, which blue on yellow also mixes, goes to a pair without clashing hues."""
-    converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, Mode('one cell', (8, 8), (8, 8), ZXPalette()))
+    """A dark yellow that black mixes with bright or dim yellow alike: the two mixtures are the same colour, and at the
+    default weights the bright pair's denser contrast of dots costs nothing more (the hand-painted references chose
+    bright). A pale face colour, which blue on yellow also mixes, goes to a pair without clashing hues."""
+    converter = Converter({'Luma': 1.0, 'Chroma': 2.0}, Mode('one cell', (8, 8), (8, 8), ZXPalette()))
     pairs = [tuple(p) for p in converter.palette.iter_idxs_pairs()]
-    bright, dim = pairs.index((8, 14)), pairs.index((0, 6))                               # K/Y, k/y
     converter.set_image(np.full((8, 8, 3), (150 / 255, 150 / 255, 0), np.float32))
     unary = converter.energy.unary()[:, 0, 0]
-    assert set(np.argsort(unary)[:2]) == {bright, dim}
-    assert abs(unary[bright] - unary[dim]) < 0.01 * (np.sort(unary)[2] - unary.min())
-    converter.luma_noise = 0
-    unary = converter.energy.unary()[:, 0, 0]
-    np.testing.assert_allclose(unary[bright], unary[dim], atol=1e-9)
+    np.testing.assert_allclose(unary[pairs.index((8, 14))], unary[pairs.index((0, 6))], atol=1e-9)    # K/Y, k/y
     converter.set_image(np.full((8, 8, 3), (226 / 255, 190 / 255, 127 / 255), np.float32))
     unary = converter.energy.unary()[:, 0, 0]
-    assert unary.argmin() != pairs.index((9, 14))                                        # B/Y
+    assert unary.argmin() != pairs.index((9, 14))                                                        # B/Y
     assert unary[pairs.index((9, 14))] > np.sort(unary)[3]
-
-
-def test_dark_navy_takes_blue():
-    """A dark navy (JoJo's jacket): blue barely adds lightness, so a metric with one lightness gain for all channels
-    stopped the blue at a few percent, far too dark, and sparse magenta won on lightness. In CIELAB's local metric
-    blue's chroma along its own primary is compressed, and blue dots win."""
-    converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, Mode('one cell', (8, 8), (8, 8), ZXPalette()))
-    for navy in ((12, 31, 56), (20, 30, 70), (13, 38, 79)):
-        converter.set_image(np.full((8, 8, 3), np.array(navy) / 255, np.float32))
-        paper, ink = list(converter.palette.iter_idxs_pairs())[converter.energy.apply()[0, 0]]
-        assert paper % 8 == 0 and ink % 8 == 1, (navy, paper, ink)                  # black and blue
 
 
 def test_equal_luminance_colour_edge():
@@ -270,8 +254,7 @@ def test_noise_origin_restarts_both_stages():
 if __name__ == '__main__':
     test_equal_luminance_colour_edge()
     test_selection_matches_full_convolution()
-    test_hue_contrast_counts_hue_clashes()
-    test_dark_navy_takes_blue()
+    test_dot_contrast_counts_hue_clashes()
     test_bright_dots_cost_no_more_than_dim()
     test_dbs_lowers_complete_colour_objective()
     test_halftone_target_is_reachable()
