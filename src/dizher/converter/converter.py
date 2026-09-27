@@ -13,7 +13,7 @@ from .colors import convert_color, lrgb2luminance, gray2rgb
 from .dither import Ditherer, Stohastic, duo_levels
 from ..halftoning.dbs import dbs_duo
 from .eye import LUMA_ALPHA, LUMA_SCALE, CHROMA_ALPHA, CHROMA_SCALE, eye_kernel
-from .energy import SelectionEnergy, pair_dissimilarity, lightness_gain, LRGB2OPP, EDGE_SIGMA
+from .energy import SelectionEnergy, pair_dissimilarity, local_metric, local, LRGB2OPP, EDGE_SIGMA
 from ..progress import report_progress, report_stage
 
 
@@ -28,8 +28,8 @@ class Converter:
             chroma_scale: float = CHROMA_SCALE,
             coherence: float = 6.0,
             edge: float = EDGE_SIGMA,
-            luma_noise: float = 0.0,
-            chroma_noise: float = 0.02,
+            luma_noise: float = 0.001,
+            chroma_noise: float = 0.05,
             structure: float = 0.06,
             ditherer: Ditherer = None,   # halftones the pair candidates and, after selection, the result
             flare: float = 0.1,
@@ -48,7 +48,7 @@ class Converter:
         self.coherence = coherence  # cost of a pair change between neighbours where the original is smooth, see energy.py
         self.structure = structure  # weight of the contrast-weighted SSIM term in the DBS optimiser, see halftoning/dbs.py
         self.ditherer = ditherer or Stohastic()
-        self.flare = flare          # flattens the per-pixel lightness gain of the error, see energy.lightness_gain
+        self.flare = flare          # flattens the per-pixel metric of the error, see energy.local_metric
         self.energy = SelectionEnergy(self, weights)
         self.image_rgb = None
         self.set_palette(mode.palette)
@@ -106,7 +106,7 @@ class Converter:
         self.image_rgb = image_rgb
         self.image_lrgb = self.image_rgb ** self.gamma
         self.image_luma = lrgb2luminance(self.image_lrgb)
-        self.gain = lightness_gain(self.image_luma, self.flare)
+        self.metric = local_metric(self.image_lrgb, self.flare)
         report_stage(f'fitting {len(self.color_pairs)} pairs')
         self.levels = self.fit_duocolors()
         self.bitmaps = self.ditherer.threshold(self.levels)
@@ -117,20 +117,18 @@ class Converter:
 
     def fit_duocolors(self) -> np.ndarray:
         assert self.image_rgb is not None
-        levels = np.empty((len(self.color_pairs),) + self.image_rgb.shape[:-1])
-        for i, (c1, c2) in enumerate(self.palette.iter_color_pairs()):
-            levels[i] = self.fit_duocolor(c1, c2)
+        """Each pair's closest mixture per pixel in the weighted local metric the candidates are scored in."""
+        target = self.opponent(self.image_lrgb)
+        colours = [self.opponent(c) for c in self.palette.as_float() ** self.gamma]
+        levels = np.empty((len(self.color_pairs),) + self.image_rgb.shape[:-1], dtype=np.float32)
+        for i, (paper, ink) in enumerate(self.palette.iter_idxs_pairs()):
+            levels[i] = duo_levels(target, colours[paper], colours[ink])
         return levels
 
-    def fit_duocolor(self, c1, c2) -> np.ndarray:
-        """Closest mixture in the weighted colour space used to score candidates."""
-        paper = self.opponent(np.asarray(c1, dtype=np.float32) ** self.gamma)
-        ink = self.opponent(np.asarray(c2, dtype=np.float32) ** self.gamma)
-        return duo_levels(self.opponent(self.image_lrgb), paper, ink)
-
     def opponent(self, linear_rgb):
+        """Linear RGB, per pixel or one colour, through the local metric (energy.local_metric) and the weights."""
         w = self.energy.weights
-        return (linear_rgb @ LRGB2OPP.T) * np.sqrt(np.array([w['Luma'], w['Chroma'], w['Chroma']], dtype=np.float32))
+        return local(self.metric, linear_rgb) * np.sqrt(np.array([w['Luma'], w['Chroma'], w['Chroma']], dtype=np.float32))
 
     def eye_kernels(self):
         # ponytail: bounded support keeps all interactions inside adjacent cells; wider support
@@ -188,12 +186,11 @@ class Converter:
 
     def optimise(self):
         """Direct binary search from the halftone bitmap under the eye model (halftoning/dbs.py); the start
-        stays in halftoned. Target and colours are scaled by the lightness gain, so it minimises the selection's
-        metric (its SSIM term then compares gained luma)."""
+        stays in halftoned. Target and colours are in the selection's local metric, so it minimises the selection's
+        error (its SSIM term then compares L*)."""
         paper, ink = self._duo()
-        g = self.gain
         report_stage('DBS')
-        self.set_bitmap(dbs_duo(self.halftone_target(paper, ink) * g, paper * g, ink * g, init=self.dithered_bitmap,
+        self.set_bitmap(dbs_duo(self.halftone_target(paper, ink), paper, ink, init=self.dithered_bitmap,
             scale=self.luma_scale, alpha=self.luma_alpha, structure=self.structure,
             kernels=self.eye_kernels(), noise=(self.luma_noise, self.chroma_noise, self.chroma_noise),
             on_step=lambda b: report_progress(lambda: self.snapshot(bitmap=b))))
@@ -215,7 +212,7 @@ class Converter:
         return paper + duo_levels(target, paper, ink)[..., None] * (ink - paper)
 
     def projected_target(self):
-        """halftone_target in sRGB, for display: the opponent map is linear, so the same mix in linear RGB."""
+        """halftone_target in sRGB, for display: the local metric is linear per pixel, so the same mix in linear RGB."""
         paper, ink = self.best_paper ** self.gamma, self.best_ink ** self.gamma
         t = duo_levels(self.opponent(self.image_lrgb), self.opponent(paper), self.opponent(ink))[..., None]
         return (paper + t * (ink - paper)) ** (1 / self.gamma)

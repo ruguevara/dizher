@@ -71,8 +71,8 @@ The GUI block that owns each control is in brackets.
 ```
  source image ──► Tune (framing, light, levels, contrast, colour) ──► sRGB 256x192
                                                                         │
-                       gamma 2.2 ──► linear RGB ──► opponent O1 O2 O3 (luma, red-green, blue-yellow)
-                                                    scaled by sqrt(weights)         [Metric: chroma]
+                       gamma 2.2 ──► linear RGB ──► local CIELAB metric per pixel (L*, a*, b*)
+                                                    scaled by sqrt(weights)  [Metric: chroma, flare]
                                                                         │
                                                                         ▼
    ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -135,11 +135,15 @@ coherence), and Seams shows where edges switch the coherence prior off.
 Seen from a normal distance, a screen is blurred by the eye, so a fine mix of two colours reads
 as their average. Dizher models this with an isotropic kernel `exp(-(r / scale)^alpha)` applied
 in linear light (alpha 2 is a Gaussian; alpha near 1 gives a sharper peak and heavier tails,
-closer to the measured contrast sensitivity). Colours are compared in an opponent space, as in
-S-CIELAB: one luminance channel and two chroma channels (red-green, blue-yellow), each with its
-own blur, because the eye resolves luminance detail much more finely than colour detail. Both
-stages use the squared error after this blur, plus an unblurred error term that penalises
-visible dots, with the same kernels and channel weights.
+closer to the measured contrast sensitivity). Errors are measured, as in S-CIELAB, in one lightness
+and two chroma channels, each with its own blur, because the eye resolves lightness detail much
+more finely than colour detail. The channels are CIELAB's L*, a* and b*, linearised at each pixel
+of the target: an error in linear light is mapped through the Jacobian of CIELAB at the target's
+colour, so mixing within an area stays linear while each error costs about its CIELAB difference
+there. A single lightness gain for all three channels, used before, over-charged blue in dark
+navies (blue adds almost no lightness, so every blue dot adds much linear chroma) and let sparse
+magenta dots win them. Both stages use the squared error after this blur, plus an unblurred error
+term that penalises visible dots, with the same kernels and channel weights.
 
 The converter caps the kernel support at half the smallest cell dimension (radius 4 for an 8x8
 cell) before normalisation, so that nearest-neighbour selection covers every interaction. The
@@ -149,8 +153,8 @@ deliberately truncated.
 ### Colour selection
 
 For every block and every allowed pair of palette colours (72 pairs on the Spectrum), a candidate
-block is made by projecting the source onto the paper/ink segment in weighted linear opponent
-colour space: the exact mixture of the two colours each pixel asks for. The whole screen is then
+block is made by projecting the source onto the paper/ink segment in the weighted local metric:
+the exact mixture of the two colours each pixel asks for. The whole screen is then
 the sum of one candidate per block, and the eye-model error of that composite is a quadratic
 function of the block labels: a cost per block, plus a pairwise cost for every two neighbouring
 blocks that measures the visible seam their candidates paint across the border. Because the blur
@@ -158,7 +162,8 @@ is small, only the 8 surrounding blocks interact.
 
 The dots are costed apart from their mixture, as t(1 - t) times the squared contrast of paper and
 ink (the mean squared error dots add around the mixture they average to). Lightness contrast has
-weight 0 by default, so bright yellow dots on black cost nothing more than dim ones. Chroma
+weight 0.001 by default, so bright yellow dots on black cost next to nothing more than dim ones; the
+weight only breaks exact ties, such as a grey that black mixes with dim or bright white alike. Chroma
 contrast counts hue alone: blue dots on yellow, which average to a pale peach, cost the most, and
 black or white dots on any colour cost nothing. These defaults, and the weights below, were fitted
 to hand-corrected attribute maps with `tests/pair_bench.py`.

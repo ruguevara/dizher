@@ -1,20 +1,26 @@
 """Debug views of a conversion: numpy images from a Converter, no imgui."""
 import numpy as np
 
-from ..converter.energy import LRGB2OPP
+import cv2
 
-ERROR_GAIN = 1.5   # the error view's contrast: weighted opponent units -> linear RGB offset from mid grey
+from ..converter.energy import LIGHTNESS_REF, local_metric
+
+ERROR_GAIN = 1.5   # the error view's contrast: local metric units -> linear RGB offset from mid grey
 SEAM_DIM = 0.3     # brightness of the image under the seam view's lines
 
 
 def error_view(c) -> np.ndarray:
-    """Result minus target as the energy sees them (eye-blurred, weighted opponent) drawn around mid grey: lighter
-    or darker where the luma is too high or low, tinted with the colour the result adds (its complement where it
-    misses one). Mid grey is no error."""
+    """Result minus target as the energy sees them (each channel of the weighted local metric eye-blurred), drawn
+    around mid grey as mid grey's metric would show it: lighter or darker where the result's lightness is too high
+    or low, tinted with the colour it adds (its complement where it misses one). Mid grey is no error."""
     w = c.energy.weights
     weight = np.sqrt(np.array([w['Luma'], w['Chroma'], w['Chroma']], dtype=np.float32))
-    error = (c.eye_opponent(c.dithered_result) - c.eye_opponent(c.image_rgb)) * weight * ERROR_GAIN
-    return (0.5 ** c.gamma + error @ np.linalg.inv(LRGB2OPP).T).clip(0, 1) ** (1 / c.gamma)
+    error = c.opponent(c.dithered_result ** c.gamma - c.image_lrgb) / weight   # unweighted, then blurred
+    error = np.stack([cv2.filter2D(np.ascontiguousarray(error[..., k]), -1, h, borderType=cv2.BORDER_REFLECT_101)
+                      for k, h in enumerate(c.eye_kernels())], axis=-1) * weight * ERROR_GAIN
+    grey = np.full((1, 1, 3), LIGHTNESS_REF, dtype=np.float32)
+    back = np.linalg.inv(local_metric(grey, c.flare)[0, 0])
+    return (LIGHTNESS_REF + error @ back.T).clip(0, 1) ** (1 / c.gamma)
 
 
 def energy_view(c) -> np.ndarray:
