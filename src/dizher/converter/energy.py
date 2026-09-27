@@ -1,9 +1,9 @@
 """Colour-pair selection as one eye-model energy over the whole composite image.
 
-E(labels) = sum_ch w_ch || h_ch * (g (Y_ch - X_ch)) ||^2   in a linear opponent space (S-CIELAB's
-O1 luminance, O2 red-green, O3 blue-yellow), Y the composite, X the target, h_ch the eye kernel of the
-channel's group (Luma: O1, Chroma: O2 and O3), g the per-pixel lightness gain (lightness_gain: linear-light
-error weighted as CIELAB sees it at the target). A pair's candidate on a block is the exact mixture its
+E(labels) = sum_ch w_ch || h_ch * (J (Y - X))_ch ||^2   in OKLab linearised at the target (L lightness, a
+green-red, b blue-yellow), Y the composite and X the target in linear light, J the per-pixel derivative of OKLab
+at X (oklab_jacobian), h_ch the eye kernel of the channel's group (Luma: L, Chroma: a and b). The error is
+linear in Y, so the energy is an exact quadratic in the labels. A pair's candidate on a block is the exact mixture its
 per-pixel level asks for (paper + t (ink - paper)), not one halftone of it: a halftone's noise decided near
 ties at random, block by block. Because the composite is a sum of per-block candidates, E splits exactly
 into a per-block term D[p, b] and pairwise terms S[p, q, b, b'] = 2 e_p[b]^T K e_q[b'] with K = h (*) h
@@ -37,53 +37,49 @@ import cv2
 from .colors import convert_color
 from ..progress import report_progress, report_stage
 
-SRGB2XYZ = np.array([[0.4124, 0.3576, 0.1805],
-                     [0.2126, 0.7152, 0.0722],
-                     [0.0193, 0.1192, 0.9505]], dtype=np.float32)
-XYZ2OPP = np.array([[ 0.279,  0.72, -0.107],      # Poirson & Wandell opponent space, as in S-CIELAB
-                    [-0.449,  0.29, -0.077],
-                    [ 0.086, -0.59,  0.501]], dtype=np.float32)
-LRGB2OPP = XYZ2OPP @ SRGB2XYZ
-# Poirson & Wandell's chroma axes are not orthogonal to the neutral axis: white maps to O2 = -0.22, so a
-# luminance error leaks into "chroma". Remove the neutral component so every grey has zero chroma.
-_white = LRGB2OPP @ np.ones(3, dtype=np.float32)
-LRGB2OPP[1:] -= (_white[1:] / _white[0])[:, None] * LRGB2OPP[0]
-# Put the three channels on one scale: over the ZX palette red-green spans ~3x less than luminance and
-# blue-yellow ~1.2x less, which made chroma error almost free. Each row is scaled so the palette's spread
-# is the same in every channel; the Luma/Chroma weights then compare like with like.
-_palette_std = np.array([0.2859, 0.0995, 0.2416], dtype=np.float32)
-LRGB2OPP = LRGB2OPP * (_palette_std[0] / _palette_std)[:, None]
+# OKLab (Ottosson 2020): linear sRGB -> cone-like LMS, cube root each, -> L, a (green-red), b (blue-yellow).
+# The cube root is per cone signal, so a dark blue keeps its hue apart from a dark magenta: in linear light
+# their difference is a few percent of a channel, and lightness error decided the pair in shadows.
+LMS = np.array([[0.4122214708, 0.5363325363, 0.0514459929],
+                [0.2119034982, 0.6806995451, 0.1073969566],
+                [0.0883024619, 0.2817188376, 0.6299787005]], dtype=np.float32)
+OKLAB = np.array([[0.2104542553,  0.7936177850, -0.0040720468],
+                  [1.9779984951, -2.4285922050,  0.4505937099],
+                  [0.0259040371,  0.7827717662, -0.8086757660]], dtype=np.float32)
+TOE = (6 / 29) ** 3     # below this cone signal the cube root's slope is held, as CIELAB's toe holds L*'s
 
-GROUPS = OrderedDict(Luma=[0], Chroma=[1, 2])   # weight name -> opponent channels
+GROUPS = OrderedDict(Luma=[0], Chroma=[1, 2])   # weight name -> OKLab channels
 OFFSETS = [(0, 1), (1, 0), (1, 1), (1, -1)]      # unordered neighbour pairs, block units
-# Default step of the original's block means (weighted opponent units) that counts as a real edge (Converter.edge).
-# The test is per seam, so it cannot tell an edge from a steep smooth gradient; at 0.05 a red-to-yellow sky (0.03..0.07
-# per block in linear light) read as edges on every row and lost its coherence, real outlines step by 0.2 and more.
+# Default step of the original's block means (weighted OKLab) that counts as a real edge (Converter.edge).
+# The test is per seam, so it cannot tell an edge from a steep smooth gradient.
 EDGE_SIGMA = 0.1
-SEAM_COST = 0.1     # energy of one seam between totally different pairs at coherence 1; a block's own cost is ~0.2
+SEAM_COST = 0.1     # energy of one seam between totally different pairs at coherence 1
 
-LIGHTNESS_REF = 0.18   # mid grey's luminance: its error keeps weight 1
+def oklab(lrgb: np.ndarray) -> np.ndarray:
+    return (np.cbrt(np.maximum(lrgb @ LMS.T, 0)) @ OKLAB.T).astype(np.float32)
 
-def lightness_gain(luminance: np.ndarray, flare: float) -> np.ndarray:
-    """(H, W, 1) per-pixel gain of the opponent error: dL*/dY at the target's luminance over mid grey's, the eye's
-    sensitivity to an error in linear light, in CIELAB ~7x higher at black than at mid grey and ~3x lower at white.
-    Errors are scaled by it before the eye blur: within a flat area mixing stays linear, while a brown patch in a
-    black shadow costs about what it looks like instead of its ~4% of luminance. Chroma takes the same gain, as
-    CIELAB's a* b* do: on luma alone, dim red dots won dark greys from sparse white ones, their colour error left
-    cheap. flare, stray light on the screen in units of white, flattens the gain towards plain linear light."""
-    slope = lambda y: np.where(y > (6 / 29) ** 3, np.cbrt(np.maximum(y, 1e-6)) ** -2 / 3, (29 / 6) ** 2 / 3)
-    return (slope(luminance + flare) / slope(LIGHTNESS_REF + flare))[..., None].astype(np.float32)
+def oklab_to_lrgb(lab: np.ndarray) -> np.ndarray:
+    return ((lab @ np.linalg.inv(OKLAB).T) ** 3 @ np.linalg.inv(LMS).T).astype(np.float32)
+
+def oklab_jacobian(lrgb: np.ndarray, flare: float) -> np.ndarray:
+    """(..., 3) linear RGB -> (..., 3, 3) the derivative of OKLab there: a linear-light error e costs J e, the
+    OKLab error it makes at the target. The energy stays quadratic in the composite, while an error in a black
+    shadow costs about what it looks like, hue included. flare, stray light on the screen in units of white,
+    is added to the cone signals before the slope is taken: it flattens the gain towards plain linear light."""
+    slope = np.cbrt(np.maximum(lrgb @ LMS.T + flare, TOE)) ** -2 / 3
+    return np.einsum('ij,...j,jk->...ik', OKLAB, slope, LMS).astype(np.float32)
 
 def dot_contrast(color_pairs: np.ndarray, gamma: float) -> np.ndarray:
-    """(P, 2, 3) gamma-encoded RGB pairs -> (P, 2) squared contrast between a pair's paper and ink dots, per GROUPS.
-    Luma: of the opponent luminance channel. Chroma: of hue alone, in CIELAB, 2 (|ab_p| |ab_i| - ab_p . ab_i) / 100^2:
-    none for black, white or grey dots on any colour, most for complementary pairs (blue on yellow, green on magenta)
-    whose mixture the eye sees as dots of both. Yellow dots on black cost no chroma: the hand-painted references
-    (tests/pair_bench.py) keep bright dots of the target's hue over a dim pair with fewer dots."""
-    lin = (color_pairs.astype(np.float32) ** gamma) @ LRGB2OPP.T
-    ab = convert_color(color_pairs.astype(np.float32).reshape(1, -1, 3), 'RGB', 'LAB').reshape(-1, 2, 3)[..., 1:] / 100
+    """(P, 2, 3) gamma-encoded RGB pairs -> (P, 2) squared contrast between a pair's paper and ink dots, per GROUPS,
+    in OKLab of the two colours themselves: dots are seen at their own colour. Luma: of L. Chroma: of hue alone,
+    2 (|ab_p| |ab_i| - ab_p . ab_i): none for black, white or grey dots on any colour, most for complementary pairs
+    (blue on yellow, green on magenta) whose mixture the eye sees as dots of both. Yellow dots on black cost no
+    chroma: the hand-painted references (tests/pair_bench.py) keep bright dots of the target's hue over a dim pair
+    with fewer dots."""
+    lab = oklab(color_pairs.astype(np.float32) ** gamma)
+    ab = lab[..., 1:]
     hue = 2 * (np.linalg.norm(ab[:, 0], axis=-1) * np.linalg.norm(ab[:, 1], axis=-1) - (ab[:, 0] * ab[:, 1]).sum(-1))
-    return np.stack([(lin[:, 1, 0] - lin[:, 0, 0]) ** 2, np.maximum(hue, 0)], axis=-1).astype(np.float32)
+    return np.stack([(lab[:, 1, 0] - lab[:, 0, 0]) ** 2, np.maximum(hue, 0)], axis=-1).astype(np.float32)
 
 def autocorrelation(h: np.ndarray) -> np.ndarray:
     r = h.shape[0] // 2
@@ -134,16 +130,17 @@ class SelectionEnergy:
     def calc(self) -> None:
         report_stage('selection energy')
         c = self.converter
-        X = c.image_lrgb.astype(np.float32) @ LRGB2OPP.T
-        lin = (c.color_pairs.astype(np.float32) ** c.gamma) @ LRGB2OPP.T                  # (P, 2, 3) paper, ink
+        J = c.jacobian                                                     # (H, W, 3, 3) OKLab at the target
+        lin = c.color_pairs.astype(np.float32) ** c.gamma                  # (P, 2, 3) paper, ink
         t = c.levels.astype(np.float32)
         Y = lin[:, None, None, 0] + t[..., None] * (lin[:, None, None, 1] - lin[:, None, None, 0])   # the exact mixtures
-        E = (Y - X) * c.gain                                               # (P, H, W, 3)
+        E = np.einsum('hwij,phwj->phwi', J, Y - c.image_lrgb.astype(np.float32), optimize=True)    # (P, H, W, 3)
+        X = oklab(c.image_lrgb.astype(np.float32))
         P, H, W, _ = E.shape
         h, w = c.cell
         R, C = H // h, W // w
-        # t(1 - t) contrast^2 is the mean squared error dots add around their mixture, gained per pixel like E
-        spread = (t * (1 - t) * c.gain[..., 0] ** 2).reshape(P, R, h, C, w).sum(axis=(2, 4))   # (P, R, C)
+        # t(1 - t) contrast^2 is the mean squared error dots add around their mixture
+        spread = (t * (1 - t)).reshape(P, R, h, C, w).sum(axis=(2, 4))   # (P, R, C)
         dots = dict(zip(GROUPS, dot_contrast(c.color_pairs, c.gamma).T))
         E = E.reshape(P, R, h, C, w, 3).transpose(1, 3, 0, 2, 4, 5).reshape(R, C, P, h * w, 3)
         luma, chroma, _ = c.eye_kernels()

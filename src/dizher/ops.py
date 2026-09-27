@@ -33,7 +33,7 @@ HALFTONERS = {cls.label: cls for cls in (Stohastic, Ordered, ErrorDiffusion)}
 @dataclass(frozen=True)
 class Metric:
     chroma: float   # weight of the chroma error against luma's 1
-    flare: float    # flattens the lightness gain of the error, see converter/energy.py
+    flare: float    # flattens OKLab's slope in the shadows, see converter/energy.oklab_jacobian
 
 
 @dataclass(frozen=True)
@@ -140,9 +140,9 @@ def detail(picture: np.ndarray,
     return tone.detail(picture, texture, sharpen, radius)
 
 
-def metric(chroma: Annotated[float, meta(min=0.0, max=4.0, help="weight of chroma error; luma error weighs 1")] = 2.0,
+def metric(chroma: Annotated[float, meta(min=0.0, max=4.0, help="weight of chroma error; luma error weighs 1")] = 1.5,
            flare: Annotated[float, meta(min=0.0, max=1.0, help="stray light on the screen, in units of white: 0 weighs "
-                                        "errors as CIELAB lightness does, ~7x more in black than in mid grey; "
+                                        "errors as OKLab does, many times more in black than in mid grey; "
                                         "higher flattens that towards plain linear light")] = 0.1) -> Metric:
     """Balance of chroma against luma error in the eye-model energy, and how much more an error counts in the
     shadows. One chroma weight: scaling both would only duplicate coherence (the seam cost has no weight), shift
@@ -188,7 +188,7 @@ def select_pairs(prepared: Converter,
                                              "counts as an edge, where a pair change costs no coherence")] = EDGE_SIGMA,
                  luma_noise: Annotated[float, meta(min=0.0, max=0.5, help="cost of dot contrast in lightness")] = 0.0,
                  chroma_noise: Annotated[float, meta(min=0.0, max=0.5, help="cost of dots of clashing hues, "
-                                                     "blue on yellow most, black or white dots none")] = 0.02,
+                                                     "blue on yellow most, black or white dots none")] = 0.1,
                  progress=None) -> Converter:
     """One (paper, ink) pair per cell; the noise weights also reach the DBS optimiser."""
     c = prepared.copy(coherence=coherence, edge=edge, luma_noise=luma_noise, chroma_noise=chroma_noise)

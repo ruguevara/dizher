@@ -71,8 +71,9 @@ The GUI block that owns each control is in brackets.
 ```
  source image ──► Tune (framing, light, levels, contrast, colour) ──► sRGB 256x192
                                                                         │
-                       gamma 2.2 ──► linear RGB ──► opponent O1 O2 O3 (luma, red-green, blue-yellow)
-                                                    scaled by sqrt(weights)         [Metric: chroma]
+                       gamma 2.2 ──► linear RGB ──► OKLab L a b (lightness, green-red, blue-yellow),
+                                        linearised at each target pixel, scaled by sqrt(weights)
+                                        [Metric: chroma, flare]
                                                                         │
                                                                         ▼
    ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -87,7 +88,7 @@ The GUI block that owns each control is in brackets.
    │                                                                                                │
    │     h_ch      [Eye model: luma/chroma alpha, blur px]  support capped at 4 px (half a cell)    │
    │     noise_ch  [Select pairs: luma noise, chroma noise]                                         │
-   │     dot_ch    paper-ink contrast: luma, and for chroma the hue difference alone (CIELAB)       │
+   │     dot_ch    paper-ink contrast in OKLab: L, and for chroma the hue difference alone          │
    │     V         CIELUV distance of papers + inks, fixed by the palette                           │
    │     coherence, edge  [Select pairs: coherence, edge]                                           │
    │                                                                                                │
@@ -135,11 +136,14 @@ coherence), and Seams shows where edges switch the coherence prior off.
 Seen from a normal distance, a screen is blurred by the eye, so a fine mix of two colours reads
 as their average. Dizher models this with an isotropic kernel `exp(-(r / scale)^alpha)` applied
 in linear light (alpha 2 is a Gaussian; alpha near 1 gives a sharper peak and heavier tails,
-closer to the measured contrast sensitivity). Colours are compared in an opponent space, as in
-S-CIELAB: one luminance channel and two chroma channels (red-green, blue-yellow), each with its
-own blur, because the eye resolves luminance detail much more finely than colour detail. Both
-stages use the squared error after this blur, plus an unblurred error term that penalises
-visible dots, with the same kernels and channel weights.
+closer to the measured contrast sensitivity). Colours are compared in OKLab, an opponent space
+of one lightness channel and two chroma channels (green-red, blue-yellow), each with its own blur
+as in S-CIELAB, because the eye resolves luminance detail much more finely than colour detail.
+Mixing happens in linear light, so the error is measured in OKLab linearised at each target
+pixel: it stays linear in the result, which keeps both stages exact quadratic problems, while a
+dark navy still tells blue from magenta (in linear light their difference is a few percent of one
+channel). Both stages use the squared error after the blur, plus an unblurred error term that
+penalises visible dots, with the same kernels and channel weights.
 
 The converter caps the kernel support at half the smallest cell dimension (radius 4 for an 8x8
 cell) before normalisation, so that nearest-neighbour selection covers every interaction. The
@@ -149,8 +153,8 @@ deliberately truncated.
 ### Colour selection
 
 For every block and every allowed pair of palette colours (72 pairs on the Spectrum), a candidate
-block is made by projecting the source onto the paper/ink segment in weighted linear opponent
-colour space: the exact mixture of the two colours each pixel asks for. The whole screen is then
+block is made by projecting the source onto the paper/ink segment in weighted OKLab (linearised at
+the target pixel): the exact mixture of the two colours each pixel asks for. The whole screen is then
 the sum of one candidate per block, and the eye-model error of that composite is a quadratic
 function of the block labels: a cost per block, plus a pairwise cost for every two neighbouring
 blocks that measures the visible seam their candidates paint across the border. Because the blur
@@ -283,6 +287,7 @@ Critical:
 * R. Ulichney, "The void-and-cluster method for dither array generation", Proc. SPIE 1913, 1993.
 * X. Zhang and B. A. Wandell, "A spatial extension of CIELAB for digital color image
   reproduction" (S-CIELAB), SID Symposium Digest, 1996.
+* B. Ottosson, "A perceptual color space for image processing" (OKLab), 2020.
 * F. Durand and J. Dorsey, "Fast bilateral filtering for the display of high-dynamic-range
   images", SIGGRAPH 2002: the base/detail split behind Local tone.
 * W.-M. Pang, Y. Qu, T.-T. Wong, D. Cohen-Or and P.-A. Heng, "Structure-aware halftoning",
