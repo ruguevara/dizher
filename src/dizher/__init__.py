@@ -1,5 +1,5 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__version__ = '0.2.3'   # the core version, bumped by hand before a release tag (uZX's versions.cmake)
-CHANNEL = 'alpha'       # what a tagged release is called: alpha, beta, rc or demo; every other build is dev
+__version__ = '0.2.4'   # the core version (uZX's versions.cmake): on develop the next one, bumped right after a release
+CHANNEL = 'alpha'       # a tagged release's: alpha, beta, rc or demo, empty when stable; every other build is dev
