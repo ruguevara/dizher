@@ -240,6 +240,22 @@ def test_custom_palette(ctx):
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the Spectrum conversion again')
 
 
+def test_method_switch_brings_its_values(ctx):
+    """Picking another selection method sets the Metric and Select pairs values it was tuned with, as one undo step."""
+    from dizher.converter.energy import METHODS
+    before = ui.app.graph
+    ctx.set_ref('//Convert')
+    pick(ctx, 'metric/method', 'Halftoned')
+    ctx.yield_(2)
+    preset = METHODS['Halftoned'].preset
+    assert params('metric').method == 'Halftoned' and params('metric').chroma == preset['chroma'], params('metric')
+    assert (params('select').coherence, params('select').chroma_noise) == (preset['coherence'], preset['chroma_noise'])
+    ui.app.undo()
+    ctx.yield_(2)
+    assert ui.app.graph == before
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the conversion again')
+
+
 def test_hover_inspector(ctx):
     from imgui_bundle.imgui.test_engine import CaptureFlags_
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'a conversion to inspect')
@@ -382,6 +398,7 @@ TESTS = [
     ('ui', 'views_and_grid', test_views_and_grid),
     ('ui', 'mode_switch_refits_previews', test_mode_switch_refits_previews),
     ('ui', 'custom_palette', test_custom_palette),
+    ('ui', 'method_switch_brings_its_values', test_method_switch_brings_its_values),
     ('ui', 'hover_inspector', test_hover_inspector),
     ('ui', 'cell_popup', test_cell_popup),
     ('ui', 'paint', test_paint),

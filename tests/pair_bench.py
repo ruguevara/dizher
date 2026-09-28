@@ -1,9 +1,13 @@
 """Pair selection against hand-checked attribute maps. Run by hand, not collected by pytest:
 
     python tests/pair_bench.py freeze NAME...         reference.scr from the project as saved, painted cells included
-    python tests/pair_bench.py run [NAME...] [--set k=v ...] [--sheets DIR]
-                                                      select pairs with the default Metric, Eye and Select params (each
-                                                      project keeps its Tune params, palette and halftoner) and score them
+    python tests/pair_bench.py run [NAME...] [--method M] [--set k=v ...] [--sheets DIR]
+                                                      select pairs by a method with the Metric and Select values it was
+                                                      tuned with (default the newest; each project keeps its Tune params,
+                                                      palette and halftoner) and score them
+    python tests/pair_bench.py compare [NAME...] [--ref GIT_REF] [--sheets DIR]
+                                                      every method side by side, and optionally another git ref's own
+                                                      selection (e.g. origin/develop), run from a scratch worktree
     python tests/pair_bench.py regions NAME [--out DIR] [--k N]
                                                       the cells grouped into numbered regions, for painting by region
     python tests/pair_bench.py paint NAME FILE.json   regions (and cells) to Overpaint overrides in the project
@@ -14,7 +18,10 @@ matches it. Pairs are unordered, and the two blacks are one colour.
 """
 import argparse
 import json
+import os
+import subprocess
 import sys
+import tempfile
 import time
 from dataclasses import replace
 from pathlib import Path
@@ -26,6 +33,7 @@ from mokit.graph import Memo, evaluate
 from mokit.project import load_project, save_project
 
 from dizher import ops
+from dizher.converter.energy import METHODS, NEWEST
 from dizher.platforms.zxspectrum.scr import _row_offsets
 
 IMAGES = Path(__file__).parent / 'images'
@@ -207,19 +215,29 @@ def select(graph, memo, **params):
     return evaluate(graph, 'select', memo)
 
 
-def run(names, sets, sheets=None, memos=None, quiet=False):
+def reference(name):
+    """The reference's bitmap, its (paper, ink) indexes, the colours each cell shows, and the painted cells."""
+    bitmap, ref_idx = read_scr(IMAGES / name / 'reference.scr')
+    return bitmap, ref_idx, shown(bitmap, ref_idx), painted_cells(project_graph(name))
+
+
+def scored(name, got, seconds=0.0):
+    _, _, ref, painted = reference(name)
+    s = score(ref, got, painted)
+    s['name'], s['seconds'], s['spots'] = name, seconds, spots(name, ref, got, painted)
+    return s
+
+
+def run(names, sets, sheets=None, memos=None, quiet=False, method=NEWEST):
     rows = []
     for name in [n for n in names if (IMAGES / n / 'reference.scr').exists()]:
-        graph = project_graph(name, DEFAULTS)
+        graph = ops.apply_preset(project_graph(name, DEFAULTS), method)
         memo = memos.setdefault(name, Memo()) if memos is not None else Memo()
         t = time.time()
         conv = select(graph, memo, **sets)
-        bitmap, ref_idx = read_scr(IMAGES / name / 'reference.scr')
-        ref = shown(bitmap, ref_idx)
+        bitmap, ref_idx, ref, painted = reference(name)
         got = label_pairs(conv, conv.best_attr_indexes)
-        painted = painted_cells(project_graph(name))
-        s = score(ref, got, painted)
-        s['name'], s['seconds'], s['spots'] = name, time.time() - t, spots(name, ref, got, painted)
+        s = scored(name, got, time.time() - t)
         rows.append(s)
         if sheets:
             wrong = list(zip(*np.nonzero(~matches(ref, got))))
@@ -236,6 +254,93 @@ def run(names, sets, sheets=None, memos=None, quiet=False):
         print(f"{'mean':16} {mean('agree'):6.3f} {mean('painted'):7.3f} {mean('rest'):6.3f} {mean('false_seams'):6.3f} "
               f"{mean('missed_seams'):6.3f}")
     return rows
+
+
+# Runs in another checkout's own code (PYTHONPATH its src/), so it uses only APIs develop has: each project with that
+# code's default Metric, Eye and Select params; prints {name: (R, C, 2) palette indexes (paper, ink)} as JSON.
+REF_RUNNER = """
+import json, sys
+import numpy as np
+from mokit.graph import Memo, evaluate
+from mokit.project import load_project
+from dizher import ops
+out = {}
+for name, folder in json.loads(sys.argv[1]).items():
+    project = load_project(folder)
+    graph = ops.make_graph()
+    for nid in graph.ids():
+        if nid in project.graph and nid not in ('metric', 'eye', 'select'):
+            graph = graph.with_params(nid, project.graph[nid].params)
+    conv = evaluate(graph, 'select', Memo())
+    out[name] = np.array(list(conv.palette.iter_idxs_pairs()))[conv.best_attr_indexes].tolist()
+print(json.dumps(out))
+"""
+
+
+def ref_labels(ref, names):
+    """{name: (R, C, 2) palette indexes} chosen by the code of a git ref, checked out in a scratch worktree."""
+    repo = Path(__file__).resolve().parent.parent
+    tree = Path(tempfile.gettempdir()) / ('dizher-bench-' + ref.replace('/', '-'))
+    if not tree.exists():
+        subprocess.run(['git', '-C', str(repo), 'worktree', 'add', '--detach', str(tree), ref], check=True)
+    subprocess.run(['git', '-C', str(tree), 'checkout', '-q', '--detach', ref], check=True)
+    env = dict(os.environ, PYTHONPATH=str(tree / 'src'))
+    folders = json.dumps({n: str(IMAGES / n) for n in names})
+    out = subprocess.run([sys.executable, '-c', REF_RUNNER, folders], env=env, check=True, capture_output=True, text=True)
+    return {n: np.array(v) for n, v in json.loads(out.stdout.strip().splitlines()[-1]).items()}
+
+
+def compare(names, ref=None, sheets=None):
+    """Every method with its tuned values, and a git ref's own selection, on each reference: painted cells matched,
+    false seams and the spot checks. With sheets: per image, the reference | each method's final result."""
+    names = [n for n in names if (IMAGES / n / 'reference.scr').exists()]
+    columns = {m: {} for m in METHODS}
+    finals, palettes = {n: [] for n in names}, {}
+    for name in names:
+        memo = Memo()
+        for method in METHODS:
+            graph = ops.apply_preset(project_graph(name, DEFAULTS), method)
+            t = time.time()
+            conv = select(graph, memo)
+            columns[method][name] = scored(name, label_pairs(conv, conv.best_attr_indexes), time.time() - t)
+            palettes[name] = conv.palette
+            if sheets:
+                finals[name].append((method, finish(graph, memo, conv).dithered_result))
+    if ref:
+        t = time.time()
+        theirs = ref_labels(ref, names)
+        columns[ref] = {}
+        for name in names:
+            columns[ref][name] = scored(name, np.sort(black(theirs[name]), axis=-1), (time.time() - t) / len(names))
+            if sheets:   # their labels through this code's halftone and optimiser
+                graph = ops.apply_preset(project_graph(name, DEFAULTS), NEWEST)
+                conv = select(graph, Memo())
+                index = {tuple(p): i for i, p in enumerate(conv.palette.iter_idxs_pairs())}
+                labels = np.vectorize(lambda a, b: index[(a, b)])(theirs[name][..., 0], theirs[name][..., 1])
+                mine = conv.copy()
+                mine.set_labels(labels)
+                finals[name].append((ref, finish(graph, Memo(), mine).dithered_result))
+    for label, rows in columns.items():
+        print(f'== {label}')
+        print(f"{'image':16} {'painted':>7} {'false':>6} {'changes':>7}")
+        for s in rows.values():
+            print(f"{s['name']:16} {s['painted']:7.3f} {s['false_seams']:6.3f} {s['pair_changes']:7d}  {s['spots']}")
+        print(f"{'mean':16} {np.nanmean([s['painted'] for s in rows.values()]):7.3f} "
+              f"{np.nanmean([s['false_seams'] for s in rows.values()]):6.3f}")
+    if sheets:
+        zoom = 2
+        up = lambda a: np.repeat(np.repeat((a.clip(0, 1) * 255).astype(np.uint8), zoom, 0), zoom, 1)
+        for name in names:
+            bitmap, ref_idx, _, _ = reference(name)
+            tiles = [('reference', render_scr(bitmap, ref_idx, palettes[name]))] + finals[name]
+            gap = np.full((192 * zoom + 20, 6, 3), 128, np.uint8)
+            row = []
+            for label, img in tiles:
+                tile = np.concatenate([np.full((20, 256 * zoom, 3), 255, np.uint8), up(img)])
+                cv2.putText(tile, label, (4, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+                row += [tile, gap]
+            cv2.imwrite(str(Path(sheets) / f'{name}-compare.png'), cv2.cvtColor(np.concatenate(row[:-1], axis=1),
+                                                                                 cv2.COLOR_RGB2BGR))
 
 
 def regions(name, out, k):
@@ -303,9 +408,11 @@ def paint(name, spec_path):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('command', choices=('freeze', 'run', 'regions', 'paint'))
+    ap.add_argument('command', choices=('freeze', 'run', 'compare', 'regions', 'paint'))
     ap.add_argument('args', nargs='*')
     ap.add_argument('--set', action='append', help='Metric, Eye or Select param=value')
+    ap.add_argument('--method', default=NEWEST, choices=tuple(METHODS), help='selection method (run)')
+    ap.add_argument('--ref', help='git ref whose own selection compare adds, e.g. origin/develop')
     ap.add_argument('--sheets', help='folder for contact sheets')
     ap.add_argument('--out', default='.')
     ap.add_argument('--k', type=int, default=12)
@@ -315,7 +422,11 @@ def main(argv=None):
     elif a.command == 'run':
         if a.sheets:
             Path(a.sheets).mkdir(parents=True, exist_ok=True)
-        run(a.args or SET, parse_sets(a.set), a.sheets)
+        run(a.args or SET, parse_sets(a.set), a.sheets, method=a.method)
+    elif a.command == 'compare':
+        if a.sheets:
+            Path(a.sheets).mkdir(parents=True, exist_ok=True)
+        compare(a.args or SET, a.ref, a.sheets)
     elif a.command == 'regions':
         regions(a.args[0], a.out, a.k)
     else:

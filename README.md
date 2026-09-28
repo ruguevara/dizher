@@ -78,8 +78,8 @@ The GUI block that owns each control is in brackets.
    ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
    │ Stage 1: SELECT PAIRS                one paper/ink pair per 8x8 block                          │
    │                                                                                                │
-   │  candidates: for every allowed pair, project the block onto the paper-ink segment: the exact   │
-   │  mixture t per pixel                                   [Target: palette subset]                │
+   │  candidates: for every allowed pair, project the block onto the paper-ink segment: the mixture │
+   │  t per pixel, exact or halftoned   [Metric: method]  [Target: palette subset]                  │
    │                                                                                                │
    │  loss(labels) = Σ_ch || h_ch ∗ (composite − target) ||²    eye-blurred error, exact quadratic  │
    │               + Σ_ch noise_ch · (|| composite − target ||² + Σ t(1−t) · dot_ch²)               │
@@ -150,13 +150,14 @@ deliberately truncated.
 
 For every block and every allowed pair of palette colours (72 pairs on the Spectrum), a candidate
 block is made by projecting the source onto the paper/ink segment in weighted linear opponent
-colour space: the exact mixture of the two colours each pixel asks for. The whole screen is then
+colour space: the mixture of the two colours each pixel asks for, taken exactly or halftoned
+depending on the selection method (below). The whole screen is then
 the sum of one candidate per block, and the eye-model error of that composite is a quadratic
 function of the block labels: a cost per block, plus a pairwise cost for every two neighbouring
 blocks that measures the visible seam their candidates paint across the border. Because the blur
 is small, only the 8 surrounding blocks interact.
 
-The dots are costed apart from their mixture, as t(1 - t) times the squared contrast of paper and
+With the exact mixture, the dots are costed apart from it, as t(1 - t) times the squared contrast of paper and
 ink (the mean squared error dots add around the mixture they average to). Lightness contrast has
 weight 0 by default, so bright yellow dots on black cost nothing more than dim ones. Chroma
 contrast counts hue alone: blue dots on yellow, which average to a pale peach, cost the most, and
@@ -170,6 +171,23 @@ CIELUV distance of the papers plus that of the inks), scaled down where the orig
 has an edge across that seam. Labels are optimised by line-wise dynamic programming: each row,
 then each column, is re-solved exactly given the rest, until nothing changes. The palette can be
 restricted to bright colours only, non-bright only, grayscale, black and white, or any custom set.
+
+#### Selection methods
+
+How a pair is scored on a block is a choice, [Metric: method]; the rest (the solver, coherence,
+Overpaint, halftoning and DBS) is shared. Picking a method also sets the Metric and Select pairs
+values it was tuned with, as one undo step.
+
+| Method | A pair is scored on | Tuned values |
+|---|---|---|
+| Exact mixture (new projects) | its exact mixture, plus a cost for dots of clashing hues | chroma 2, coherence 6, chroma noise 0.02 |
+| Halftoned (0.2.4) | one halftone of its mixture, by the chosen halftoner | chroma 1, coherence 2, chroma noise 0.05 |
+
+A project saved before there was a choice opens as Halftoned, so it converts as it did. Methods
+live in `src/dizher/converter/energy.py` (`METHODS`); a new one is a class with a `candidates`
+method and its `preset`. `python tests/pair_bench.py compare --ref origin/develop` scores every
+method, and the selection of any git ref run from a scratch worktree, against the hand-painted
+references in `tests/images/*/reference.scr`.
 
 ### Halftoning
 

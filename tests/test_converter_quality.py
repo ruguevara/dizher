@@ -73,6 +73,22 @@ def test_bright_dots_cost_no_more_than_dim():
     assert unary[pairs.index((9, 14))] > np.sort(unary)[3]
 
 
+def test_halftoned_is_develops_selection():
+    """The Halftoned method is develop's (0.2.4's) scoring, kept exactly: these labels came from develop's code
+    (`pair_bench.py compare --ref origin/develop` checks the test projects the same way)."""
+    y, x = np.mgrid[0:32, 0:48].astype(np.float32)
+    y, x = y / 31, x / 47
+    image = np.stack([x, y, (1 - x) * (1 - y) * 0.8 + 0.1 * np.sin(6 * x)], -1).clip(0, 1).astype(np.float32)
+    image[8:24, 16:32] = (0.1, 0.15, 0.3)      # a navy block
+    converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, Mode('small', (32, 48), (8, 8), ZXPalette()),
+                          coherence=2.0, chroma_noise=0.05, method='Halftoned')
+    converter.set_image(image)
+    labels = np.array(list(converter.palette.iter_idxs_pairs()))[converter.energy.apply()]
+    develop = [[[0, 1], [0, 1], [0, 3], [0, 2], [0, 2], [8, 10]], [[0, 3], [0, 3], [0, 1], [0, 1], [2, 6], [2, 6]],
+               [[0, 4], [0, 4], [0, 1], [0, 1], [2, 6], [2, 6]], [[8, 12], [8, 12], [8, 12], [10, 12], [10, 12], [10, 14]]]
+    np.testing.assert_array_equal(labels, develop)
+
+
 def test_equal_luminance_colour_edge():
     converter = Converter({'Luma': 1.0, 'Chroma': 1.0},
                           Mode('one cell', (8, 8), (8, 8), ZXPalette()))
@@ -252,6 +268,7 @@ def test_noise_origin_restarts_both_stages():
     assert (r0 != r1).any(), 'the DBS start must follow the origin'
 
 if __name__ == '__main__':
+    test_halftoned_is_develops_selection()
     test_equal_luminance_colour_edge()
     test_selection_matches_full_convolution()
     test_dot_contrast_counts_hue_clashes()

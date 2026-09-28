@@ -3,15 +3,15 @@
 E(labels) = sum_ch w_ch || h_ch * (g (Y_ch - X_ch)) ||^2   in a linear opponent space (S-CIELAB's
 O1 luminance, O2 red-green, O3 blue-yellow), Y the composite, X the target, h_ch the eye kernel of the
 channel's group (Luma: O1, Chroma: O2 and O3), g the per-pixel lightness gain (lightness_gain: linear-light
-error weighted as CIELAB sees it at the target). A pair's candidate on a block is the exact mixture its
-per-pixel level asks for (paper + t (ink - paper)), not one halftone of it: a halftone's noise decided near
-ties at random, block by block. Because the composite is a sum of per-block candidates, E splits exactly
+error weighted as CIELAB sees it at the target). A pair's candidate on a block is what the selection method
+(METHODS) makes of its per-pixel level: the exact mixture paper + t (ink - paper), or one halftone of it.
+Because the composite is a sum of per-block candidates, E splits exactly
 into a per-block term D[p, b] and pairwise terms S[p, q, b, b'] = 2 e_p[b]^T K e_q[b'] with K = h (*) h
 the kernel autocorrelation. The pairwise term is the visible seam a pair change paints, in the same units
 as D, with no extra knob.
 
-The dots cost apart from the mixture: each group's unblurred error, the mixture's residual plus the
-t (1 - t) contrast^2 the dots add around it (dot_contrast), weighted by luma_noise and chroma_noise.
+Each group's unblurred error, weighted by luma_noise and chroma_noise, charges what the blur hides. For the
+exact mixture it is the mixture's residual plus the t (1 - t) contrast^2 the dots add around it (dot_contrast).
 Chroma contrast counts hue only: blue dots on yellow, which average to a pale colour, cost the most, and
 bright yellow dots on black cost nothing, as the hand-painted references prefer them to a dim pair with
 fewer dots. Luma dot contrast has weight 0 by default for the same reason.
@@ -114,6 +114,43 @@ def _ranges(dr, dc, R, C):
     """Block index ranges of 'me' such that the neighbour at (dr, dc) exists."""
     return slice(max(0, -dr), R - max(0, dr)), slice(max(0, -dc), C - max(0, dc))
 
+class Halftoned:
+    """Each pair scored on one halftone of its per-pixel mixture, painted by the chosen halftoner: the pairs are chosen
+    for the dots they will get. The halftone's noise decides near ties block by block, and the dot contrast of a
+    bright pair is charged twice (in the blurred error and in the unblurred one), so dim pairs win. Develop's and
+    0.2.4's scoring, kept exactly; a project saved without a method opens with it."""
+    preset = dict(chroma=1.0, flare=0.1, coherence=2.0, edge=EDGE_SIGMA, luma_noise=0.0, chroma_noise=0.05)
+
+    def candidates(self, c, X):
+        Y = (c.realized ** c.gamma) @ LRGB2OPP.T
+        return (Y - X) * c.gain, None
+
+
+class ExactMixture:
+    """Each pair scored on the exact mixture its per-pixel level asks for, and its dots apart from the mixture:
+    t (1 - t) times the squared contrast of paper and ink (dot_contrast), in lightness and in hue alone. Blue dots
+    on yellow cost the most, black, white or grey dots nothing. Defaults fitted to the hand-painted references of
+    tests/pair_bench.py."""
+    preset = dict(chroma=2.0, flare=0.1, coherence=6.0, edge=EDGE_SIGMA, luma_noise=0.0, chroma_noise=0.02)
+
+    def candidates(self, c, X):
+        lin = (c.color_pairs.astype(np.float32) ** c.gamma) @ LRGB2OPP.T              # (P, 2, 3) paper, ink
+        t = c.levels.astype(np.float32)
+        Y = lin[:, None, None, 0] + t[..., None] * (lin[:, None, None, 1] - lin[:, None, None, 0])
+        P, H, W = t.shape
+        h, w = c.cell
+        # t(1 - t) contrast^2 is the mean squared error dots add around their mixture, gained per pixel like E
+        spread = (t * (1 - t) * c.gain[..., 0] ** 2).reshape(P, H // h, h, W // w, w).sum(axis=(2, 4))
+        dots = dict(zip(GROUPS, dot_contrast(c.color_pairs, c.gamma).T))
+        return (Y - X) * c.gain, {g: dots[g][:, None, None] * spread for g in GROUPS}
+
+
+# How a pair is scored on a block (Metric: method): the rest of pair selection, the halftoner and DBS are shared.
+# Each has the Metric and Select pairs values it was tuned with, set when it is picked (ops.apply_preset).
+METHODS = {'Exact mixture': ExactMixture(), 'Halftoned': Halftoned()}
+NEWEST = 'Exact mixture'    # new projects
+LEGACY = 'Halftoned'        # projects saved before there was a choice
+
 class SelectionEnergy:
     def __init__(self, converter, weights) -> None:
         self.converter = converter
@@ -135,16 +172,10 @@ class SelectionEnergy:
         report_stage('selection energy')
         c = self.converter
         X = c.image_lrgb.astype(np.float32) @ LRGB2OPP.T
-        lin = (c.color_pairs.astype(np.float32) ** c.gamma) @ LRGB2OPP.T                  # (P, 2, 3) paper, ink
-        t = c.levels.astype(np.float32)
-        Y = lin[:, None, None, 0] + t[..., None] * (lin[:, None, None, 1] - lin[:, None, None, 0])   # the exact mixtures
-        E = (Y - X) * c.gain                                               # (P, H, W, 3)
+        E, extra = METHODS[c.method].candidates(c, X)                      # (P, H, W, 3), group -> (P, R, C) or None
         P, H, W, _ = E.shape
         h, w = c.cell
         R, C = H // h, W // w
-        # t(1 - t) contrast^2 is the mean squared error dots add around their mixture, gained per pixel like E
-        spread = (t * (1 - t) * c.gain[..., 0] ** 2).reshape(P, R, h, C, w).sum(axis=(2, 4))   # (P, R, C)
-        dots = dict(zip(GROUPS, dot_contrast(c.color_pairs, c.gamma).T))
         E = E.reshape(P, R, h, C, w, 3).transpose(1, 3, 0, 2, 4, 5).reshape(R, C, P, h * w, 3)
         luma, chroma, _ = c.eye_kernels()
         kernels = dict(Luma=luma, Chroma=chroma)
@@ -153,7 +184,9 @@ class SelectionEnergy:
             K0 = block_kernel_matrix(cpp, 0, 0, c.cell)
             A = [np.ascontiguousarray(E[..., k]) for k in channels]         # each (R, C, P, 64)
             self.X[g] = X[..., channels].reshape(R, h, C, w, len(channels)).mean(axis=(1, 3))   # (R, C, nch) target block means
-            self.N[g] = sum((a ** 2).sum(-1) for a in A).transpose(2, 0, 1) + dots[g][:, None, None] * spread
+            self.N[g] = sum((a ** 2).sum(-1) for a in A).transpose(2, 0, 1)
+            if extra is not None:
+                self.N[g] = self.N[g] + extra[g]
             self.D[g] = sum(np.einsum('rcpx,xy,rcpy->prc', a, K0, a, optimize=True) for a in A)
             self.S[g] = {}
             for dr, dc in OFFSETS:
