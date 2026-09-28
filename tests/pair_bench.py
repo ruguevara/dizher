@@ -277,9 +277,9 @@ def variants(names, n, seed, fast):
 def judge(args, n, seed, out, by, zoom):
     what, rest = args[0], args[1:]
     if what == 'pairs':
-        for name in rest or JUDGED:
+        for i, name in enumerate(rest or JUDGED):
             judged = [(p['a'], p['b']) for p in J.load(name)['pairs']]
-            entries = J.add_pairs(name, J.pick(name, n, seed, judged))
+            entries = J.add_pairs(name, J.pick(name, n, seed + i, judged))     # another draw per picture
             J.make_sheets(name, entries, out, zoom)
     elif what == 'record':
         name, text = rest[0], ' '.join(rest[1:])

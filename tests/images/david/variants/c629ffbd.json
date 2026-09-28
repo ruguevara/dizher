@@ -1,0 +1,16 @@
+{
+ "id": "c629ffbd",
+ "name": "david",
+ "method": "Halftoned",
+ "params": {
+  "chroma": 0.7482997452356128,
+  "coherence": 2.5573316259854533,
+  "edge": 0.12002742510630866,
+  "chroma_noise": 0.08997468417338822,
+  "luma_noise": 0.02602977808467545,
+  "flare": 0.22042587474184305
+ },
+ "optimised": true,
+ "seconds": 12.8,
+ "made": "2026-09-28"
+}

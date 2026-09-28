@@ -1,0 +1,16 @@
+{
+ "id": "e3e44dbe",
+ "name": "vangog",
+ "method": "Exact mixture",
+ "params": {
+  "chroma": 2.967243956716739,
+  "coherence": 2.7883700560816096,
+  "edge": 0.20369279344449026,
+  "chroma_noise": 0.010027126403117195,
+  "luma_noise": 0.06547757723606147,
+  "flare": 0.24592166797159093
+ },
+ "optimised": true,
+ "seconds": 12.0,
+ "made": "2026-09-28"
+}

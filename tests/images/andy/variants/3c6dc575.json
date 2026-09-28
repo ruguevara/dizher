@@ -1,0 +1,16 @@
+{
+ "id": "3c6dc575",
+ "name": "andy",
+ "method": "Exact mixture",
+ "params": {
+  "chroma": 2.8955427016447093,
+  "coherence": 4.399838481322738,
+  "edge": 0.3551348148301756,
+  "chroma_noise": 0.00770121336781275,
+  "luma_noise": 0.046421860653754296,
+  "flare": 0.13120714617248563
+ },
+ "optimised": true,
+ "seconds": 12.5,
+ "made": "2026-09-28"
+}

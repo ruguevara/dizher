@@ -12,7 +12,7 @@ from .metrics import Picture, judged_pairs
 from .scr import pairs_to_labels
 from .variants import RANGES, read_variant
 
-FLARES = (0.03, 0.1, 0.3)
+FLARES = (0.03, 0.1, 0.3, 0.6, 1.0)   # the first fits landed on the grid's top, so it goes past the UI's range
 FREE = ('chroma', 'coherence', 'edge', 'chroma_noise', 'luma_noise')
 
 

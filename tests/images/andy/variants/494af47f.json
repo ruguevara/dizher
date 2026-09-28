@@ -1,0 +1,16 @@
+{
+ "id": "494af47f",
+ "name": "andy",
+ "method": "Halftoned",
+ "params": {
+  "chroma": 2.2418217021035503,
+  "coherence": 3.318196831230246,
+  "edge": 0.10270960985133955,
+  "chroma_noise": 0.08262418327199211,
+  "luma_noise": 0.0357430663121928,
+  "flare": 0.09737082165574837
+ },
+ "optimised": true,
+ "seconds": 19.6,
+ "made": "2026-09-28"
+}

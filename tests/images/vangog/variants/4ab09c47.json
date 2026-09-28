@@ -1,0 +1,16 @@
+{
+ "id": "4ab09c47",
+ "name": "vangog",
+ "method": "Halftoned",
+ "params": {
+  "chroma": 2.0976990859903264,
+  "coherence": 5.2619285669046025,
+  "edge": 0.24460452052422682,
+  "chroma_noise": 0.09608110063166808,
+  "luma_noise": 0.0691244584513373,
+  "flare": 0.20601575620719081
+ },
+ "optimised": true,
+ "seconds": 18.7,
+ "made": "2026-09-28"
+}

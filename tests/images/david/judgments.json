@@ -1,0 +1,100 @@
+{
+ "pairs": [
+  {
+   "k": 1,
+   "a": "077c4e11",
+   "b": "659f3889",
+   "verdicts": {
+    "claude": {
+     "verdict": "b",
+     "tags": [
+      "hue"
+     ],
+     "note": "A: red and cyan over the whole grey statue"
+    }
+   }
+  },
+  {
+   "k": 2,
+   "a": "659f3889",
+   "b": "53971878",
+   "verdicts": {
+    "claude": {
+     "verdict": "a",
+     "tags": [
+      "hue"
+     ],
+     "note": "B: cyan and red speckles in the hair and a red patch bottom right"
+    }
+   }
+  },
+  {
+   "k": 3,
+   "a": "ac00382c",
+   "b": "e3e44dbe",
+   "verdicts": {
+    "claude": {
+     "verdict": "b",
+     "tags": [
+      "hue"
+     ],
+     "note": "A: cyan speckles and a red block bottom left"
+    }
+   }
+  },
+  {
+   "k": 4,
+   "a": "73ad24e5",
+   "b": "bddb6198",
+   "verdicts": {
+    "claude": {
+     "verdict": "same",
+     "tags": [],
+     "note": ""
+    }
+   }
+  },
+  {
+   "k": 5,
+   "a": "659f3889",
+   "b": "2054f490",
+   "verdicts": {
+    "claude": {
+     "verdict": "a",
+     "tags": [
+      "hue"
+     ],
+     "note": "B: teal blocks top right"
+    }
+   }
+  },
+  {
+   "k": 6,
+   "a": "659f3889",
+   "b": "c629ffbd",
+   "verdicts": {
+    "claude": {
+     "verdict": "a",
+     "tags": [
+      "hue"
+     ],
+     "note": "B: cyan all over the hair and a red patch bottom right"
+    }
+   }
+  },
+  {
+   "k": 7,
+   "a": "3935fcf8",
+   "b": "077c4e11",
+   "verdicts": {
+    "claude": {
+     "verdict": "a",
+     "tags": [
+      "hue"
+     ],
+     "note": "B: red and cyan over the whole statue"
+    }
+   }
+  }
+ ]
+}
