@@ -38,11 +38,14 @@ MISSING = object()
 
 # ----- params metadata -------------------------------------------------------------------------------
 
-def meta(*, min=None, max=None, step=None, choices=(), editor="", label="", help="", output=False) -> dict:
+def meta(*, min=None, max=None, step=None, choices=(), editor="", label="", help="", output=False,
+         legacy=None) -> dict:
     """`field(metadata=meta(...))`: editor hints for a params field. Keyword-only so typos fail.
-    `output=True` marks a Path the op writes: its location, not its content, enters the key."""
+    `output=True` marks a Path the op writes: its location, not its content, enters the key.
+    `legacy` is the value the field takes in a saved project that predates it (project.params_from_json); the
+    default stays for new documents and Reset."""
     return {k: v for k, v in dict(min=min, max=max, step=step, choices=tuple(choices), editor=editor,
-                                  label=label, help=help, output=output).items()
+                                  label=label, help=help, output=output, legacy=legacy).items()
             if v is not None and v is not False and v != "" and v != ()}
 
 

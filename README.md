@@ -78,15 +78,16 @@ The GUI block that owns each control is in brackets.
    ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
    │ Stage 1: SELECT PAIRS                one paper/ink pair per 8x8 block                          │
    │                                                                                                │
-   │  candidates: for every allowed pair, project the block onto the paper-ink segment, halftone    │
-   │  it as stage 2 will          [Target: palette subset]  [Halftoner: halftoner, matrix, kernel]  │
+   │  candidates: for every allowed pair, project the block onto the paper-ink segment: the mixture │
+   │  t per pixel, exact or halftoned   [Metric: method]  [Target: palette subset]                  │
    │                                                                                                │
    │  loss(labels) = Σ_ch || h_ch ∗ (composite − target) ||²    eye-blurred error, exact quadratic  │
-   │               + Σ_ch noise_ch · || composite − target ||²  unblurred dot contrast              │
+   │               + Σ_ch noise_ch · (|| composite − target ||² + Σ t(1−t) · dot_ch²)               │
    │               + coherence · Σ_seams V(pair, pair') · exp(−step² / 2 edge²)   Potts prior       │
    │                                                                                                │
    │     h_ch      [Eye model: luma/chroma alpha, blur px]  support capped at 4 px (half a cell)    │
    │     noise_ch  [Select pairs: luma noise, chroma noise]                                         │
+   │     dot_ch    paper-ink contrast: luma, and for chroma the hue difference alone (CIELAB)       │
    │     V         CIELUV distance of papers + inks, fixed by the palette                           │
    │     coherence, edge  [Select pairs: coherence, edge]                                           │
    │                                                                                                │
@@ -138,7 +139,7 @@ closer to the measured contrast sensitivity). Colours are compared in an opponen
 S-CIELAB: one luminance channel and two chroma channels (red-green, blue-yellow), each with its
 own blur, because the eye resolves luminance detail much more finely than colour detail. Both
 stages use the squared error after this blur, plus an unblurred error term that penalises
-visible dot noise, with the same kernels and channel weights.
+visible dots, with the same kernels and channel weights.
 
 The converter caps the kernel support at half the smallest cell dimension (radius 4 for an 8x8
 cell) before normalisation, so that nearest-neighbour selection covers every interaction. The
@@ -149,12 +150,19 @@ deliberately truncated.
 
 For every block and every allowed pair of palette colours (72 pairs on the Spectrum), a candidate
 block is made by projecting the source onto the paper/ink segment in weighted linear opponent
-colour space and then halftoning that mixture with the chosen halftoner, so that pairs are chosen
-for the dots they will actually get (error diffusion is batched over all pairs in one raster
-pass). The whole screen is then the sum of one candidate per block, and the eye-model error of
-that composite is a quadratic function of the block labels: a cost per block, plus a pairwise
-cost for every two neighbouring blocks that measures the visible seam their candidates paint
-across the border. Because the blur is small, only the 8 surrounding blocks interact.
+colour space: the mixture of the two colours each pixel asks for, taken exactly or halftoned
+depending on the selection method (below). The whole screen is then
+the sum of one candidate per block, and the eye-model error of that composite is a quadratic
+function of the block labels: a cost per block, plus a pairwise cost for every two neighbouring
+blocks that measures the visible seam their candidates paint across the border. Because the blur
+is small, only the 8 surrounding blocks interact.
+
+With the exact mixture, the dots are costed apart from it, as t(1 - t) times the squared contrast of paper and
+ink (the mean squared error dots add around the mixture they average to). Lightness contrast has
+weight 0 by default, so bright yellow dots on black cost nothing more than dim ones. Chroma
+contrast counts hue alone: blue dots on yellow, which average to a pale peach, cost the most, and
+black or white dots on any colour cost nothing. These defaults, and the weights below, were fitted
+to hand-corrected attribute maps with `tests/pair_bench.py`.
 
 Blurred error alone is blind to texture: a lone block dithered with green dots among blocks
 dithered with yellow ones is an obvious cell even when the mean colours match. A coherence prior
@@ -163,6 +171,22 @@ CIELUV distance of the papers plus that of the inks), scaled down where the orig
 has an edge across that seam. Labels are optimised by line-wise dynamic programming: each row,
 then each column, is re-solved exactly given the rest, until nothing changes. The palette can be
 restricted to bright colours only, non-bright only, grayscale, black and white, or any custom set.
+
+#### Selection methods
+
+How a pair is scored on a block is a choice, [Metric: method]; the rest (the solver, coherence,
+Overpaint, halftoning and DBS) is shared. Picking a method also sets the Metric and Select pairs
+values it was tuned with, as one undo step.
+
+| Method | A pair is scored on | Tuned values |
+|---|---|---|
+| Exact mixture (new projects) | its exact mixture, plus a cost for dots of clashing hues | chroma 2, coherence 6, chroma noise 0.02 |
+| Halftoned (0.2.4) | one halftone of its mixture, by the chosen halftoner | chroma 1, coherence 2, chroma noise 0.05 |
+
+A project saved before there was a choice opens as Halftoned, so it converts as it did. Methods
+live in `src/dizher/converter/energy.py` (`METHODS`); a new one is a class with a `candidates`
+method and its `preset`. `python tests/pair_bench.py compare` scores every method against the
+hand-painted references in `tests/images/*/reference.scr`.
 
 ### Halftoning
 
@@ -175,7 +199,7 @@ matches the blurred image. All halftoners take the same colour-aware inputs:
 * stochastic, with blue noise.
 
 The Halftoner block shows only the controls of the chosen method, and the same method paints the
-pair candidates.
+pair candidates of the live preview while colours are being selected.
 
 The Optimise stage, on by default, then runs Direct Binary Search (DBS) from that halftone: it
 repeatedly visits every pixel and either flips it or swaps it with one of its 8 neighbours,

@@ -119,7 +119,8 @@
     "metric": {
       "op": "dizher.ops:metric",
       "params": {
-        "chroma": 1.0,
+        "method": "Exact mixture",
+        "chroma": 2.0,
         "flare": 0.1
       },
       "inputs": []
@@ -159,26 +160,35 @@
     "select": {
       "op": "dizher.ops:select_pairs",
       "params": {
-        "coherence": 2.0,
+        "coherence": 6.0,
         "edge": 0.1,
-        "luma_noise": 0.257999986410141,
-        "chroma_noise": 0.05
+        "luma_noise": 0.0,
+        "chroma_noise": 0.02
       },
       "inputs": [
         "prepare"
+      ]
+    },
+    "overpaint": {
+      "op": "dizher.ops:overpaint",
+      "params": {
+        "overrides": []
+      },
+      "inputs": [
+        "select"
       ]
     },
     "halftone": {
       "op": "dizher.ops:halftone",
       "params": null,
       "inputs": [
-        "select"
+        "overpaint"
       ]
     },
     "optimise": {
       "op": "dizher.ops:optimise",
       "params": {
-        "enabled": false,
+        "enabled": true,
         "structure": 0.06
       },
       "inputs": [

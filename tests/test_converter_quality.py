@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 from dizher.converter.converter import Converter
-from dizher.converter.energy import SEAM_COST
+from dizher.converter.energy import SEAM_COST, dot_contrast
 from dizher.converter.dither import ErrorDiffusion, Ordered, Stohastic, duo_levels
 from dizher.halftoning.dbs import _Structure, CONTRAST_GAIN
 from dizher.halftoning.error_distribution import ed_dither_duo, stucki_duo
@@ -21,6 +21,71 @@ def colour_error(converter, image):
         blurred = cv2.filter2D(np.pad(e, radius), -1, kernel, borderType=cv2.BORDER_CONSTANT)
         total += float((blurred ** 2).sum() + noise[channel] * (e ** 2).sum())
     return total
+
+
+def mixture(converter, labels):
+    """The composite pair selection scores: each block's pair mixed in linear light at each pixel's level."""
+    rows, cols = np.indices(converter.size)
+    idx = converter.expand_cells(labels)
+    pairs = converter.color_pairs[idx] ** converter.gamma                     # (H, W, 2, 3)
+    t = converter.levels[idx, rows, cols][..., None]
+    return (pairs[..., 0, :] + t * (pairs[..., 1, :] - pairs[..., 0, :])) ** (1 / converter.gamma)
+
+
+def dot_error(converter, labels):
+    """The dots' unblurred error around that mixture, t (1 - t) contrast^2, gained, weighted per channel group."""
+    rows, cols = np.indices(converter.size)
+    idx = converter.expand_cells(labels)
+    t = converter.levels[idx, rows, cols]
+    spread = t * (1 - t) * converter.gain[..., 0] ** 2
+    contrast = dot_contrast(converter.color_pairs, converter.gamma)[idx]     # (H, W, 2) luma, chroma
+    w = converter.energy.weights
+    return float((spread * (w['Luma'] * converter.luma_noise * contrast[..., 0]
+                            + w['Chroma'] * converter.chroma_noise * contrast[..., 1])).sum())
+
+
+def test_dot_contrast_counts_hue_clashes():
+    """Chroma dot contrast is hue alone: black or white dots cost none, yellow on black none, complementary pairs
+    the most; luma contrast is plain."""
+    pal = ZXPalette().as_float()
+    pairs = {name: np.stack([pal[a], pal[b]]) for name, (a, b) in
+             dict(KY=(8, 14), KW=(8, 15), RW=(10, 15), RY=(10, 14), RG=(10, 12), BY=(9, 14), ky=(0, 6)).items()}
+    luma, chroma = dot_contrast(np.stack(list(pairs.values())), 2.2).T
+    c = dict(zip(pairs, chroma))
+    assert c['KY'] == c['KW'] == c['RW'] == c['ky'] == 0
+    assert 0 < c['RY'] < c['RG'] < c['BY']
+    l = dict(zip(pairs, luma))
+    assert l['KW'] > l['KY'] > l['ky'] > 0
+
+
+def test_bright_dots_cost_no_more_than_dim():
+    """A dark yellow that black mixes with bright or dim yellow alike: the two mixtures are the same colour, and at the
+    default weights the bright pair's denser contrast of dots costs nothing more (the hand-painted references chose
+    bright). A pale face colour, which blue on yellow also mixes, goes to a pair without clashing hues."""
+    converter = Converter({'Luma': 1.0, 'Chroma': 2.0}, Mode('one cell', (8, 8), (8, 8), ZXPalette()))
+    pairs = [tuple(p) for p in converter.palette.iter_idxs_pairs()]
+    converter.set_image(np.full((8, 8, 3), (150 / 255, 150 / 255, 0), np.float32))
+    unary = converter.energy.unary()[:, 0, 0]
+    np.testing.assert_allclose(unary[pairs.index((8, 14))], unary[pairs.index((0, 6))], atol=1e-9)    # K/Y, k/y
+    converter.set_image(np.full((8, 8, 3), (226 / 255, 190 / 255, 127 / 255), np.float32))
+    unary = converter.energy.unary()[:, 0, 0]
+    assert unary.argmin() != pairs.index((9, 14))                                                        # B/Y
+    assert unary[pairs.index((9, 14))] > np.sort(unary)[3]
+
+
+def test_halftoned_is_develops_selection():
+    """The Halftoned method is develop's (0.2.4's) scoring, kept exactly: these labels came from develop's code."""
+    y, x = np.mgrid[0:32, 0:48].astype(np.float32)
+    y, x = y / 31, x / 47
+    image = np.stack([x, y, (1 - x) * (1 - y) * 0.8 + 0.1 * np.sin(6 * x)], -1).clip(0, 1).astype(np.float32)
+    image[8:24, 16:32] = (0.1, 0.15, 0.3)      # a navy block
+    converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, Mode('small', (32, 48), (8, 8), ZXPalette()),
+                          coherence=2.0, chroma_noise=0.05, method='Halftoned')
+    converter.set_image(image)
+    labels = np.array(list(converter.palette.iter_idxs_pairs()))[converter.energy.apply()]
+    develop = [[[0, 1], [0, 1], [0, 3], [0, 2], [0, 2], [8, 10]], [[0, 3], [0, 3], [0, 1], [0, 1], [2, 6], [2, 6]],
+               [[0, 4], [0, 4], [0, 1], [0, 1], [2, 6], [2, 6]], [[8, 12], [8, 12], [8, 12], [10, 12], [10, 12], [10, 14]]]
+    np.testing.assert_array_equal(labels, develop)
 
 
 def test_equal_luminance_colour_edge():
@@ -48,9 +113,7 @@ def test_selection_matches_full_convolution():
         converter.luma_scale = converter.chroma_scale = scale
         converter.set_image(rng.random((*mode.size, 3), dtype=np.float32))
         labels = rng.integers(len(converter.color_pairs), size=(3, 4))
-        rows, cols = np.indices(mode.size)
-        image = converter.realized[converter.expand_cells(labels), rows, cols]
-        direct = colour_error(converter, image)
+        direct = colour_error(converter, mixture(converter, labels)) + dot_error(converter, labels)
         np.testing.assert_allclose(converter.energy.energy(labels), direct, rtol=2e-6)
         assert direct >= 0
 
@@ -204,8 +267,11 @@ def test_noise_origin_restarts_both_stages():
     assert (r0 != r1).any(), 'the DBS start must follow the origin'
 
 if __name__ == '__main__':
+    test_halftoned_is_develops_selection()
     test_equal_luminance_colour_edge()
     test_selection_matches_full_convolution()
+    test_dot_contrast_counts_hue_clashes()
+    test_bright_dots_cost_no_more_than_dim()
     test_dbs_lowers_complete_colour_objective()
     test_halftone_target_is_reachable()
     test_colour_diffusion_preserves_scalar_projection()

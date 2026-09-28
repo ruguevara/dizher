@@ -217,6 +217,27 @@ def test_project_round_trip_and_restore():
 
 
 
+def test_selection_methods():
+    """New documents score pairs by the newest method with the values it was tuned with; a project saved before the
+    choice existed opens as Halftoned, develop's scoring; picking a method brings its Metric and Select pairs values."""
+    import json
+    from mokit import project
+    from dizher.converter.energy import METHODS, NEWEST, LEGACY
+    graph = ops.make_graph()
+    assert graph['metric'].params.method == NEWEST and ops.apply_preset(graph, NEWEST) == graph
+    data = json.loads(project.dumps(graph, {}))
+    del data['nodes']['metric']['params']['method']
+    loaded, _, diagnostics = project.loads(json.dumps(data))
+    assert loaded['metric'].params.method == LEGACY and not diagnostics
+    assert loaded['metric'].params.chroma == graph['metric'].params.chroma    # the saved values stay as they were
+    for method, scoring in METHODS.items():
+        picked = ops.apply_preset(loaded, method)
+        assert picked['metric'].params.method == method
+        for k, v in scoring.preset.items():
+            node = 'metric' if hasattr(picked['metric'].params, k) else 'select'
+            assert getattr(picked[node].params, k) == v, (method, k)
+
+
 def test_undo_redo():
     from dizher.ui.app import Pipeline
     host = Pipeline()
@@ -317,6 +338,7 @@ if __name__ == '__main__':
     test_host_reruns_only_downstream_of_an_edit()
     test_host_discards_stale_completions()
     test_project_round_trip_and_restore()
+    test_selection_methods()
     test_undo_redo()
     test_host_watches_the_source_file()
     test_project_folder()

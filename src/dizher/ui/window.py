@@ -411,6 +411,10 @@ class Window:
             if not is_open:
                 continue
             on_change = lambda p, n=nid: app.set_params(n, p, held=imgui.is_any_item_active())
+            if nid == 'metric':   # another selection method brings the values it was tuned with, one undo step
+                on_change = lambda p, old=params: (app.set_graph(ops.apply_preset(app.graph, p.method))
+                                                   if p.method != old.method else
+                                                   app.set_params('metric', p, held=imgui.is_any_item_active()))
             if nid in self.editors:
                 self.editors[nid].draw(params, app.shown(inputs[0]) if inputs else None, on_change, id=nid)
             elif params is not None:

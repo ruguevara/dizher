@@ -105,6 +105,8 @@ def params_from_json(params_type, data: Optional[dict], root: Optional[Path], di
                 values[f.name] = _coerce(raw, hints.get(f.name, f.type), root)
             except (TypeError, ValueError) as e:
                 diagnostics.append(f"{where}: {f.name}={raw!r} does not coerce ({e}); using default")
+        elif "legacy" in f.metadata:        # saved before the field existed: what it behaved as then
+            values[f.name] = f.metadata["legacy"]
         elif f.default is DC_MISSING and f.default_factory is DC_MISSING:
             raise GraphError(f"{where}: required field {f.name!r} missing")
     for name in data:
