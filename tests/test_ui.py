@@ -457,7 +457,7 @@ def test_cell_popup(ctx):
 def test_paint(ctx):
     """Paint mode: a left click on a swatch picks the ink, a right click the paper, either turns it on; a left drag
     over the preview paints the cells it crosses, one undo step; a right click picks a cell's colours up; Auto as
-    both erases; Esc ends it; Clear drops every cell; Fix writes the shown colours into an Auto one."""
+    both erases; Esc ends it; Clear drops every cell; Fix paints every cell with the colours it shows."""
     from imgui_bundle.imgui.test_engine import CaptureFlags_
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'a conversion to paint')
     brush = ui.editors['overpaint']
@@ -535,10 +535,13 @@ def test_paint(ctx):
     ctx.item_click('overpaint/Fix')
     ctx.yield_(2)
     fixed = params('overpaint').overrides
-    assert [o[:2] for o in fixed] == [(2, 3), (4, 5)] and fixed[0][2] >= 0 and fixed[0][3] == 2, fixed
-    assert fixed[1] == (4, 5, 7, 1) and len(ui.app.past) == steps + 1, 'Fix is one undo step'
+    cell = {o[:2]: o[2:] for o in fixed}
+    assert len(fixed) == 24 * 32 and all(-1 not in o for o in fixed), 'every cell painted'
+    assert cell[2, 3][1] == 2 and cell[4, 5] == (7, 1) and len(ui.app.past) == steps + 1, 'Fix is one undo step'
     assert ui.editors['overpaint'].fixed(fixed, ui.app.shown('select')) == fixed, 'nothing left to fix: Fix disabled'
-    reset('overpaint')
+    ctx.item_click('overpaint/Clear')
+    ctx.yield_(2)
+    assert params('overpaint').overrides == ()
     ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x - 50, r.min.y - 50))
 
 

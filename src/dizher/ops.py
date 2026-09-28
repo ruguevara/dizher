@@ -247,17 +247,16 @@ def overpaint(selection: Converter,
     if not overrides:
         return selection
     labels = selection.best_attr_indexes.copy()
+    paint = painted_field(overrides, labels.shape)
+    rows, cols = np.nonzero((paint >= 0).any(-1))
     pairs = np.array(list(selection.palette.iter_idxs_pairs()))   # (P, 2) paper, ink
     rgb = selection.palette.as_float()
-    R, C = labels.shape
-    for r, c, *paint in overrides:
-        if r >= R or c >= C:
-            continue
-        want = [p if p >= 0 else a for p, a in zip(paint, pairs[labels[r, c]])]
-        weight = [PAINTED if p >= 0 else 1 for p in paint]
-        far = lambda i, j: sum(w * np.linalg.norm(rgb[pairs[:, k]] - rgb[x], axis=-1)
-                               for k, x, w in zip((i, j), want, weight))
-        labels[r, c] = np.minimum(far(0, 1), far(1, 0)).argmin()   # a pair is unordered: paper may be the brighter
+    paint = paint[rows, cols]                                      # (N, 2) painted cells, -1 keeping the selection's
+    want = np.where(paint >= 0, paint, pairs[labels[rows, cols]])
+    weight = np.where(paint >= 0, PAINTED, 1).astype(np.float32)   # float32 as the distances, so ties stay ties
+    to = [np.linalg.norm(rgb[:, None] - rgb[pairs[:, k]][None], axis=-1) for k in (0, 1)]   # colour -> paper, ink
+    far = lambda i, j: weight[:, :1] * to[i][want[:, 0]] + weight[:, 1:] * to[j][want[:, 1]]   # (N, P)
+    labels[rows, cols] = np.minimum(far(0, 1), far(1, 0)).argmin(-1)   # a pair is unordered: paper may be the brighter
     painted = selection.copy()
     painted.set_labels(labels)
     return painted
@@ -266,26 +265,40 @@ def overpaint(selection: Converter,
 PAINTED = 1e3   # a painted colour's distance against a kept one's: the nearest pair keeps the painted colours first
 
 
-def shown_pair(conv: Converter, r: int, c: int, painted=(-1, -1)) -> tuple:
-    """The cell's (paper, ink) as conv shows it, a painted colour in its painted role, matched by colour as Overpaint
-    matches it (either black is the painted one): the pair is unordered, the darker colour its paper."""
-    paper, ink = list(conv.palette.iter_idxs_pairs())[conv.best_attr_indexes[r, c]]
+def painted_field(overrides: tuple, shape) -> np.ndarray:
+    """(R, C, 2) every cell's painted (paper, ink), -1 where it keeps the selection's; cells off the screen dropped."""
+    field = np.full((*shape, 2), -1, dtype=np.int64)
+    o = np.array(overrides, dtype=np.int64).reshape(-1, 4)
+    o = o[(o[:, 0] < shape[0]) & (o[:, 1] < shape[1])]
+    field[o[:, 0], o[:, 1]] = o[:, 2:]
+    return field
+
+
+def shown_pairs(conv: Converter, painted: np.ndarray) -> np.ndarray:
+    """(R, C, 2) every cell's (paper, ink) as conv shows it, a painted colour (painted_field) in its painted role,
+    matched by colour as Overpaint matches it, so either black reads as the painted one; the pair is unordered, the
+    darker colour its paper where nothing is painted."""
+    pairs = np.array(list(conv.palette.iter_idxs_pairs()))[conv.best_attr_indexes]   # (R, C, 2) the darker first
     rgb = conv.palette.as_float()
-    off = lambda roles: sum(np.linalg.norm(rgb[x] - rgb[p]) for x, p in zip(roles, painted) if p >= 0)
-    return (ink, paper) if off((ink, paper)) < off((paper, ink)) else (paper, ink)
+    off = lambda shown: sum(np.where(painted[..., k] >= 0, np.linalg.norm(rgb[shown[..., k]] - rgb[painted[..., k]],
+                                                                         axis=-1), 0) for k in (0, 1))
+    return np.where((off(pairs[..., ::-1]) < off(pairs))[..., None], pairs[..., ::-1], pairs)
 
 
 def fix_overrides(selection: Converter, overrides: tuple) -> tuple:
-    """The painted cells with the colours they show: a -1 (Auto) colour becomes the one Select pairs gave the cell, a
-    pair the palette cannot show becomes the one Overpaint shows for it. Overpaint's result stays the same and no
-    longer follows Select pairs. A painted colour shown as itself keeps its index (either black), so a fixed cell
-    fixes to itself. A cell off the screen is kept as painted."""
-    painted = overpaint(selection, overrides)
-    R, C = painted.best_attr_indexes.shape
+    """Every cell of the screen painted with the colours it shows, so the whole field no longer follows Select pairs
+    and Overpaint's result stays the same: an unpainted cell takes the pair Select pairs gave it, a -1 (Auto) colour
+    the one Select pairs gave, a pair the palette cannot show the one Overpaint shows for it. A painted colour shown as
+    itself keeps its index (either black), so a fixed field fixes to itself. Cells off the screen are kept as
+    painted."""
+    shape = selection.best_attr_indexes.shape
+    painted = painted_field(overrides, shape)
+    shown = shown_pairs(overpaint(selection, overrides), painted)
     rgb = selection.palette.as_ubyte()
-    kept = lambda shown, paint: tuple(p if p >= 0 and (rgb[p] == rgb[s]).all() else s for s, p in zip(shown, paint))
-    return tuple((r, c, *kept(shown_pair(painted, r, c, (p, i)), (p, i))) if r < R and c < C else (r, c, p, i)
-                 for r, c, p, i in overrides)
+    field = np.where((painted >= 0) & (rgb[painted] == rgb[shown]).all(-1), painted, shown)
+    off = [o for o in overrides if o[0] >= shape[0] or o[1] >= shape[1]]
+    return tuple(sorted([(r, c, int(p), int(i)) for (r, c), (p, i) in zip(np.ndindex(*shape), field.reshape(-1, 2))]
+                        + off))
 
 
 def halftone(selection: Converter, progress=None) -> Converter:

@@ -100,27 +100,31 @@ def test_brush_brightness():
 
 
 def test_fix_overrides():
-    """Fix writes into every painted cell the colours it shows: no -1 is left, a pair the Spectrum cannot show becomes
-    the one shown, each painted colour stays in its role, the result keeps its colours, and a fixed cell fixes to
-    itself; a cell off the screen is kept as painted."""
+    """Fix paints every cell with the colours it shows: an unpainted cell its selected pair, no -1 left, a pair the
+    Spectrum cannot show the one shown, each painted colour in its role; the result keeps its colours and a fixed field
+    fixes to itself; a cell off the screen is kept as painted."""
     memo = Memo()
     graph = pipeline()
     selection = evaluate(graph, 'select', memo)
+    R, C = selection.best_attr_indexes.shape
+    pairs = list(selection.palette.iter_idxs_pairs())
     colours = lambda conv: selection.color_pairs[conv.best_attr_indexes]   # (R, C, 2, 3): the two blacks alike
+    painted = lambda cells: evaluate(
+        graph.with_params('overpaint', replace(graph['overpaint'].params, overrides=cells)), 'overpaint', memo)
     cells = ((0, 0, 7, 1), (0, 1, 2, 14), (3, 5, -1, 14), (4, 4, 2, -1), (5, 5, -1, 8), (99, 0, 0, 7))   # 14 bright Y
     fixed = ops.fix_overrides(selection, cells)
-    assert [o[:2] for o in fixed] == [o[:2] for o in cells] and fixed[-1] == cells[-1]
-    assert all(-1 not in o for o in fixed[:-1]), fixed
-    assert fixed[0] == (0, 0, 7, 1)                    # a pair the Spectrum shows stays as painted
-    assert fixed[1] == (0, 1, 10, 14)                  # r/Y: the paper brightened, as Overpaint shows it
-    assert fixed[2][3] == 14 and fixed[3][2] == 2 and fixed[4][3] == 8   # painted colours in their painted roles
-    before = colours(evaluate(graph.with_params('overpaint', replace(graph['overpaint'].params, overrides=cells)),
-                              'overpaint', memo))
-    after = colours(evaluate(graph.with_params('overpaint', replace(graph['overpaint'].params, overrides=fixed)),
-                             'overpaint', memo))
-    np.testing.assert_array_equal(after, before)
+    cell = {o[:2]: o[2:] for o in fixed}
+    assert len(fixed) == R * C + 1 and cell[99, 0] == (0, 7) and list(fixed) == sorted(fixed)
+    assert all(-1 not in o for o in fixed), fixed
+    assert cell[0, 0] == (7, 1)                         # a pair the Spectrum shows stays as painted
+    assert cell[0, 1] == (10, 14)                       # r/Y: the paper brightened, as Overpaint shows it
+    assert cell[3, 5][1] == 14 and cell[4, 4][0] == 2 and cell[5, 5][1] == 8   # painted colours in their painted roles
+    assert cell[10, 10] == pairs[selection.best_attr_indexes[10, 10]]           # unpainted: the selected pair
+    np.testing.assert_array_equal(colours(painted(fixed)), colours(painted(cells)))
     assert ops.fix_overrides(selection, fixed) == fixed
-    assert ops.fix_overrides(selection, ()) == ()
+    whole = ops.fix_overrides(selection, ())
+    assert len(whole) == R * C and all(o[2:] == pairs[selection.best_attr_indexes[o[:2]]] for o in whole)
+    np.testing.assert_array_equal(colours(painted(whole)), colours(selection))
 
 
 def test_host_reruns_only_downstream_of_an_edit():

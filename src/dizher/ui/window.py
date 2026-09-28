@@ -264,8 +264,7 @@ class OverpaintEditor:
     DIM, as both, keeps a cell's colours and sets their brightness. A left click on a swatch picks the ink, a right click the paper (Multipaint's and MS
     Paint's buttons), and turns Paint mode on. In the preview a left drag paints cells with the brush, a right click
     picks up a cell's colours as the brush, the eyedropper (Window._paint). Clear gives every painted cell back to
-    Select pairs; Fix writes into every painted cell the colours it shows, so an Auto one no longer follows Select
-    pairs."""
+    Select pairs; Fix paints every cell with the colours it shows, so the whole field no longer follows Select pairs."""
 
     def __init__(self) -> None:
         self.on, self.ink, self.paper = False, 15, TRANSPARENT   # bright white on the Spectrum, light grey on the C64
@@ -295,8 +294,8 @@ class OverpaintEditor:
         if imgui.small_button('Fix'):
             on_change(replace(params, overrides=fixed))
         imgui.end_disabled()
-        imgui.set_item_tooltip('Painted cells take the colours they show: an Auto ink or paper becomes the one Select '
-                               'pairs gave, a pair the palette cannot show the one shown')
+        imgui.set_item_tooltip('Paint every cell with the colours it shows: the whole field stops following Select '
+                               'pairs, an Auto ink or paper and a pair the palette cannot show become the ones shown')
         imgui.same_line()
         imgui.text(f'{len(params.overrides)} painted')
         if selection is not None:
@@ -655,8 +654,9 @@ class Window:
             imgui.end_popup()
 
     def _colours(self, conv, r: int, c: int) -> tuple:
-        """The cell's (paper, ink) as conv shows it, a painted colour in its painted role (ops.shown_pair)."""
-        return ops.shown_pair(conv, r, c, self._painted(r, c))
+        """The cell's (paper, ink) as conv shows it, a painted colour in its painted role (ops.shown_pairs)."""
+        painted = ops.painted_field(self.app.graph['overpaint'].params.overrides, conv.best_attr_indexes.shape)
+        return tuple(int(x) for x in ops.shown_pairs(conv, painted)[r, c])
 
     def _painted(self, r: int, c: int) -> tuple:
         """The cell's painted (paper, ink), -1 where it keeps the selection's."""
