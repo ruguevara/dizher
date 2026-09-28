@@ -5,9 +5,8 @@
                                                       select pairs by a method with the Metric and Select values it was
                                                       tuned with (default the newest; each project keeps its Tune params,
                                                       palette and halftoner) and score them
-    python tests/pair_bench.py compare [NAME...] [--ref GIT_REF] [--sheets DIR]
-                                                      every method side by side, and optionally another git ref's own
-                                                      selection (e.g. origin/develop), run from a scratch worktree
+    python tests/pair_bench.py compare [NAME...] [--sheets DIR]
+                                                      every method side by side, each with the values it was tuned with
     python tests/pair_bench.py regions NAME [--out DIR] [--k N]
                                                       the cells grouped into numbered regions, for painting by region
     python tests/pair_bench.py paint NAME FILE.json   regions (and cells) to Overpaint overrides in the project
@@ -18,10 +17,7 @@ matches it. Pairs are unordered, and the two blacks are one colour.
 """
 import argparse
 import json
-import os
-import subprocess
 import sys
-import tempfile
 import time
 from dataclasses import replace
 from pathlib import Path
@@ -256,43 +252,9 @@ def run(names, sets, sheets=None, memos=None, quiet=False, method=NEWEST):
     return rows
 
 
-# Runs in another checkout's own code (PYTHONPATH its src/), so it uses only APIs develop has: each project with that
-# code's default Metric, Eye and Select params; prints {name: (R, C, 2) palette indexes (paper, ink)} as JSON.
-REF_RUNNER = """
-import json, sys
-import numpy as np
-from mokit.graph import Memo, evaluate
-from mokit.project import load_project
-from dizher import ops
-out = {}
-for name, folder in json.loads(sys.argv[1]).items():
-    project = load_project(folder)
-    graph = ops.make_graph()
-    for nid in graph.ids():
-        if nid in project.graph and nid not in ('metric', 'eye', 'select'):
-            graph = graph.with_params(nid, project.graph[nid].params)
-    conv = evaluate(graph, 'select', Memo())
-    out[name] = np.array(list(conv.palette.iter_idxs_pairs()))[conv.best_attr_indexes].tolist()
-print(json.dumps(out))
-"""
-
-
-def ref_labels(ref, names):
-    """{name: (R, C, 2) palette indexes} chosen by the code of a git ref, checked out in a scratch worktree."""
-    repo = Path(__file__).resolve().parent.parent
-    tree = Path(tempfile.gettempdir()) / ('dizher-bench-' + ref.replace('/', '-'))
-    if not tree.exists():
-        subprocess.run(['git', '-C', str(repo), 'worktree', 'add', '--detach', str(tree), ref], check=True)
-    subprocess.run(['git', '-C', str(tree), 'checkout', '-q', '--detach', ref], check=True)
-    env = dict(os.environ, PYTHONPATH=str(tree / 'src'))
-    folders = json.dumps({n: str(IMAGES / n) for n in names})
-    out = subprocess.run([sys.executable, '-c', REF_RUNNER, folders], env=env, check=True, capture_output=True, text=True)
-    return {n: np.array(v) for n, v in json.loads(out.stdout.strip().splitlines()[-1]).items()}
-
-
-def compare(names, ref=None, sheets=None):
-    """Every method with its tuned values, and a git ref's own selection, on each reference: painted cells matched,
-    false seams and the spot checks. With sheets: per image, the reference | each method's final result."""
+def compare(names, sheets=None):
+    """Every method with its tuned values on each reference: painted cells matched, false seams and the spot checks.
+    With sheets: per image, the reference | each method's final result."""
     names = [n for n in names if (IMAGES / n / 'reference.scr').exists()]
     columns = {m: {} for m in METHODS}
     finals, palettes = {n: [] for n in names}, {}
@@ -306,20 +268,6 @@ def compare(names, ref=None, sheets=None):
             palettes[name] = conv.palette
             if sheets:
                 finals[name].append((method, finish(graph, memo, conv).dithered_result))
-    if ref:
-        t = time.time()
-        theirs = ref_labels(ref, names)
-        columns[ref] = {}
-        for name in names:
-            columns[ref][name] = scored(name, np.sort(black(theirs[name]), axis=-1), (time.time() - t) / len(names))
-            if sheets:   # their labels through this code's halftone and optimiser
-                graph = ops.apply_preset(project_graph(name, DEFAULTS), NEWEST)
-                conv = select(graph, Memo())
-                index = {tuple(p): i for i, p in enumerate(conv.palette.iter_idxs_pairs())}
-                labels = np.vectorize(lambda a, b: index[(a, b)])(theirs[name][..., 0], theirs[name][..., 1])
-                mine = conv.copy()
-                mine.set_labels(labels)
-                finals[name].append((ref, finish(graph, Memo(), mine).dithered_result))
     for label, rows in columns.items():
         print(f'== {label}')
         print(f"{'image':16} {'painted':>7} {'false':>6} {'changes':>7}")
@@ -412,7 +360,6 @@ def main(argv=None):
     ap.add_argument('args', nargs='*')
     ap.add_argument('--set', action='append', help='Metric, Eye or Select param=value')
     ap.add_argument('--method', default=NEWEST, choices=tuple(METHODS), help='selection method (run)')
-    ap.add_argument('--ref', help='git ref whose own selection compare adds, e.g. origin/develop')
     ap.add_argument('--sheets', help='folder for contact sheets')
     ap.add_argument('--out', default='.')
     ap.add_argument('--k', type=int, default=12)
@@ -426,7 +373,7 @@ def main(argv=None):
     elif a.command == 'compare':
         if a.sheets:
             Path(a.sheets).mkdir(parents=True, exist_ok=True)
-        compare(a.args or SET, a.ref, a.sheets)
+        compare(a.args or SET, a.sheets)
     elif a.command == 'regions':
         regions(a.args[0], a.out, a.k)
     else:

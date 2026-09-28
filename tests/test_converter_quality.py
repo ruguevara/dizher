@@ -74,8 +74,7 @@ def test_bright_dots_cost_no_more_than_dim():
 
 
 def test_halftoned_is_develops_selection():
-    """The Halftoned method is develop's (0.2.4's) scoring, kept exactly: these labels came from develop's code
-    (`pair_bench.py compare --ref origin/develop` checks the test projects the same way)."""
+    """The Halftoned method is develop's (0.2.4's) scoring, kept exactly: these labels came from develop's code."""
     y, x = np.mgrid[0:32, 0:48].astype(np.float32)
     y, x = y / 31, x / 47
     image = np.stack([x, y, (1 - x) * (1 - y) * 0.8 + 0.1 * np.sin(6 * x)], -1).clip(0, 1).astype(np.float32)

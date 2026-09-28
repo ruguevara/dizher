@@ -185,9 +185,8 @@ values it was tuned with, as one undo step.
 
 A project saved before there was a choice opens as Halftoned, so it converts as it did. Methods
 live in `src/dizher/converter/energy.py` (`METHODS`); a new one is a class with a `candidates`
-method and its `preset`. `python tests/pair_bench.py compare --ref origin/develop` scores every
-method, and the selection of any git ref run from a scratch worktree, against the hand-painted
-references in `tests/images/*/reference.scr`.
+method and its `preset`. `python tests/pair_bench.py compare` scores every method against the
+hand-painted references in `tests/images/*/reference.scr`.
 
 ### Halftoning
 
