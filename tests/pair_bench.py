@@ -27,6 +27,14 @@
                                                       a judge's verdicts (a, b or same, the faults named: hue, clash,
                                                       noise, tone, other; a note after --) into judgments.json
     python tests/pair_bench.py judge agree [NAME...]   how far the judges agree, by fault
+    python tests/pair_bench.py zxart fetch [--n 50] [--rating 4]
+                                                      the top standard pictures by votes from zxart.ee: their screens
+                                                      to tests/images/zxart/<id>/reference.scr, the list to index.json
+    python tests/pair_bench.py zxart prepare [--luma 1.0] [--chroma 2.5]
+                                                      each picture's source (its screen through a wider eye blur) and
+                                                      project, so run/compare zxart/<id> score against the artist
+    python tests/pair_bench.py zxart stats            the pairs the artists use, how often they change, clashing hues
+    python tests/pair_bench.py zxart names            the project names, for run and compare
 
 A project is tests/images/NAME/project.json; its reference is reference.scr beside it. The reference is judged per
 cell as the colours it shows: a cell whose bitmap is all paper or all ink is solid, and any pair holding that colour
@@ -49,7 +57,7 @@ from dizher import ops
 from dizher.converter.energy import METHODS, NEWEST
 
 sys.path.insert(0, str(Path(__file__).parent))
-from bench import render as R, variants as V, judge as J                                             # noqa: E402
+from bench import render as R, variants as V, judge as J, zxart as Z                                 # noqa: E402
 from bench.scr import pair_name, parse_pair, black, label_pairs, matches, score, render_scr   # noqa: E402
 from bench.project import IMAGES, DEFAULTS, project_graph, painted_cells, select, finish, reference    # noqa: E402
 
@@ -245,7 +253,8 @@ def render(name, out, zoom=3, crops=(), variant=None, eye=True, method=NEWEST):
     img = R.sheet(columns, zoom, conv.eye_view if eye else None, crops, marks=marks)
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
-    path = out / (f'{name}-{Path(str(variant)).stem}.png' if variant else f'{name}.png')
+    stem = name.replace('/', '-')                      # zxart/47111 -> zxart-47111
+    path = out / (f'{stem}-{Path(str(variant)).stem}.png' if variant else f'{stem}.png')
     R.save(path, img)
     print(path)
     return path
@@ -277,6 +286,20 @@ def judge(args, n, seed, out, by, zoom):
         raise SystemExit(f'judge {what}? pairs, record or agree')
 
 
+def zxart(args, n, rating, luma, chroma):
+    what = args[0] if args else 'names'
+    if what == 'fetch':
+        Z.fetch(n, rating)
+    elif what == 'prepare':
+        Z.prepare(luma_sigma=luma, chroma_sigma=chroma)
+    elif what == 'stats':
+        Z.print_stats(Z.stats())
+    elif what == 'names':
+        print(' '.join(Z.name(e['id']) for e in Z.load_index()))
+    else:
+        raise SystemExit(f'zxart {what}? fetch, prepare, stats or names')
+
+
 def parse_crop(s):
     r0, c0, r1, c1 = (int(x) for x in s.split(','))
     return r0, c0, r1, c1
@@ -284,7 +307,8 @@ def parse_crop(s):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('command', choices=('freeze', 'run', 'compare', 'regions', 'paint', 'render', 'variants', 'judge'))
+    ap.add_argument('command', choices=('freeze', 'run', 'compare', 'regions', 'paint', 'render', 'variants', 'judge',
+                                        'zxart'))
     ap.add_argument('args', nargs='*')
     ap.add_argument('--set', action='append', help='Metric, Eye or Select param=value')
     ap.add_argument('--method', default=NEWEST, choices=tuple(METHODS), help='selection method (run)')
@@ -299,6 +323,9 @@ def main(argv=None):
     ap.add_argument('--seed', type=int, default=0)
     ap.add_argument('--fast', action='store_true', help='variants stop at the halftone, no DBS')
     ap.add_argument('--by', default='user', help='the judge recording verdicts')
+    ap.add_argument('--rating', type=float, default=4.0, help='least zxart rating (zxart fetch)')
+    ap.add_argument('--luma', type=float, default=Z.LUMA_SIGMA, help='px of lightness blur of a zxart source')
+    ap.add_argument('--chroma', type=float, default=Z.CHROMA_SIGMA, help='px of colour blur of a zxart source')
     a = ap.parse_intermixed_args(argv)
     if a.command == 'freeze':
         freeze(a.args)
@@ -318,6 +345,8 @@ def main(argv=None):
         variants(a.args or JUDGED, a.n or 24, a.seed, a.fast)
     elif a.command == 'judge':
         judge(a.args, a.n or 8, a.seed, a.out, a.by, a.zoom if a.zoom != 3 else 2)
+    elif a.command == 'zxart':
+        zxart(a.args, a.n or 50, a.rating, a.luma, a.chroma)
     else:
         paint(*a.args)
 

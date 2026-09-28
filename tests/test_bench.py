@@ -138,3 +138,51 @@ def test_judgments_parse_record_agree(tmp_path, monkeypatch):
     assert a['pairs'] == 4 and a['agree'] == 0.5 and a['opposed'] == 0.5
     assert a['tags']['hue'] == (1, 1.0) and a['tags']['noise'] == (1, 0.0) and a['tags']['clash'][0] == 0
     assert J.kappa(['a', 'b', 'same'], ['a', 'b', 'same']) == 1.0 and abs(J.kappa(['a', 'b'], ['b', 'a'])) == 1.0
+
+
+def test_zxart_fetch_prepare_stats(tmp_path, monkeypatch):
+    """The API's answer parses (a saved sample); fetch keeps only plain 6912-byte screens without flash and writes the
+    index; prepare makes a source that the blur leaves close to the screen's mean colour per cell, and a project the
+    bench can run; stats count what the artist did."""
+    import json
+    from bench import zxart as Z
+    sample = (Path(__file__).parent / 'bench' / 'zxart-sample.json').read_bytes()
+    entries = Z.api(0, 2, 4.0, fetch=lambda url: sample)
+    assert len(entries) == 2 and entries[0]['id'] == 47111 and entries[0]['original'].endswith('.scr')
+    assert "'" in Z.api(0, 2, 4.0, fetch=lambda url: sample)[1]['title']          # &#039; unescaped
+    monkeypatch.setattr(Z, 'FOLDER', tmp_path / 'zxart')
+    rng = np.random.default_rng(2)
+    screens = {}
+    for e in entries:
+        bitmap = rng.random((192, 256)) < 0.5
+        idx = np.broadcast_to((0, 5), (24, 32, 2)).copy()                           # k/c dithered all over
+        idx[:12, :16] = (2, 6)                                                       # r/y in one quarter
+        screens[e['original']] = bytearray(to_scr(bitmap, idx))
+    screens[entries[1]['original']][6144] |= 0x80                                   # flash: skipped
+    calls = []
+    def get(url):
+        calls.append(url)
+        if url.startswith(Z.API[:30]):
+            return sample if len(calls) == 1 else b'{"responseStatus": "success", "responseData": {"zxPicture": []}}'
+        return bytes(screens[url])
+    got = Z.fetch(5, 4.0, get=get, log=lambda s: None)
+    assert [e['id'] for e in got] == [47111] and (tmp_path / 'zxart' / '47111' / 'reference.scr').exists()
+    assert json.loads((tmp_path / 'zxart' / 'index.json').read_text())[0]['id'] == 47111
+    assert (tmp_path / 'zxart' / '.gitignore').read_text().startswith('*')
+    names = Z.prepare(got, log=lambda s: None)
+    assert names == ['zxart/47111'] and (tmp_path / 'zxart' / '47111' / 'project.json').exists()
+    import cv2
+    src = cv2.cvtColor(cv2.imread(str(tmp_path / 'zxart' / '47111' / 'source.png')), cv2.COLOR_BGR2RGB) / 255
+    bitmap, idx = read_scr(tmp_path / 'zxart' / '47111' / 'reference.scr')
+    from bench.scr import render_scr
+    screen = render_scr(bitmap, idx, ZXPalette())
+    lin = lambda a: a ** 2.2
+    cell_mean = lambda a: lin(a).reshape(24, 8, 32, 8, 3).mean(axis=(1, 3))
+    inside = np.ones((24, 32), bool)                                                # away from the quarter's border
+    inside[10:14] = False
+    inside[:, 14:18] = False
+    off = np.abs(cell_mean(src) - cell_mean(screen))[inside]    # a random 50% dither's cell mean itself wanders ~0.05
+    assert off.mean() < 0.02 and off.max() < 0.1 and src.std() < 0.8 * screen.std()   # the 1 px lightness blur keeps texture
+    s = Z.stats(got)
+    assert s['pictures'] == 1 and s['cells'] == 768 and 0 < s['seam_changes'] < 0.1 and s['distinct'] == 2
+    assert sum(f for _, f, _ in s['pairs']) > 0.99 and s['pairs'][0][0] == 'k/c' and s['pairs'][1][2] > 0

@@ -98,7 +98,7 @@ def make_sheets(name, entries, out, zoom=2, eye=True, log=print) -> list:
     out.mkdir(parents=True, exist_ok=True)
     paths = []
     for e in entries:
-        path = out / f'{name}-{e["k"]}.png'
+        path = out / f'{name.replace("/", "-")}-{e["k"]}.png'
         R.save(path, sheet(name, e['a'], e['b'], zoom, eye))
         paths.append(path)
         log(f'{name} #{e["k"]}: {path}')
