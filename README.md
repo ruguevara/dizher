@@ -208,6 +208,45 @@ live in `src/dizher/converter/energy.py` (`METHODS`); a new one is a class with 
 method and its `preset`. `python tests/pair_bench.py compare` scores every method against the
 hand-painted references in `tests/images/*/reference.scr`.
 
+#### Pair bench
+
+Tuning pair selection on one badly coloured picture at a time is blind. `tests/pair_bench.py`
+(its code in `tests/bench/`) is the method for finding the selection metric instead: a set of
+judged colourings, a judge metric that reproduces the judgments, and the energy fitted to the
+judge.
+
+* Renders to judge by eye: `render NAME --crop r0,c0,r1,c1` draws target | reference | result
+  enlarged without smoothing, with row and column numbers, the cells off the reference outlined,
+  the eye-model views under them, and crops of a cell range at twice the zoom. `regions NAME`
+  groups cells into numbered regions and `paint NAME spec.json` colours regions or cells into the
+  project's Overpaint, so a colouring can be corrected region by region and looked at again.
+* Variants: `variants NAME --n 24` converts a project under sampled Metric and Select pairs values
+  of every method, finished as the app would, each a screen in the project's `cache/variants/`.
+* Judgments: `judge pairs NAME --n 8` picks pairs of variants (the reference among them) and draws
+  a target | A | B sheet per pair; `judge record NAME --by user "12 a hue, 13 same, 14 b noise"`
+  files a judge's verdicts with the faults named (hue: a colour the original has not; clash:
+  seams between cells; noise: pairs varying over one surface; tone; other), one per line, semicolon
+  or comma, a note after `--`; `judge agree` measures how far two judges agree, by fault. Judged
+  pairs and their screens live in `tests/images/NAME/judgments.json` and `variants/`. There is no
+  one right colouring: a picture has many accepted ones and its rejected ones, and the judgments
+  are pairwise.
+* Artists' screens: `zxart fetch --n 50` lists the top standard pictures on zxart.ee and downloads
+  their screens (the list `tests/images/zxart/index.json` is in git, the works are not);
+  `zxart prepare` makes each a project whose source is the screen through a wider eye blur and
+  whose reference is the screen itself, so `run` and `compare` score a method against the artist
+  with no hand painting; `zxart stats` gives the pairs artists use, how often they change pair and
+  how often they mix clashing hues.
+* Judge metrics: `rank NAME...` scores every judged variant by each candidate metric
+  (`tests/bench/metrics.py`: the selection energies, blurred opponent error at several scales,
+  S-CIELAB, CIEDE2000, SSIM on lightness and on colour, chroma added and hue shifted, pair changes
+  over flat seams and pairs per flat region, LPIPS and DISTS with `pip install -e .[bench]`) and
+  reports how often each puts the winner of a judged pair below the loser, overall, by fault and
+  by picture, and where it ranks the reference among the variants.
+* The energy fitted: `fit NAME...` finds the Metric and Select pairs values under which each
+  method's energy agrees most with the judge, with the agreement of the preset and of a fit
+  without each picture. The judge metric can be anything; the energy the solver minimises is a sum
+  of per-cell and per-seam terms, so it is fitted to the judge rather than replaced by it.
+
 ### Halftoning
 
 With paper and ink fixed per block, each pixel is set to one of them so that the blurred result
