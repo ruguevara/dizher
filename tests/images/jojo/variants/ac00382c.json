@@ -1,0 +1,16 @@
+{
+ "id": "ac00382c",
+ "name": "jojo",
+ "method": "Halftoned",
+ "params": {
+  "chroma": 0.9296128413020379,
+  "coherence": 7.066171014836418,
+  "edge": 0.3254782268542576,
+  "chroma_noise": 0.08594377692674898,
+  "luma_noise": 0.016493390132408133,
+  "flare": 0.001592537613111329
+ },
+ "optimised": true,
+ "seconds": 19.8,
+ "made": "2026-09-28"
+}

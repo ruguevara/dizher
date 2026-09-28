@@ -1,0 +1,103 @@
+{
+ "pairs": [
+  {
+   "k": 1,
+   "a": "077c4e11",
+   "b": "659f3889",
+   "verdicts": {
+    "claude": {
+     "verdict": "b",
+     "tags": [
+      "hue"
+     ],
+     "note": "A: black flats and purple patches where the background is dark blue"
+    }
+   }
+  },
+  {
+   "k": 2,
+   "a": "659f3889",
+   "b": "53971878",
+   "verdicts": {
+    "claude": {
+     "verdict": "same",
+     "tags": [],
+     "note": ""
+    }
+   }
+  },
+  {
+   "k": 3,
+   "a": "reference",
+   "b": "2054f490",
+   "verdicts": {
+    "claude": {
+     "verdict": "a",
+     "tags": [
+      "hue",
+      "tone"
+     ],
+     "note": "B too yellow all over, the wall and letters lose their orange"
+    }
+   }
+  },
+  {
+   "k": 4,
+   "a": "ac00382c",
+   "b": "e3e44dbe",
+   "verdicts": {
+    "claude": {
+     "verdict": "b",
+     "tags": [
+      "hue",
+      "tone"
+     ],
+     "note": "A: black background with a magenta patch, red wall"
+    }
+   }
+  },
+  {
+   "k": 5,
+   "a": "e3e44dbe",
+   "b": "c629ffbd",
+   "verdicts": {
+    "claude": {
+     "verdict": "a",
+     "tags": [
+      "hue"
+     ],
+     "note": "B: black background with purple"
+    }
+   }
+  },
+  {
+   "k": 6,
+   "a": "bddb6198",
+   "b": "reference",
+   "verdicts": {
+    "claude": {
+     "verdict": "b",
+     "tags": [
+      "hue"
+     ],
+     "note": "A: black flats and magenta, B keeps the blue"
+    }
+   }
+  },
+  {
+   "k": 7,
+   "a": "2054f490",
+   "b": "659f3889",
+   "verdicts": {
+    "claude": {
+     "verdict": "b",
+     "tags": [
+      "hue",
+      "tone"
+     ],
+     "note": "A yellowish, black background with magenta"
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,16 @@
+{
+ "id": "077c4e11",
+ "name": "rocket-rackoon",
+ "method": "Exact mixture",
+ "params": {
+  "chroma": 0.6660729198124684,
+  "coherence": 7.843104053398924,
+  "edge": 0.05097256262785357,
+  "chroma_noise": 0.057769909564169886,
+  "luma_noise": 0.09990944047433394,
+  "flare": 0.1725114629576076
+ },
+ "optimised": true,
+ "seconds": 20.0,
+ "made": "2026-09-28"
+}

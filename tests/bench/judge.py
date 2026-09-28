@@ -5,7 +5,8 @@ the faults named, and the agreement between judges. tests/images/NAME/judgments.
                 "verdicts": {"user": {"verdict": "a", "tags": ["hue"], "note": ""}, "claude": {...}}}]}
 
 k numbers the pairs of a picture across batches; the sheet of pair k is NAME-k.png. A verdict comes as text,
-one pair per line or comma: "12 a hue, 13 same, 14 b clash noise -- the sky", tags from TAGS, a note after --.
+one pair per line, semicolon or comma: "12 a hue, 13 same; 14 b clash noise -- the sky, at the right", tags from TAGS,
+a note after -- running to the end of the line or semicolon (commas inside it stay).
 """
 import json
 import re
@@ -108,18 +109,19 @@ def make_sheets(name, entries, out, zoom=2, eye=True, log=print) -> list:
 def parse(text: str) -> dict:
     """'12 a hue, 13 same, 14 b clash noise -- the sky' -> {12: {verdict, tags, note}, ...}."""
     out = {}
-    for item in re.split(r'[,\n;]+', text):
-        item = item.strip()
-        if not item:
-            continue
-        body, _, note = item.partition('--')
+    items = []
+    for chunk in re.split(r'[\n;]+', text):
+        head, _, note = chunk.partition('--')
+        parts = [p for p in head.split(',') if p.strip()]
+        items += [(p, '') for p in parts[:-1]] + ([(parts[-1], note)] if parts else [])
+    for body, note in items:
         words = body.split()
         if len(words) < 2 or not words[0].isdigit() or words[1].lower() not in VERDICTS:
-            raise ValueError(f'cannot read {item!r}: expected "<pair> a|b|same [tags] [-- note]"')
+            raise ValueError(f'cannot read {body.strip()!r}: expected "<pair> a|b|same [tags] [-- note]"')
         tags = [w.lower() for w in words[2:]]
         unknown = [t for t in tags if t not in TAGS]
         if unknown:
-            raise ValueError(f'unknown tags {unknown} in {item!r}; tags are {TAGS}')
+            raise ValueError(f'unknown tags {unknown} in {body.strip()!r}; tags are {TAGS}')
         out[int(words[0])] = dict(verdict=VERDICTS[words[1].lower()], tags=tags, note=note.strip())
     return out
 

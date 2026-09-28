@@ -1,0 +1,16 @@
+{
+ "id": "bddb6198",
+ "name": "jojo",
+ "method": "Halftoned",
+ "params": {
+  "chroma": 1.6090822407889844,
+  "coherence": 4.86011079532895,
+  "edge": 0.2903331572221976,
+  "chroma_noise": 0.068205851712882,
+  "luma_noise": 0.03228436876375731,
+  "flare": 0.11337907816961522
+ },
+ "optimised": true,
+ "seconds": 19.5,
+ "made": "2026-09-28"
+}
