@@ -3,8 +3,8 @@ on the right, each with one collapsible block per stage in pipeline order (mokit
 custom one), the Preview dock between them with the tuned image and the conversion, and the History dock under
 Convert's with every undo step. A block header shows its
 stage's state: plain when done, tinted while it runs or after it failed, muted while waiting to run. hello_imgui's
-ini keeps the dock layout, its user prefs which blocks are open and the session: the project folder and the params,
-unsaved edits included, restored on the next start when no path is given.
+ini keeps the dock layout, its user prefs which blocks are open and the session: the project folder and its unsaved
+edits, restored on the next start when no path is given; with none the project opens as it is on disk.
 
 A project is AmaZX's mokit folder: project.json holds every node's params, the source path relative to the folder;
 exports default to its build/. Every image has one, as a sidecar: opening an image opens the project beside it named
@@ -961,6 +961,7 @@ class Window:
         hello_imgui.save_user_pref('expanded', json.dumps(self.expanded))
         hello_imgui.save_user_pref('autosave', json.dumps(self.autosave))
         hello_imgui.save_user_pref('recent', json.dumps([str(p) for p in self.recent]))
-        hello_imgui.save_user_pref('session', json.dumps({
-            'project': str(self.project) if self.project else None,
-            'graph': project.graph_to_json(self.app.graph, None, None)}))
+        session = {'project': str(self.project) if self.project else None}
+        if self.app.graph != self.saved:   # unsaved edits only: else the project on disk wins, edited outside or not
+            session['graph'] = project.graph_to_json(self.app.graph, None, None)
+        hello_imgui.save_user_pref('session', json.dumps(session))
