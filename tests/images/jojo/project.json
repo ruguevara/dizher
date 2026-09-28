@@ -120,6 +120,7 @@
     "metric": {
       "op": "dizher.ops:metric",
       "params": {
+        "method": "Exact mixture",
         "chroma": 1.0,
         "flare": 0.1
       },
