@@ -15,6 +15,18 @@
                                                       target | reference | result (the method's, or a variant) with cell
                                                       rulers, the cells off the reference outlined, the eye views under
                                                       them, and each crop of cells (inclusive) at twice the zoom
+    python tests/pair_bench.py variants NAME... [--n 24] [--seed 0] [--fast]
+                                                      the selection under sampled Metric and Select values of every
+                                                      method, finished as the app would (--fast: no DBS), each a screen
+                                                      in the project's cache/variants/ with its params
+    python tests/pair_bench.py judge pairs NAME... [--n 8] [--seed 0] [--out DIR]
+                                                      pairs of variants to judge, appended to the project's
+                                                      judgments.json (their screens kept in variants/), a sheet
+                                                      target | A | B per pair in DIR
+    python tests/pair_bench.py judge record NAME --by user "12 a hue, 13 same, 14 b clash noise -- the sky"
+                                                      a judge's verdicts (a, b or same, the faults named: hue, clash,
+                                                      noise, tone, other; a note after --) into judgments.json
+    python tests/pair_bench.py judge agree [NAME...]   how far the judges agree, by fault
 
 A project is tests/images/NAME/project.json; its reference is reference.scr beside it. The reference is judged per
 cell as the colours it shows: a cell whose bitmap is all paper or all ink is solid, and any pair holding that colour
@@ -37,26 +49,12 @@ from dizher import ops
 from dizher.converter.energy import METHODS, NEWEST
 
 sys.path.insert(0, str(Path(__file__).parent))
-from bench import render as R
-from bench.scr import (pair_name, parse_pair, read_scr, shown, label_pairs, matches, score, render_scr)   # noqa: E402
+from bench import render as R, variants as V, judge as J                                             # noqa: E402
+from bench.scr import pair_name, parse_pair, black, label_pairs, matches, score, render_scr   # noqa: E402
+from bench.project import IMAGES, DEFAULTS, project_graph, painted_cells, select, finish, reference    # noqa: E402
 
-IMAGES = Path(__file__).parent / 'images'
 SET = ('anubis', 'rocket-rackoon', 'jojo')
-DEFAULTS = ('metric', 'eye', 'select')      # nodes the run resets, so every image is judged under one setting
-
-
-def project_graph(name: str, defaults=()):
-    """The project's graph in the current pipeline's shape (older projects lack nodes, e.g. Overpaint)."""
-    project = load_project(IMAGES / name)
-    graph = ops.make_graph()
-    for nid in graph.ids():
-        if nid in project.graph and nid not in defaults:
-            graph = graph.with_params(nid, project.graph[nid].params)
-    return graph
-
-
-def painted_cells(graph) -> set:
-    return {(r, c) for r, c, *_ in graph['overpaint'].params.overrides}
+JUDGED = ('anubis', 'rocket-rackoon', 'jojo', 'andy', 'david', 'vangog')   # the calibration set
 
 
 def _count(got, cells, names):
@@ -81,12 +79,6 @@ def spots(name, ref, got, painted) -> str:
     return ', '.join(f'{label} {check(got, ref, painted)}' for label, check in SPOTS.get(name, ()))
 
 
-def finish(graph, memo, selection):
-    """The project's Halftone and Optimise run on a selection, as the app would."""
-    from dizher.ops import halftone, optimise
-    return optimise(halftone(selection), **vars(graph['optimise'].params))
-
-
 def freeze(names):
     for name in names:
         graph = project_graph(name)
@@ -102,24 +94,6 @@ def parse_sets(items):
         k, v = item.split('=')
         out[k] = float(v)
     return out
-
-
-def select(graph, memo, **params):
-    """Select pairs with params set on whichever of the Metric, Eye and Select nodes has them."""
-    for nid in DEFAULTS:
-        node = graph[nid].params
-        mine = {k: v for k, v in params.items() if hasattr(node, k)}
-        if mine:
-            graph = graph.with_params(nid, replace(node, **mine))
-    unknown = [k for k in params if not any(hasattr(graph[nid].params, k) for nid in DEFAULTS)]
-    assert not unknown, unknown
-    return evaluate(graph, 'select', memo)
-
-
-def reference(name):
-    """The reference's bitmap, its (paper, ink) indexes, the colours each cell shows, and the painted cells."""
-    bitmap, ref_idx = read_scr(IMAGES / name / 'reference.scr')
-    return bitmap, ref_idx, shown(bitmap, ref_idx), painted_cells(project_graph(name))
 
 
 def scored(name, got, seconds=0.0):
@@ -250,17 +224,6 @@ def paint(name, spec_path):
     print(f'{name}: {len(overrides)} painted cells')
 
 
-def variant_file(name, variant) -> Path:
-    """A variant by id (tests/images/NAME/variants/ID.scr, else its cache) or by path."""
-    for folder in ('variants', 'cache/variants'):
-        f = IMAGES / name / folder / f'{variant}.scr'
-        if f.exists():
-            return f
-    f = Path(variant)
-    assert f.exists(), f'no variant {variant} of {name}'
-    return f
-
-
 def render(name, out, zoom=3, crops=(), variant=None, eye=True, method=NEWEST):
     """target | reference | result with rulers, eye views and crops: NAME.png (NAME-ID.png for a variant)."""
     graph = ops.apply_preset(project_graph(name, DEFAULTS), method)
@@ -271,11 +234,9 @@ def render(name, out, zoom=3, crops=(), variant=None, eye=True, method=NEWEST):
         bitmap, ref_idx, ref, _ = reference(name)
         columns.append(('reference', render_scr(bitmap, ref_idx, conv.palette)))
     if variant:
-        bitmap, idx = read_scr(variant_file(name, variant))
-        title, got = f'variant {Path(str(variant)).stem}', np.sort(idx, axis=-1)
+        bitmap, idx = V.read_variant(name, variant)
+        title, got = f'variant {Path(str(variant)).stem}', np.sort(black(idx), axis=-1)
         columns.append((title, render_scr(bitmap, idx, conv.palette)))
-        from bench.scr import black
-        got = np.sort(black(idx), axis=-1)
     else:
         title, got = method, label_pairs(conv, conv.best_attr_indexes)
         columns.append((title, finish(graph, memo, conv).dithered_result))
@@ -290,6 +251,32 @@ def render(name, out, zoom=3, crops=(), variant=None, eye=True, method=NEWEST):
     return path
 
 
+def variants(names, n, seed, fast):
+    for name in names:
+        ids = V.generate(name, V.sample(n, seed), optimise=not fast)
+        print(f'{name}: {len(ids)} variants in {V.folders(name)[1]}')
+
+
+def judge(args, n, seed, out, by, zoom):
+    what, rest = args[0], args[1:]
+    if what == 'pairs':
+        for name in rest or JUDGED:
+            judged = [(p['a'], p['b']) for p in J.load(name)['pairs']]
+            entries = J.add_pairs(name, J.pick(name, n, seed, judged))
+            J.make_sheets(name, entries, out, zoom)
+    elif what == 'record':
+        name, text = rest[0], ' '.join(rest[1:])
+        print(f'{name}: {J.record(name, text, by)} verdicts by {by}')
+    elif what == 'agree':
+        a = J.agreement(rest or JUDGED)
+        print(f"{a['pairs']} pairs judged by both: agree {a['agree']:.2f}, kappa {a['kappa']:.2f}, "
+              f"opposed {a['opposed']:.2f}, same {a['same'][0]:.2f} / {a['same'][1]:.2f}")
+        for t, (count, agree) in a['tags'].items():
+            print(f'  {t:6} {count:3d} pairs, agree {agree:.2f}')
+    else:
+        raise SystemExit(f'judge {what}? pairs, record or agree')
+
+
 def parse_crop(s):
     r0, c0, r1, c1 = (int(x) for x in s.split(','))
     return r0, c0, r1, c1
@@ -297,7 +284,7 @@ def parse_crop(s):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('command', choices=('freeze', 'run', 'compare', 'regions', 'paint', 'render'))
+    ap.add_argument('command', choices=('freeze', 'run', 'compare', 'regions', 'paint', 'render', 'variants', 'judge'))
     ap.add_argument('args', nargs='*')
     ap.add_argument('--set', action='append', help='Metric, Eye or Select param=value')
     ap.add_argument('--method', default=NEWEST, choices=tuple(METHODS), help='selection method (run)')
@@ -308,7 +295,11 @@ def main(argv=None):
     ap.add_argument('--crop', action='append', default=[], help='r0,c0,r1,c1 cells, inclusive (render)')
     ap.add_argument('--variant', help='a variant id or .scr file in place of the method\'s result (render)')
     ap.add_argument('--no-eye', action='store_true', help='no eye-view rows (render)')
-    a = ap.parse_args(argv)
+    ap.add_argument('--n', type=int, help='variants per picture (variants: 24), pairs per picture (judge pairs: 8)')
+    ap.add_argument('--seed', type=int, default=0)
+    ap.add_argument('--fast', action='store_true', help='variants stop at the halftone, no DBS')
+    ap.add_argument('--by', default='user', help='the judge recording verdicts')
+    a = ap.parse_intermixed_args(argv)
     if a.command == 'freeze':
         freeze(a.args)
     elif a.command == 'run':
@@ -323,6 +314,10 @@ def main(argv=None):
         regions(a.args[0], a.out, a.k)
     elif a.command == 'render':
         render(a.args[0], a.out, a.zoom, [parse_crop(c) for c in a.crop], a.variant, not a.no_eye, a.method)
+    elif a.command == 'variants':
+        variants(a.args or JUDGED, a.n or 24, a.seed, a.fast)
+    elif a.command == 'judge':
+        judge(a.args, a.n or 8, a.seed, a.out, a.by, a.zoom if a.zoom != 3 else 2)
     else:
         paint(*a.args)
 

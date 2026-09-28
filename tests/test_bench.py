@@ -78,3 +78,63 @@ def test_sheet_layout():
     assert (a == 128).all(axis=-1).mean() > 0.9 and (b[8 * z, 16 * z] == (255, 0, 0)).all()
     eye_top = top + 16 * z + R.GAP + R.TITLE + m
     assert (sheet[eye_top + 4, m + 4] == 64).all()
+
+
+def test_variants_sample_and_ids():
+    """A sample covers every method and each param's range, starts with the presets, and ids are stable."""
+    from bench import variants as V
+    from dizher.converter.energy import METHODS
+    s = V.sample(6, seed=3)
+    assert len(s) == 6 + len(V.presets()) and {p['method'] for p in s[len(V.presets()):]} == set(METHODS)
+    for k, (lo, hi) in V.RANGES.items():
+        vals = [p[k] for p in s[len(V.presets()):]]
+        assert all(lo <= v <= hi for v in vals) and max(vals) - min(vals) > (hi - lo) / 2
+    assert V.sample(6, seed=3) == s and V.sample(6, seed=4) != s
+    assert V.variant_id(s[0]) == V.variant_id(dict(s[0])) and V.variant_id(s[0]) != V.variant_id(s[1])
+    assert V.variant_id(dict(chroma=1.00001)) == V.variant_id(dict(chroma=1.0))
+    assert V.distance(dict(method='a', params={}), dict(method='a', params={})) == 0
+    assert V.distance(dict(method='a', params={}), dict(method='b', params={'chroma': 3.0})) > 1
+
+
+def test_judgments_parse_record_agree(tmp_path, monkeypatch):
+    """Verdict text parses; pairs pick without repeats; verdicts land in the picture's judgments; agreement and
+    kappa come out as known."""
+    import json
+    import pytest
+    from bench import judge as J, variants as V
+    p = J.parse('12 a hue, 13 same; 14 B clash noise -- the sky\n15 = ')
+    assert p[12] == dict(verdict='a', tags=['hue'], note='') and p[13]['verdict'] == 'same'
+    assert p[14] == dict(verdict='b', tags=['clash', 'noise'], note='the sky') and p[15]['verdict'] == 'same'
+    with pytest.raises(ValueError):
+        J.parse('12 a sky')
+    with pytest.raises(ValueError):
+        J.parse('a 12')
+    # a fake picture with four cached variants and a reference
+    monkeypatch.setattr(J, 'IMAGES', tmp_path)
+    monkeypatch.setattr(V, 'IMAGES', tmp_path)
+    import bench.project
+    monkeypatch.setattr(bench.project, 'IMAGES', tmp_path)
+    cache = tmp_path / 'pic' / 'cache' / 'variants'
+    cache.mkdir(parents=True)
+    for i, method in enumerate(('Exact mixture', 'Halftoned') * 2):
+        meta = dict(id=f'v{i}', method=method, params=dict(chroma=0.5 + i))
+        (cache / f'v{i}.json').write_text(json.dumps(meta))
+        (cache / f'v{i}.scr').write_bytes(bytes(6912))
+    (tmp_path / 'pic' / 'reference.scr').write_bytes(bytes(6912))
+    assert len(V.listing('pic')) == 5
+    pairs = J.pick('pic', 6, seed=1)
+    assert len(pairs) == 6 and len({frozenset(p) for p in pairs}) == 6
+    assert sum('reference' in p for p in pairs) == 2
+    entries = J.add_pairs('pic', pairs)
+    assert [e['k'] for e in entries] == [1, 2, 3, 4, 5, 6]
+    assert (tmp_path / 'pic' / 'variants' / 'v0.scr').exists()             # judged variants are kept
+    more = J.pick('pic', 2, seed=1, judged=[(e['a'], e['b']) for e in entries])
+    assert not {frozenset(p) for p in more} & {frozenset(p) for p in pairs}
+    assert J.record('pic', '1 a hue, 2 b, 3 same, 4 a noise', 'user') == 4
+    assert J.record('pic', '1 a, 2 a, 3 same, 4 b noise', 'claude') == 4
+    with pytest.raises(AssertionError):
+        J.record('pic', '99 a', 'user')
+    a = J.agreement(['pic'])
+    assert a['pairs'] == 4 and a['agree'] == 0.5 and a['opposed'] == 0.5
+    assert a['tags']['hue'] == (1, 1.0) and a['tags']['noise'] == (1, 0.0) and a['tags']['clash'][0] == 0
+    assert J.kappa(['a', 'b', 'same'], ['a', 'b', 'same']) == 1.0 and abs(J.kappa(['a', 'b'], ['b', 'a'])) == 1.0
