@@ -10,6 +10,11 @@
     python tests/pair_bench.py regions NAME [--out DIR] [--k N]
                                                       the cells grouped into numbered regions, for painting by region
     python tests/pair_bench.py paint NAME FILE.json   regions (and cells) to Overpaint overrides in the project
+    python tests/pair_bench.py render NAME [--out DIR] [--zoom 3] [--crop r0,c0,r1,c1 ...] [--variant ID|FILE.scr]
+                                       [--method M] [--no-eye]
+                                                      target | reference | result (the method's, or a variant) with cell
+                                                      rulers, the cells off the reference outlined, the eye views under
+                                                      them, and each crop of cells (inclusive) at twice the zoom
 
 A project is tests/images/NAME/project.json; its reference is reference.scr beside it. The reference is judged per
 cell as the colours it shows: a cell whose bitmap is all paper or all ink is solid, and any pair holding that colour
@@ -30,17 +35,14 @@ from mokit.project import load_project, save_project
 
 from dizher import ops
 from dizher.converter.energy import METHODS, NEWEST
-from dizher.platforms.zxspectrum.scr import _row_offsets
+
+sys.path.insert(0, str(Path(__file__).parent))
+from bench import render as R
+from bench.scr import (pair_name, parse_pair, read_scr, shown, label_pairs, matches, score, render_scr)   # noqa: E402
 
 IMAGES = Path(__file__).parent / 'images'
 SET = ('anubis', 'rocket-rackoon', 'jojo')
 DEFAULTS = ('metric', 'eye', 'select')      # nodes the run resets, so every image is judged under one setting
-NAMES = 'k b r m g c y w'.split()
-
-
-def pair_name(p, i) -> str:
-    n = lambda x: NAMES[x % 8].upper() if x >= 8 else NAMES[x % 8]
-    return f'{n(p)}/{n(i)}'
 
 
 def project_graph(name: str, defaults=()):
@@ -55,58 +57,6 @@ def project_graph(name: str, defaults=()):
 
 def painted_cells(graph) -> set:
     return {(r, c) for r, c, *_ in graph['overpaint'].params.overrides}
-
-
-def read_scr(path: Path):
-    """(192, 256) bool ink bitmap, (24, 32, 2) palette indexes (paper, ink)."""
-    data = np.frombuffer(Path(path).read_bytes(), dtype=np.uint8)
-    rows = np.stack([data[off:off + 32] for off in _row_offsets()])
-    bitmap = np.unpackbits(rows, axis=1).astype(bool)
-    attrs = data[6144:6912].reshape(24, 32).astype(int)
-    bright = (attrs >> 6 & 1) * 8
-    return bitmap, np.stack([(attrs >> 3 & 7) + bright, (attrs & 7) + bright], axis=-1)
-
-
-def black(i):
-    return np.where(np.asarray(i) % 8 == 0, 0, i)
-
-
-def shown(bitmap, pairs, cell=(8, 8)):
-    """(R, C, 2) the colours each cell shows, blacks unified; a solid cell repeats its colour."""
-    h, w = cell
-    R, C = pairs.shape[:2]
-    ink = bitmap.reshape(R, h, C, w).sum(axis=(1, 3))
-    paper, inkc = black(pairs[..., 0]), black(pairs[..., 1])
-    first = np.where(ink == h * w, inkc, paper)
-    second = np.where(ink == 0, paper, inkc)
-    return np.sort(np.stack([first, second], axis=-1), axis=-1)
-
-
-def label_pairs(conv, labels):
-    """(R, C, 2) sorted palette indexes, blacks unified, of a labelling."""
-    idx = np.array(list(conv.palette.iter_idxs_pairs()))
-    return np.sort(black(idx[labels]), axis=-1)
-
-
-def matches(ref, got):
-    """(R, C) bool: got's pair is the reference's, or holds its solid colour."""
-    solid = ref[..., 0] == ref[..., 1]
-    same = (ref == got).all(-1)
-    holds = (got == ref[..., :1]).any(-1)
-    return np.where(solid, holds, same)
-
-
-def same_region(a, b):
-    """Two neighbouring cells read as one region: equal pairs, or a solid colour the other pair holds."""
-    eq = (a == b).all(-1)
-    a_solid, b_solid = a[..., 0] == a[..., 1], b[..., 0] == b[..., 1]
-    return eq | (a_solid & (b == a[..., :1]).any(-1)) | (b_solid & (a == b[..., :1]).any(-1))
-
-
-def seams(pairs):
-    """Every 4-neighbour seam's (a, b) pairs, flattened."""
-    return (np.concatenate([pairs[1:].reshape(-1, 2), pairs[:, 1:].reshape(-1, 2)]),
-            np.concatenate([pairs[:-1].reshape(-1, 2), pairs[:, :-1].reshape(-1, 2)]))
 
 
 def _count(got, cells, names):
@@ -131,55 +81,10 @@ def spots(name, ref, got, painted) -> str:
     return ', '.join(f'{label} {check(got, ref, painted)}' for label, check in SPOTS.get(name, ()))
 
 
-def score(ref, got, painted):
-    ok = matches(ref, got)
-    mask = np.zeros(ok.shape, bool)
-    for r, c in painted:
-        mask[r, c] = True
-    ra, rb = seams(ref)
-    ga, gb = seams(got)
-    ref_same, got_same = same_region(ra, rb), same_region(ga, gb)
-    return dict(agree=ok.mean(), painted=ok[mask].mean() if mask.any() else np.nan, rest=ok[~mask].mean(),
-                false_seams=(ref_same & ~got_same).sum() / max(ref_same.sum(), 1),
-                missed_seams=(~ref_same & got_same).sum() / max((~ref_same).sum(), 1),
-                pair_changes=(~got_same).sum())
-
-
-def render_scr(bitmap, pairs, palette):
-    rgb = palette.as_float()
-    paper = np.repeat(np.repeat(rgb[pairs[..., 0]], 8, 0), 8, 1)
-    ink = np.repeat(np.repeat(rgb[pairs[..., 1]], 8, 0), 8, 1)
-    return np.where(bitmap[..., None], ink, paper)
-
-
-def outline(img, cells, colour, zoom):
-    out = img.copy()
-    for r, c in cells:
-        y, x = r * 8 * zoom, c * 8 * zoom
-        cv2.rectangle(out, (x, y), (x + 8 * zoom - 1, y + 8 * zoom - 1), colour, 1)
-    return out
-
-
-def sheet(path, target, reference, result, wrong, zoom=2):
-    """target | reference | result, the cells the result gets wrong outlined in red on it."""
-    up = lambda a: np.repeat(np.repeat((a.clip(0, 1) * 255).astype(np.uint8), zoom, 0), zoom, 1)
-    res = outline(up(result), wrong, (255, 0, 0), zoom)
-    gap = np.full((192 * zoom, 4, 3), 128, np.uint8)
-    img = np.concatenate([up(target), gap, up(reference), gap, res], axis=1)
-    cv2.imwrite(str(path), cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
-
-
 def finish(graph, memo, selection):
     """The project's Halftone and Optimise run on a selection, as the app would."""
     from dizher.ops import halftone, optimise
     return optimise(halftone(selection), **vars(graph['optimise'].params))
-
-
-def pair_view(path, reference, result, zoom=2):
-    """reference | result at zoom, no marks: for judging by eye."""
-    up = lambda a: np.repeat(np.repeat((a.clip(0, 1) * 255).astype(np.uint8), zoom, 0), zoom, 1)
-    gap = np.full((192 * zoom, 6, 3), 128, np.uint8)
-    cv2.imwrite(str(path), cv2.cvtColor(np.concatenate([up(reference), gap, up(result)], axis=1), cv2.COLOR_RGB2BGR))
 
 
 def freeze(names):
@@ -237,10 +142,12 @@ def run(names, sets, sheets=None, memos=None, quiet=False, method=NEWEST):
         rows.append(s)
         if sheets:
             wrong = list(zip(*np.nonzero(~matches(ref, got))))
-            result = conv.snapshot(labels=conv.best_attr_indexes).dithered_result
-            sheet(Path(sheets) / f'{name}.png', conv.image_rgb, render_scr(bitmap, ref_idx, conv.palette), result, wrong)
+            ref_img = render_scr(bitmap, ref_idx, conv.palette)
+            composite = conv.snapshot(labels=conv.best_attr_indexes).dithered_result
+            R.save(Path(sheets) / f'{name}.png', R.sheet([('target', conv.image_rgb), ('reference', ref_img),
+                                                          ('selection', composite)], 2, marks={'selection': wrong}))
             final = finish(graph, memo, conv).dithered_result
-            pair_view(Path(sheets) / f'{name}-final.png', render_scr(bitmap, ref_idx, conv.palette), final)
+            R.save(Path(sheets) / f'{name}-final.png', R.sheet([('reference', ref_img), (method, final)], 2))
     if not quiet:
         print(f"{'image':16} {'agree':>6} {'painted':>7} {'rest':>6} {'false':>6} {'missed':>6} {'changes':>7} {'s':>5}")
         for s in rows:
@@ -276,19 +183,10 @@ def compare(names, sheets=None):
         print(f"{'mean':16} {np.nanmean([s['painted'] for s in rows.values()]):7.3f} "
               f"{np.nanmean([s['false_seams'] for s in rows.values()]):6.3f}")
     if sheets:
-        zoom = 2
-        up = lambda a: np.repeat(np.repeat((a.clip(0, 1) * 255).astype(np.uint8), zoom, 0), zoom, 1)
         for name in names:
             bitmap, ref_idx, _, _ = reference(name)
             tiles = [('reference', render_scr(bitmap, ref_idx, palettes[name]))] + finals[name]
-            gap = np.full((192 * zoom + 20, 6, 3), 128, np.uint8)
-            row = []
-            for label, img in tiles:
-                tile = np.concatenate([np.full((20, 256 * zoom, 3), 255, np.uint8), up(img)])
-                cv2.putText(tile, label, (4, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
-                row += [tile, gap]
-            cv2.imwrite(str(Path(sheets) / f'{name}-compare.png'), cv2.cvtColor(np.concatenate(row[:-1], axis=1),
-                                                                                 cv2.COLOR_RGB2BGR))
+            R.save(Path(sheets) / f'{name}-compare.png', R.sheet(tiles, 2))
 
 
 def regions(name, out, k):
@@ -296,38 +194,37 @@ def regions(name, out, k):
     graph = project_graph(name, DEFAULTS)
     conv = evaluate(graph, 'prepare', Memo())
     lab = cv2.cvtColor(conv.image_rgb.astype(np.float32), cv2.COLOR_RGB2Lab)
-    R, C = 24, 32
-    means = lab.reshape(R, 8, C, 8, 3).mean(axis=(1, 3))
+    rows, cols = 24, 32
+    means = lab.reshape(rows, 8, cols, 8, 3).mean(axis=(1, 3))
     feats = means.reshape(-1, 3).astype(np.float32)
     _, km, _ = cv2.kmeans(feats, k, None, (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 50, 0.1), 5,
                           cv2.KMEANS_PP_CENTERS)
-    km = km.reshape(R, C).astype(np.int32)
-    labels = np.zeros((R, C), np.int32)
+    km = km.reshape(rows, cols).astype(np.int32)
+    labels = np.zeros((rows, cols), np.int32)
     n = 0
     for cluster in range(k):
         count, comp = cv2.connectedComponents((km == cluster).astype(np.uint8), connectivity=4)
         for i in range(1, count):
             labels[comp == i] = n
             n += 1
-    zoom = 4
-    img = np.repeat(np.repeat((conv.image_rgb.clip(0, 1) * 255).astype(np.uint8), zoom, 0), zoom, 1)
-    img = np.ascontiguousarray(img)
-    for r in range(R):
-        for c in range(C):
-            y, x = r * 8 * zoom, c * 8 * zoom
-            if r + 1 < R and labels[r + 1, c] != labels[r, c]:
+    zoom, m = 4, R.MARGIN
+    img = R.ruled(conv.image_rgb, zoom, grid=False)
+    for r in range(rows):
+        for c in range(cols):
+            y, x = m + r * 8 * zoom, m + c * 8 * zoom
+            if r + 1 < rows and labels[r + 1, c] != labels[r, c]:
                 cv2.line(img, (x, y + 8 * zoom - 1), (x + 8 * zoom - 1, y + 8 * zoom - 1), (255, 255, 255), 1)
-            if c + 1 < C and labels[r, c + 1] != labels[r, c]:
+            if c + 1 < cols and labels[r, c + 1] != labels[r, c]:
                 cv2.line(img, (x + 8 * zoom - 1, y), (x + 8 * zoom - 1, y + 8 * zoom - 1), (255, 255, 255), 1)
     for i in range(n):
         rs, cs = np.nonzero(labels == i)
         j = np.argmin((rs - rs.mean()) ** 2 + (cs - cs.mean()) ** 2)
-        y, x = rs[j] * 8 * zoom + 20, cs[j] * 8 * zoom + 4
+        y, x = m + rs[j] * 8 * zoom + 20, m + cs[j] * 8 * zoom + 4
         cv2.putText(img, str(i), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 0), 3)
         cv2.putText(img, str(i), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
-    cv2.imwrite(str(out / f'{name}-regions.png'), cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+    R.save(out / f'{name}-regions.png', img)
     np.save(out / f'{name}-regions.npy', labels)
     print(f'{n} regions: {out / f"{name}-regions.png"}')
 
@@ -336,8 +233,7 @@ def paint(name, spec_path):
     """spec: {"regions": FILE.npy, "pairs": {"region": "P/I", ...}, "cells": [[r, c, "P/I"], ...]}, colours by letter
     (k b r m g c y w, capitals bright)."""
     spec = json.loads(Path(spec_path).read_text())
-    index = lambda ch: 'kbrmgcyw'.index(ch.lower()) + (8 if ch.isupper() else 0)
-    parse = lambda s: tuple(index(ch) for ch in s.split('/'))
+    parse = parse_pair
     cells = {}
     if 'regions' in spec:
         labels = np.load(spec['regions'])
@@ -354,15 +250,64 @@ def paint(name, spec_path):
     print(f'{name}: {len(overrides)} painted cells')
 
 
+def variant_file(name, variant) -> Path:
+    """A variant by id (tests/images/NAME/variants/ID.scr, else its cache) or by path."""
+    for folder in ('variants', 'cache/variants'):
+        f = IMAGES / name / folder / f'{variant}.scr'
+        if f.exists():
+            return f
+    f = Path(variant)
+    assert f.exists(), f'no variant {variant} of {name}'
+    return f
+
+
+def render(name, out, zoom=3, crops=(), variant=None, eye=True, method=NEWEST):
+    """target | reference | result with rulers, eye views and crops: NAME.png (NAME-ID.png for a variant)."""
+    graph = ops.apply_preset(project_graph(name, DEFAULTS), method)
+    memo = Memo()
+    conv = select(graph, memo)
+    columns, marks, ref = [('target', conv.image_rgb)], {}, None
+    if (IMAGES / name / 'reference.scr').exists():
+        bitmap, ref_idx, ref, _ = reference(name)
+        columns.append(('reference', render_scr(bitmap, ref_idx, conv.palette)))
+    if variant:
+        bitmap, idx = read_scr(variant_file(name, variant))
+        title, got = f'variant {Path(str(variant)).stem}', np.sort(idx, axis=-1)
+        columns.append((title, render_scr(bitmap, idx, conv.palette)))
+        from bench.scr import black
+        got = np.sort(black(idx), axis=-1)
+    else:
+        title, got = method, label_pairs(conv, conv.best_attr_indexes)
+        columns.append((title, finish(graph, memo, conv).dithered_result))
+    if ref is not None:
+        marks[title] = list(zip(*np.nonzero(~matches(ref, got))))
+    img = R.sheet(columns, zoom, conv.eye_view if eye else None, crops, marks=marks)
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    path = out / (f'{name}-{Path(str(variant)).stem}.png' if variant else f'{name}.png')
+    R.save(path, img)
+    print(path)
+    return path
+
+
+def parse_crop(s):
+    r0, c0, r1, c1 = (int(x) for x in s.split(','))
+    return r0, c0, r1, c1
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('command', choices=('freeze', 'run', 'compare', 'regions', 'paint'))
+    ap.add_argument('command', choices=('freeze', 'run', 'compare', 'regions', 'paint', 'render'))
     ap.add_argument('args', nargs='*')
     ap.add_argument('--set', action='append', help='Metric, Eye or Select param=value')
     ap.add_argument('--method', default=NEWEST, choices=tuple(METHODS), help='selection method (run)')
     ap.add_argument('--sheets', help='folder for contact sheets')
     ap.add_argument('--out', default='.')
     ap.add_argument('--k', type=int, default=12)
+    ap.add_argument('--zoom', type=int, default=3)
+    ap.add_argument('--crop', action='append', default=[], help='r0,c0,r1,c1 cells, inclusive (render)')
+    ap.add_argument('--variant', help='a variant id or .scr file in place of the method\'s result (render)')
+    ap.add_argument('--no-eye', action='store_true', help='no eye-view rows (render)')
     a = ap.parse_args(argv)
     if a.command == 'freeze':
         freeze(a.args)
@@ -376,6 +321,8 @@ def main(argv=None):
         compare(a.args or SET, a.sheets)
     elif a.command == 'regions':
         regions(a.args[0], a.out, a.k)
+    elif a.command == 'render':
+        render(a.args[0], a.out, a.zoom, [parse_crop(c) for c in a.crop], a.variant, not a.no_eye, a.method)
     else:
         paint(*a.args)
 
