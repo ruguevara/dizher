@@ -266,6 +266,28 @@ def overpaint(selection: Converter,
 PAINTED = 1e3   # a painted colour's distance against a kept one's: the nearest pair keeps the painted colours first
 
 
+def shown_pair(conv: Converter, r: int, c: int, painted=(-1, -1)) -> tuple:
+    """The cell's (paper, ink) as conv shows it, a painted colour in its painted role, matched by colour as Overpaint
+    matches it (either black is the painted one): the pair is unordered, the darker colour its paper."""
+    paper, ink = list(conv.palette.iter_idxs_pairs())[conv.best_attr_indexes[r, c]]
+    rgb = conv.palette.as_float()
+    off = lambda roles: sum(np.linalg.norm(rgb[x] - rgb[p]) for x, p in zip(roles, painted) if p >= 0)
+    return (ink, paper) if off((ink, paper)) < off((paper, ink)) else (paper, ink)
+
+
+def fix_overrides(selection: Converter, overrides: tuple) -> tuple:
+    """The painted cells with the colours they show: a -1 (Auto) colour becomes the one Select pairs gave the cell, a
+    pair the palette cannot show becomes the one Overpaint shows for it. Overpaint's result stays the same and no
+    longer follows Select pairs. A painted colour shown as itself keeps its index (either black), so a fixed cell
+    fixes to itself. A cell off the screen is kept as painted."""
+    painted = overpaint(selection, overrides)
+    R, C = painted.best_attr_indexes.shape
+    rgb = selection.palette.as_ubyte()
+    kept = lambda shown, paint: tuple(p if p >= 0 and (rgb[p] == rgb[s]).all() else s for s, p in zip(shown, paint))
+    return tuple((r, c, *kept(shown_pair(painted, r, c, (p, i)), (p, i))) if r < R and c < C else (r, c, p, i)
+                 for r, c, p, i in overrides)
+
+
 def halftone(selection: Converter, progress=None) -> Converter:
     """Each pixel quantised to its cell's paper or ink by the Halftoner: the start of the optimiser, or the result
     when it is off."""

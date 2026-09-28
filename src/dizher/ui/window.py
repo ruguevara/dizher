@@ -264,10 +264,19 @@ class OverpaintEditor:
     DIM, as both, keeps a cell's colours and sets their brightness. A left click on a swatch picks the ink, a right click the paper (Multipaint's and MS
     Paint's buttons), and turns Paint mode on. In the preview a left drag paints cells with the brush, a right click
     picks up a cell's colours as the brush, the eyedropper (Window._paint). Clear gives every painted cell back to
-    Select pairs."""
+    Select pairs; Fix writes into every painted cell the colours it shows, so an Auto one no longer follows Select
+    pairs."""
 
     def __init__(self) -> None:
         self.on, self.ink, self.paper = False, 15, TRANSPARENT   # bright white on the Spectrum, light grey on the C64
+        self._fixed = (None, None, ())   # (overrides, selection, their fix): kept, as a frame asks for it again
+
+    def fixed(self, overrides: tuple, selection) -> tuple:
+        """ops.fix_overrides, recomputed only when the painted cells or the selection change."""
+        if self._fixed[0] != overrides or self._fixed[1] is not selection:
+            fix = ops.fix_overrides(selection, overrides) if selection is not None and overrides else overrides
+            self._fixed = (overrides, selection, fix)
+        return self._fixed[2]
 
     def draw(self, params, selection, on_change, id: str) -> None:
         imgui.push_id(id)
@@ -281,7 +290,15 @@ class OverpaintEditor:
         imgui.end_disabled()
         imgui.set_item_tooltip('Give every painted cell back to Select pairs')
         imgui.same_line()
-        imgui.text(f'{len(params.overrides)} cells painted')
+        fixed = self.fixed(params.overrides, selection)
+        imgui.begin_disabled(fixed == params.overrides)
+        if imgui.small_button('Fix'):
+            on_change(replace(params, overrides=fixed))
+        imgui.end_disabled()
+        imgui.set_item_tooltip('Painted cells take the colours they show: an Auto ink or paper becomes the one Select '
+                               'pairs gave, a pair the palette cannot show the one shown')
+        imgui.same_line()
+        imgui.text(f'{len(params.overrides)} painted')
         if selection is not None:
             palette = selection.palette
             def pick(i, button):   # picking a colour is picking up the brush: Paint mode goes on
@@ -638,11 +655,8 @@ class Window:
             imgui.end_popup()
 
     def _colours(self, conv, r: int, c: int) -> tuple:
-        """The cell's (paper, ink) as conv shows it, a painted colour in its painted role: the pair is unordered, the
-        darker colour its paper."""
-        paper, ink = list(conv.palette.iter_idxs_pairs())[conv.best_attr_indexes[r, c]]
-        painted = self._painted(r, c)
-        return (ink, paper) if paper == painted[1] >= 0 or ink == painted[0] >= 0 else (paper, ink)
+        """The cell's (paper, ink) as conv shows it, a painted colour in its painted role (ops.shown_pair)."""
+        return ops.shown_pair(conv, r, c, self._painted(r, c))
 
     def _painted(self, r: int, c: int) -> tuple:
         """The cell's painted (paper, ink), -1 where it keeps the selection's."""
