@@ -188,34 +188,31 @@ def test_zxart_fetch_prepare_stats(tmp_path, monkeypatch):
     assert sum(f for _, f, _ in s['pairs']) > 0.99 and s['pairs'][0][0] == 'k/c' and s['pairs'][1][2] > 0
 
 
-def test_metrics_zero_on_self_and_rank_by_closeness(tmp_path, monkeypatch):
-    """Every metric scores a screen against itself at (or near) its floor; on pairs where the winner is the
-    screen closer to the source, a distance-like metric agrees with the judge; the ranking report reads the
-    judgments and reference of a picture."""
+def synthetic_picture(tmp_path, monkeypatch):
+    """A project in tmp_path: a smooth source; cached screens 'good' (the method's own result) and 'bad' (every
+    cell magenta on black); the reference is the good one. Returns the metrics Picture."""
     import json
+    import cv2
+    from dataclasses import replace
+    from mokit.project import save_project
+    from dizher import ops
+    from dizher.converter.dither import Stohastic
     from bench import metrics as M, variants as V, judge as J
     import bench.project
-    # a picture: a smooth source, its project, and screens made from it
-    monkeypatch.setattr(bench.project, 'IMAGES', tmp_path)
-    monkeypatch.setattr(V, 'IMAGES', tmp_path)
-    monkeypatch.setattr(J, 'IMAGES', tmp_path)
+    for mod in (bench.project, V, J):
+        monkeypatch.setattr(mod, 'IMAGES', tmp_path)
     y, x = np.mgrid[0:192, 0:256] / 255.0
     source = np.stack([x, y * 0.7, 0.3 + 0.3 * np.sin(6 * x)], -1).clip(0, 1).astype(np.float32)
     folder = tmp_path / 'pic'
     folder.mkdir()
-    import cv2
     cv2.imwrite(str(folder / 'source.png'), cv2.cvtColor((source * 255).astype(np.uint8), cv2.COLOR_RGB2BGR))
-    from dizher import ops
-    from dataclasses import replace
-    from mokit.project import save_project
     graph = ops.make_graph()
     graph = graph.with_params('source', replace(graph['source'].params, path=folder / 'source.png'))
     graph = graph.with_params('framing', replace(graph['framing'].params, fit='Fit'))
     save_project(folder, graph, {})
     pic = M.Picture('pic')
-    # the method's own result, and a spoiled copy: every cell's pair replaced by magenta on black
     conv = pic.conv
-    conv.dither(__import__('dizher.converter.dither', fromlist=['Stohastic']).Stohastic())
+    conv.dither(Stohastic())
     idx = np.array(list(conv.palette.iter_idxs_pairs()))[conv.best_attr_indexes]
     good = to_scr(conv.dithered_bitmap > 0.5, idx)
     bad = to_scr(conv.dithered_bitmap > 0.5, np.broadcast_to((0, 3), idx.shape).copy())
@@ -225,6 +222,15 @@ def test_metrics_zero_on_self_and_rank_by_closeness(tmp_path, monkeypatch):
         (cache / f'{vid}.scr').write_bytes(data)
         (cache / f'{vid}.json').write_text(json.dumps(dict(id=vid, method='Exact mixture', params={})))
     (folder / 'reference.scr').write_bytes(good)
+    return pic
+
+
+def test_metrics_zero_on_self_and_rank_by_closeness(tmp_path, monkeypatch):
+    """Every metric scores a screen against itself at (or near) its floor; on pairs where the winner is the
+    screen closer to the source, a distance-like metric agrees with the judge; the ranking report reads the
+    judgments and reference of a picture."""
+    from bench import metrics as M, judge as J
+    pic = synthetic_picture(tmp_path, monkeypatch)
     self_case = pic.case('good')
     self_case = M.Case(self_case.result, self_case.result, self_case.pairs, self_case.conv, self_case.convs)
     distance_like = [m for m in M.METRICS if not m.startswith(('energy', 'label_noise', 'region_pairs', 'lpips', 'dists'))]
@@ -241,3 +247,29 @@ def test_metrics_zero_on_self_and_rank_by_closeness(tmp_path, monkeypatch):
     assert result['overall']['label_noise'][0] == 0.0                                   # the spoiled copy is quieter
     assert result['reference']['pic']['opp_blur:2'] == (0.0, 2)                         # the reference is the good one
     M.print_rank(result, ['opp_blur:2', 'de2000:2', 'label_noise'])
+
+
+def test_fit_energy_to_judgments(tmp_path, monkeypatch):
+    """The energy under fitted params agrees with judgments that prefer the closer screen; the preset agrees too;
+    the sample stays in range and flare changes the candidates' setup only when it changes."""
+    from bench import fit as F, judge as J
+    synthetic_picture(tmp_path, monkeypatch)
+    J.add_pairs('pic', [('good', 'bad'), ('bad', 'good')])
+    J.record('pic', '1 a, 2 b tone', 'user')
+    s = F.sample(9, seed=1)
+    assert len(s) == 9 and all(F.RANGES[k][0] <= p[k] <= F.RANGES[k][1] for p in s for k in F.FREE)
+    assert {p['flare'] for p in s} == set(F.FLARES)
+    e = F.Energies('pic', 'Exact mixture', ['good', 'bad'])
+    first = e(dict(s[0]))
+    assert first['good'] < first['bad'] and e.flare == s[0]['flare']
+    calc_calls = []
+    monkeypatch.setattr(e.conv.energy, 'calc', lambda: calc_calls.append(1))
+    e(dict(s[0], chroma=1.5))
+    assert not calc_calls                                                                # the same flare: no setup
+    e(dict(s[0], flare=0.2))
+    assert calc_calls
+    out = F.fit(['pic'], J.load, 'user', n=6, seed=1, holdout=False, log=lambda s: None)
+    assert set(out) == {'Exact mixture', 'Halftoned'}
+    for m, r in out.items():
+        assert r['agreement'] == 1.0 and r['preset_agreement'] == 1.0 and r['pairs'] == 2, m
+        assert all(F.RANGES[k][0] <= v <= F.RANGES[k][1] for k, v in r['params'].items())

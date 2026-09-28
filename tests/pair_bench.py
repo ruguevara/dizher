@@ -39,6 +39,10 @@
                                                       every judge metric (bench/metrics.py) by how often it puts the
                                                       winner of a judged pair below the loser: overall, by fault and
                                                       by picture, and where it ranks the reference among the variants
+    python tests/pair_bench.py fit [NAME...] [--by user] [--method M] [--n 150] [--seed 0]
+                                                      the Metric and Select pairs values under which each method's
+                                                      energy agrees most with the judge (bench/fit.py), with the
+                                                      agreement of its preset and of a fit without each picture
 
 A project is tests/images/NAME/project.json; its reference is reference.scr beside it. The reference is judged per
 cell as the colours it shows: a cell whose bitmap is all paper or all ink is solid, and any pair holding that colour
@@ -61,7 +65,7 @@ from dizher import ops
 from dizher.converter.energy import METHODS, NEWEST
 
 sys.path.insert(0, str(Path(__file__).parent))
-from bench import render as R, variants as V, judge as J, zxart as Z, metrics as M                   # noqa: E402
+from bench import render as R, variants as V, judge as J, zxart as Z, metrics as M, fit as F         # noqa: E402
 from bench.scr import pair_name, parse_pair, black, label_pairs, matches, score, render_scr   # noqa: E402
 from bench.project import IMAGES, DEFAULTS, project_graph, painted_cells, select, finish, reference    # noqa: E402
 
@@ -312,6 +316,10 @@ def rank(names, by, metrics, with_reference):
         print(f'{name}: ' + ', '.join(f'{m} {a:.2f}/{n}' for m, (a, n) in best))
 
 
+def fit(names, by, method, n, seed):
+    F.fit(names, J.load, by, method, n, seed)
+
+
 def parse_crop(s):
     r0, c0, r1, c1 = (int(x) for x in s.split(','))
     return r0, c0, r1, c1
@@ -320,10 +328,10 @@ def parse_crop(s):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('command', choices=('freeze', 'run', 'compare', 'regions', 'paint', 'render', 'variants', 'judge',
-                                        'zxart', 'rank'))
+                                        'zxart', 'rank', 'fit'))
     ap.add_argument('args', nargs='*')
     ap.add_argument('--set', action='append', help='Metric, Eye or Select param=value')
-    ap.add_argument('--method', default=NEWEST, choices=tuple(METHODS), help='selection method (run)')
+    ap.add_argument('--method', default=None, choices=tuple(METHODS), help='selection method (run, render: the newest; fit: each)')
     ap.add_argument('--sheets', help='folder for contact sheets')
     ap.add_argument('--out', default='.')
     ap.add_argument('--k', type=int, default=12)
@@ -346,7 +354,7 @@ def main(argv=None):
     elif a.command == 'run':
         if a.sheets:
             Path(a.sheets).mkdir(parents=True, exist_ok=True)
-        run(a.args or SET, parse_sets(a.set), a.sheets, method=a.method)
+        run(a.args or SET, parse_sets(a.set), a.sheets, method=a.method or NEWEST)
     elif a.command == 'compare':
         if a.sheets:
             Path(a.sheets).mkdir(parents=True, exist_ok=True)
@@ -354,7 +362,7 @@ def main(argv=None):
     elif a.command == 'regions':
         regions(a.args[0], a.out, a.k)
     elif a.command == 'render':
-        render(a.args[0], a.out, a.zoom, [parse_crop(c) for c in a.crop], a.variant, not a.no_eye, a.method)
+        render(a.args[0], a.out, a.zoom, [parse_crop(c) for c in a.crop], a.variant, not a.no_eye, a.method or NEWEST)
     elif a.command == 'variants':
         variants(a.args or JUDGED, a.n or 24, a.seed, a.fast)
     elif a.command == 'judge':
@@ -363,6 +371,8 @@ def main(argv=None):
         zxart(a.args, a.n or 50, a.rating, a.luma, a.chroma)
     elif a.command == 'rank':
         rank(a.args or JUDGED, a.by, a.metrics.split(',') if a.metrics else None, not a.no_ref)
+    elif a.command == 'fit':
+        fit(a.args or JUDGED, a.by, a.method, a.n or 150, a.seed)
     else:
         paint(*a.args)
 
