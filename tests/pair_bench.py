@@ -35,6 +35,10 @@
                                                       project, so run/compare zxart/<id> score against the artist
     python tests/pair_bench.py zxart stats            the pairs the artists use, how often they change, clashing hues
     python tests/pair_bench.py zxart names            the project names, for run and compare
+    python tests/pair_bench.py rank [NAME...] [--by user] [--metrics m,m...] [--no-ref]
+                                                      every judge metric (bench/metrics.py) by how often it puts the
+                                                      winner of a judged pair below the loser: overall, by fault and
+                                                      by picture, and where it ranks the reference among the variants
 
 A project is tests/images/NAME/project.json; its reference is reference.scr beside it. The reference is judged per
 cell as the colours it shows: a cell whose bitmap is all paper or all ink is solid, and any pair holding that colour
@@ -57,7 +61,7 @@ from dizher import ops
 from dizher.converter.energy import METHODS, NEWEST
 
 sys.path.insert(0, str(Path(__file__).parent))
-from bench import render as R, variants as V, judge as J, zxart as Z                                 # noqa: E402
+from bench import render as R, variants as V, judge as J, zxart as Z, metrics as M                   # noqa: E402
 from bench.scr import pair_name, parse_pair, black, label_pairs, matches, score, render_scr   # noqa: E402
 from bench.project import IMAGES, DEFAULTS, project_graph, painted_cells, select, finish, reference    # noqa: E402
 
@@ -300,6 +304,14 @@ def zxart(args, n, rating, luma, chroma):
         raise SystemExit(f'zxart {what}? fetch, prepare, stats or names')
 
 
+def rank(names, by, metrics, with_reference):
+    result = M.rank(names, J.load, by, metrics, with_reference)
+    M.print_rank(result, metrics)
+    for name, table in result['by_picture'].items():
+        best = sorted(table.items(), key=lambda kv: -np.nan_to_num(kv[1][0], nan=-1))[:5]
+        print(f'{name}: ' + ', '.join(f'{m} {a:.2f}/{n}' for m, (a, n) in best))
+
+
 def parse_crop(s):
     r0, c0, r1, c1 = (int(x) for x in s.split(','))
     return r0, c0, r1, c1
@@ -308,7 +320,7 @@ def parse_crop(s):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('command', choices=('freeze', 'run', 'compare', 'regions', 'paint', 'render', 'variants', 'judge',
-                                        'zxart'))
+                                        'zxart', 'rank'))
     ap.add_argument('args', nargs='*')
     ap.add_argument('--set', action='append', help='Metric, Eye or Select param=value')
     ap.add_argument('--method', default=NEWEST, choices=tuple(METHODS), help='selection method (run)')
@@ -324,6 +336,8 @@ def main(argv=None):
     ap.add_argument('--fast', action='store_true', help='variants stop at the halftone, no DBS')
     ap.add_argument('--by', default='user', help='the judge recording verdicts')
     ap.add_argument('--rating', type=float, default=4.0, help='least zxart rating (zxart fetch)')
+    ap.add_argument('--metrics', help='comma-separated metric names (rank); default all')
+    ap.add_argument('--no-ref', action='store_true', help='rank: judged variants only, no reference rank')
     ap.add_argument('--luma', type=float, default=Z.LUMA_SIGMA, help='px of lightness blur of a zxart source')
     ap.add_argument('--chroma', type=float, default=Z.CHROMA_SIGMA, help='px of colour blur of a zxart source')
     a = ap.parse_intermixed_args(argv)
@@ -347,6 +361,8 @@ def main(argv=None):
         judge(a.args, a.n or 8, a.seed, a.out, a.by, a.zoom if a.zoom != 3 else 2)
     elif a.command == 'zxart':
         zxart(a.args, a.n or 50, a.rating, a.luma, a.chroma)
+    elif a.command == 'rank':
+        rank(a.args or JUDGED, a.by, a.metrics.split(',') if a.metrics else None, not a.no_ref)
     else:
         paint(*a.args)
 

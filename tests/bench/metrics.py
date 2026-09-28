@@ -1,0 +1,382 @@
+"""Judge metrics: each scores a finished colouring against its source, lower better, and is judged in turn by how
+often it ranks the winner of a judged pair below the loser (`rank`), by fault and by picture. Candidates: the
+selection energy under each method's preset, blurred opponent error at several scales, SSIM on lightness and on
+colour, CIEDE2000 after blur, S-CIELAB, chroma added and hue shifted (the wrong-colour fault), pair changes across
+flat seams and pairs per flat region (the noisy-colouring fault), and LPIPS and DISTS when torch is installed.
+
+A metric is f(ctx) -> float with ctx a Case: the source and result in sRGB float, the result's pair labels and the
+project's selection converter (its energy, eye kernels and seam smoothness)."""
+from dataclasses import dataclass
+from functools import lru_cache
+
+import cv2
+import numpy as np
+from skimage.color import rgb2lab, deltaE_ciede2000
+from skimage.metrics import structural_similarity
+
+from mokit.graph import Memo
+
+from dizher import ops
+from dizher.converter.energy import METHODS, LRGB2OPP, lightness_gain
+
+from .project import project_graph, DEFAULTS, select
+from .scr import render_scr, pairs_to_labels, same_region, black
+from .variants import read_variant, REFERENCE, listing
+
+GAMMA = 2.2
+METRICS = {}
+
+
+def metric(name):
+    def register(f):
+        METRICS[name] = f
+        return f
+    return register
+
+
+@dataclass
+class Case:
+    source: np.ndarray      # (H, W, 3) sRGB float, the converter's target
+    result: np.ndarray      # (H, W, 3) sRGB float, the screen
+    pairs: np.ndarray       # (R, C, 2) palette indexes of the screen
+    conv: object            # the project's selection converter under the default method (energy calculated)
+    convs: dict             # method -> selection converter under that method's preset
+
+    def labels(self, conv=None):
+        return pairs_to_labels(conv or self.conv, self.pairs)
+
+
+class Picture:
+    """A project's source and its selection converters, shared by every variant of it."""
+
+    def __init__(self, name, methods=tuple(METHODS)):
+        self.name = name
+        self.memo = Memo()
+        self.convs = {}
+        for m in methods:
+            graph = ops.apply_preset(project_graph(name, DEFAULTS), m)
+            self.convs[m] = select(graph, self.memo)
+        self.conv = next(iter(self.convs.values()))
+        self.source = self.conv.image_rgb
+
+    def case(self, variant) -> Case:
+        bitmap, idx = read_variant(self.name, variant)
+        return Case(self.source, render_scr(bitmap, idx, self.conv.palette), idx, self.conv, self.convs)
+
+
+# ----- helpers -----------------------------------------------------------------------------------------------
+
+def lin(rgb):
+    return rgb.astype(np.float32) ** GAMMA
+
+
+def opp(rgb):
+    return lin(rgb) @ LRGB2OPP.T
+
+
+def blur(img, sigma):
+    """Gaussian blur per channel, sigma px; sigma 0 is the image."""
+    if sigma <= 0:
+        return img
+    return cv2.GaussianBlur(np.ascontiguousarray(img, dtype=np.float32), (0, 0), sigma, borderType=cv2.BORDER_REFLECT_101)
+
+
+def lab(rgb):
+    return rgb2lab(np.clip(rgb, 0, 1).astype(np.float64))
+
+
+def blurred_srgb(rgb, sigma):
+    """Blur in linear light, back to sRGB."""
+    return np.clip(blur(lin(rgb), sigma), 0, 1) ** (1 / GAMMA)
+
+
+def pyramid(a, levels):
+    out = [a]
+    for _ in range(levels - 1):
+        out.append(cv2.pyrDown(out[-1]))
+    return out
+
+
+# ----- the energy --------------------------------------------------------------------------------------------
+
+def _energy(method):
+    def f(c: Case):
+        conv = c.convs[method]
+        labels = c.labels(conv)
+        if (labels < 0).any():
+            return float('nan')
+        return conv.energy.energy(labels)
+    return f
+
+
+for _m in METHODS:
+    METRICS[f'energy:{_m}'] = _energy(_m)
+
+
+# ----- blurred error -----------------------------------------------------------------------------------------
+
+def _opp_blur(sigma, gained=True):
+    def f(c: Case):
+        e = opp(c.result) - opp(c.source)
+        if gained:
+            e = e * lightness_gain(c.conv.image_luma, c.conv.flare)
+        return float((blur(e, sigma) ** 2).sum(-1).mean())
+    return f
+
+
+for _s in (1, 2, 4, 8):
+    METRICS[f'opp_blur:{_s}'] = _opp_blur(_s)
+METRICS['opp_blur:2:nogain'] = _opp_blur(2, gained=False)
+
+
+@metric('scielab')
+def scielab(c: Case):
+    """S-CIELAB: opponent channels blurred as the eye model does (the converter's kernels), CIEDE2000 between them."""
+    a, b = c.conv.eye_view(c.source), c.conv.eye_view(c.result)
+    return float(deltaE_ciede2000(lab(a), lab(b)).mean())
+
+
+def _de2000(sigma):
+    def f(c: Case):
+        return float(deltaE_ciede2000(lab(blurred_srgb(c.source, sigma)), lab(blurred_srgb(c.result, sigma))).mean())
+    return f
+
+
+for _s in (1, 2, 4):
+    METRICS[f'de2000:{_s}'] = _de2000(_s)
+
+
+# ----- structure ---------------------------------------------------------------------------------------------
+
+def _ssim_channels(a, b, data_range):
+    return float(np.mean([structural_similarity(a[..., k], b[..., k], data_range=data_range, win_size=7,
+                                                gaussian_weights=True, sigma=1.5) for k in range(a.shape[-1])]))
+
+
+def _ssim(channels, sigma=0, levels=1):
+    """1 - mean SSIM over the CIELAB channels (a slice), the images first blurred sigma px in linear light and
+    compared over a pyramid of levels."""
+    def f(c: Case):
+        a, b = lab(blurred_srgb(c.source, sigma)), lab(blurred_srgb(c.result, sigma))
+        a, b = a[..., channels], b[..., channels]
+        rng = 100.0 if channels == slice(0, 1) else 255.0
+        return 1 - float(np.mean([_ssim_channels(x, y, rng) for x, y in zip(pyramid(a, levels), pyramid(b, levels))]))
+    return f
+
+
+METRICS['ssim_L'] = _ssim(slice(0, 1))
+METRICS['ssim_L:2'] = _ssim(slice(0, 1), sigma=2)
+METRICS['msssim_L'] = _ssim(slice(0, 1), levels=4)
+METRICS['ssim_ab'] = _ssim(slice(1, 3))
+METRICS['msssim_ab'] = _ssim(slice(1, 3), levels=4)
+METRICS['msssim_Lab'] = _ssim(slice(0, 3), levels=4)
+
+
+# ----- the wrong-colour fault ----------------------------------------------------------------------------------
+
+def _chroma_added(sigma):
+    """Chroma the result has where the source has less, after a blur: a hue where the original had none."""
+    def f(c: Case):
+        a, b = lab(blurred_srgb(c.source, sigma)), lab(blurred_srgb(c.result, sigma))
+        ca, cb = np.hypot(a[..., 1], a[..., 2]), np.hypot(b[..., 1], b[..., 2])
+        return float(np.maximum(0, cb - ca).mean())
+    return f
+
+
+for _s in (2, 4):
+    METRICS[f'chroma_added:{_s}'] = _chroma_added(_s)
+
+
+def _hue_shift(sigma):
+    """Hue turned between source and result after a blur, weighted by the smaller chroma (a grey has no hue)."""
+    def f(c: Case):
+        a, b = lab(blurred_srgb(c.source, sigma)), lab(blurred_srgb(c.result, sigma))
+        ca, cb = np.hypot(a[..., 1], a[..., 2]), np.hypot(b[..., 1], b[..., 2])
+        dh = np.abs(np.arctan2(a[..., 2], a[..., 1]) - np.arctan2(b[..., 2], b[..., 1]))
+        dh = np.minimum(dh, 2 * np.pi - dh)
+        return float((np.minimum(ca, cb) * dh).mean())
+    return f
+
+
+for _s in (2, 4):
+    METRICS[f'hue_shift:{_s}'] = _hue_shift(_s)
+
+
+# ----- the noisy-colouring fault -------------------------------------------------------------------------------
+
+def flat_seams(conv):
+    """(R-1, C) and (R, C-1) weights 0..1: 1 where the source is flat across the seam (the energy's smoothness)."""
+    return conv.energy.seam_smoothness()
+
+
+@metric('label_noise')
+def label_noise(c: Case):
+    """Pair changes across seams where the source is flat, per seam."""
+    s = np.sort(black(c.pairs), axis=-1)
+    Lh, Lv = flat_seams(c.conv)
+    ch = ~same_region(s[1:].reshape(-1, 2), s[:-1].reshape(-1, 2)).reshape(Lh.shape)
+    cv = ~same_region(s[:, 1:].reshape(-1, 2), s[:, :-1].reshape(-1, 2)).reshape(Lv.shape)
+    return float(((Lh * ch).sum() + (Lv * cv).sum()) / (Lh.size + Lv.size))
+
+
+@metric('region_pairs')
+def region_pairs(c: Case):
+    """Regions of the source: cells joined across flat seams (smoothness over 0.5). Over regions of 4 cells and
+    more, the distinct pairs beyond one, weighted by size, per cell."""
+    Lh, Lv = flat_seams(c.conv)
+    R, C = c.pairs.shape[:2]
+    parent = np.arange(R * C)
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    for r in range(R - 1):
+        for col in range(C):
+            if Lh[r, col] > 0.5:
+                parent[find(r * C + col)] = find((r + 1) * C + col)
+    for r in range(R):
+        for col in range(C - 1):
+            if Lv[r, col] > 0.5:
+                parent[find(r * C + col)] = find(r * C + col + 1)
+    roots = np.array([find(i) for i in range(R * C)])
+    s = np.sort(black(c.pairs), axis=-1).reshape(-1, 2)
+    total = 0.0
+    for root in np.unique(roots):
+        members = np.nonzero(roots == root)[0]
+        if len(members) < 4:
+            continue
+        distinct = len({tuple(p) for p in s[members].tolist()})
+        total += (distinct - 1) * len(members)
+    return total / (R * C)
+
+
+# ----- learned metrics (optional) -------------------------------------------------------------------------------
+
+@lru_cache(maxsize=None)
+def _torch_model(kind):
+    try:
+        import torch
+        if kind == 'dists':
+            from piqa import DISTS
+            return torch, DISTS().eval()
+        import lpips
+        return torch, lpips.LPIPS(net=kind, verbose=False).eval()
+    except ImportError:
+        return None
+
+
+def _learned(kind):
+    def f(c: Case):
+        loaded = _torch_model(kind)
+        if loaded is None:
+            return float('nan')
+        torch, model = loaded
+        with torch.no_grad():
+            t = lambda a: torch.from_numpy(np.ascontiguousarray(a.transpose(2, 0, 1))[None].astype(np.float32))
+            if kind == 'dists':
+                return float(model(t(c.source), t(c.result)))
+            return float(model(t(c.source) * 2 - 1, t(c.result) * 2 - 1))
+    return f
+
+
+for _k in ('alex', 'vgg'):
+    METRICS[f'lpips_{_k}'] = _learned(_k)
+METRICS['dists'] = _learned('dists')
+
+
+# ----- ranking the metrics by the judgments ---------------------------------------------------------------------
+
+def scores(picture: Picture, variants, metrics=None) -> dict:
+    """variant -> metric -> value."""
+    metrics = metrics or list(METRICS)
+    out = {}
+    for v in variants:
+        c = picture.case(v)
+        out[v] = {m: METRICS[m](c) for m in metrics}
+    return out
+
+
+def judged_pairs(judgments: dict, by: str) -> list:
+    """(winner, loser, tags) of every pair the judge decided (not same)."""
+    out = []
+    for p in judgments['pairs']:
+        v = p['verdicts'].get(by)
+        if v and v['verdict'] in ('a', 'b'):
+            w, l = (p['a'], p['b']) if v['verdict'] == 'a' else (p['b'], p['a'])
+            out.append((w, l, tuple(v.get('tags', ()))))
+    return out
+
+
+def agreement(pairs, values: dict, metrics) -> dict:
+    """metric -> (share of pairs where the winner scores lower, ties half; pairs counted), over pairs whose both
+    variants have a value."""
+    out = {}
+    for m in metrics:
+        hits, n = 0.0, 0
+        for w, l, _ in pairs:
+            a, b = values[w][m], values[l][m]
+            if np.isnan(a) or np.isnan(b):
+                continue
+            n += 1
+            hits += 1.0 if a < b else 0.5 if a == b else 0.0
+        out[m] = (hits / n if n else float('nan'), n)
+    return out
+
+
+def reference_rank(values: dict, metrics) -> dict:
+    """metric -> share of variants the metric puts below the reference (0: the reference is best)."""
+    out = {}
+    ref = values.get(REFERENCE)
+    if ref is None:
+        return {m: (float('nan'), 0) for m in metrics}
+    others = [v for k, v in values.items() if k != REFERENCE]
+    for m in metrics:
+        vals = [v[m] for v in others if not np.isnan(v[m])]
+        out[m] = (sum(x < ref[m] for x in vals) / len(vals) if vals and not np.isnan(ref[m]) else float('nan'), len(vals))
+    return out
+
+
+def rank(names, judgments_of, by='user', metrics=None, with_reference=True, log=print) -> dict:
+    """Every metric's agreement with the judge over the named pictures: overall, by fault tag and by picture,
+    and the reference's rank among each picture's variants. judgments_of(name) -> judgments dict."""
+    metrics = metrics or list(METRICS)
+    tags = {}
+    per_picture, all_pairs, all_values, ref_ranks = {}, [], {}, {}
+    for name in names:
+        pairs = judged_pairs(judgments_of(name), by)
+        variants = sorted({v for w, l, _ in pairs for v in (w, l)})
+        if with_reference:
+            variants = sorted(set(variants) | set(listing(name)))
+        if not variants:
+            continue
+        log(f'{name}: {len(pairs)} judged pairs, {len(variants)} variants')
+        picture = Picture(name)
+        values = scores(picture, variants, metrics)
+        per_picture[name] = agreement(pairs, values, metrics)
+        all_pairs += [(f'{name}/{w}', f'{name}/{l}', t) for w, l, t in pairs]
+        all_values.update({f'{name}/{v}': s for v, s in values.items()})
+        if with_reference and REFERENCE in values:
+            ref_ranks[name] = reference_rank(values, metrics)
+        for w, l, t in pairs:
+            for tag in t:
+                tags.setdefault(tag, []).append((f'{name}/{w}', f'{name}/{l}', t))
+    overall = agreement(all_pairs, all_values, metrics)
+    by_tag = {tag: agreement(ps, all_values, metrics) for tag, ps in tags.items()}
+    return dict(overall=overall, by_tag=by_tag, by_picture=per_picture, reference=ref_ranks, values=all_values)
+
+
+def print_rank(result, metrics=None) -> None:
+    metrics = metrics or list(result['overall'])
+    tags = list(result['by_tag'])
+    refs = result['reference']
+    print(f"{'metric':22} {'all':>9} " + ' '.join(f'{t:>9}' for t in tags) + f" {'ref':>9}")
+    for m in sorted(metrics, key=lambda m: -np.nan_to_num(result['overall'][m][0], nan=-1)):
+        cell = lambda a: f'{a[0]:6.2f}/{a[1]:<3d}' if not np.isnan(a[0]) else f"{'n/a':>9}"
+        ref = [refs[n][m][0] for n in refs if not np.isnan(refs[n][m][0])]
+        print(f'{m:22} {cell(result["overall"][m])} ' + ' '.join(cell(result['by_tag'][t][m]) for t in tags)
+              + (f' {np.mean(ref):6.2f}/{len(ref):<3d}' if ref else f" {'n/a':>9}"))
+    print('cells: agreement with the judge / pairs counted; ref: share of variants the metric puts below the '
+          'reference, averaged over pictures with one (0 is best)')

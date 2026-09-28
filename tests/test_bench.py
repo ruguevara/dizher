@@ -186,3 +186,58 @@ def test_zxart_fetch_prepare_stats(tmp_path, monkeypatch):
     s = Z.stats(got)
     assert s['pictures'] == 1 and s['cells'] == 768 and 0 < s['seam_changes'] < 0.1 and s['distinct'] == 2
     assert sum(f for _, f, _ in s['pairs']) > 0.99 and s['pairs'][0][0] == 'k/c' and s['pairs'][1][2] > 0
+
+
+def test_metrics_zero_on_self_and_rank_by_closeness(tmp_path, monkeypatch):
+    """Every metric scores a screen against itself at (or near) its floor; on pairs where the winner is the
+    screen closer to the source, a distance-like metric agrees with the judge; the ranking report reads the
+    judgments and reference of a picture."""
+    import json
+    from bench import metrics as M, variants as V, judge as J
+    import bench.project
+    # a picture: a smooth source, its project, and screens made from it
+    monkeypatch.setattr(bench.project, 'IMAGES', tmp_path)
+    monkeypatch.setattr(V, 'IMAGES', tmp_path)
+    monkeypatch.setattr(J, 'IMAGES', tmp_path)
+    y, x = np.mgrid[0:192, 0:256] / 255.0
+    source = np.stack([x, y * 0.7, 0.3 + 0.3 * np.sin(6 * x)], -1).clip(0, 1).astype(np.float32)
+    folder = tmp_path / 'pic'
+    folder.mkdir()
+    import cv2
+    cv2.imwrite(str(folder / 'source.png'), cv2.cvtColor((source * 255).astype(np.uint8), cv2.COLOR_RGB2BGR))
+    from dizher import ops
+    from dataclasses import replace
+    from mokit.project import save_project
+    graph = ops.make_graph()
+    graph = graph.with_params('source', replace(graph['source'].params, path=folder / 'source.png'))
+    graph = graph.with_params('framing', replace(graph['framing'].params, fit='Fit'))
+    save_project(folder, graph, {})
+    pic = M.Picture('pic')
+    # the method's own result, and a spoiled copy: every cell's pair replaced by magenta on black
+    conv = pic.conv
+    conv.dither(__import__('dizher.converter.dither', fromlist=['Stohastic']).Stohastic())
+    idx = np.array(list(conv.palette.iter_idxs_pairs()))[conv.best_attr_indexes]
+    good = to_scr(conv.dithered_bitmap > 0.5, idx)
+    bad = to_scr(conv.dithered_bitmap > 0.5, np.broadcast_to((0, 3), idx.shape).copy())
+    cache = folder / 'cache' / 'variants'
+    cache.mkdir(parents=True)
+    for vid, data in (('good', good), ('bad', bad)):
+        (cache / f'{vid}.scr').write_bytes(data)
+        (cache / f'{vid}.json').write_text(json.dumps(dict(id=vid, method='Exact mixture', params={})))
+    (folder / 'reference.scr').write_bytes(good)
+    self_case = pic.case('good')
+    self_case = M.Case(self_case.result, self_case.result, self_case.pairs, self_case.conv, self_case.convs)
+    distance_like = [m for m in M.METRICS if not m.startswith(('energy', 'label_noise', 'region_pairs', 'lpips', 'dists'))]
+    for m in distance_like:
+        assert abs(M.METRICS[m](self_case)) < 1e-4, m
+    values = M.scores(pic, ['good', 'bad', 'reference'])
+    for m in distance_like + ['energy:Exact mixture', 'energy:Halftoned']:
+        assert values['good'][m] < values['bad'][m], m
+    assert values['bad']['label_noise'] == 0 and values['bad']['region_pairs'] == 0     # one pair everywhere is quiet
+    J.add_pairs('pic', [('good', 'bad'), ('bad', 'good')])
+    J.record('pic', '1 a hue, 2 b', 'user')
+    result = M.rank(['pic'], J.load, 'user', ['opp_blur:2', 'de2000:2', 'label_noise'], log=lambda s: None)
+    assert result['overall']['opp_blur:2'] == (1.0, 2) and result['by_tag']['hue']['de2000:2'] == (1.0, 1)
+    assert result['overall']['label_noise'][0] == 0.0                                   # the spoiled copy is quieter
+    assert result['reference']['pic']['opp_blur:2'] == (0.0, 2)                         # the reference is the good one
+    M.print_rank(result, ['opp_blur:2', 'de2000:2', 'label_noise'])
