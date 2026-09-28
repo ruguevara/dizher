@@ -71,13 +71,27 @@ def sample(n, seed, flares=FLARES):
     return out
 
 
-def objective(params, energies_by_picture: dict, pairs_by_picture: dict, soft=False) -> float:
-    """Agreement over all pictures' pairs, pairs weighted equally."""
-    values = {}
+def hits(params, energies_by_picture: dict, pairs_by_picture: dict, soft=False) -> dict:
+    """name -> (hits, pairs counted) of the energy under params on each picture's pairs."""
+    out = {}
     for name, e in energies_by_picture.items():
-        values.update({f'{name}/{v}': x for v, x in e(params).items()})
-    pairs = [(f'{n}/{w}', f'{n}/{l}', t) for n, ps in pairs_by_picture.items() for w, l, t in ps]
-    return agreement(values, pairs, soft)
+        values = e(params)
+        pairs = pairs_by_picture[name]
+        a = agreement(values, pairs, soft)
+        n = sum(1 for w, l, _ in pairs if not (np.isnan(values[w]) or np.isnan(values[l])))
+        out[name] = (a * n if n else 0.0, n)
+    return out
+
+
+def total(hits_by_picture: dict, names=None) -> float:
+    """Agreement over the named pictures' pairs (all when None), pairs weighted equally."""
+    h = sum(v[0] for k, v in hits_by_picture.items() if names is None or k in names)
+    n = sum(v[1] for k, v in hits_by_picture.items() if names is None or k in names)
+    return h / n if n else float('nan')
+
+
+def objective(params, energies_by_picture: dict, pairs_by_picture: dict, soft=False) -> float:
+    return total(hits(params, energies_by_picture, pairs_by_picture, soft))
 
 
 def clip(params):
@@ -112,26 +126,24 @@ def fit(names, judgments_of, by='user', method=None, n=150, seed=0, holdout=True
             energies_by[name] = Energies(name, m, variants)
         if not pairs_by:
             continue
-        total = sum(len(p) for p in pairs_by.values())
-        log(f'{m}: {total} pairs over {len(pairs_by)} pictures')
-        candidates = sample(n, seed)
+        n_pairs = sum(len(p) for p in pairs_by.values())
+        log(f'{m}: {n_pairs} pairs over {len(pairs_by)} pictures')
         preset = {k: float(v) for k, v in METHODS[m].preset.items() if k in RANGES}
-        candidates.append(preset)
-        scored = [(objective(p, energies_by, pairs_by), p) for p in candidates]
-        scored.sort(key=lambda t: -t[0])
+        candidates = sorted(sample(n, seed) + [preset], key=lambda p: p['flare'])   # one setup per flare value
+        per_picture = [hits(p, energies_by, pairs_by) for p in candidates]
+        scored = sorted(zip((total(h) for h in per_picture), candidates), key=lambda t: -t[0])
         best_params, best = refine(scored[0][1], energies_by, pairs_by)
         if best < scored[0][0]:
             best, best_params = scored[0]
-        result = dict(params=best_params, agreement=best, pairs=total, preset_agreement=objective(preset, energies_by, pairs_by),
+        result = dict(params=best_params, agreement=best, pairs=n_pairs, preset_agreement=objective(preset, energies_by, pairs_by),
                       preset=preset, holdout={})
         log(f'{m}: preset {result["preset_agreement"]:.2f}, fitted {best:.2f} '
             + ' '.join(f'{k}={v:.3g}' for k, v in best_params.items()))
         if holdout and len(pairs_by) > 1:
             for held in pairs_by:
-                train_e = {k: v for k, v in energies_by.items() if k != held}
-                train_p = {k: v for k, v in pairs_by.items() if k != held}
-                top = max(candidates, key=lambda p: objective(p, train_e, train_p))
-                result['holdout'][held] = objective(top, {held: energies_by[held]}, {held: pairs_by[held]})
+                rest = [k for k in pairs_by if k != held]
+                top = max(range(len(candidates)), key=lambda i: total(per_picture[i], rest))
+                result['holdout'][held] = total(per_picture[top], [held])
                 log(f'  without {held}: {result["holdout"][held]:.2f} on its {len(pairs_by[held])} pairs')
         out[m] = result
     return out

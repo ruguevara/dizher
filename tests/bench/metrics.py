@@ -257,14 +257,24 @@ def region_pairs(c: Case):
 
 @lru_cache(maxsize=None)
 def _torch_model(kind):
+    """(torch, model, inputs in -1..1) or None without the bench extra; the failure is printed once."""
     try:
         import torch
         if kind == 'dists':
-            from piqa import DISTS
-            return torch, DISTS().eval()
+            import os
+            import DISTS_pytorch
+            from DISTS_pytorch import DISTS
+            model = DISTS(load_weights=False)     # the package looks for its weights in sys.prefix, they are beside it
+            weights = torch.load(os.path.join(os.path.dirname(DISTS_pytorch.__file__), 'weights.pt'))
+            model.alpha.data, model.beta.data = weights['alpha'], weights['beta']
+            return torch, model.eval(), False
+        if kind in ('haarpsi', 'gmsd'):
+            from piqa import HaarPSI, GMSD
+            return torch, (HaarPSI if kind == 'haarpsi' else GMSD)().eval(), False
         import lpips
-        return torch, lpips.LPIPS(net=kind, verbose=False).eval()
-    except ImportError:
+        return torch, lpips.LPIPS(net=kind, verbose=False).eval(), True
+    except Exception as e:                        # noqa: BLE001  an optional dependency: the metric reads n/a
+        print(f'{kind}: {e.__class__.__name__}: {e}')
         return None
 
 
@@ -273,18 +283,19 @@ def _learned(kind):
         loaded = _torch_model(kind)
         if loaded is None:
             return float('nan')
-        torch, model = loaded
+        torch, model, signed = loaded
         with torch.no_grad():
             t = lambda a: torch.from_numpy(np.ascontiguousarray(a.transpose(2, 0, 1))[None].astype(np.float32))
-            if kind == 'dists':
-                return float(model(t(c.source), t(c.result)))
-            return float(model(t(c.source) * 2 - 1, t(c.result) * 2 - 1))
+            a, b = (t(c.source), t(c.result)) if not signed else (t(c.source) * 2 - 1, t(c.result) * 2 - 1)
+            value = float(model(a, b))
+            return 1 - value if kind == 'haarpsi' else value      # HaarPSI is a similarity, 1 for the same picture
     return f
 
 
 for _k in ('alex', 'vgg'):
     METRICS[f'lpips_{_k}'] = _learned(_k)
-METRICS['dists'] = _learned('dists')
+for _k in ('dists', 'haarpsi', 'gmsd'):
+    METRICS[_k] = _learned(_k)
 
 
 # ----- ranking the metrics by the judgments ---------------------------------------------------------------------

@@ -237,7 +237,8 @@ def test_metrics_zero_on_self_and_rank_by_closeness(tmp_path, monkeypatch):
     for m in distance_like:
         assert abs(M.METRICS[m](self_case)) < 1e-4, m
     values = M.scores(pic, ['good', 'bad', 'reference'])
-    for m in distance_like + ['energy:Exact mixture', 'energy:Halftoned']:
+    colour_blind = ('gmsd', 'haarpsi')                        # gradient metrics on luminance: magenta is a fine grey
+    for m in [m for m in distance_like if m not in colour_blind] + ['energy:Exact mixture', 'energy:Halftoned']:
         assert values['good'][m] < values['bad'][m], m
     assert values['bad']['label_noise'] == 0 and values['bad']['region_pairs'] == 0     # one pair everywhere is quiet
     J.add_pairs('pic', [('good', 'bad'), ('bad', 'good')])
