@@ -457,7 +457,8 @@ def test_cell_popup(ctx):
 def test_paint(ctx):
     """Paint mode: a left click on a swatch picks the ink, a right click the paper, either turns it on; a left drag
     over the preview paints the cells it crosses, one undo step; a right click picks a cell's colours up; Auto as
-    both erases; Esc ends it; Clear drops every cell; Fix paints every cell with the colours it shows."""
+    both erases; Esc ends it; Clear drops every cell; Fix paints every cell with the colours it shows; Hide
+    shows the conversion without them, keeping them, and Paint shows them again."""
     from imgui_bundle.imgui.test_engine import CaptureFlags_
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'a conversion to paint')
     brush = ui.editors['overpaint']
@@ -530,6 +531,14 @@ def test_paint(ctx):
     ctx.yield_(2)
     assert params('overpaint').overrides == ()
     ui.app.set_params('overpaint', replace(params('overpaint'), overrides=((2, 3, -1, 2), (4, 5, 7, 1))))   # Auto paper
+    ctx.item_click('overpaint/Paint')
+    ctx.item_click('overpaint/Hide')
+    ctx.yield_(2)
+    assert ui.app.unpainted and not brush.on and len(params('overpaint').overrides) == 2, 'Hide keeps the cells'
+    ctx.item_click('overpaint/Paint')
+    ctx.yield_(2)
+    assert brush.on and not ui.app.unpainted, 'painting shows the painted cells'
+    ctx.item_click('overpaint/Paint')
     ctx.yield_(2)
     steps = len(ui.app.past)
     ctx.item_click('overpaint/Fix')

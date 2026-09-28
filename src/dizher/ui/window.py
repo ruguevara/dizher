@@ -264,9 +264,11 @@ class OverpaintEditor:
     DIM, as both, keeps a cell's colours and sets their brightness. A left click on a swatch picks the ink, a right click the paper (Multipaint's and MS
     Paint's buttons), and turns Paint mode on. In the preview a left drag paints cells with the brush, a right click
     picks up a cell's colours as the brush, the eyedropper (Window._paint). Clear gives every painted cell back to
-    Select pairs; Fix paints every cell with the colours it shows, so the whole field no longer follows Select pairs."""
+    Select pairs; Fix paints every cell with the colours it shows, so the whole field no longer follows Select pairs.
+    Hide shows the conversion without the painted cells, which stay (Pipeline.set_unpainted); Paint shows them again."""
 
-    def __init__(self) -> None:
+    def __init__(self, app) -> None:
+        self.app = app   # the Pipeline, whose unpainted view Hide switches
         self.on, self.ink, self.paper = False, 15, TRANSPARENT   # bright white on the Spectrum, light grey on the C64
         self._fixed = (None, None, ())   # (overrides, selection, their fix): kept, as a frame asks for it again
 
@@ -277,11 +279,24 @@ class OverpaintEditor:
             self._fixed = (overrides, selection, fix)
         return self._fixed[2]
 
+    def paint(self, on: bool) -> None:
+        """Paint mode on or off; on shows the painted cells, Hide goes off."""
+        self.on = on
+        if on:
+            self.app.set_unpainted(False)
+
     def draw(self, params, selection, on_change, id: str) -> None:
         imgui.push_id(id)
         if widgets.toggle_button('Paint', self.on):
-            self.on = not self.on
+            self.paint(not self.on)
         imgui.set_item_tooltip('Paint cells in the preview; Esc ends')
+        imgui.same_line()
+        imgui.begin_disabled(not params.overrides and not self.app.unpainted)
+        if widgets.toggle_button('Hide', self.app.unpainted):
+            self.app.set_unpainted(not self.app.unpainted)
+            self.on = self.on and not self.app.unpainted
+        imgui.end_disabled()
+        imgui.set_item_tooltip('Show the conversion without the painted cells; they stay in the project')
         imgui.same_line()
         imgui.begin_disabled(not params.overrides)
         if imgui.small_button('Clear'):
@@ -296,8 +311,7 @@ class OverpaintEditor:
         imgui.end_disabled()
         imgui.set_item_tooltip('Paint every cell with the colours it shows: the whole field stops following Select '
                                'pairs, an Auto ink or paper and a pair the palette cannot show become the ones shown')
-        imgui.same_line()
-        imgui.text(f'{len(params.overrides)} painted')
+        imgui.text(f'{len(params.overrides)} cells painted' + (', hidden' if self.app.unpainted else ''))
         if selection is not None:
             palette = selection.palette
             def pick(i, button):   # picking a colour is picking up the brush: Paint mode goes on
@@ -307,7 +321,7 @@ class OverpaintEditor:
                     self.ink, self.paper = same_bright(palette, i, self.paper)
                 else:
                     self.paper, self.ink = same_bright(palette, i, self.ink)
-                self.on = True
+                self.paint(True)
             specials = ((TRANSPARENT, DIM), (AUTO, BRIGHT)) if has_bright(palette) else ((TRANSPARENT,), (AUTO,))
             palette_grid(palette, pick, lambda i: colour_name(i, palette) + (': a click for the ink and the paper' if i in (BRIGHT, DIM)
                                                                     else ': left click for the ink, right for the paper'),
@@ -332,7 +346,7 @@ class Window:
         self.images = {}       # immvision params per preview
         self.expanded = {}     # node id -> block open; imgui keeps no header state in its ini
         self.editors = {'levels': LevelsEditor(self._palette, palette_grid), 'halftoner': HalftoneEditor(), 'target': TargetEditor(),
-                        'overpaint': OverpaintEditor()}   # node id -> custom params editor
+                        'overpaint': OverpaintEditor(self.app)}   # node id -> custom params editor
         self.view, self.grid = 'Screen', False     # the conversion's view and the cell grid; not persisted
         self._debug = {}       # image key -> (the Converter it came from, the image)
         self._steps = 0        # history length last frame: the History list follows a new step

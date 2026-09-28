@@ -151,6 +151,34 @@ def test_host_reruns_only_downstream_of_an_edit():
     host.close()
 
 
+def test_host_unpainted_view():
+    """Hide: the stages run without the painted cells, which stay in the graph, with no undo step; both conversions
+    stay in RAM, so switching either way reruns nothing; an edit of the painted cells shows them again."""
+    from dizher.ui.app import Pipeline
+    host = Pipeline()
+    host.open(IMAGE)
+    host.set_params('halftoner', replace(host.graph['halftoner'].params, halftoner=Ordered.label))
+    host.set_params('optimise', replace(host.graph['optimise'].params, enabled=False))
+    settle(host)
+    selected = host.result('select').best_attr_indexes
+    pairs = list(host.result('select').palette.iter_idxs_pairs())
+    paint = next(p for p in pairs if p != pairs[selected[0, 0]] and p[0] != p[1])
+    host.set_params('overpaint', replace(host.graph['overpaint'].params, overrides=((0, 0, *paint),)))
+    assert settle(host) == ['overpaint', 'halftone', 'optimise']
+    painted, graph, steps = host.result('optimise'), host.graph, len(host.past)
+    host.set_unpainted(True)
+    assert settle(host) == [], 'the conversion from before the painting is still in RAM'
+    assert (host.result('overpaint').best_attr_indexes == selected).all() and host.result('optimise') is not painted
+    assert host.graph is graph and len(host.past) == steps, 'a view: the painted cells stay, no undo step'
+    host.set_unpainted(False)
+    assert settle(host) == [] and host.result('optimise') is painted, 'the painted result is still in RAM'
+    host.set_unpainted(True)
+    assert settle(host) == []
+    host.set_params('overpaint', replace(host.graph['overpaint'].params, overrides=()))
+    assert not host.unpainted, 'an edit of the painted cells shows them'
+    host.close()
+
+
 def test_host_discards_stale_completions():
     from concurrent.futures import Future
     from dizher.ui.app import Job, Pipeline
@@ -379,6 +407,7 @@ if __name__ == '__main__':
     test_overpaint()
     test_fix_overrides()
     test_host_reruns_only_downstream_of_an_edit()
+    test_host_unpainted_view()
     test_host_discards_stale_completions()
     test_project_round_trip_and_restore()
     test_selection_methods()
