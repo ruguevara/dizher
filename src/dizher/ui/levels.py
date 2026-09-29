@@ -13,6 +13,7 @@ channel's end points, grey its gamma (Levels) or adds a point group (Curves), li
 delete button. The swatch before an eyedropper picks its target from the mode's palette, or Auto: the palette's black,
 grey (the grey nearest mid lightness) or white, following the mode."""
 import math
+from contextlib import contextmanager
 from dataclasses import replace
 
 import numpy as np
@@ -29,6 +30,7 @@ STRIP_HEIGHT = 0.7    # em, the gradient under the histogram
 HANDLE = 0.45         # em, half the width of a handle triangle, and of a curve point
 NUMBER_WIDTH = 3.5    # em
 TIP_WIDTH = 22.0      # em, a warning's tooltip wraps there
+SCALE = 0.85          # the eyedroppers' rows: font, paddings and spacings, so swatches and buttons too
 EYEDROPPER = icons_fontawesome_6.ICON_FA_EYE_DROPPER
 WARNING = icons_fontawesome_6.ICON_FA_TRIANGLE_EXCLAMATION
 ARROW = '\u2192'
@@ -59,12 +61,44 @@ def composite(params) -> tuple:
     return tuple(getattr(params, n) for n in LEVELS)
 
 
-def swatch(id: str, rgb, tip: str = '', size: float = 1.0) -> bool:
+_full = []   # the font size outside smaller(), for tooltips inside it
+
+
+@contextmanager
+def smaller():
+    """Items at SCALE: the font and the paddings and spacings, so frame-high swatches and buttons shrink along."""
+    st = imgui.get_style()
+    _full.append(em_size(1.0))
+    imgui.push_font(None, em_size(SCALE))
+    for var, v in ((imgui.StyleVar_.frame_padding, st.frame_padding), (imgui.StyleVar_.item_spacing, st.item_spacing),
+                   (imgui.StyleVar_.item_inner_spacing, st.item_inner_spacing)):
+        imgui.push_style_var(var, imgui.ImVec2(v.x * SCALE, v.y * SCALE))
+    try:
+        yield
+    finally:
+        imgui.pop_style_var(3)
+        imgui.pop_font()
+        _full.pop()
+
+
+def tip(*lines: str) -> None:
+    """The last item's tooltip, at full size inside smaller(), wrapping at TIP_WIDTH."""
+    if imgui.begin_item_tooltip():
+        imgui.push_font(None, _full[-1] if _full else em_size(1.0))
+        imgui.push_text_wrap_pos(em_size(TIP_WIDTH))
+        for line in lines:
+            imgui.text(line)
+        imgui.pop_text_wrap_pos()
+        imgui.pop_font()
+        imgui.end_tooltip()
+
+
+def swatch(id: str, rgb, tip_: str = '', size: float = 1.0) -> bool:
     side = imgui.get_frame_height() * size
     clicked = imgui.color_button(id, imgui.ImVec4(*map(float, np.clip(rgb, 0, 1)), 1.0),
                                  imgui.ColorEditFlags_.no_tooltip.value, imgui.ImVec2(side, side))
-    if tip:
-        imgui.set_item_tooltip(tip)
+    if tip_:
+        tip(tip_)
     return clicked
 
 
@@ -159,7 +193,8 @@ class LevelsEditor:
         else:
             self._curves(params, picture, on_change, width)
         self._eyedroppers(params, on_change)
-        self._results(params, on_change)
+        with smaller():
+            self._results(params, on_change)
         imgui.pop_id()
 
     def _mode(self, params, on_change) -> None:
@@ -396,26 +431,28 @@ class LevelsEditor:
         if self.palette is None:
             return
         palette = self.palette()
-        inner, x0, avail = imgui.get_style().item_inner_spacing.x, imgui.get_cursor_pos_x(), imgui.get_content_region_avail().x
-        group = 2 * imgui.get_frame_height() + inner
-        spread = 3 * group + 2 * imgui.get_style().item_spacing.x <= avail   # black left, grey centred, white right
+        with smaller():
+            inner, x0, avail = imgui.get_style().item_inner_spacing.x, imgui.get_cursor_pos_x(), imgui.get_content_region_avail().x
+            group = 2 * imgui.get_frame_height() + inner
+            spread = 3 * group + 2 * imgui.get_style().item_spacing.x <= avail   # black left, grey centred, white right
         for k, role in enumerate(tone.ROLES):
-            if k and spread:
-                imgui.same_line()
-                imgui.set_cursor_pos_x(x0 + (avail - group) * k / 2)
-            elif k and widgets.fits_on_line(group):
-                imgui.same_line()
             i, rgb, auto = self.target(params, role)
-            if swatch(f'##target {role}', rgb, f"Target: {'Auto, ' if auto else ''}{palette.name(i)} {rgb255(rgb)}; "
-                                                 f"a click picks another"):
-                imgui.open_popup(f'target {role}')
-            imgui.same_line(0, inner)
-            if square(pick_label(role), self.armed == role):
-                self.armed = None if self.armed == role else role
-            imgui.set_item_tooltip(f'{PICKERS[role]}, to {palette.name(i)}: click the picture where it should be that colour; '
-                                   + {'black': 'sets the black point', 'white': 'sets the white point',
-                                      'grey': 'sets the gamma' if params.mode == 'Levels' else 'adds a point per channel'}[role]
-                                   + '. Esc ends')
+            with smaller():
+                if k and spread:
+                    imgui.same_line()
+                    imgui.set_cursor_pos_x(x0 + (avail - group) * k / 2)
+                elif k and widgets.fits_on_line(group):
+                    imgui.same_line()
+                if swatch(f'##target {role}', rgb, f"Target: {'Auto, ' if auto else ''}{palette.name(i)} {rgb255(rgb)}; "
+                                                     f"a click picks another"):
+                    imgui.open_popup(f'target {role}')
+                imgui.same_line(0, inner)
+                if square(pick_label(role), self.armed == role):
+                    self.armed = None if self.armed == role else role
+            tip(f'{PICKERS[role]}, to {palette.name(i)}: click the picture where it should be that colour; '
+                + {'black': 'sets the black point', 'white': 'sets the white point',
+                   'grey': 'sets the gamma' if params.mode == 'Levels' else 'adds a point per channel'}[role]
+                + '. Esc ends')
             if imgui.begin_popup(f'target {role}'):
                 auto_i = tone.palette_roles(palette.as_float())[k]
                 if imgui.selectable(f'Auto {role}: {palette.name(auto_i)}', auto)[0]:
@@ -452,7 +489,7 @@ class LevelsEditor:
                 else:
                     curves, picks = tone.curves_clear(params.curves, params.picks, role)
                     on_change(replace(params, curves=curves, picks=picks))
-            imgui.set_item_tooltip(f'Clear the {PICKERS[role].lower()}: puts back what it set')
+            tip(f'Clear the {PICKERS[role].lower()}: puts back what it set')
             imgui.same_line()
             self._landing(role, s, t, self.result(params, s), palette.name(i) if palette is not None else rgb255(t))
         if params.mode != 'Curves' or not params.picks:
@@ -477,7 +514,7 @@ class LevelsEditor:
             if square(f'{CROSS}##drop{k}'):
                 curves, picks = tone.curves_drop(params.curves, params.picks, k)
                 on_change(replace(params, curves=curves, picks=picks))
-            imgui.set_item_tooltip('Remove this grey point from the curves')
+            tip('Remove this grey point from the curves')
             imgui.same_line()
             self._landing(f'pick{k}', s, t, self.result(params, s), name, notes)
 
@@ -497,11 +534,6 @@ class LevelsEditor:
             imgui.same_line(0, inner)
             with style.text_color(Palette.warn):
                 imgui.text(WARNING)
-            if imgui.begin_item_tooltip():
-                imgui.push_text_wrap_pos(em_size(TIP_WIDTH))
-                for note in notes:
-                    imgui.text(note)
-                imgui.pop_text_wrap_pos()
-                imgui.end_tooltip()
+            tip(*notes)
         imgui.same_line(0, inner)
         swatch(f'##{id} target', t, f'Target: {name} {rgb255(t)}')
