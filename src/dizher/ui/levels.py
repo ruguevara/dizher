@@ -66,6 +66,12 @@ def rgb255(rgb) -> str:
     return '(%d, %d, %d)' % tuple(np.round(np.asarray(rgb) * 255))
 
 
+def flow(label: str, first: bool = False) -> None:
+    """Before a small button: on the same line when it fits in the block, else on the next (a narrow dock)."""
+    if not first and widgets.fits_on_line(imgui.calc_text_size(label.split('##')[0]).x + 2 * imgui.get_style().frame_padding.x):
+        imgui.same_line(0, 0)
+
+
 class LevelsEditor:
     def __init__(self, palette=None, grid=None) -> None:
         """palette(): the target mode's palette, the eyedroppers' targets; grid: window.palette_grid."""
@@ -121,7 +127,7 @@ class LevelsEditor:
         imgui.push_id(id)
         self._mode(params, on_change)
         for c, name in enumerate(CHANNELS):
-            imgui.same_line(0, 0) if c else imgui.same_line()
+            flow(name)
             if widgets.toggle_button(f'{name}##channel', self.channel == c):
                 self.channel = c
             imgui.set_item_tooltip('The composite, the channels after it' if not c else f'The {name} channel, after the composite')
@@ -137,6 +143,7 @@ class LevelsEditor:
         """Levels | Curves. To Curves the levels come along as curves, unless the curves are already edited: then it
         asks."""
         for m in ('Levels', 'Curves'):
+            flow(m, m == 'Levels')
             if widgets.toggle_button(m, params.mode == m) and params.mode != m:
                 neutral = composite(params) == tone.NEUTRAL and all(tuple(c) == tone.NEUTRAL for c in params.channels)
                 edited = params.picks or any(tuple(c) != tone.IDENTITY for c in params.curves)
@@ -150,7 +157,6 @@ class LevelsEditor:
                     on_change(replace(params, mode=m))
             imgui.set_item_tooltip('Levels per channel; its values stay when Curves is on' if m == 'Levels' else
                                    'Curves per channel; switching from Levels brings the levels along as curves')
-            imgui.same_line(0, 0)
         if self._ask:
             imgui.open_popup('curves from levels')
             self._ask = False
@@ -342,9 +348,8 @@ class LevelsEditor:
             a, b = imgui.ImVec2(X(x) - pad * 0.7, Y(y) - pad * 0.7), imgui.ImVec2(X(x) + pad * 0.7, Y(y) + pad * 0.7)
             draw.add_rect_filled(a, b, grey(1.0 if spot is not None and x == spot[0] else 0.1))
             draw.add_rect(a, b, style.u32(INK[c]))
-        with style.muted():
-            imgui.text('Input %.0f  Output %.0f' % spot if spot else
-                       'Click adds a point; drag it off or right-click to remove')
+        widgets.hint('Input %.0f  Output %.0f' % spot if spot else
+                     'Click adds a point; drag it off or right-click to remove')
 
     def _move(self, params, on_change, off: bool, mx: float, my: float) -> None:
         """The dragged point to (mx, my) between its neighbours, or removed while off the graph (back on, it returns)."""
@@ -368,15 +373,18 @@ class LevelsEditor:
         if self.palette is None:
             return
         palette = self.palette()
+        inner = imgui.get_style().item_inner_spacing.x
         for k, role in enumerate(tone.ROLES):
-            if k:
+            label = role.capitalize()
+            if k and widgets.fits_on_line(imgui.get_frame_height() + inner + imgui.calc_text_size(label).x
+                                          + 2 * imgui.get_style().frame_padding.x):
                 imgui.same_line()
             i, rgb, auto = self.target(params, role)
             if swatch(f'##target {role}', rgb, f"Target: {'Auto, ' if auto else ''}{palette.name(i)} {rgb255(rgb)}; "
                                                  f"a click picks another"):
                 imgui.open_popup(f'target {role}')
-            imgui.same_line(0, imgui.get_style().item_inner_spacing.x)
-            if widgets.toggle_button(f'{role.capitalize()}##pick', self.armed == role):
+            imgui.same_line(0, inner)
+            if widgets.toggle_button(f'{label}##pick', self.armed == role):
                 self.armed = None if self.armed == role else role
             imgui.set_item_tooltip({'black': 'Click the picture where it should be the target black: sets the black point',
                                     'grey': 'Click the picture where it should be the target colour: '
@@ -426,12 +434,12 @@ class LevelsEditor:
             gone = [n for x, n in zip(p[tone.PICK_X], 'RGB') if x < 0]
             if gone:
                 notes.append('lost ' + ''.join(gone))
-            self._landing(f'pick{k}', s, t, self.result(params, s), name, notes)
-            imgui.same_line()
             if imgui.small_button(f'x##drop{k}'):
                 curves, picks = tone.curves_drop(params.curves, params.picks, k)
                 on_change(replace(params, curves=curves, picks=picks))
             imgui.set_item_tooltip('Remove this grey point from the curves')
+            imgui.same_line()
+            self._landing(f'pick{k}', s, t, self.result(params, s), name, notes)
 
     def _landing(self, id: str, s, t, got, label: str, notes=()) -> None:
         """sample -> target swatches, the landing between them when it misses by more than 1/255."""
@@ -446,10 +454,11 @@ class LevelsEditor:
             imgui.text('/')
         imgui.same_line(0, imgui.get_style().item_inner_spacing.x)
         swatch(f'##{id} target', t, f'Target {rgb255(t)}', 0.8)
-        imgui.same_line()
         text = ', '.join((label, *notes))
+        if widgets.fits_on_line(imgui.calc_text_size(text).x):
+            imgui.same_line()
         if miss or notes:
             with style.text_color(Palette.warn):
-                imgui.text(text)
+                imgui.text_wrapped(text)
         else:
-            imgui.text(text)
+            imgui.text_wrapped(text)

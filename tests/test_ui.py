@@ -152,11 +152,13 @@ def test_eyedroppers(ctx):
     """The grey target is picked from the palette; the armed grey eyedropper takes clicks in the preview, off Paint
     mode: in Levels it sets the channels' gamma so the sample lands on the target, in Curves every click adds a point
     group, listed with a delete button; Esc disarms."""
-    from imgui_bundle.imgui.test_engine import CaptureFlags_
+    from imgui_bundle.imgui.test_engine import CaptureFlags_, TestRef
     wait(ctx, lambda: not ui.app.busy and ui.app.result('light') is not None, 'the tone input')
     editor, brush = ui.editors['levels'], ui.editors['overpaint']
     ctx.set_ref('//Tune')
-    ctx.item_click('**/##target grey')
+    # a **/ wildcard never ends on a label that is only ##id: the swatch is found beside its eyedropper
+    ctx.set_ref(TestRef(ctx.item_info('**/Grey##pick').parent_id))
+    ctx.item_click('##target grey')
     ctx.yield_(2)
     ctx.item_click('//$FOCUSED/##colour5')   # non-bright cyan
     ctx.yield_(2)
@@ -188,7 +190,8 @@ def test_eyedroppers(ctx):
         ctx.yield_(2)
     assert len(params('levels').picks) == 2, params('levels').picks
     ctx.set_ref('//Tune')
-    ctx.item_click('**/x##drop0')
+    ctx.set_ref(TestRef(ctx.item_info('**/Grey##pick').parent_id))
+    ctx.item_click('x##drop0')
     ctx.yield_(2)
     assert len(params('levels').picks) == 1
     ctx.key_press(imgui.Key.escape)
