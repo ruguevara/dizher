@@ -8,7 +8,7 @@ from imgui_bundle import imgui
 
 from dizher import tone
 from dizher.converter.dither import Ordered
-from dizher.ui.levels import pick_label
+from dizher.ui.levels import CROSS, pick_label
 from dizher.ui.window import REDO, UNDO, Window
 
 IMAGE = Path(__file__).parent / 'images' / 'goldhill-256.png'
@@ -182,6 +182,15 @@ def test_eyedroppers(ctx):
     assert p.channels != type(p)().channels and abs(got[1:] - cyan[1:]).max() <= 1 / 255, (p.channels, got, cyan)
     assert not params('overpaint').overrides, 'the click painted'
     ctx.set_ref('//Tune')
+    ctx.set_ref(TestRef(ctx.item_info('**/' + pick_label('grey')).parent_id))
+    ctx.item_click(f'{CROSS}##clear grey')   # puts the gammas back; the next click sets them again
+    ctx.yield_(2)
+    assert params('levels').channels == type(p)().channels and ('Levels', 'grey') not in editor.last
+    ctx.mouse_move_to_pos(preview_point(ctx, 60, 60))
+    ctx.mouse_click(0)
+    ctx.yield_(2)
+    assert params('levels') == p
+    ctx.set_ref('//Tune')
     ctx.item_click('**/Curves')   # the curves are as new: the levels come along without asking
     ctx.yield_(2)
     assert params('levels').mode == 'Curves' and params('levels').curves[1] != tone.IDENTITY and editor.armed == 'grey'
@@ -192,7 +201,7 @@ def test_eyedroppers(ctx):
     assert len(params('levels').picks) == 2, params('levels').picks
     ctx.set_ref('//Tune')
     ctx.set_ref(TestRef(ctx.item_info('**/' + pick_label('grey')).parent_id))
-    ctx.item_click('x##drop0')
+    ctx.item_click(f'{CROSS}##drop0')
     ctx.yield_(2)
     assert len(params('levels').picks) == 1
     ctx.key_press(imgui.Key.escape)

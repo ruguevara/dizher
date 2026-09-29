@@ -177,6 +177,13 @@ def levels_pick(composite, channels, role: str, sample, target) -> tuple:
     return tuple(out)
 
 
+def levels_clear(channels, role: str) -> tuple:
+    """The channels' levels without an eyedropper's setting: black and white put each channel's input and output end
+    back, grey its gamma."""
+    k = {'black': (0, 3), 'white': (1, 4), 'grey': (2,)}[role]
+    return tuple(tuple(float(NEUTRAL[i]) if i in k else float(v) for i, v in enumerate(c)) for c in channels)
+
+
 # A grey point group of Curves, one per grey eyedropper click: its (sample r, g, b; target r, g, b) in 0..255, the
 # target's palette index, the input of its point in the R, G and B curves (-1 once that point is gone) and REPLACED
 # bits: which channels' points it put in place of another's.
@@ -249,6 +256,23 @@ def curves_drop(curves, picks, k: int) -> tuple:
         p = p[p[:, 0] != x]
         new[c] = flat(p) if len(p) >= 2 else IDENTITY
     return tuple(new), picks[:k] + picks[k + 1:]
+
+
+def curves_clear(curves, picks, role: str) -> tuple:
+    """(curves, picks) without the black or white eyedropper's ends: in each channel the lowest (highest) point no
+    grey point group owns goes, and the end is back at 0, 0 (255, 255)."""
+    end = (0.0, 0.0) if role == 'black' else (255.0, 255.0)
+    new = [curves[0]]
+    for c in (1, 2, 3):
+        p = points(curves[c])
+        owned = {pick[PICK_X][c - 1] for pick in picks}
+        free = [j for j in range(len(p)) if p[j, 0] not in owned]
+        if free:
+            p = np.delete(p, free[0] if role == 'black' else free[-1], axis=0)
+        if end[0] not in p[:, 0]:
+            p = np.vstack([p, [end]])
+        new.append(flat(p[p[:, 0].argsort()]))
+    return tuple(new), picks
 
 
 def curve_edit(curves, picks, c: int, old_x: float, new) -> tuple:

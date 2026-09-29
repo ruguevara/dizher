@@ -164,6 +164,28 @@ def test_curves_eyedroppers(palette):
     assert curves[0] == (10.0, 0.0, 128.0, 140.0, 255.0, 255.0)   # the composite is left alone
 
 
+def test_clear_puts_an_eyedropper_back():
+    """Levels: black and white clear each channel's ends, grey its gamma, the rest stays. Curves: black and white
+    put the ends back at 0, 0 and 255, 255; a grey point below the black point stays, the black end goes."""
+    black, grey, white = tone.palette_roles(ZX)
+    channels = (tone.NEUTRAL,) * 3
+    for role, s in (('black', (0.1, 0.12, 0.08)), ('grey', (0.45, 0.5, 0.4)), ('white', (0.9, 0.85, 0.95))):
+        channels = tone.levels_pick(tone.NEUTRAL, channels, role, s, ZX[5])
+    for role, k in (('black', (0, 3)), ('grey', (2,)), ('white', (1, 4))):
+        cleared = tone.levels_clear(channels, role)
+        assert all(c[i] == tone.NEUTRAL[i] for c in cleared for i in k)
+        assert all(c[i] == d[i] for c, d in zip(cleared, channels) for i in set(range(5)) - set(k)), role
+    curves, picks = (tone.IDENTITY,) * 4, ()
+    curves, picks = tone.curves_end(curves, picks, 'black', (0.2, 0.2, 0.2), ZX[black])
+    curves, picks = tone.curves_end(curves, picks, 'white', (0.8, 0.8, 0.8), ZX[white])
+    assert tone.curves_clear(*tone.curves_clear(curves, picks, 'black'), 'white') == ((tone.IDENTITY,) * 4, ())
+    curves, picks = tone.curves_grey(curves, picks, (0.1, 0.1, 0.1), ZX[5], 5)   # below the black point
+    cleared, kept = tone.curves_clear(curves, picks, 'black')
+    for c, d in zip(cleared[1:], curves[1:]):   # (25.5, cyan) (51, black) (204, white) -> (0, 0) (25.5, cyan) (204, white)
+        assert tone.points(c).tolist() == [[0, 0]] + tone.points(d)[[0, 2]].tolist(), (c, d)
+    assert kept == picks
+
+
 def test_curves_grey_conflict_replace_and_drop():
     """A point whose samples and targets are ordered differently in a channel is added and marked; one within MERGE
     of another point's input replaces it there and says so; deleting a group takes its points away."""

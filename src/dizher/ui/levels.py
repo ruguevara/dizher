@@ -33,6 +33,7 @@ TIP_WIDTH = 22.0      # em, a warning's tooltip wraps there
 EYEDROPPER = icons_fontawesome_6.ICON_FA_EYE_DROPPER
 WARNING = icons_fontawesome_6.ICON_FA_TRIANGLE_EXCLAMATION
 ARROW = '\u2192'
+CROSS = '\u2715'
 MIN_GAP = tone.MIN_GAP
 OFF = 1.5             # em a dragged curve point goes beyond the graph to be removed
 CHANNELS = ('RGB', 'R', 'G', 'B')
@@ -387,10 +388,14 @@ class LevelsEditor:
         if self.palette is None:
             return
         palette = self.palette()
-        inner = imgui.get_style().item_inner_spacing.x
+        inner, x0, avail = imgui.get_style().item_inner_spacing.x, imgui.get_cursor_pos_x(), imgui.get_content_region_avail().x
+        group = imgui.get_frame_height() * SWATCH + inner + imgui.calc_text_size(EYEDROPPER).x + 2 * imgui.get_style().frame_padding.x
+        spread = 3 * group + 2 * imgui.get_style().item_spacing.x <= avail   # black left, grey centred, white right
         for k, role in enumerate(tone.ROLES):
-            if k and widgets.fits_on_line(imgui.get_frame_height() * SWATCH + inner + imgui.calc_text_size(EYEDROPPER).x
-                                          + 2 * imgui.get_style().frame_padding.x):
+            if k and spread:
+                imgui.same_line()
+                imgui.set_cursor_pos_x(x0 + (avail - group) * k / 2)
+            elif k and widgets.fits_on_line(group):
                 imgui.same_line()
             i, rgb, auto = self.target(params, role)
             if swatch(f'##target {role}', rgb, f"Target: {'Auto, ' if auto else ''}{palette.name(i)} {rgb255(rgb)}; "
@@ -431,6 +436,15 @@ class LevelsEditor:
                 if (params.mode, role) in self.last and not (params.mode == 'Curves' and role == 'grey')]
         for role, s in rows:
             i, t, _ = self.target(params, role)
+            if imgui.small_button(f'{CROSS}##clear {role}'):
+                del self.last[params.mode, role]
+                if params.mode == 'Levels':
+                    on_change(replace(params, channels=tone.levels_clear(params.channels, role)))
+                else:
+                    curves, picks = tone.curves_clear(params.curves, params.picks, role)
+                    on_change(replace(params, curves=curves, picks=picks))
+            imgui.set_item_tooltip(f'Clear the {PICKERS[role].lower()}: puts back what it set')
+            imgui.same_line()
             self._landing(role, s, t, self.result(params, s), palette.name(i) if palette is not None else rgb255(t))
         if params.mode != 'Curves' or not params.picks:
             return
@@ -450,7 +464,7 @@ class LevelsEditor:
             gone = sum(1 << b for b, x in enumerate(p[tone.PICK_X]) if x < 0)
             if gone:
                 notes.append(f'Lost in {rgb(gone)}: a later point took its place in that curve.')
-            if imgui.small_button(f'x##drop{k}'):
+            if imgui.small_button(f'{CROSS}##drop{k}'):
                 curves, picks = tone.curves_drop(params.curves, params.picks, k)
                 on_change(replace(params, curves=curves, picks=picks))
             imgui.set_item_tooltip('Remove this grey point from the curves')
