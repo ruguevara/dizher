@@ -28,7 +28,9 @@ HIST_HEIGHT = 5.0     # em
 STRIP_HEIGHT = 0.7    # em, the gradient under the histogram
 HANDLE = 0.45         # em, half the width of a handle triangle, and of a curve point
 NUMBER_WIDTH = 3.5    # em
+TIP_WIDTH = 22.0      # em, a warning's tooltip wraps there
 EYEDROPPER = icons_fontawesome_6.ICON_FA_EYE_DROPPER
+WARNING = icons_fontawesome_6.ICON_FA_TRIANGLE_EXCLAMATION
 MIN_GAP = tone.MIN_GAP
 OFF = 1.5             # em a dragged curve point goes beyond the graph to be removed
 CHANNELS = ('RGB', 'R', 'G', 'B')
@@ -420,15 +422,17 @@ class LevelsEditor:
 
     def _results(self, params, on_change) -> None:
         """Levels: where the last sample of each eyedropper lands against its target. Curves: the same for black and
-        white, and the grey point groups: sample -> target, the landing when it misses, notes, a delete button."""
+        white, and the grey point groups: a delete button, sample -> target, the landing when it misses, a warning
+        sign when it misses or its points were replaced or break a curve's order, which its tooltip explains."""
+        palette = self.palette() if self.palette is not None else None
         rows = [(role, self.last[params.mode, role]) for role in tone.ROLES
                 if (params.mode, role) in self.last and not (params.mode == 'Curves' and role == 'grey')]
         for role, s in rows:
-            _, t, _ = self.target(params, role)
-            self._landing(f'{role}', s, t, self.result(params, s), role.capitalize())
+            i, t, _ = self.target(params, role)
+            self._landing(role, s, t, self.result(params, s), palette.name(i) if palette is not None else rgb255(t))
         if params.mode != 'Curves' or not params.picks:
             return
-        palette = self.palette() if self.palette is not None else None
+        rgb = lambda bits: ', '.join(n for b, n in enumerate('RGB') if bits >> b & 1)
         for k, p in enumerate(params.picks):
             s, t = np.asarray(p[:3]) / 255, np.asarray(p[3:6]) / 255
             index = int(p[6])
@@ -436,12 +440,14 @@ class LevelsEditor:
             notes = []
             conflict = tone.pick_conflicts(params.curves, p)
             if conflict:
-                notes.append('conflict in ' + ''.join(n for b, n in zip(range(3), 'RGB') if conflict >> b & 1))
+                notes.append(f'Conflict in {rgb(conflict)}: out of order with another point of that curve (one with a '
+                             'lower input has a higher output, or the reverse), so the curve turns back and inverts there.')
             if int(p[tone.PICK_REPLACED]):
-                notes.append('replaced ' + ''.join(n for b, n in zip(range(3), 'RGB') if int(p[tone.PICK_REPLACED]) >> b & 1))
-            gone = [n for x, n in zip(p[tone.PICK_X], 'RGB') if x < 0]
+                notes.append(f'Replaced in {rgb(int(p[tone.PICK_REPLACED]))}: its sample was within {tone.MERGE:.0f} '
+                             "levels of another point of that curve, so it took that point's place.")
+            gone = sum(1 << b for b, x in enumerate(p[tone.PICK_X]) if x < 0)
             if gone:
-                notes.append('lost ' + ''.join(gone))
+                notes.append(f'Lost in {rgb(gone)}: a later point took its place in that curve.')
             if imgui.small_button(f'x##drop{k}'):
                 curves, picks = tone.curves_drop(params.curves, params.picks, k)
                 on_change(replace(params, curves=curves, picks=picks))
@@ -449,24 +455,30 @@ class LevelsEditor:
             imgui.same_line()
             self._landing(f'pick{k}', s, t, self.result(params, s), name, notes)
 
-    def _landing(self, id: str, s, t, got, label: str, notes=()) -> None:
-        """sample -> target swatches, the landing between them when it misses by more than 1/255."""
+    def _landing(self, id: str, s, t, got, name: str, notes=()) -> None:
+        """sample -> target swatches, the landing between them and a warning sign when it misses by more than 1/255
+        or there are notes: the sign's tooltip says what is wrong."""
+        inner = imgui.get_style().item_inner_spacing.x
         swatch(f'##{id} sample', s, f'Sampled {rgb255(s)}', 0.8)
-        imgui.same_line(0, imgui.get_style().item_inner_spacing.x)
+        imgui.same_line(0, inner)
         imgui.text('->')
         miss = np.abs(np.asarray(got) - t).max() > 1 / 255 + 1e-6
         if miss:
-            imgui.same_line(0, imgui.get_style().item_inner_spacing.x)
+            imgui.same_line(0, inner)
             swatch(f'##{id} got', got, f'Lands on {rgb255(got)}: the target cannot be reached', 0.8)
-            imgui.same_line(0, imgui.get_style().item_inner_spacing.x)
+            imgui.same_line(0, inner)
             imgui.text('/')
-        imgui.same_line(0, imgui.get_style().item_inner_spacing.x)
-        swatch(f'##{id} target', t, f'Target {rgb255(t)}', 0.8)
-        text = ', '.join((label, *notes))
-        if widgets.fits_on_line(imgui.calc_text_size(text).x):
+        imgui.same_line(0, inner)
+        swatch(f'##{id} target', t, f'Target: {name} {rgb255(t)}', 0.8)
+        if miss:
+            notes = (f'Misses the target {name} {rgb255(t)}: lands on {rgb255(got)}, the nearest it can get.', *notes)
+        if notes:
             imgui.same_line()
-        if miss or notes:
             with style.text_color(Palette.warn):
-                imgui.text_wrapped(text)
-        else:
-            imgui.text_wrapped(text)
+                imgui.text(WARNING)
+            if imgui.begin_item_tooltip():
+                imgui.push_text_wrap_pos(em_size(TIP_WIDTH))
+                for note in notes:
+                    imgui.text(note)
+                imgui.pop_text_wrap_pos()
+                imgui.end_tooltip()
