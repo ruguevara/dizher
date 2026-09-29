@@ -98,6 +98,32 @@ def test_levels_auto(ctx):
 
 
 
+def test_edit_keeps_the_live_snapshot(ctx):
+    """An edit while the optimiser runs cancels it; till the next stage sends a snapshot the last one stays on screen,
+    not the older finished conversion."""
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the conversion to settle')
+    before = ui.result
+    ui.app.set_params('optimise', replace(params('optimise'), enabled=True))
+    running = lambda: ui.app.job is not None and ui.app.job.node_id == 'optimise' and ui.app.job.image is not None
+    wait(ctx, running, 'an optimiser snapshot')
+    ctx.yield_()
+    snapshot = ui._live()
+    assert snapshot is not None
+    ui.app.set_params('overpaint', replace(params('overpaint'), overrides=((0, 0, 1, 7),)))
+    for _ in range(3000):
+        ctx.yield_()
+        live = ui._live()
+        shown = live if live is not None else ui.result   # what _converted draws
+        assert shown is not None and shown is not before, 'the preview fell back to the older conversion'
+        if shown is not snapshot:   # the next stage's snapshot, or its finished conversion
+            break
+    else:
+        raise AssertionError('no newer conversion came')
+    reset('overpaint')
+    ui.app.set_params('optimise', replace(params('optimise'), enabled=False))
+    wait(ctx, lambda: not ui.app.busy, 'the pipeline to settle')
+
+
 def test_history_panel(ctx):
     ui.app.set_params('contrast', replace(params('contrast'), contrast=10.0))
     ui.app.set_params('contrast', replace(params('contrast'), contrast=20.0))
@@ -408,6 +434,7 @@ TESTS = [
     ('ui', 'slider_drag_moves_param', test_slider_drag_moves_param),
     ('ui', 'levels_handles_drag', test_levels_handles_drag),
     ('ui', 'levels_auto', test_levels_auto),
+    ('ui', 'edit_keeps_the_live_snapshot', test_edit_keeps_the_live_snapshot),
     ('ui', 'history_panel', test_history_panel),
     ('ui', 'autosave', test_autosave),
     ('ui', 'unsaved_dialog', test_unsaved_dialog),
