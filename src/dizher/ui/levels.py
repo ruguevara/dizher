@@ -28,7 +28,6 @@ HIST_HEIGHT = 5.0     # em
 STRIP_HEIGHT = 0.7    # em, the gradient under the histogram
 HANDLE = 0.45         # em, half the width of a handle triangle, and of a curve point
 NUMBER_WIDTH = 3.5    # em
-SWATCH = 0.8          # of the frame height: the eyedroppers' target swatches and their rows'
 TIP_WIDTH = 22.0      # em, a warning's tooltip wraps there
 EYEDROPPER = icons_fontawesome_6.ICON_FA_EYE_DROPPER
 WARNING = icons_fontawesome_6.ICON_FA_TRIANGLE_EXCLAMATION
@@ -74,6 +73,15 @@ def rgb255(rgb) -> str:
 
 
 PICKERS = {'black': 'Black point eyedropper', 'grey': 'Mid point eyedropper', 'white': 'White point eyedropper'}
+
+
+def square(label: str, active: bool = False) -> bool:
+    """An icon button the size of a swatch, level with the swatches and the rows' text; drawn pressed when active."""
+    side = imgui.ImVec2(imgui.get_frame_height(), imgui.get_frame_height())
+    if not active:
+        return imgui.button(label, side)
+    with style.selected():
+        return imgui.button(label, side)
 
 
 def pick_label(role: str) -> str:
@@ -389,7 +397,7 @@ class LevelsEditor:
             return
         palette = self.palette()
         inner, x0, avail = imgui.get_style().item_inner_spacing.x, imgui.get_cursor_pos_x(), imgui.get_content_region_avail().x
-        group = imgui.get_frame_height() * SWATCH + inner + imgui.calc_text_size(EYEDROPPER).x + 2 * imgui.get_style().frame_padding.x
+        group = 2 * imgui.get_frame_height() + inner
         spread = 3 * group + 2 * imgui.get_style().item_spacing.x <= avail   # black left, grey centred, white right
         for k, role in enumerate(tone.ROLES):
             if k and spread:
@@ -399,10 +407,10 @@ class LevelsEditor:
                 imgui.same_line()
             i, rgb, auto = self.target(params, role)
             if swatch(f'##target {role}', rgb, f"Target: {'Auto, ' if auto else ''}{palette.name(i)} {rgb255(rgb)}; "
-                                                 f"a click picks another", SWATCH):
+                                                 f"a click picks another"):
                 imgui.open_popup(f'target {role}')
             imgui.same_line(0, inner)
-            if widgets.toggle_button(pick_label(role), self.armed == role):
+            if square(pick_label(role), self.armed == role):
                 self.armed = None if self.armed == role else role
             imgui.set_item_tooltip(f'{PICKERS[role]}, to {palette.name(i)}: click the picture where it should be that colour; '
                                    + {'black': 'sets the black point', 'white': 'sets the white point',
@@ -436,7 +444,8 @@ class LevelsEditor:
                 if (params.mode, role) in self.last and not (params.mode == 'Curves' and role == 'grey')]
         for role, s in rows:
             i, t, _ = self.target(params, role)
-            if imgui.small_button(f'{CROSS}##clear {role}'):
+            imgui.align_text_to_frame_padding()
+            if square(f'{CROSS}##clear {role}'):
                 del self.last[params.mode, role]
                 if params.mode == 'Levels':
                     on_change(replace(params, channels=tone.levels_clear(params.channels, role)))
@@ -464,7 +473,8 @@ class LevelsEditor:
             gone = sum(1 << b for b, x in enumerate(p[tone.PICK_X]) if x < 0)
             if gone:
                 notes.append(f'Lost in {rgb(gone)}: a later point took its place in that curve.')
-            if imgui.small_button(f'{CROSS}##drop{k}'):
+            imgui.align_text_to_frame_padding()
+            if square(f'{CROSS}##drop{k}'):
                 curves, picks = tone.curves_drop(params.curves, params.picks, k)
                 on_change(replace(params, curves=curves, picks=picks))
             imgui.set_item_tooltip('Remove this grey point from the curves')
@@ -475,13 +485,13 @@ class LevelsEditor:
         """sample → target swatches; before the target, where it lands when that misses by more than 1/255 and a
         warning sign when it misses or there are notes: the sign's tooltip says what is wrong."""
         inner = imgui.get_style().item_inner_spacing.x
-        swatch(f'##{id} sample', s, f'Sampled {rgb255(s)}', SWATCH)
+        swatch(f'##{id} sample', s, f'Sampled {rgb255(s)}')
         imgui.same_line(0, inner)
         imgui.text(ARROW)
         miss = np.abs(np.asarray(got) - t).max() > 1 / 255 + 1e-6
         if miss:
             imgui.same_line(0, inner)
-            swatch(f'##{id} got', got, f'Lands on {rgb255(got)}: the target cannot be reached', SWATCH)
+            swatch(f'##{id} got', got, f'Lands on {rgb255(got)}: the target cannot be reached')
             notes = (f'Misses the target {name} {rgb255(t)}: lands on {rgb255(got)}, the nearest it can get.', *notes)
         if notes:
             imgui.same_line(0, inner)
@@ -494,4 +504,4 @@ class LevelsEditor:
                 imgui.pop_text_wrap_pos()
                 imgui.end_tooltip()
         imgui.same_line(0, inner)
-        swatch(f'##{id} target', t, f'Target: {name} {rgb255(t)}', SWATCH)
+        swatch(f'##{id} target', t, f'Target: {name} {rgb255(t)}')
