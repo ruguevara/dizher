@@ -99,14 +99,31 @@ def light(picture: np.ndarray,
     return tone.light(picture, exposure, temperature, tint)
 
 
+TONE_MODES = ('Levels', 'Curves')
+
+
 def levels(picture: np.ndarray,
+           mode: Annotated[str, meta(choices=TONE_MODES, help="the one applied; both keep their values")] = 'Levels',
            in_black: Annotated[int, meta(min=0, max=254)] = 0,
            in_white: Annotated[int, meta(min=1, max=255)] = 255,
            gamma: Annotated[float, meta(min=0.1, max=9.99)] = 1.0,
            out_black: Annotated[int, meta(min=0, max=255)] = 0,
-           out_white: Annotated[int, meta(min=0, max=255)] = 255) -> np.ndarray:
-    """Photoshop Levels; the UI draws it with ui/levels.py."""
-    return tone.levels(picture, in_black, in_white, gamma, out_black, out_white)
+           out_white: Annotated[int, meta(min=0, max=255)] = 255,
+           channels: Annotated[tuple[tuple[float, ...], ...],
+                               meta(help="R, G, B levels after the composite, each (in_black, in_white, gamma, "
+                                         "out_black, out_white)")] = (tuple(map(float, tone.NEUTRAL)),) * 3,
+           curves: Annotated[tuple[tuple[float, ...], ...],
+                             meta(help="RGB, R, G, B curves as flat (x, y) points in 0..255")] = (tone.IDENTITY,) * 4,
+           picks: Annotated[tuple[tuple[float, ...], ...], meta(help="the Curves grey eyedropper's point groups, "
+                                                                     "see tone.PICK_X")] = (),
+           targets: Annotated[tuple[int, ...], meta(help="the black, grey and white eyedroppers' palette indexes, "
+                                                        "-1 for the mode's own")] = (-1, -1, -1)) -> np.ndarray:
+    """Photoshop Levels or Curves, per channel, with palette-targeted eyedroppers: the composite (RGB) first, then
+    each channel's on its result. The in_black..out_white fields are the composite levels, as before channels came.
+    The UI draws it with ui/levels.py."""
+    if mode == 'Curves':
+        return tone.curves(picture, curves)
+    return tone.all_levels(picture, (in_black, in_white, gamma, out_black, out_white), channels)
 
 
 def local_tone(picture: np.ndarray,
@@ -276,7 +293,7 @@ TUNE = (   # (node id, block label, op, inputs): the left column's blocks, top t
     ('source', 'Source', 'mokit.ops:load_media', ()),
     ('framing', 'Framing', 'dizher.ops:framing', ('source', 'target')),
     ('light', 'Light', 'dizher.ops:light', ('framing',)),
-    ('levels', 'Levels', 'dizher.ops:levels', ('light',)),
+    ('levels', 'Levels & Curves', 'dizher.ops:levels', ('light',)),
     ('local', 'Local tone', 'dizher.ops:local_tone', ('levels',)),
     ('contrast', 'Contrast', 'dizher.ops:contrast', ('local',)),
     ('color', 'Color', 'dizher.ops:color', ('contrast',)),
