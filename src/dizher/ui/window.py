@@ -705,7 +705,7 @@ class Window:
             draw.add_rect(p, q, black)
 
     def _eyedrop(self, picture, at, lo, zoom: int) -> None:
-        """An armed eyedropper over a preview whose top-left is lo: the cursor is a cross over the 5x5 pixels it
+        """An armed eyedropper over a preview whose top-left is lo: the cursor is a cross over the 3x3 pixels it
         averages, with the sample and the target beside it; a left click sends pixel at to the tone node."""
         editor, (y, x) = self.editors['levels'], at
         params = self.app.graph['levels'].params
@@ -713,8 +713,8 @@ class Window:
             editor.pick(params, picture, y, x, lambda p: self.app.set_params('levels', p))
         imgui.set_mouse_cursor(imgui.MouseCursor_.none)
         draw, black, white = imgui.get_foreground_draw_list(), imgui.IM_COL32(0, 0, 0, 255), imgui.IM_COL32(255, 255, 255, 255)
-        a = imgui.ImVec2(lo.x + (x - 2) * zoom, lo.y + (y - 2) * zoom)
-        b = imgui.ImVec2(a.x + 5 * zoom, a.y + 5 * zoom)
+        a = imgui.ImVec2(lo.x + (x - tone.SAMPLE) * zoom, lo.y + (y - tone.SAMPLE) * zoom)
+        b = imgui.ImVec2(a.x + (2 * tone.SAMPLE + 1) * zoom, a.y + (2 * tone.SAMPLE + 1) * zoom)
         draw.add_rect(a, b, black, thickness=3)
         draw.add_rect(a, b, white)
         m, arm = imgui.get_mouse_pos(), imgui.get_text_line_height() * 0.6

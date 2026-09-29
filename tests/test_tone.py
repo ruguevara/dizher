@@ -195,5 +195,5 @@ def test_curve_edit_carries_the_group():
 def test_sample_averages_and_clips():
     rgb = np.zeros((10, 10, 3), np.float32)
     rgb[:5, :5] = 1
-    assert np.allclose(tone.sample(rgb, 2, 2), 1) and np.allclose(tone.sample(rgb, 0, 0), 1)   # 3x3 at the corner
-    assert np.allclose(tone.sample(rgb, 4, 4), 9 / 25)
+    assert np.allclose(tone.sample(rgb, 2, 2), 1) and np.allclose(tone.sample(rgb, 0, 0), 1)   # 2x2 at the corner
+    assert np.allclose(tone.sample(rgb, 4, 4), 4 / 9)   # 3x3, 2x2 of it lit

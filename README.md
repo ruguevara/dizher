@@ -140,7 +140,7 @@ beyond the end points. Switching to Curves brings the levels along as curves (it
 the curves have been edited); switching back finds the levels as they were.
 
 Three eyedroppers, black, grey and white, pull a sampled colour onto a colour of the target palette:
-arm one, click the preview, and the node's input there (the mean of 5x5 pixels) maps onto its target.
+arm one, click the preview, and the node's input there (the mean of 3x3 pixels) maps onto its target.
 The targets default to the palette's black, white and the grey nearest mid lightness (the
 Spectrum's non-bright white, the C64's middle grey) and follow the mode; the swatch before each
 eyedropper picks any palette colour instead, such as non-bright cyan for a background. Black and

@@ -132,7 +132,10 @@ def levels_to_curves(composite, channels) -> tuple:
     return tuple(levels_to_curve(*c) for c in (composite, *channels))
 
 
-def sample(rgb: np.ndarray, y: int, x: int, radius: int = 2) -> np.ndarray:
+SAMPLE = 1   # px around the eyedropper's pixel it averages: 3x3
+
+
+def sample(rgb: np.ndarray, y: int, x: int, radius: int = SAMPLE) -> np.ndarray:
     """The mean colour of the (2 radius + 1)² pixels around (y, x), cut at the edges."""
     h, w = rgb.shape[:2]
     return rgb[max(y - radius, 0):min(y + radius + 1, h), max(x - radius, 0):min(x + radius + 1, w)].reshape(-1, 3).mean(0)
