@@ -69,7 +69,7 @@ Two optimisers in a row, both minimising the same eye-model error, each with its
 The GUI block that owns each control is in brackets.
 
 ```
- source image ──► Tune (framing, light, levels, contrast, colour) ──► sRGB 256x192
+ source image ──► Tune (framing, light, levels/curves, contrast, colour) ──► sRGB 256x192
                                                                         │
                        gamma 2.2 ──► linear RGB ──► opponent O1 O2 O3 (luma, red-green, blue-yellow)
                                                     scaled by sqrt(weights)         [Metric: chroma]
@@ -129,6 +129,26 @@ The views in the Preview tab show what each stage sees: Projected is the stage 2
 Unoptimised is the halftone the optimiser started from, Eye shows the target and the result
 through h, Error is their difference, Energy is the stage 1 loss per block (own, seam,
 coherence), and Seams shows where edges switch the coherence prior off.
+
+### Levels and Curves
+
+The Levels & Curves block of Tune is one node with two modes; only the chosen one is applied and
+both keep their values. Each has a channel selector as in Photoshop: RGB, the composite, is applied
+first, then R, G and B each on its result. Levels are black, grey (gamma) and white input points and
+an output range per channel; Curves are monotone cubic curves (no overshoot) through the points, flat
+beyond the end points. Switching to Curves brings the levels along as curves (it asks first when
+the curves have been edited); switching back finds the levels as they were.
+
+Three eyedroppers, black, grey and white, pull a sampled colour onto a colour of the target palette:
+arm one, click the preview, and the node's input there (the mean of 5x5 pixels) maps onto its target.
+The targets default to the palette's black, white and the grey nearest mid lightness (the
+Spectrum's non-bright white, the C64's middle grey) and follow the mode; the swatch before each
+eyedropper picks any palette colour instead, such as non-bright cyan for a background. Black and
+white set each channel's end points, grey sets each channel's gamma in Levels (a target channel a
+gamma cannot reach is shown next to the target) and in Curves adds a point per channel with every
+click, so several colours can be pulled to the palette. The points are listed with their sample and
+target; a point whose order in some channel disagrees with the others' is marked as a conflict, and
+one within 4 levels of another's input replaces it in that channel.
 
 ### Eye model
 
@@ -232,6 +252,8 @@ Done:
   Auto and a histogram, local tone (local contrast, shadows, highlights and clarity on an
   edge-preserving base layer), contrast, vibrance and saturation, texture and sharpening (unsharp
   mask at the screen's size)
+* [x] Levels per channel and Curves (R, G, B and the composite, as in Photoshop), with black, grey
+  and white eyedroppers that map a sampled colour onto a chosen palette colour
 * [x] Palette subsets: bright only, non-bright only, grayscale, black and white, or a custom set
   with any colour toggled on or off
 * [x] Python installation package
@@ -263,8 +285,6 @@ Critical:
 * [ ] Palette snapping prototype
 * [ ] A panel of starred or named snapshots to compare and choose from
 * [ ] Global presets of selected stages and params
-* [ ] Curves (a tone curve editor; subsumes Contrast)
-* [ ] Levels per channel (R, G, B), like Photoshop's channel menu
 
 ### Future versions
 

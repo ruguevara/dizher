@@ -98,6 +98,106 @@ def test_levels_auto(ctx):
 
 
 
+def test_levels_channel(ctx):
+    """R shows the red channel: its black handle moves the red levels only, the composite stays."""
+    editor = ui.editors['levels']
+    ctx.set_ref('//Tune')
+    ctx.item_click('**/R##channel')
+    ctx.yield_(2)
+    assert editor.channel == 1
+    r = rect(ctx, '//Tune', '**/##in')
+    pad, y = (r.max.y - r.min.y) / 4, r.max.y - 3
+    drag(ctx, imgui.ImVec2(r.min.x + pad, y), imgui.ImVec2(r.min.x + pad + 50, y))
+    p = params('levels')
+    assert p.channels[0][0] > 0 and p.channels[1:] == type(p)().channels[1:] and p.in_black == 0, p
+    ctx.item_click('**/RGB##channel')
+    ctx.yield_(2)
+    assert editor.channel == 0
+
+
+def test_tone_mode_switch(ctx):
+    """Curves brings the levels along as curves; a click on the graph adds a point; Levels keeps its own values."""
+    levels = params('levels')
+    ctx.set_ref('//Tune')
+    ctx.item_click('**/Curves')
+    ctx.yield_(2)
+    p = params('levels')
+    assert p.mode == 'Curves' and p.curves == tone.levels_to_curves(
+        (p.in_black, p.in_white, p.gamma, p.out_black, p.out_white), p.channels), p
+    assert p.curves[1] != tone.IDENTITY, 'the red levels became a red curve'
+    ctx.item_click('**/G##channel')
+    r = rect(ctx, '//Tune', '**/##curve')
+    ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x + (r.max.x - r.min.x) * 0.3, r.min.y + (r.max.y - r.min.y) * 0.3))
+    ctx.mouse_click(0)
+    ctx.yield_(2)
+    assert len(tone.points(params('levels').curves[2])) == 3, params('levels').curves
+    ctx.item_click('**/Levels')
+    ctx.yield_(2)
+    assert params('levels') == replace(levels, curves=params('levels').curves), 'Levels keeps its own values'
+    ctx.item_click('**/Curves')   # the curves are edited now: it asks, and Keep the curves keeps them
+    ctx.yield_(2)
+    ctx.item_click('//$FOCUSED/Keep the curves')
+    ctx.yield_(2)
+    assert params('levels').mode == 'Curves' and len(tone.points(params('levels').curves[2])) == 3
+    ctx.item_click('**/RGB##channel')
+    reset('levels')
+
+
+def preview_point(ctx, dx, dy):
+    r = rect(ctx, '//Preview', '**/Screen')   # the tuned image is under the view bar
+    return imgui.ImVec2(r.min.x + dx, r.max.y + dy)
+
+
+def test_eyedroppers(ctx):
+    """The grey target is picked from the palette; the armed grey eyedropper takes clicks in the preview, off Paint
+    mode: in Levels it sets the channels' gamma so the sample lands on the target, in Curves every click adds a point
+    group, listed with a delete button; Esc disarms."""
+    from imgui_bundle.imgui.test_engine import CaptureFlags_
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('light') is not None, 'the tone input')
+    editor, brush = ui.editors['levels'], ui.editors['overpaint']
+    ctx.set_ref('//Tune')
+    ctx.item_click('**/##target grey')
+    ctx.yield_(2)
+    ctx.item_click('//$FOCUSED/##colour5')   # non-bright cyan
+    ctx.yield_(2)
+    assert params('levels').targets == (-1, 5, -1), params('levels')
+    brush.on = True
+    ctx.yield_(2)
+    ctx.set_ref('//Tune')
+    ctx.item_click('**/Grey##pick')
+    ctx.yield_(2)
+    assert editor.armed == 'grey' and not brush.on, 'arming ends Paint mode'
+    ctx.mouse_move_to_pos(preview_point(ctx, 60, 60))
+    ctx.yield_(2)
+    ctx.capture_set_filename('/tmp/dizher_eyedropper.png')
+    ctx.capture_screenshot(CaptureFlags_.none.value)
+    ctx.mouse_click(0)
+    ctx.yield_(2)
+    p = params('levels')
+    s = editor.last['Levels', 'grey']
+    got, cyan = editor.result(p, s), ui._palette().as_float()[5]
+    assert p.channels != type(p)().channels and abs(got[1:] - cyan[1:]).max() <= 1 / 255, (p.channels, got, cyan)
+    assert not params('overpaint').overrides, 'the click painted'
+    ctx.set_ref('//Tune')
+    ctx.item_click('**/Curves')   # the curves are as new: the levels come along without asking
+    ctx.yield_(2)
+    assert params('levels').mode == 'Curves' and params('levels').curves[1] != tone.IDENTITY and editor.armed == 'grey'
+    for dx in (40, 120):
+        ctx.mouse_move_to_pos(preview_point(ctx, dx, 60))
+        ctx.mouse_click(0)
+        ctx.yield_(2)
+    assert len(params('levels').picks) == 2, params('levels').picks
+    ctx.set_ref('//Tune')
+    ctx.item_click('**/x##drop0')
+    ctx.yield_(2)
+    assert len(params('levels').picks) == 1
+    ctx.key_press(imgui.Key.escape)
+    ctx.yield_(2)
+    assert editor.armed is None
+    ctx.capture_set_filename('/tmp/dizher_curves.png')
+    ctx.capture_screenshot(CaptureFlags_.hide_mouse_cursor.value)
+    ctx.mouse_move_to_pos(preview_point(ctx, -50, -500))
+    reset('levels')
 def test_edit_keeps_the_live_snapshot(ctx):
     """An edit while the optimiser runs cancels it; till the next stage sends a snapshot the last one stays on screen,
     not the older finished conversion."""
@@ -434,6 +534,9 @@ TESTS = [
     ('ui', 'slider_drag_moves_param', test_slider_drag_moves_param),
     ('ui', 'levels_handles_drag', test_levels_handles_drag),
     ('ui', 'levels_auto', test_levels_auto),
+    ('ui', 'levels_channel', test_levels_channel),
+    ('ui', 'tone_mode_switch', test_tone_mode_switch),
+    ('ui', 'eyedroppers', test_eyedroppers),
     ('ui', 'edit_keeps_the_live_snapshot', test_edit_keeps_the_live_snapshot),
     ('ui', 'history_panel', test_history_panel),
     ('ui', 'autosave', test_autosave),

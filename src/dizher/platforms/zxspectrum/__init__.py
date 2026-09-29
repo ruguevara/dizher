@@ -15,6 +15,8 @@ class ZXPalette(Palette):
         'Grayscale': frozenset({0, 7, 8, 15}),  # the blacks, gray (not-bright white), white
         'Mono': frozenset({8, 15}),  # black and bright white
     }
+    NAMES = tuple(f'{c} ({b})' for b in ('non-bright', 'bright')
+                  for c in ('black', 'blue', 'red', 'magenta', 'green', 'cyan', 'yellow', 'white'))
 
     def __init__(self, not_bright_level=205, bright_level=255):
         # index bits: 0 blue, 1 red, 2 green; 3 bright
