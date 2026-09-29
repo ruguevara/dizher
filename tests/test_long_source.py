@@ -12,7 +12,7 @@ import pytest
 from mokit.paths import exists, os_path
 from dizher.converter.dither import Ordered
 
-IMAGE = Path(__file__).parent / 'images' / 'goldhill-256.png'
+IMAGE = Path(__file__).parent / 'images' / 'goldhill.png'
 
 
 def long_paths(tmp: Path):

@@ -11,7 +11,7 @@ from dizher.converter.dither import Ordered
 from dizher.ui.levels import CROSS, pick_label
 from dizher.ui.window import REDO, UNDO, Window
 
-IMAGE = Path(__file__).parent / 'images' / 'goldhill-256.png'
+IMAGE = Path(__file__).parent / 'images' / 'goldhill.png'
 ui = Window(IMAGE)
 ui.app.set_params('halftoner', replace(ui.app.graph['halftoner'].params, halftoner=Ordered.label))  # fast
 ui.app.set_params('optimise', replace(ui.app.graph['optimise'].params, enabled=False))
@@ -251,9 +251,9 @@ def test_history_panel(ctx):
 def test_autosave(ctx):
     import json, tempfile
     folder = ui.project
-    assert folder == IMAGE.with_name('goldhill-256') and not folder.exists() and not ui.autosave   # tests never write it
+    assert folder == IMAGE.with_name('goldhill') and not folder.exists() and not ui.autosave   # tests never write it
     with tempfile.TemporaryDirectory() as tmp:
-        ui.project, ui.autosave = Path(tmp) / 'goldhill-256', True
+        ui.project, ui.autosave = Path(tmp) / 'goldhill', True
         ui.app.set_params('contrast', replace(params('contrast'), contrast=15.0))
         ctx.yield_(2)
         stored = json.loads((ui.project / 'project.json').read_text())['nodes']['contrast']['params']
@@ -284,7 +284,7 @@ def test_recent_images(ctx):
     for image in images * 2:                           # more than fit, each twice
         ui._open_image(image)
     assert ui.recent == [p.resolve() for p in images[::-1]][:20]   # the latest first, no repeats
-    ctx.menu_click('//##MainMenuBar/File/Open recent/goldhill-256.png##' + str(ui.recent.index(IMAGE.resolve())))
+    ctx.menu_click('//##MainMenuBar/File/Open recent/goldhill.png##' + str(ui.recent.index(IMAGE.resolve())))
     ctx.yield_(2)
     assert ui._source() == IMAGE.resolve() and ui.recent[0] == IMAGE.resolve()
     ui.app.set_params('halftoner', replace(params('halftoner'), halftoner=Ordered.label))
