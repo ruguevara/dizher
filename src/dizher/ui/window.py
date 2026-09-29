@@ -34,7 +34,7 @@ from mokit.ui.params import params_editor
 from mokit.graph import GraphError, Op
 from mokit.ui.style import Palette
 
-from .. import ops, version
+from .. import ops, tone, version
 from ..converter.converter import os_path
 from .app import Pipeline, project_folder
 from .levels import LevelsEditor
@@ -69,21 +69,25 @@ TRANSPARENT, AUTO, BRIGHT, DIM = -1, -2, -3, -4
 SPECIAL = {TRANSPARENT: (0.0, 0.0, 0.0, 0.0), AUTO: (0.3, 0.3, 0.3, 1.0), BRIGHT: (0.3, 0.3, 0.3, 1.0),
            DIM: (0.3, 0.3, 0.3, 1.0)}   # alpha 0 shows imgui's checkerboard
 LABEL = {AUTO: 'A', BRIGHT: 'B1', DIM: 'B0'}   # on a special's swatch while no mark takes its place
+COUNTED = {'overrides': 'cells', 'picks': 'grey points'}   # params the history counts
 UNDO, REDO = imgui.Key.mod_ctrl | imgui.Key.z, imgui.Key.mod_ctrl | imgui.Key.mod_shift | imgui.Key.z   # Cmd on macOS
 
 
 @lru_cache(maxsize=1024)
 def change(before, after) -> str:
     """A history step's label: the params that differ between two graphs, with their new values."""
-    def show(v):
-        if isinstance(v, tuple) and v and isinstance(v[0], tuple):   # Overpaint's cells: a count, not a wall of numbers
-            return f'{len(v)} cells'
+    def show(name, v):
+        if name in COUNTED:   # a count, not a wall of numbers
+            return f'{len(v)} {COUNTED[name]}'
+        if isinstance(v, tuple) and v and isinstance(v[0], tuple):   # channels, curves: the name alone
+            return ''
         return f'{v:.3g}' if isinstance(v, float) else v.name if isinstance(v, Path) else str(v)
     parts = []
     for nid, node in after.nodes:
         old, new = before[nid].params, node.params
         if old != new:
-            diff = [f'{f.name} {show(getattr(new, f.name))}' for f in fields(new) if getattr(new, f.name) != getattr(old, f.name)]
+            diff = [f'{f.name} {show(f.name, getattr(new, f.name))}'.rstrip() for f in fields(new)
+                    if getattr(new, f.name) != getattr(old, f.name)]
             parts.append(f"{LABELS[nid]}: {', '.join(diff)}")
     return '; '.join(parts)
 
@@ -196,10 +200,11 @@ def palette_grid(palette, click, tip, marks={}, specials=()) -> None:
     imgui.pop_style_var()
 
 
-def colour_name(i: int) -> str:
-    return {TRANSPARENT: 'Transparent, the cell keeps its own', AUTO: 'Auto, the colour Select pairs chose',
-            BRIGHT: 'Bright (BRIGHT 1): the cell keeps its colours, made bright',
-            DIM: 'Not bright (BRIGHT 0): the cell keeps its colours, made not bright'}.get(i, f'Colour {i}')
+def colour_name(i: int, palette=None) -> str:
+    special = {TRANSPARENT: 'Transparent, the cell keeps its own', AUTO: 'Auto, the colour Select pairs chose',
+               BRIGHT: 'Bright (BRIGHT 1): the cell keeps its colours, made bright',
+               DIM: 'Not bright (BRIGHT 0): the cell keeps its colours, made not bright'}
+    return special.get(i, f'Colour {i}' + (f', {palette.name(i)}' if palette is not None else ''))
 
 
 def has_bright(palette) -> bool:
@@ -288,7 +293,7 @@ class OverpaintEditor:
                     self.paper, self.ink = same_bright(palette, i, self.ink)
                 self.on = True
             specials = ((TRANSPARENT, DIM), (AUTO, BRIGHT)) if has_bright(palette) else ((TRANSPARENT,), (AUTO,))
-            palette_grid(palette, pick, lambda i: colour_name(i) + (': a click for the ink and the paper' if i in (BRIGHT, DIM)
+            palette_grid(palette, pick, lambda i: colour_name(i, palette) + (': a click for the ink and the paper' if i in (BRIGHT, DIM)
                                                                     else ': left click for the ink, right for the paper'),
                          role_marks(self.paper, self.ink), specials)
         if self.on:
@@ -310,7 +315,7 @@ class Window:
             self._open_image(path)
         self.images = {}       # immvision params per preview
         self.expanded = {}     # node id -> block open; imgui keeps no header state in its ini
-        self.editors = {'levels': LevelsEditor(), 'halftoner': HalftoneEditor(), 'target': TargetEditor(),
+        self.editors = {'levels': LevelsEditor(self._palette, palette_grid), 'halftoner': HalftoneEditor(), 'target': TargetEditor(),
                         'overpaint': OverpaintEditor()}   # node id -> custom params editor
         self.view, self.grid = 'Screen', False     # the conversion's view and the cell grid; not persisted
         self._debug = {}       # image key -> (the Converter it came from, the image)
@@ -320,6 +325,7 @@ class Window:
         self._cell = None          # (row, column) the cell popup shows
         self._held = None          # (the last live snapshot, the finished conversion it stands in for): see _live
         self._stroke = None        # a paint stroke's cells so far: pressed over a preview in Paint mode, not let go yet
+        self._tools = (False, None)   # Paint mode and the armed eyedropper last frame: the one turned on last wins
 
     def runner_params(self, persist: bool = True) -> hello_imgui.RunnerParams:
         immvision.use_rgb_color_order()
@@ -405,9 +411,15 @@ class Window:
 
     def _frame(self) -> None:
         style.sync()
-        brush = self.editors['overpaint']
-        if brush.on and imgui.is_key_pressed(imgui.Key.escape):
-            brush.on = False
+        brush, tone_ = self.editors['overpaint'], self.editors['levels']
+        if imgui.is_key_pressed(imgui.Key.escape):
+            brush.on, tone_.armed = False, None
+        if brush.on and tone_.armed:   # one tool takes the preview's clicks
+            if not self._tools[0]:
+                tone_.armed = None
+            else:
+                brush.on = False
+        self._tools = (brush.on, tone_.armed)
         if not (imgui.is_mouse_down(0) or imgui.is_mouse_down(1)):
             self._stroke = None
         held = imgui.is_any_item_active() or self._stroke is not None   # a paint stroke is one undo step, like a dragged slider
@@ -585,7 +597,10 @@ class Window:
         stacked = min(avail.x / w, (avail.y - spacing.y) / (2 * h))
         zoom = max(1, int(max(side, stacked)))
         cell, hovered = ops.MODES[self.app.graph['target'].params.mode].cell, None
-        painting = self.editors['overpaint'].on
+        picture = self.app.shown('light')   # the tone node's input, what its eyedroppers sample
+        picking = (self.editors['levels'].armed is not None and picture is not None
+                   and all(i.shape[:2] == picture.shape[:2] for _, i in shown))
+        painting = self.editors['overpaint'].on and not picking
         for key, image in shown:
             ih, iw = image.shape[:2]
             pixels = as_ubyte(image)
@@ -602,7 +617,9 @@ class Window:
         same = all(i.shape == shown[0][1].shape for _, i in shown)   # not mid mode switch
         if hovered is not None and same:
             at = hovered[0] // cell[0], hovered[1] // cell[1]
-            if painting:
+            if picking:
+                self._eyedrop(picture, hovered, lo, zoom)
+            elif painting:
                 self._paint(at, lo, cell, zoom)
             elif imgui.is_mouse_clicked(imgui.MouseButton_.right):
                 self._cell = at
@@ -687,6 +704,35 @@ class Window:
                 draw.add_line(imgui.ImVec2(p.x, q.y), imgui.ImVec2(q.x, p.y), imgui.IM_COL32(220, 40, 40, 255), 2)
             draw.add_rect(p, q, black)
 
+    def _eyedrop(self, picture, at, lo, zoom: int) -> None:
+        """An armed eyedropper over a preview whose top-left is lo: the cursor is a cross over the 3x3 pixels it
+        averages, with the sample and the target beside it; a left click sends pixel at to the tone node."""
+        editor, (y, x) = self.editors['levels'], at
+        params = self.app.graph['levels'].params
+        if imgui.is_mouse_clicked(imgui.MouseButton_.left):
+            editor.pick(params, picture, y, x, lambda p: self.app.set_params('levels', p))
+        imgui.set_mouse_cursor(imgui.MouseCursor_.none)
+        draw, black, white = imgui.get_foreground_draw_list(), imgui.IM_COL32(0, 0, 0, 255), imgui.IM_COL32(255, 255, 255, 255)
+        a = imgui.ImVec2(lo.x + (x - tone.SAMPLE) * zoom, lo.y + (y - tone.SAMPLE) * zoom)
+        b = imgui.ImVec2(a.x + (2 * tone.SAMPLE + 1) * zoom, a.y + (2 * tone.SAMPLE + 1) * zoom)
+        draw.add_rect(a, b, black, thickness=3)
+        draw.add_rect(a, b, white)
+        m, arm = imgui.get_mouse_pos(), imgui.get_text_line_height() * 0.6
+        for thick, col in ((3, black), (1, white)):
+            draw.add_line(imgui.ImVec2(m.x - arm, m.y), imgui.ImVec2(m.x + arm, m.y), col, thick)
+            draw.add_line(imgui.ImVec2(m.x, m.y - arm), imgui.ImVec2(m.x, m.y + arm), col, thick)
+        s = imgui.get_text_line_height() * 0.8
+        _, target, _ = editor.target(params, editor.armed)
+        for i, rgb in enumerate((tone.sample(picture, y, x), target)):   # sample, then the target it goes to
+            p = imgui.ImVec2(m.x + arm + 2 + i * s, m.y + arm + 2)
+            q = imgui.ImVec2(p.x + s, p.y + s)
+            draw.add_rect_filled(p, q, imgui.IM_COL32(*(int(round(v * 255)) for v in np.clip(rgb, 0, 1)), 255))
+            draw.add_rect(p, q, black)
+
+    def _palette(self):
+        """The target mode's palette, all of it: the eyedroppers' targets."""
+        return ops.MODES[self.app.graph['target'].params.mode].palette
+
     def _painted_cells(self, cell, zoom: int, cells) -> None:
         """Paint mode: the painted cells outlined over the image just drawn, cells its (rows, columns)."""
         lo, (h, w), col = imgui.get_item_rect_min(), cell, imgui.get_color_u32(Palette.warn)
@@ -740,7 +786,7 @@ class Window:
                 paper, ink = same_bright(conv.palette, i, painted[1])
             self._set_cell(r, c, (paper, ink))
 
-        palette_grid(conv.palette, pick, lambda i: f'{colour_name(i)}: left click for the ink, right for the paper',
+        palette_grid(conv.palette, pick, lambda i: f'{colour_name(i, conv.palette)}: left click for the ink, right for the paper',
                      role_marks(paper, ink), ((AUTO,),))
         imgui.begin_disabled(painted == (-1, -1))
         if imgui.button('Auto'):

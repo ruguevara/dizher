@@ -7,8 +7,9 @@ import numpy as np
 
 class Palette:
     """Colours a device can show, as (N, 3) gamma-encoded RGB bytes, and the indexes a cell may pair (enabled).
-    SUBSETS names sets of indexes; subclasses add theirs, `subsets` puts All colours first."""
+    SUBSETS names sets of indexes; subclasses add theirs, `subsets` puts All colours first. NAMES, one per colour."""
     SUBSETS = {}
+    NAMES = ()
 
     def __init__(self, colours):
         self.colours = np.asarray(colours, dtype=np.uint8).reshape(-1, 3)
@@ -17,6 +18,9 @@ class Palette:
     @property
     def subsets(self) -> dict:
         return {'All colours': frozenset(range(len(self))), **self.SUBSETS}
+
+    def name(self, i: int) -> str:
+        return self.NAMES[i] if i < len(self.NAMES) else f'colour {i}'
 
     def with_colours(self, enabled) -> 'Palette':
         palette = copy.copy(self)
