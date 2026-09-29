@@ -17,6 +17,7 @@ from dataclasses import replace
 
 import numpy as np
 from imgui_bundle import em_size, imgui
+from imgui_bundle import icons_fontawesome_6
 
 from mokit.ui import style, widgets
 from mokit.ui.style import Palette
@@ -27,6 +28,7 @@ HIST_HEIGHT = 5.0     # em
 STRIP_HEIGHT = 0.7    # em, the gradient under the histogram
 HANDLE = 0.45         # em, half the width of a handle triangle, and of a curve point
 NUMBER_WIDTH = 3.5    # em
+EYEDROPPER = icons_fontawesome_6.ICON_FA_EYE_DROPPER
 MIN_GAP = tone.MIN_GAP
 OFF = 1.5             # em a dragged curve point goes beyond the graph to be removed
 CHANNELS = ('RGB', 'R', 'G', 'B')
@@ -64,6 +66,14 @@ def swatch(id: str, rgb, tip: str = '', size: float = 1.0) -> bool:
 
 def rgb255(rgb) -> str:
     return '(%d, %d, %d)' % tuple(np.round(np.asarray(rgb) * 255))
+
+
+PICKERS = {'black': 'Black point eyedropper', 'grey': 'Mid point eyedropper', 'white': 'White point eyedropper'}
+
+
+def pick_label(role: str) -> str:
+    """An eyedropper's toggle: the icon, the role in the id (the target swatch before it shows the colour)."""
+    return f'{EYEDROPPER}##pick {role}'
 
 
 def flow(label: str, first: bool = False) -> None:
@@ -375,8 +385,7 @@ class LevelsEditor:
         palette = self.palette()
         inner = imgui.get_style().item_inner_spacing.x
         for k, role in enumerate(tone.ROLES):
-            label = role.capitalize()
-            if k and widgets.fits_on_line(imgui.get_frame_height() + inner + imgui.calc_text_size(label).x
+            if k and widgets.fits_on_line(imgui.get_frame_height() + inner + imgui.calc_text_size(EYEDROPPER).x
                                           + 2 * imgui.get_style().frame_padding.x):
                 imgui.same_line()
             i, rgb, auto = self.target(params, role)
@@ -384,12 +393,11 @@ class LevelsEditor:
                                                  f"a click picks another"):
                 imgui.open_popup(f'target {role}')
             imgui.same_line(0, inner)
-            if widgets.toggle_button(f'{label}##pick', self.armed == role):
+            if widgets.toggle_button(pick_label(role), self.armed == role):
                 self.armed = None if self.armed == role else role
-            imgui.set_item_tooltip({'black': 'Click the picture where it should be the target black: sets the black point',
-                                    'grey': 'Click the picture where it should be the target colour: '
-                                            + ('sets the gamma' if params.mode == 'Levels' else 'adds a point per channel'),
-                                    'white': 'Click the picture where it should be the target white: sets the white point'}[role]
+            imgui.set_item_tooltip(f'{PICKERS[role]}, to {palette.name(i)}: click the picture where it should be that colour; '
+                                   + {'black': 'sets the black point', 'white': 'sets the white point',
+                                      'grey': 'sets the gamma' if params.mode == 'Levels' else 'adds a point per channel'}[role]
                                    + '. Esc ends')
             if imgui.begin_popup(f'target {role}'):
                 auto_i = tone.palette_roles(palette.as_float())[k]
@@ -402,7 +410,7 @@ class LevelsEditor:
                     self.grid(palette, click, lambda j: palette.name(j), {} if auto else {i: '✓'})
                 imgui.end_popup()
         if self.armed:
-            widgets.hint(f'Click the preview to sample for {self.armed}; Esc ends')
+            widgets.hint(f'{PICKERS[self.armed]}: click the preview to sample; Esc ends')
 
     @staticmethod
     def _set_target(params, on_change, k: int, i: int) -> None:

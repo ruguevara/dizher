@@ -8,6 +8,7 @@ from imgui_bundle import imgui
 
 from dizher import tone
 from dizher.converter.dither import Ordered
+from dizher.ui.levels import pick_label
 from dizher.ui.window import REDO, UNDO, Window
 
 IMAGE = Path(__file__).parent / 'images' / 'goldhill-256.png'
@@ -157,7 +158,7 @@ def test_eyedroppers(ctx):
     editor, brush = ui.editors['levels'], ui.editors['overpaint']
     ctx.set_ref('//Tune')
     # a **/ wildcard never ends on a label that is only ##id: the swatch is found beside its eyedropper
-    ctx.set_ref(TestRef(ctx.item_info('**/Grey##pick').parent_id))
+    ctx.set_ref(TestRef(ctx.item_info('**/' + pick_label('grey')).parent_id))
     ctx.item_click('##target grey')
     ctx.yield_(2)
     ctx.item_click('//$FOCUSED/##colour5')   # non-bright cyan
@@ -166,7 +167,7 @@ def test_eyedroppers(ctx):
     brush.on = True
     ctx.yield_(2)
     ctx.set_ref('//Tune')
-    ctx.item_click('**/Grey##pick')
+    ctx.item_click('**/' + pick_label('grey'))
     ctx.yield_(2)
     assert editor.armed == 'grey' and not brush.on, 'arming ends Paint mode'
     ctx.mouse_move_to_pos(preview_point(ctx, 60, 60))
@@ -190,7 +191,7 @@ def test_eyedroppers(ctx):
         ctx.yield_(2)
     assert len(params('levels').picks) == 2, params('levels').picks
     ctx.set_ref('//Tune')
-    ctx.set_ref(TestRef(ctx.item_info('**/Grey##pick').parent_id))
+    ctx.set_ref(TestRef(ctx.item_info('**/' + pick_label('grey')).parent_id))
     ctx.item_click('x##drop0')
     ctx.yield_(2)
     assert len(params('levels').picks) == 1

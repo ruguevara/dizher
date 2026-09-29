@@ -20,6 +20,7 @@ from imgui_bundle import imgui, hello_imgui, em_size, em_to_vec2
 THEME = hello_imgui.ImGuiTheme_.so_dark_accent_blue
 FONT, FONT_SIZE = "fonts/Roboto/Roboto-Regular.ttf", 16.0   # imgui_bundle asset; hello_imgui scales it for DPI
 FONT_BOLD = "fonts/Roboto/Roboto-Bold.ttf"
+FONT_ICONS = "fonts/Font_Awesome_6_Free-Solid-900.otf"   # merged into both: icons_fontawesome_6.ICON_FA_* in any label
 FONTS: dict = {}     # "regular" / "bold" -> ImFont, filled at start-up by `install`; `font("bold")` to push one
 
 # ImGuiStyle metrics, in em (1 em = font height). Applied after the theme, so they win.
@@ -127,8 +128,9 @@ def install(params: hello_imgui.RunnerParams) -> None:
 
 
 def _load_fonts() -> None:
-    FONTS["regular"] = hello_imgui.load_font(FONT, FONT_SIZE)
-    FONTS["bold"] = hello_imgui.load_font(FONT_BOLD, FONT_SIZE)
+    for key, path in (("regular", FONT), ("bold", FONT_BOLD)):
+        FONTS[key] = hello_imgui.load_font(path, FONT_SIZE)
+        hello_imgui.load_font(FONT_ICONS, FONT_SIZE, hello_imgui.FontLoadingParams(merge_to_last_font=True))
 
 
 @contextmanager
