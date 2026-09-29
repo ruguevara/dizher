@@ -4,7 +4,7 @@
     "source": {
       "op": "mokit.ops:load_media",
       "params": {
-        "path": "../andy.png"
+        "path": "../burning-hand.jpeg"
       },
       "inputs": []
     },
@@ -41,8 +41,8 @@
       "op": "dizher.ops:levels",
       "params": {
         "in_black": 0,
-        "in_white": 196,
-        "gamma": 0.87,
+        "in_white": 255,
+        "gamma": 1.0,
         "out_black": 0,
         "out_white": 255
       },
@@ -74,7 +74,7 @@
     "color": {
       "op": "dizher.ops:color",
       "params": {
-        "vibrance": 100.0,
+        "vibrance": 0.0,
         "saturation": 0.0
       },
       "inputs": [
@@ -84,9 +84,9 @@
     "detail": {
       "op": "dizher.ops:detail",
       "params": {
-        "texture": -75.13800048828125,
-        "sharpen": 156.21499633789062,
-        "radius": 0.7570000290870667
+        "texture": 0.0,
+        "sharpen": 0.0,
+        "radius": 1.0
       },
       "inputs": [
         "color"
@@ -120,8 +120,8 @@
     "metric": {
       "op": "dizher.ops:metric",
       "params": {
-        "method": "Halftoned",
-        "chroma": 1.0,
+        "method": "Exact mixture",
+        "chroma": 2.0,
         "flare": 0.1
       },
       "inputs": []
@@ -130,7 +130,7 @@
       "op": "dizher.ops:eye",
       "params": {
         "luma_alpha": 2.0,
-        "luma_scale": 1.4,
+        "luma_scale": 1.899999976158142,
         "chroma_alpha": 2.0,
         "chroma_scale": 1.4
       },
@@ -139,7 +139,7 @@
     "halftoner": {
       "op": "dizher.ops:halftoner",
       "params": {
-        "halftoner": "Stohastic",
+        "halftoner": "Ordered",
         "matrix": "Void dispersed dots",
         "kernel": "Shiau-Fan 3",
         "noise_x": 0,
@@ -161,10 +161,10 @@
     "select": {
       "op": "dizher.ops:select_pairs",
       "params": {
-        "coherence": 2.0,
+        "coherence": 6.0,
         "edge": 0.1,
         "luma_noise": 0.0,
-        "chroma_noise": 0.05
+        "chroma_noise": 0.02
       },
       "inputs": [
         "prepare"
@@ -173,206 +173,7 @@
     "overpaint": {
       "op": "dizher.ops:overpaint",
       "params": {
-        "overrides": [
-          [
-            0,
-            0,
-            9,
-            13
-          ],
-          [
-            0,
-            1,
-            9,
-            13
-          ],
-          [
-            0,
-            2,
-            9,
-            13
-          ],
-          [
-            0,
-            3,
-            9,
-            13
-          ],
-          [
-            0,
-            4,
-            9,
-            13
-          ],
-          [
-            1,
-            0,
-            9,
-            13
-          ],
-          [
-            1,
-            1,
-            9,
-            13
-          ],
-          [
-            1,
-            2,
-            9,
-            13
-          ],
-          [
-            1,
-            3,
-            9,
-            13
-          ],
-          [
-            1,
-            4,
-            9,
-            13
-          ],
-          [
-            2,
-            0,
-            9,
-            13
-          ],
-          [
-            2,
-            1,
-            9,
-            13
-          ],
-          [
-            2,
-            2,
-            9,
-            13
-          ],
-          [
-            2,
-            3,
-            9,
-            13
-          ],
-          [
-            2,
-            4,
-            9,
-            13
-          ],
-          [
-            3,
-            0,
-            9,
-            13
-          ],
-          [
-            3,
-            1,
-            9,
-            13
-          ],
-          [
-            3,
-            2,
-            9,
-            13
-          ],
-          [
-            3,
-            3,
-            9,
-            13
-          ],
-          [
-            4,
-            0,
-            9,
-            13
-          ],
-          [
-            4,
-            1,
-            9,
-            13
-          ],
-          [
-            4,
-            2,
-            9,
-            13
-          ],
-          [
-            4,
-            3,
-            9,
-            13
-          ],
-          [
-            4,
-            4,
-            9,
-            13
-          ],
-          [
-            5,
-            0,
-            9,
-            13
-          ],
-          [
-            5,
-            1,
-            9,
-            13
-          ],
-          [
-            5,
-            2,
-            9,
-            13
-          ],
-          [
-            5,
-            3,
-            9,
-            13
-          ],
-          [
-            6,
-            1,
-            9,
-            13
-          ],
-          [
-            6,
-            3,
-            9,
-            13
-          ],
-          [
-            7,
-            3,
-            9,
-            13
-          ],
-          [
-            8,
-            12,
-            0,
-            5
-          ],
-          [
-            8,
-            18,
-            0,
-            5
-          ]
-        ]
+        "overrides": []
       },
       "inputs": [
         "select"

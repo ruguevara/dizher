@@ -4,7 +4,7 @@
     "source": {
       "op": "mokit.ops:load_media",
       "params": {
-        "path": "../diver-sunset.webp"
+        "path": null
       },
       "inputs": []
     },
@@ -81,19 +81,6 @@
         "contrast"
       ]
     },
-    "snap": {
-      "op": "dizher.ops:snap",
-      "params": {
-        "strength": 0.0,
-        "radius": 24.0,
-        "smoothness": 2.0,
-        "mixes": true
-      },
-      "inputs": [
-        "color",
-        "target"
-      ]
-    },
     "detail": {
       "op": "dizher.ops:detail",
       "params": {
@@ -102,21 +89,39 @@
         "radius": 1.0
       },
       "inputs": [
-        "snap"
+        "color"
       ]
     },
     "target": {
       "op": "dizher.ops:target",
       "params": {
         "mode": "ZX Spectrum standard",
-        "palette": "All colours"
+        "colours": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
       },
       "inputs": []
     },
     "metric": {
       "op": "dizher.ops:metric",
       "params": {
-        "chroma": 1.0,
+        "method": "Exact mixture",
+        "chroma": 2.0,
         "flare": 0.1
       },
       "inputs": []
@@ -156,20 +161,29 @@
     "select": {
       "op": "dizher.ops:select_pairs",
       "params": {
-        "coherence": 2.0,
+        "coherence": 6.0,
         "edge": 0.1,
         "luma_noise": 0.0,
-        "chroma_noise": 0.05
+        "chroma_noise": 0.02
       },
       "inputs": [
         "prepare"
+      ]
+    },
+    "overpaint": {
+      "op": "dizher.ops:overpaint",
+      "params": {
+        "overrides": []
+      },
+      "inputs": [
+        "select"
       ]
     },
     "halftone": {
       "op": "dizher.ops:halftone",
       "params": null,
       "inputs": [
-        "select"
+        "overpaint"
       ]
     },
     "optimise": {
