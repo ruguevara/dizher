@@ -28,9 +28,11 @@ HIST_HEIGHT = 5.0     # em
 STRIP_HEIGHT = 0.7    # em, the gradient under the histogram
 HANDLE = 0.45         # em, half the width of a handle triangle, and of a curve point
 NUMBER_WIDTH = 3.5    # em
+SWATCH = 0.8          # of the frame height: the eyedroppers' target swatches and their rows'
 TIP_WIDTH = 22.0      # em, a warning's tooltip wraps there
 EYEDROPPER = icons_fontawesome_6.ICON_FA_EYE_DROPPER
 WARNING = icons_fontawesome_6.ICON_FA_TRIANGLE_EXCLAMATION
+ARROW = '\u2192'
 MIN_GAP = tone.MIN_GAP
 OFF = 1.5             # em a dragged curve point goes beyond the graph to be removed
 CHANNELS = ('RGB', 'R', 'G', 'B')
@@ -387,12 +389,12 @@ class LevelsEditor:
         palette = self.palette()
         inner = imgui.get_style().item_inner_spacing.x
         for k, role in enumerate(tone.ROLES):
-            if k and widgets.fits_on_line(imgui.get_frame_height() + inner + imgui.calc_text_size(EYEDROPPER).x
+            if k and widgets.fits_on_line(imgui.get_frame_height() * SWATCH + inner + imgui.calc_text_size(EYEDROPPER).x
                                           + 2 * imgui.get_style().frame_padding.x):
                 imgui.same_line()
             i, rgb, auto = self.target(params, role)
             if swatch(f'##target {role}', rgb, f"Target: {'Auto, ' if auto else ''}{palette.name(i)} {rgb255(rgb)}; "
-                                                 f"a click picks another"):
+                                                 f"a click picks another", SWATCH):
                 imgui.open_popup(f'target {role}')
             imgui.same_line(0, inner)
             if widgets.toggle_button(pick_label(role), self.armed == role):
@@ -456,24 +458,19 @@ class LevelsEditor:
             self._landing(f'pick{k}', s, t, self.result(params, s), name, notes)
 
     def _landing(self, id: str, s, t, got, name: str, notes=()) -> None:
-        """sample -> target swatches, the landing between them and a warning sign when it misses by more than 1/255
-        or there are notes: the sign's tooltip says what is wrong."""
+        """sample → target swatches; before the target, where it lands when that misses by more than 1/255 and a
+        warning sign when it misses or there are notes: the sign's tooltip says what is wrong."""
         inner = imgui.get_style().item_inner_spacing.x
-        swatch(f'##{id} sample', s, f'Sampled {rgb255(s)}', 0.8)
+        swatch(f'##{id} sample', s, f'Sampled {rgb255(s)}', SWATCH)
         imgui.same_line(0, inner)
-        imgui.text('->')
+        imgui.text(ARROW)
         miss = np.abs(np.asarray(got) - t).max() > 1 / 255 + 1e-6
         if miss:
             imgui.same_line(0, inner)
-            swatch(f'##{id} got', got, f'Lands on {rgb255(got)}: the target cannot be reached', 0.8)
-            imgui.same_line(0, inner)
-            imgui.text('/')
-        imgui.same_line(0, inner)
-        swatch(f'##{id} target', t, f'Target: {name} {rgb255(t)}', 0.8)
-        if miss:
+            swatch(f'##{id} got', got, f'Lands on {rgb255(got)}: the target cannot be reached', SWATCH)
             notes = (f'Misses the target {name} {rgb255(t)}: lands on {rgb255(got)}, the nearest it can get.', *notes)
         if notes:
-            imgui.same_line()
+            imgui.same_line(0, inner)
             with style.text_color(Palette.warn):
                 imgui.text(WARNING)
             if imgui.begin_item_tooltip():
@@ -482,3 +479,5 @@ class LevelsEditor:
                     imgui.text(note)
                 imgui.pop_text_wrap_pos()
                 imgui.end_tooltip()
+        imgui.same_line(0, inner)
+        swatch(f'##{id} target', t, f'Target: {name} {rgb255(t)}', SWATCH)
