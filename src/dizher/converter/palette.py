@@ -48,6 +48,15 @@ class Palette:
     def __getitem__(self, index):
         return self.colours[index]
 
+    def bright(self, i: int):
+        """A colour's brightness where a cell's two colours must share one (the Spectrum's BRIGHT), else None: here
+        there is none."""
+        return None
+
+    def with_bright(self, i: int, on: bool) -> int:
+        """The colour i with the brightness on (True) or off: here i itself."""
+        return i
+
     def iter_idxs_pairs(self):
         """(paper, ink) index pairs with paper the darker colour: the error diffuser and the coherence
         metric rely on that order, and palette index order need not follow luminance (C64 index 1 is white)."""

@@ -83,6 +83,22 @@ def test_overpaint():
         assert project.load_project(Path(tmp) / 'p').graph['overpaint'].params.overrides == cells
 
 
+def test_brush_brightness():
+    """On the Spectrum a colour picked for the ink or the paper brings the other to its brightness, BRIGHT and DIM
+    included; black takes the other's; the specials without one and the C64 change nothing."""
+    from dizher.platforms import c64, zxspectrum
+    from dizher.ui.window import AUTO, BRIGHT, DIM, TRANSPARENT, has_bright, same_bright
+    zx = zxspectrum.STANDARD.palette
+    assert same_bright(zx, 10, 1) == (10, 9) and same_bright(zx, 2, 9) == (2, 1)       # bright red / dim red
+    assert same_bright(zx, 0, 9) == (8, 9) and same_bright(zx, 8, 1) == (0, 1)         # black follows
+    assert same_bright(zx, 10, 0) == (10, 8)                                           # the other black flips too
+    assert same_bright(zx, 10, DIM) == (10, BRIGHT) and same_bright(zx, 2, BRIGHT) == (2, DIM)
+    for other in (TRANSPARENT, AUTO, -1):
+        assert same_bright(zx, 10, other) == (10, other)
+    assert has_bright(zx) and not has_bright(c64.HIRES.palette)
+    assert same_bright(c64.HIRES.palette, 1, 9) == (1, 9)
+
+
 def test_host_reruns_only_downstream_of_an_edit():
     from dizher.ui.app import Pipeline
     host = Pipeline()
