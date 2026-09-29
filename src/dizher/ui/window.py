@@ -64,8 +64,11 @@ MAX_PATH = 260   # Windows' path limit, the NUL included
 # for it at every numpy or OpenCV call, so at a high refresh rate or with no vsync the frames starve the stage
 BUSY_FPS = 30.0
 INSPECT_CELLS, INSPECT_ZOOM, INSPECT_PAIRS = 3, 10, 8   # the hover tooltip: cells a side, its zoom, pairs listed
-TRANSPARENT, AUTO = -1, -2   # the brush's specials: keep the cell's colour, give it back to Select pairs
-SPECIAL = {TRANSPARENT: (0.0, 0.0, 0.0, 0.0), AUTO: (0.3, 0.3, 0.3, 1.0)}   # alpha 0 shows imgui's checkerboard
+# the brush's specials: keep the cell's colour, give it back to Select pairs, keep its colours made bright or not
+TRANSPARENT, AUTO, BRIGHT, DIM = -1, -2, -3, -4
+SPECIAL = {TRANSPARENT: (0.0, 0.0, 0.0, 0.0), AUTO: (0.3, 0.3, 0.3, 1.0), BRIGHT: (0.3, 0.3, 0.3, 1.0),
+           DIM: (0.3, 0.3, 0.3, 1.0)}   # alpha 0 shows imgui's checkerboard
+LABEL = {AUTO: 'A', BRIGHT: 'B1', DIM: 'B0'}   # on a special's swatch while no mark takes its place
 UNDO, REDO = imgui.Key.mod_ctrl | imgui.Key.z, imgui.Key.mod_ctrl | imgui.Key.mod_shift | imgui.Key.z   # Cmd on macOS
 
 
@@ -164,15 +167,15 @@ class HalftoneEditor:
 
 def palette_grid(palette, click, tip, marks={}, specials=()) -> None:
     """The palette as 2 rows of 8 swatches edge to edge; click(i, button) on a left or right click, tip(i) the tooltip,
-    marks {i: '✓' for imgui's tick, else a letter or two}. Colours the palette has off are disabled. specials, of
-    TRANSPARENT (checkered) and AUTO (grey, A), end a row each."""
-    width = 8 + bool(specials)
+    marks {i: '✓' for imgui's tick, else a letter or two}. Colours the palette has off are disabled. specials, a tuple
+    per row of TRANSPARENT (checkered), AUTO, BRIGHT and DIM (grey, their LABEL), end the rows."""
+    width = 8 + max(map(len, specials), default=0)
     side = min(1.5 * imgui.get_text_line_height(), imgui.get_content_region_avail().x / width)   # fits a narrow dock
     size = imgui.ImVec2(side, side)
     imgui.push_style_var(imgui.StyleVar_.item_spacing, imgui.ImVec2(0, 0))   # cells edge to edge
     colours = [(i, (*map(float, rgb), 1.0)) for i, rgb in enumerate(palette.as_float())]
     for row in range(2):
-        for n, (i, rgba) in enumerate(colours[8 * row:8 * row + 8] + [(k, SPECIAL[k]) for k in specials[row:row + 1]]):
+        for n, (i, rgba) in enumerate(colours[8 * row:8 * row + 8] + [(k, SPECIAL[k]) for k in (specials[row:row + 1] or [()])[0]]):
             if n:
                 imgui.same_line()
             imgui.begin_disabled(i >= 0 and i not in palette.enabled)
@@ -182,7 +185,7 @@ def palette_grid(palette, click, tip, marks={}, specials=()) -> None:
                 click(i, imgui.MouseButton_.right)
             imgui.end_disabled()
             imgui.set_item_tooltip(tip(i))
-            mark, lo = marks.get(i, 'A' if i == AUTO else None), imgui.get_item_rect_min()
+            mark, lo = marks.get(i, LABEL.get(i)), imgui.get_item_rect_min()
             ink = imgui.IM_COL32(*(3 * (0 if i >= 0 and np.dot(rgba[:3], (0.299, 0.587, 0.114)) > 0.5 else 255,)), 255)
             if mark == '✓':   # imgui's checkbox tick, black on light colours, white on dark
                 pad = side / 5
@@ -194,7 +197,33 @@ def palette_grid(palette, click, tip, marks={}, specials=()) -> None:
 
 
 def colour_name(i: int) -> str:
-    return {TRANSPARENT: 'Transparent, the cell keeps its own', AUTO: 'Auto, the colour Select pairs chose'}.get(i, f'Colour {i}')
+    return {TRANSPARENT: 'Transparent, the cell keeps its own', AUTO: 'Auto, the colour Select pairs chose',
+            BRIGHT: 'Bright (BRIGHT 1): the cell keeps its colours, made bright',
+            DIM: 'Not bright (BRIGHT 0): the cell keeps its colours, made not bright'}.get(i, f'Colour {i}')
+
+
+def has_bright(palette) -> bool:
+    """A cell's two colours share a brightness (the Spectrum): the brush has BRIGHT and DIM."""
+    return any(palette.bright(i) is not None for i in range(len(palette)))
+
+
+def brightness(palette, i: int):
+    """True, False, or None where a colour or brush special sets none: black, TRANSPARENT, AUTO, the selection's -1."""
+    return {BRIGHT: True, DIM: False}.get(i) if i < 0 else palette.bright(i)
+
+
+def same_bright(palette, chosen: int, other: int) -> tuple:
+    """(chosen, other) for a cell's two colours when one was just chosen, on a palette whose pairs share a brightness:
+    black takes the other's, any other colour gives the other its own (a colour, BRIGHT or DIM; black flips to the
+    matching black)."""
+    mine, theirs = brightness(palette, chosen), brightness(palette, other)
+    if chosen >= 0 and mine is None:
+        return (chosen, other) if theirs is None else (palette.with_bright(chosen, theirs), other)
+    if mine is None:
+        return chosen, other
+    if other >= 0:
+        return chosen, palette.with_bright(other, mine)
+    return chosen, (BRIGHT if mine else DIM) if other in (BRIGHT, DIM) else other
 
 
 class TargetEditor:
@@ -225,7 +254,9 @@ def role_marks(paper: int, ink: int) -> dict:
 
 class OverpaintEditor:
     """Paint mode, Art Studio's attribute brush: an ink and a paper, each a palette index, TRANSPARENT, which keeps
-    the cell's own, or AUTO, which gives it back to Select pairs: an Auto ink and paper erase. A left click on a swatch picks the ink, a right click the paper (Multipaint's and MS
+    the cell's own, or AUTO, which gives it back to Select pairs: an Auto ink and paper erase. On the Spectrum ink and
+    paper share a brightness: a colour picked for one brings the other along (black takes the other's), and BRIGHT or
+    DIM, as both, keeps a cell's colours and sets their brightness. A left click on a swatch picks the ink, a right click the paper (Multipaint's and MS
     Paint's buttons), and turns Paint mode on. In the preview a left drag paints cells with the brush, a right click
     picks up a cell's colours as the brush, the eyedropper (Window._paint). Clear gives every painted cell back to
     Select pairs."""
@@ -247,14 +278,19 @@ class OverpaintEditor:
         imgui.same_line()
         imgui.text(f'{len(params.overrides)} cells painted')
         if selection is not None:
+            palette = selection.palette
             def pick(i, button):   # picking a colour is picking up the brush: Paint mode goes on
-                if button == imgui.MouseButton_.left:
-                    self.ink = i
+                if i in (BRIGHT, DIM):
+                    self.ink = self.paper = i
+                elif button == imgui.MouseButton_.left:
+                    self.ink, self.paper = same_bright(palette, i, self.paper)
                 else:
-                    self.paper = i
+                    self.paper, self.ink = same_bright(palette, i, self.ink)
                 self.on = True
-            palette_grid(selection.palette, pick, lambda i: f'{colour_name(i)}: left click for the ink, right for the paper',
-                         role_marks(self.paper, self.ink), (TRANSPARENT, AUTO))
+            specials = ((TRANSPARENT, DIM), (AUTO, BRIGHT)) if has_bright(palette) else ((TRANSPARENT,), (AUTO,))
+            palette_grid(palette, pick, lambda i: colour_name(i) + (': a click for the ink and the paper' if i in (BRIGHT, DIM)
+                                                                    else ': left click for the ink, right for the paper'),
+                         role_marks(self.paper, self.ink), specials)
         if self.on:
             widgets.hint("Left drag paints cells, right click picks up a cell's colours; A as ink and paper erases")
         imgui.pop_id()
@@ -282,7 +318,7 @@ class Window:
         self._after_close = None   # what waits for the unsaved changes dialog: opening another image
         self._about = False        # Help > About was chosen: the dialog opens next frame, outside the menu
         self._cell = None          # (row, column) the cell popup shows
-        self._stroke = False       # a paint stroke is on: pressed over a preview in Paint mode, not let go yet
+        self._stroke = None        # a paint stroke's cells so far: pressed over a preview in Paint mode, not let go yet
 
     def runner_params(self, persist: bool = True) -> hello_imgui.RunnerParams:
         immvision.use_rgb_color_order()
@@ -372,8 +408,8 @@ class Window:
         if brush.on and imgui.is_key_pressed(imgui.Key.escape):
             brush.on = False
         if not (imgui.is_mouse_down(0) or imgui.is_mouse_down(1)):
-            self._stroke = False
-        held = imgui.is_any_item_active() or self._stroke   # a paint stroke is one undo step, like a dragged slider
+            self._stroke = None
+        held = imgui.is_any_item_active() or self._stroke is not None   # a paint stroke is one undo step, like a dragged slider
         if not held:
             self.app.release()
         # global routing: a focused text field keeps its own Cmd+Z
@@ -601,11 +637,23 @@ class Window:
         paints the cells it crosses; a right click makes the cell's colours as shown the brush, the eyedropper."""
         brush, (h, w), (r, c) = self.editors['overpaint'], cell, at
         if imgui.is_mouse_clicked(imgui.MouseButton_.left):
-            self._stroke = True
-        if self._stroke and imgui.is_mouse_down(imgui.MouseButton_.left):
-            put = lambda b, old: old if b == TRANSPARENT else -1 if b == AUTO else b   # -1 stored: the selection's
-            self._set_cell(r, c, tuple(map(put, (brush.paper, brush.ink), self._painted(r, c))), held=True)
+            self._stroke = set()
         painted = self.app.shown('overpaint')   # quick to redo, so it has the latest strokes
+        # a cell once a stroke: till the preview catches up its colours as shown are not yet the ones painted
+        if self._stroke is not None and at not in self._stroke and imgui.is_mouse_down(imgui.MouseButton_.left) \
+                and painted is not None:
+            self._stroke.add(at)
+            palette, shown = painted.palette, self._colours(painted, r, c)
+            level = next((v for v in (brightness(palette, brush.ink), brightness(palette, brush.paper)) if v is not None), None)
+            def put(b, old, now):   # -1 stored: the selection's
+                if b == AUTO:
+                    return -1
+                if b in (BRIGHT, DIM):
+                    return palette.with_bright(now, b == BRIGHT)
+                if b == TRANSPARENT:   # kept, with the brush's brightness when it has one
+                    return palette.with_bright(old, level) if old >= 0 and level is not None else old
+                return b
+            self._set_cell(r, c, tuple(map(put, (brush.paper, brush.ink), self._painted(r, c), shown)), held=True)
         if imgui.is_mouse_clicked(imgui.MouseButton_.right) and painted is not None:
             brush.paper, brush.ink = self._colours(painted, r, c)
         imgui.set_mouse_cursor(imgui.MouseCursor_.none)
@@ -622,10 +670,10 @@ class Window:
             p, q = imgui.ImVec2(m.x + x, m.y + y), imgui.ImVec2(m.x + x + s, m.y + y + s)
             if i >= 0:
                 draw.add_rect_filled(p, q, imgui.IM_COL32(*(int(v * 255) for v in rgb[i]), 255))
-            elif i == AUTO:   # its swatch: grey with an A
-                draw.add_rect_filled(p, q, imgui.IM_COL32(*(int(v * 255) for v in SPECIAL[AUTO])))
-                t = imgui.calc_text_size('A')
-                draw.add_text(imgui.ImVec2(p.x + (s - t.x) / 2, p.y + (s - t.y) / 2), white, 'A')
+            elif i in LABEL:   # its swatch: grey with its label
+                draw.add_rect_filled(p, q, imgui.IM_COL32(*(int(v * 255) for v in SPECIAL[i])))
+                t = imgui.calc_text_size(LABEL[i])
+                draw.add_text(imgui.ImVec2(p.x + (s - t.x) / 2, p.y + (s - t.y) / 2), white, LABEL[i])
             else:
                 draw.add_rect_filled(p, q, imgui.IM_COL32(128, 128, 128, 255))
                 draw.add_line(imgui.ImVec2(p.x, q.y), imgui.ImVec2(q.x, p.y), imgui.IM_COL32(220, 40, 40, 255), 2)
@@ -676,12 +724,16 @@ class Window:
             return
         paper, ink = self._colours(conv, r, c)
 
-        def pick(i, button):
+        def pick(i, button):   # the other colour to this one's brightness, as the brush's
             i = -1 if i == AUTO else i   # -1 stored: the selection's
-            self._set_cell(r, c, (painted[0], i) if button == imgui.MouseButton_.left else (i, painted[1]))
+            if button == imgui.MouseButton_.left:
+                ink, paper = same_bright(conv.palette, i, painted[0])
+            else:
+                paper, ink = same_bright(conv.palette, i, painted[1])
+            self._set_cell(r, c, (paper, ink))
 
         palette_grid(conv.palette, pick, lambda i: f'{colour_name(i)}: left click for the ink, right for the paper',
-                     role_marks(paper, ink), (AUTO,))
+                     role_marks(paper, ink), ((AUTO,),))
         imgui.begin_disabled(painted == (-1, -1))
         if imgui.button('Auto'):
             self._set_cell(r, c, None)

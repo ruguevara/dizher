@@ -328,6 +328,12 @@ def test_paint(ctx):
     ctx.item_click('overpaint/##colour5', imgui.MouseButton_.right)
     ctx.yield_(2)
     assert brush.on and (brush.ink, brush.paper) == (2, 5), vars(brush)
+    ctx.item_click('overpaint/##colour13', imgui.MouseButton_.right)   # a bright paper brightens the ink
+    ctx.yield_(2)
+    assert (brush.ink, brush.paper) == (10, 13), vars(brush)
+    ctx.item_click('overpaint/##colour5', imgui.MouseButton_.right)
+    ctx.yield_(2)
+    assert (brush.ink, brush.paper) == (2, 5), vars(brush)
     r = rect(ctx, '//Preview', '**/Screen')
     a, b = imgui.ImVec2(r.min.x + 100, r.max.y + 100), imgui.ImVec2(r.min.x + 160, r.max.y + 100)
     steps = len(ui.app.past)
@@ -363,6 +369,20 @@ def test_paint(ctx):
     ctx.key_press(UNDO)
     ctx.yield_(2)
     assert params('overpaint').overrides == overrides
+    ctx.set_ref('//Convert')
+    ctx.item_click('overpaint/##colour-3')   # B1 as ink and paper: the cells keep their colours, made bright
+    ctx.yield_(2)
+    assert (brush.ink, brush.paper) == (-3, -3), vars(brush)
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('overpaint') is not None, 'the painted cells again')
+    ctx.mouse_move_to_pos(a)
+    ctx.mouse_down(0)
+    for t in range(1, 7):
+        ctx.mouse_move_to_pos(imgui.ImVec2(a.x + (b.x - a.x) * t / 6, a.y))
+    ctx.mouse_up(0)
+    ctx.yield_(2)
+    assert all(o[2:] == (13, 10) for o in params('overpaint').overrides), params('overpaint')
+    ctx.key_press(UNDO)
+    ctx.yield_(2)
     ctx.key_press(imgui.Key.escape)
     ctx.yield_(2)
     assert not brush.on

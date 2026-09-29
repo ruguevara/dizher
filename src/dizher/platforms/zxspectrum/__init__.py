@@ -23,6 +23,13 @@ class ZXPalette(Palette):
         level = np.where(i >= 8, bright_level, not_bright_level)[:, None]
         super().__init__(rgb * level)
 
+    def bright(self, i: int):
+        """The bright bit; None for black, which is both."""
+        return None if i in (0, 8) else i >= 8
+
+    def with_bright(self, i: int, on: bool) -> int:
+        return i | 8 if on else i & 7
+
     def iter_idxs_pairs(self):
         """Both colours of a cell share the bright bit."""
         for i1, i2 in super().iter_idxs_pairs():
