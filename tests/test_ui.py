@@ -237,6 +237,25 @@ def test_edit_keeps_the_live_snapshot(ctx):
     wait(ctx, lambda: not ui.app.busy, 'the pipeline to settle')
 
 
+def test_hide_off_shows_the_painted_result(ctx):
+    """Hide off while the unpainted optimiser runs: the painted result, still in RAM, is shown at once, not the
+    unpainted run's last snapshot."""
+    ui.app.set_params('optimise', replace(params('optimise'), enabled=True))
+    ui.app.set_params('overpaint', replace(params('overpaint'), overrides=((0, 0, 1, 7),)))
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the painted conversion', 20000)
+    painted = ui.app.result('optimise')
+    ui.app.set_unpainted(True)
+    running = lambda: ui.app.job is not None and ui.app.job.node_id == 'optimise' and ui.app.job.image is not None
+    wait(ctx, running, 'an unpainted optimiser snapshot', 20000)
+    ctx.yield_()
+    ui.app.set_unpainted(False)
+    ctx.yield_(2)
+    assert ui.app.result('optimise') is painted and ui._live() is None, 'the unpainted snapshot stayed on screen'
+    reset('overpaint')
+    ui.app.set_params('optimise', replace(params('optimise'), enabled=False))
+    wait(ctx, lambda: not ui.app.busy, 'the pipeline to settle')
+
+
 def test_history_panel(ctx):
     ui.app.set_params('contrast', replace(params('contrast'), contrast=10.0))
     ui.app.set_params('contrast', replace(params('contrast'), contrast=20.0))
@@ -573,6 +592,7 @@ TESTS = [
     ('ui', 'tone_mode_switch', test_tone_mode_switch),
     ('ui', 'eyedroppers', test_eyedroppers),
     ('ui', 'edit_keeps_the_live_snapshot', test_edit_keeps_the_live_snapshot),
+    ('ui', 'hide_off_shows_the_painted_result', test_hide_off_shows_the_painted_result),
     ('ui', 'history_panel', test_history_panel),
     ('ui', 'autosave', test_autosave),
     ('ui', 'unsaved_dialog', test_unsaved_dialog),

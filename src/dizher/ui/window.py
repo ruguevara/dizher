@@ -569,12 +569,14 @@ class Window:
     def _live(self):
         """The running pair selection's or optimiser's latest snapshot. An edit cancels the stage, and the next one
         sends its first snapshot a moment later: till then the last snapshot stays, not the older finished result
-        (or none) flashing in between. A finished result that changes (the stage done, an undo, another image), a
-        user's cancel or a stage's error ends that."""
+        (or none) flashing in between. A finished result that changes (the stage done, an undo, another image), one
+        already there for the current graph (Hide off before the unpainted run ends), a user's cancel or a stage's
+        error ends that."""
         job, finished = self.app.job, self.app.shown('optimise')
         if job is not None and job.node_id in ('select', 'optimise') and not job.cancel.is_set() and job.image is not None:
             self._held = (job.image, finished)
-        elif self._held is not None and (self._held[1] is not finished or self.app.cancelled or self.app.errors):
+        elif self._held is not None and (self._held[1] is not finished or self.app.result('optimise') is not None
+                                         or self.app.cancelled or self.app.errors):
             self._held = None
         return None if self._held is None else self._held[0]
 
