@@ -21,7 +21,7 @@ from dizher.converter.energy import METHODS, LRGB2OPP, lightness_gain
 
 from .project import project_graph, DEFAULTS, select
 from .scr import render_scr, pairs_to_labels, same_region, black
-from .variants import read_variant, listing, reference_id
+from .variants import read_variant, listing, reference_id, RANGES
 
 GAMMA = 2.2
 METRICS = {}
@@ -58,10 +58,81 @@ class Picture:
             self.convs[m] = select(graph, self.memo)
         self.conv = next(iter(self.convs.values()))
         self.source = self.conv.image_rgb
+        self.energies = {}
 
     def case(self, variant) -> Case:
         bitmap, idx = read_variant(self.name, variant)
         return Case(self.source, render_scr(bitmap, idx, self.conv.palette), idx, self.conv, self.convs)
+
+    def energy_set(self, method) -> 'Energies':
+        """The method's energy as a function of its params, on a converter of its own."""
+        if method not in self.energies:
+            self.energies[method] = Energies(self.name, method, conv=self.convs[method])
+        return self.energies[method]
+
+
+SETUP = ('flare', 'luma_scale', 'chroma_scale', 'luma_alpha', 'chroma_alpha')   # params that rebuild the candidates' setup
+WEIGHTS = ('chroma', 'coherence', 'edge', 'chroma_noise', 'luma_noise')          # params the energy applies as they are
+
+
+class Energies:
+    """A picture's variants' energies under one method as a function of the Metric, Eye and Select pairs params:
+    the setup params (flare, the eye kernels) rebuild the candidates' energy when they change, the rest apply as they
+    are. On a converter copy of its own, so the preset's converter stays as it is."""
+
+    def __init__(self, name, method, variants=(), conv=None):
+        self.name = name
+        self.conv = (conv if conv is not None else Picture(name, methods=(method,)).convs[method]).copy()
+        self.conv.energy.invalidate()      # the copy's own arrays: calc() fills the dicts in place
+        self.labels = {}
+        for v in variants:
+            self.label(v)
+        self.setup = None
+
+    def label(self, variant):
+        if variant not in self.labels:
+            self.labels[variant] = pairs_to_labels(self.conv, read_variant(self.name, variant)[1])
+        return self.labels[variant]
+
+    def set_setup(self, params: dict):
+        setup = tuple((k, float(params[k])) for k in SETUP if k in params)
+        if setup != self.setup:
+            c = self.conv
+            for k, v in setup:
+                setattr(c, k, v)
+            c.gain = lightness_gain(c.image_luma, c.flare)
+            c.energy.calc()
+            self.setup = setup
+
+    def set_flare(self, flare):
+        self.set_setup(dict(flare=flare))
+
+    def __call__(self, params: dict, variants=None) -> dict:
+        """variant -> energy under params; a variant whose pairs the palette lacks reads nan."""
+        self.set_setup(params)
+        c = self.conv
+        if 'chroma' in params:
+            c.energy.weights['Chroma'] = params['chroma']
+        for k in ('coherence', 'edge', 'luma_noise', 'chroma_noise'):
+            if k in params:
+                setattr(c, k, params[k])
+        return {v: c.energy.energy(l) if (l >= 0).all() else float('nan')
+                for v, l in ((v, self.label(v)) for v in (variants if variants is not None else self.labels))}
+
+
+def parse_energy_metric(name: str):
+    """'energy:Exact mixture:flare=1+luma_scale=2.8' -> (method, params); the params over the method's preset."""
+    parts = name.split(':')
+    assert parts[0] == 'energy' and parts[1] in METHODS, name
+    params = {k: float(v) for k, v in METHODS[parts[1]].preset.items() if k in RANGES}
+    for item in (parts[2].split('+') if len(parts) > 2 and parts[2] else ()):
+        k, v = item.split('=')
+        assert k in SETUP or k in WEIGHTS, f'{name}: {k} is not an energy param'
+        params[k] = float(v)
+    return parts[1], params
+
+
+JUDGE_TERMS = ('opp_blur:2:nogain', 'gmsd')   # judge:<w> = the first over its median + w * the second over its median
 
 
 # ----- helpers -----------------------------------------------------------------------------------------------
@@ -311,12 +382,34 @@ def distances(conv, reference_rgb, result_rgb, pairs, metrics=DISTANCES) -> dict
 
 
 def scores(picture: Picture, variants, metrics=None) -> dict:
-    """variant -> metric -> value."""
+    """variant -> metric -> value. Besides METRICS: 'energy:<method>:<k=v+k=v>' (parse_energy_metric) and 'judge:<w>',
+    the composite of JUDGE_TERMS, each term over its median across the variants scored, the second weighted w."""
     metrics = metrics or list(METRICS)
+    plain = [m for m in metrics if m in METRICS]
+    judges = [m for m in metrics if m.startswith('judge:')]
+    energies = [m for m in metrics if m.startswith('energy:') and m not in METRICS]
+    unknown = [m for m in metrics if m not in plain + judges + energies]
+    assert not unknown, f'unknown metrics {unknown}'
+    terms = [t for t in JUDGE_TERMS if judges and t not in plain]
     out = {}
     for v in variants:
         c = picture.case(v)
-        out[v] = {m: METRICS[m](c) for m in metrics}
+        out[v] = {m: METRICS[m](c) for m in plain + terms}
+    for m in energies:
+        method, params = parse_energy_metric(m)
+        for v, e in picture.energy_set(method)(params, variants).items():
+            out[v][m] = e
+    if judges:
+        a, b = JUDGE_TERMS
+        med = lambda t: np.nanmedian([out[v][t] for v in variants]) or 1.0
+        ma, mb = med(a), med(b)
+        for m in judges:
+            w = float(m.split(':')[1])
+            for v in variants:
+                out[v][m] = out[v][a] / ma + w * out[v][b] / mb
+        for v in variants:
+            for t in terms:
+                del out[v][t]
     return out
 
 

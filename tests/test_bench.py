@@ -294,7 +294,9 @@ def test_reference_frozen_from_the_project(tmp_path, monkeypatch):
 
 def test_fit_energy_to_judgments(tmp_path, monkeypatch):
     """The energy under fitted params agrees with judgments that prefer the closer screen; the preset agrees too;
-    the sample stays in range and flare changes the candidates' setup only when it changes."""
+    the sample stays in range and the setup params rebuild the candidates only when they change; the dynamic
+    energy metrics and the composite judge score."""
+    import pytest
     from bench import fit as F, judge as J
     synthetic_picture(tmp_path, monkeypatch)
     J.add_pairs('pic', [('good', 'bad'), ('bad', 'good')])
@@ -302,15 +304,28 @@ def test_fit_energy_to_judgments(tmp_path, monkeypatch):
     s = F.sample(9, seed=1)
     assert len(s) == 9 and all(F.RANGES[k][0] <= p[k] <= F.RANGES[k][1] for p in s for k in F.FREE)
     assert {p['flare'] for p in s} == set(F.FLARES)
-    e = F.Energies('pic', 'Exact mixture', ['good', 'bad'])
+    from bench import metrics as M
+    e = M.Energies('pic', 'Exact mixture', ['good', 'bad'])
     first = e(dict(s[0]))
-    assert first['good'] < first['bad'] and e.flare == s[0]['flare']
+    assert first['good'] < first['bad'] and e.conv.flare == s[0]['flare']
     calc_calls = []
     monkeypatch.setattr(e.conv.energy, 'calc', lambda: calc_calls.append(1))
     e(dict(s[0], chroma=1.5))
-    assert not calc_calls                                                                # the same flare: no setup
+    assert not calc_calls                                                                # the same setup: no rebuild
     e(dict(s[0], flare=0.2))
-    assert calc_calls
+    assert calc_calls == [1] and e.conv.flare == 0.2
+    e(dict(s[0], flare=0.2, luma_scale=2.8))
+    assert calc_calls == [1, 1] and e.conv.luma_scale == 2.8                            # the eye kernels rebuild too
+    # the dynamic metrics: the preset's energy by either name, a wider blur another value, the composite judge
+    method, params = M.parse_energy_metric('energy:Exact mixture:flare=1+luma_scale=2.8')
+    assert method == 'Exact mixture' and params['flare'] == 1 and params['luma_scale'] == 2.8 and params['coherence'] == 6.0
+    with pytest.raises(AssertionError):
+        M.parse_energy_metric('energy:Exact mixture:zoom=2')
+    pic = M.Picture('pic')
+    v = M.scores(pic, ['good', 'bad'], ['energy:Exact mixture', 'energy:Exact mixture:', 'energy:Exact mixture:luma_scale=2.8',
+                                        'judge:1', 'opp_blur:2:nogain'])
+    assert v['good']['energy:Exact mixture'] == v['good']['energy:Exact mixture:'] != v['good']['energy:Exact mixture:luma_scale=2.8']
+    assert v['good']['judge:1'] < v['bad']['judge:1'] and 'gmsd' not in v['good'] and 'opp_blur:2:nogain' in v['good']
     out = F.fit(['pic'], J.load, 'user', n=6, seed=1, holdout=False, log=lambda s: None)
     assert set(out) == {'Exact mixture', 'Halftoned'}
     for m, r in out.items():

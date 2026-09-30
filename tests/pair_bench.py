@@ -42,7 +42,9 @@
     python tests/pair_bench.py rank [NAME...] [--by user] [--metrics m,m...] [--no-ref]
                                                       every judge metric (bench/metrics.py) by how often it puts the
                                                       winner of a judged pair below the loser: overall, by fault and
-                                                      by picture, and where it ranks the reference among the variants
+                                                      by picture, and where it ranks the reference among the variants;
+                                                      --metrics may name energy:<method>:<k=v+k=v> (the energy under
+                                                      those values over the preset) and judge:<w> (the composite)
     python tests/pair_bench.py fit [NAME...] [--by user] [--method M] [--n 150] [--seed 0]
                                                       the Metric and Select pairs values under which each method's
                                                       energy agrees most with the judge (bench/fit.py), with the

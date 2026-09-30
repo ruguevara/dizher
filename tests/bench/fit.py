@@ -6,41 +6,13 @@ agreement is fit to the pictures at hand."""
 import numpy as np
 from scipy.optimize import minimize
 
-from dizher.converter.energy import METHODS, lightness_gain
+from dizher.converter.energy import METHODS
 
-from .metrics import Picture, judged_pairs
-from .scr import pairs_to_labels
-from .variants import RANGES, read_variant
+from .metrics import Energies, judged_pairs
+from .variants import RANGES
 
 FLARES = (0.03, 0.1, 0.3, 0.6, 1.0)   # the first fits landed on the grid's top, so it goes past the UI's range
 FREE = ('chroma', 'coherence', 'edge', 'chroma_noise', 'luma_noise')
-
-
-class Energies:
-    """Every judged variant's energy of one picture under one method, as a function of the params."""
-
-    def __init__(self, name, method, variants):
-        self.picture = Picture(name, methods=(method,))
-        self.conv = self.picture.convs[method]
-        self.labels = {v: pairs_to_labels(self.conv, read_variant(name, v)[1]) for v in variants}
-        self.flare = None
-
-    def set_flare(self, flare):
-        if flare != self.flare:
-            c = self.conv
-            c.flare = flare
-            c.gain = lightness_gain(c.image_luma, flare)
-            c.energy.calc()
-            self.flare = flare
-
-    def __call__(self, params: dict) -> dict:
-        """variant -> energy under params (flare included)."""
-        self.set_flare(params['flare'])
-        c = self.conv
-        c.energy.weights['Chroma'] = params['chroma']
-        c.coherence, c.edge = params['coherence'], params['edge']
-        c.luma_noise, c.chroma_noise = params['luma_noise'], params['chroma_noise']
-        return {v: c.energy.energy(l) if (l >= 0).all() else float('nan') for v, l in self.labels.items()}
 
 
 def agreement(energies: dict, pairs, soft=False) -> float:
