@@ -12,6 +12,15 @@
       "noise"
      ],
      "note": "A: purple over the left half of the jacket, both faces checkered"
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "clash",
+      "noise",
+      "tone"
+     ],
+     "note": ""
     }
    }
   },
@@ -26,6 +35,15 @@
       "hue"
      ],
      "note": "B: teal patches on the jacket"
+    },
+    "user": {
+     "verdict": "same",
+     "tags": [
+      "clash",
+      "noise",
+      "tone"
+     ],
+     "note": ""
     }
    }
   },
@@ -41,6 +59,16 @@
       "noise"
      ],
      "note": "B: faces checkered yellow and grey, purple on the jacket, A smooth faces"
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "clash",
+      "hue",
+      "tone",
+      "noise"
+     ],
+     "note": ""
     }
    }
   },
@@ -55,6 +83,15 @@
       "hue"
      ],
      "note": "A: purple on the jacket and cyan spots in the title, though its faces are whiter"
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "clash",
+      "tone",
+      "noise"
+     ],
+     "note": ""
     }
    }
   },
@@ -69,6 +106,15 @@
       "hue"
      ],
      "note": "B: purple and cyan patches on the jacket"
+    },
+    "user": {
+     "verdict": "b",
+     "tags": [
+      "clash",
+      "tone",
+      "noise"
+     ],
+     "note": ""
     }
    }
   },
@@ -84,6 +130,15 @@
       "noise"
      ],
      "note": "A: checkered faces and purple jacket, B smooth faces and a blue jacket"
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "clash",
+      "tone",
+      "noise"
+     ],
+     "note": ""
     }
    }
   },
@@ -98,6 +153,15 @@
       "hue"
      ],
      "note": "A: purple over the left of the jacket"
+    },
+    "user": {
+     "verdict": "same",
+     "tags": [
+      "clash",
+      "tone",
+      "noise"
+     ],
+     "note": "\u0442\u0443\u0442 \u0438 \u0432\u044b\u0448\u0435 \u0448\u0430\u0445\u043c\u0430\u0442\u043a\u0430 \u0441\u0435\u0440\u043e\u0433\u043e \u0438 \u044f\u0440\u043a\u043e \u0431\u0435\u043b\u043e\u0433\u043e \u043f\u0440\u044f\u043c\u043e \u043d\u0430 \u043b\u0438\u0446\u0435 \u0443\u0436\u0430\u0441\u043d\u0430, \u0430 \u0441\u0435\u0440\u043e-\u0436\u0451\u043b\u0442\u043e\u0435 \u043d\u0430 \u0441\u0435\u0440\u043e-\u0431\u0435\u043b\u043e\u043c \u0432\u043e\u043e\u0431\u0449\u0435 \u043d\u0435 \u0432\u0438\u0434\u043d\u043e"
     }
    }
   }

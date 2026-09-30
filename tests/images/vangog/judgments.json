@@ -12,6 +12,14 @@
       "noise"
      ],
      "note": "B: the sky pale lavender and white with a red patch in the cypress, A keeps the blue and cyan"
+    },
+    "user": {
+     "verdict": "b",
+     "tags": [
+      "clash",
+      "noise"
+     ],
+     "note": ""
     }
    }
   },
@@ -26,6 +34,14 @@
       "noise"
      ],
      "note": "A: more cyan and blue blocks checkering the sky"
+    },
+    "user": {
+     "verdict": "same",
+     "tags": [
+      "clash",
+      "tone"
+     ],
+     "note": ""
     }
    }
   },
@@ -41,6 +57,14 @@
       "tone"
      ],
      "note": "A: flat cyan patches over the upper left sky"
+    },
+    "user": {
+     "verdict": "same",
+     "tags": [
+      "clash",
+      "tone"
+     ],
+     "note": ""
     }
    }
   },
@@ -56,6 +80,14 @@
       "tone"
      ],
      "note": "A: dark blue sky with a whitish swirl, B keeps the cyan swirls"
+    },
+    "user": {
+     "verdict": "b",
+     "tags": [
+      "clash",
+      "tone"
+     ],
+     "note": ""
     }
    }
   },
@@ -70,6 +102,14 @@
       "hue"
      ],
      "note": "A: the whole sky pale lavender"
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "clash",
+      "tone"
+     ],
+     "note": ""
     }
    }
   },
@@ -84,6 +124,14 @@
       "hue"
      ],
      "note": "B: the sky pale lavender"
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "clash",
+      "hue"
+     ],
+     "note": ""
     }
    }
   },
@@ -99,6 +147,13 @@
       "noise"
      ],
      "note": "B: pale lavender sky with a red patch in the cypress"
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "hue"
+     ],
+     "note": ""
     }
    }
   }

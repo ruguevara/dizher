@@ -11,6 +11,13 @@
       "hue"
      ],
      "note": "A: black flats and purple patches where the background is dark blue"
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "noise"
+     ],
+     "note": ""
     }
    }
   },
@@ -22,6 +29,13 @@
     "claude": {
      "verdict": "same",
      "tags": [],
+     "note": ""
+    },
+    "user": {
+     "verdict": "b",
+     "tags": [
+      "noise"
+     ],
      "note": ""
     }
    }
@@ -38,6 +52,14 @@
       "tone"
      ],
      "note": "B too yellow all over, the wall and letters lose their orange"
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "hue",
+      "tone"
+     ],
+     "note": ""
     }
    }
   },
@@ -53,6 +75,14 @@
       "tone"
      ],
      "note": "A: black background with a magenta patch, red wall"
+    },
+    "user": {
+     "verdict": "b",
+     "tags": [
+      "hue",
+      "tone"
+     ],
+     "note": ""
     }
    }
   },
@@ -67,6 +97,14 @@
       "hue"
      ],
      "note": "B: black background with purple"
+    },
+    "user": {
+     "verdict": "b",
+     "tags": [
+      "noise",
+      "clash"
+     ],
+     "note": ""
     }
    }
   },
@@ -81,6 +119,14 @@
       "hue"
      ],
      "note": "A: black flats and magenta, B keeps the blue"
+    },
+    "user": {
+     "verdict": "b",
+     "tags": [
+      "hue",
+      "tone"
+     ],
+     "note": ""
     }
    }
   },
@@ -96,6 +142,14 @@
       "tone"
      ],
      "note": "A yellowish, black background with magenta"
+    },
+    "user": {
+     "verdict": "same",
+     "tags": [
+      "noise",
+      "clash"
+     ],
+     "note": ""
     }
    }
   }

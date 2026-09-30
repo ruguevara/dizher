@@ -11,6 +11,14 @@
       "hue"
      ],
      "note": "A: red and cyan over the whole grey statue"
+    },
+    "user": {
+     "verdict": "b",
+     "tags": [
+      "hue",
+      "clash"
+     ],
+     "note": ""
     }
    }
   },
@@ -25,6 +33,13 @@
       "hue"
      ],
      "note": "B: cyan and red speckles in the hair and a red patch bottom right"
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "hue"
+     ],
+     "note": ""
     }
    }
   },
@@ -39,6 +54,13 @@
       "hue"
      ],
      "note": "A: cyan speckles and a red block bottom left"
+    },
+    "user": {
+     "verdict": "b",
+     "tags": [
+      "hue"
+     ],
+     "note": ""
     }
    }
   },
@@ -50,6 +72,13 @@
     "claude": {
      "verdict": "same",
      "tags": [],
+     "note": ""
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "clash"
+     ],
      "note": ""
     }
    }
@@ -65,6 +94,13 @@
       "hue"
      ],
      "note": "B: teal blocks top right"
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "hue"
+     ],
+     "note": ""
     }
    }
   },
@@ -79,6 +115,13 @@
       "hue"
      ],
      "note": "B: cyan all over the hair and a red patch bottom right"
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "hue"
+     ],
+     "note": ""
     }
    }
   },
@@ -93,6 +136,14 @@
       "hue"
      ],
      "note": "B: red and cyan over the whole statue"
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "hue",
+      "clash"
+     ],
+     "note": ""
     }
    }
   }

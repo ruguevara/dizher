@@ -12,6 +12,15 @@
       "noise"
      ],
      "note": "A: flat pale olive and grey blocks in the ground"
+    },
+    "user": {
+     "verdict": "b",
+     "tags": [
+      "tone",
+      "clash",
+      "hue"
+     ],
+     "note": ""
     }
    }
   },
@@ -26,6 +35,14 @@
       "hue"
      ],
      "note": "B: green speckles around the raccoon"
+    },
+    "user": {
+     "verdict": "b",
+     "tags": [
+      "clash",
+      "noise"
+     ],
+     "note": ""
     }
    }
   },
@@ -41,6 +58,15 @@
       "noise"
      ],
      "note": "B: flat pale olive blocks in the ground"
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "tone",
+      "clash",
+      "hue"
+     ],
+     "note": ""
     }
    }
   },
@@ -56,6 +82,14 @@
       "noise"
      ],
      "note": "A: olive and grey blocks in the ground, flat red sky"
+    },
+    "user": {
+     "verdict": "b",
+     "tags": [
+      "clash",
+      "hue"
+     ],
+     "note": ""
     }
    }
   },
@@ -71,6 +105,14 @@
       "noise"
      ],
      "note": "B: flat olive patches and grey blocks in the ground"
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "clash",
+      "noise"
+     ],
+     "note": ""
     }
    }
   },
@@ -86,6 +128,13 @@
       "noise"
      ],
      "note": "A: flat olive patches, dull ground"
+    },
+    "user": {
+     "verdict": "b",
+     "tags": [
+      "clash"
+     ],
+     "note": ""
     }
    }
   },
@@ -101,6 +150,15 @@
       "noise"
      ],
      "note": "A: large flat pale olive blocks in the ground"
+    },
+    "user": {
+     "verdict": "b",
+     "tags": [
+      "clash",
+      "tone",
+      "hue"
+     ],
+     "note": ""
     }
    }
   }

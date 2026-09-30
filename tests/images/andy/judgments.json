@@ -12,6 +12,14 @@
       "tone"
      ],
      "note": "A: the right half of the face grey-white, B keeps its yellow"
+    },
+    "user": {
+     "verdict": "b",
+     "tags": [
+      "clash",
+      "hue"
+     ],
+     "note": ""
     }
    }
   },
@@ -27,6 +35,13 @@
       "tone"
      ],
      "note": "B: orange in the hair and yellow on the face, A whiter"
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "hue"
+     ],
+     "note": "\u0433\u043b\u0430\u0437"
     }
    }
   },
@@ -42,6 +57,13 @@
       "tone"
      ],
      "note": "A: the right half of the face all white and grey, the red glasses gone"
+    },
+    "user": {
+     "verdict": "b",
+     "tags": [
+      "hue"
+     ],
+     "note": ""
     }
    }
   },
@@ -56,6 +78,14 @@
       "hue"
      ],
      "note": "B: a little more orange in the hair and cheeks"
+    },
+    "user": {
+     "verdict": "same",
+     "tags": [
+      "tone",
+      "hue"
+     ],
+     "note": ""
     }
    }
   },
@@ -70,6 +100,14 @@
       "hue"
      ],
      "note": "B: a flat saturated magenta patch over the left of the face"
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "clash",
+      "hue"
+     ],
+     "note": ""
     }
    }
   },
@@ -84,6 +122,13 @@
       "hue"
      ],
      "note": "B: orange hair, blue and red on the left, A flat magenta"
+    },
+    "user": {
+     "verdict": "b",
+     "tags": [
+      "tone"
+     ],
+     "note": ""
     }
    }
   },
@@ -95,6 +140,14 @@
     "claude": {
      "verdict": "same",
      "tags": [],
+     "note": ""
+    },
+    "user": {
+     "verdict": "a",
+     "tags": [
+      "hue",
+      "clash"
+     ],
      "note": ""
     }
    }
