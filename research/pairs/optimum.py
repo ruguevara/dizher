@@ -2,7 +2,13 @@
 noise)? Started from Select pairs, each cell in turn takes the pair the judge rates best on the cells around it, until
 a pass changes nothing.
 
-    python research/pairs/optimum.py [NAME...]     the projects build.py made; writes data/optimum/NAME.npz
+    python research/pairs/optimum.py ROUND [--full] [NAME...]   the fast judge's optimum, or the full one's (LPIPS,
+                                                        slow); the projects build.py made; data/optimum/rROUND/NAME.*
+    python research/pairs/optimum.py ROUND --pairs      counterexamples from that round's optima, for fit.py
+
+The optima are worse than the paintings (the user, round 1: in 8 of 9 pictures, the other slightly better). --pairs
+makes them local labels like build.py's B: per picture segment where the optimum shows other colours than the
+painting, the painting against itself with that segment from the optimum (O), the painting better, assumed.
 
 The search renders without DBS (Converter.render_labels: each pair's own halftone): the judge decides a painted segment
 the same way on it as on the full render in 0.90 of the segments (B) and 0.94 (C), rank correlation 0.96. Every
@@ -18,10 +24,10 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build import colours   # noqa: E402
-from common import DATA, Project, shown   # noqa: E402
-from metrics import judge_fast_score, judge_score   # noqa: E402
+from common import DATA, Project, segments, shown, window   # noqa: E402
+from metrics import JUDGE, JUDGE_FAST, all_metrics, judge_fast_score, judge_score, score_batch, seen_change   # noqa: E402
 
-OUT = DATA / 'optimum'
+ROOT = DATA / 'optimum'
 REACH, PASSES = 2, 4   # cells around a cell the judge sees; passes at most
 
 
@@ -36,7 +42,7 @@ def candidates(p: Project, sets: list) -> np.ndarray:
     return reps
 
 
-def search(p: Project, start: np.ndarray, seed=0):
+def search(p: Project, start: np.ndarray, judge: dict, seed=0):
     sel, T, (h, w) = p.selection, p.target(), p.selection.cell
     realized = sel.realized.astype(np.float32)
     labels = start.copy()
@@ -56,12 +62,11 @@ def search(p: Project, start: np.ndarray, seed=0):
                  max(c - REACH - c0, 0) * w:(min(c + REACH + 1, C) - c0) * w] = True
             cell = (slice((r - r0) * h, (r - r0 + 1) * h), slice((c - c0) * w, (c - c0 + 1) * w))
             px = (slice(r * h, (r + 1) * h), slice(c * w, (c + 1) * w))
-            best, best_label = np.inf, labels[r, c]
+            Xs = []
             for label in cand[r, c]:
                 Xc[cell] = realized[label][px]
-                s = judge_fast_score(Xc, Tc, mask)
-                if s < best - 1e-9:
-                    best, best_label = s, label
+                Xs.append(Xc.copy())
+            best_label = cand[r, c][int(np.argmin(score_batch(judge, Xs, Tc, mask)))]
             if best_label != labels[r, c] and not np.array_equal(realized[best_label][px], X[px]):
                 labels[r, c] = best_label
                 X[px] = realized[best_label][px]
@@ -72,18 +77,20 @@ def search(p: Project, start: np.ndarray, seed=0):
     return labels, changed
 
 
-def run(name: str):
+def run(job):
+    name, out, full = job
     t = time.time()
     p = Project(name)
     z = np.load(DATA / f'{name}.npz')
     T, painted, bare = p.target(), z['painted'], z['bare']
-    labels, changed = search(p, bare)
+    judge = JUDGE if full else JUDGE_FAST
+    labels, changed = search(p, bare, judge)
     O = p.render(labels)
     f = lambda k: z[k].astype(np.float32) / 255
     sets = colours(p.pairs, p.selection.palette.as_ubyte())
     same = lambda a, b: np.array([[sets[a[r, c]] == sets[b[r, c]] for c in range(a.shape[1])] for r in range(a.shape[0])])
     moved, was_painted = ~same(labels, bare), ~same(painted, bare)
-    report = dict(image=name, passes=changed, seconds=round(time.time() - t),
+    report = dict(image=name, judge=judge, passes=changed, seconds=round(time.time() - t),
                   cells_moved=int(moved.sum()), painted_cells=int(was_painted.sum()),
                   moved_to_painting=int((moved & was_painted & same(labels, painted)).sum()),
                   moved_where_painted=int((moved & was_painted).sum()),
@@ -92,14 +99,43 @@ def run(name: str):
                                                                           ('optimum', O))},
                   full={k: round(judge_score(X, T), 4) for k, X in (('select', f('H')), ('painting', f('A')),
                                                                      ('optimum', O))})
-    OUT.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(OUT / f'{name}.npz', labels=labels, O=np.round(O * 255).astype(np.uint8))
-    (OUT / f'{name}.json').write_text(json.dumps(report, indent=1))
+    out.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(out / f'{name}.npz', labels=labels, O=np.round(O * 255).astype(np.uint8))
+    (out / f'{name}.json').write_text(json.dumps(report, indent=1))
     return report
 
 
+def counterexamples(job):
+    """The painting against itself with one segment from the optimum, per segment where they show other colours."""
+    name, out, _ = job
+    p = Project(name)
+    z = np.load(DATA / f'{name}.npz')
+    T, A, painted = p.target(), z['A'].astype(np.float32) / 255, z['painted']
+    best = np.load(out / f'{name}.npz')['labels']
+    sets = colours(p.pairs, p.selection.palette.as_ubyte())
+    differs = np.array([[sets[best[r, c]] != sets[painted[r, c]] for c in range(best.shape[1])]
+                        for r in range(best.shape[0])])
+    seg, meta, renders = segments(T), [], {}
+    for s in range(seg.max() + 1):
+        cells = differs & (seg == s)
+        if not cells.any():
+            continue
+        L = painted.copy()
+        L[cells] = best[cells]
+        X, mask = p.render(L), window(cells)
+        renders[f'O{s}'] = np.round(X * 255).astype(np.uint8)
+        changed = np.repeat(np.repeat(cells, 8, 0), 8, 1)
+        meta.append(dict(id=f'{name}/{out.name}/{s}', image=name, segment=s, cells=int(cells.sum()),
+                         change=seen_change(X, A, changed), A=all_metrics(A, T, mask), B=all_metrics(X, T, mask)))
+    np.savez_compressed(out / f'pairs-{name}.npz', **renders)
+    (out / f'pairs-{name}.json').write_text(json.dumps(meta, indent=1))
+    return name, len(meta)
+
+
 if __name__ == '__main__':
-    names = sys.argv[1:] or sorted(f.stem for f in DATA.glob('*.npz'))
+    out, args = ROOT / f'r{sys.argv[1]}', sys.argv[2:]
+    pairs, full = '--pairs' in args, '--full' in args
+    names = [a for a in args if not a.startswith('--')] or sorted(f.stem for f in DATA.glob('*.npz'))
     with Pool(min(len(names), 9)) as pool:
-        for rep in pool.imap_unordered(run, names):
+        for rep in pool.imap_unordered(counterexamples if pairs else run, [(n, out, full) for n in names]):
             print(json.dumps(rep), flush=True)
