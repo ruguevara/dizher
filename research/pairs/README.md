@@ -36,6 +36,7 @@ over its cells grown by two cells (`common.window`).
     python research/pairs/variants.py       # ~3 min: kept cells against other coherences, data/variants/
     python research/pairs/flat.py           # ~7 min: flat counterexamples, data/flat/
     python research/pairs/fit.py            # the judge: selection, anchor, whole pictures (section 4)
+    python research/pairs/eyes.py           # ~10 min: every metric through 4 eye models; --deep: LPIPS/DISTS grid
     python research/pairs/views.py OUT [N]  # blind images of N pairs for judging by eye, with key.json
 
 ## Results
@@ -157,9 +158,34 @@ sources weighted alike: B (229), C (229) and the user's decisive votes of round 
   heaviest weight that costs at most 0.02 of the mean accuracy: S-CIELAB at 0.2 (standardised). The coarse anchors and
   `hue_family_miss` cost more at every weight.
 
-**Judge v1** = 1.035 `seam_excess` + 0.054 `scielab_dE` (`metrics.judge_score`), leaving one image out: B 0.62, C 0.74,
-cal 0.79, F 0.55. On whole pictures it ranks a black screen last on all 9 images; the painting over Select pairs on 4,
-even on 2 (autumn, sunset), under on 3 (RC1, golden-axe, andy).
+**Judge v1** = 1.035 `seam_excess` + 0.054 `scielab_dE`, leaving one image out: B 0.62, C 0.74, cal 0.79, F 0.55. On
+whole pictures it ranks a black screen last on all 9 images; the painting over Select pairs on 4, even on 2, under on 3.
+
+#### Through the eye (`eyes.py`)
+
+The metrics above compare the raw render, dither and all, except where they blur on their own (S-CIELAB, the seams,
+the coarse ones). `eyes.py` shows both sides and the picture first through an eye model and recomputes every
+candidate. Mean agreement over B, C and cal; F; noise (the null pairs' change over the real one):
+
+| metric | none | project eye, Gaussian 1 px | random-portrait exp(-r^0.95) | S-CIELAB 26 ppd | S-CIELAB 13 ppd |
+|---|---|---|---|---|---|
+| seam_excess | 0.73 / 0.41 / 0.15 | 0.71 / 0.39 / 0.12 | 0.67 / 0.39 / 0.10 | 0.69 / 0.47 / 0.23 | 0.69 / 0.50 / 0.14 |
+| scielab_dE | 0.43 / 0.74 / 0.12 | 0.41 / 0.72 / 0.13 | 0.40 / 0.70 / 0.10 | 0.39 / 0.73 / 0.12 | 0.39 / 0.69 / 0.12 |
+| lpips | 0.54 / 0.63 / 0.44 | **0.66 / 0.72 / 0.31** | 0.66 / 0.70 / 0.34 | 0.55 / 0.70 / 0.44 | 0.56 / 0.67 / 0.52 |
+| dists | 0.51 / 0.61 / 0.66 | 0.62 / 0.73 / 0.46 | 0.62 / 0.67 / 0.36 | 0.59 / 0.63 / 0.67 | 0.49 / 0.63 / 0.54 |
+
+- Only the network metrics change: they see dither texture as distortion. Through a blur of 0.75-1.5 px LPIPS agrees
+  0.65-0.66 (a grid of Gaussians 0.5-3 px and exp(-r^0.95) at scale 0.5-2; best 0.68, within a vote or two), and
+  more blur loses again. S-CIELAB at the user's viewing leaves the dither nearly whole (a narrow luma filter with a
+  sharpening lobe) and does not help. The rest, structure and fidelity alike, gain nothing from an eye in front.
+- LPIPS through the project's eye (Gaussian 1 px, fixed before the grid) is the first metric that agrees with the
+  labels and prefers the painting to the flat segment: B 0.57, C 0.71, cal 0.70, F 0.71.
+
+**Judge v2** (`metrics.judge_score`) = 0.883 `seam_excess` + 27.06 `lpips_eye`, LPIPS at the heaviest anchor weight
+within 0.02 of the best mean: leaving one image out B 0.65, C 0.76, cal 0.79, **F 0.68**. On whole pictures: a black
+screen last on all 9, the painting over Select pairs on **7** (under on autumn and golden-axe). The seam term is still
+the only one picked first on resamples of the images; LPIPS earns its place as the counterweight to smoothness, which
+the one-sided labels cannot select.
 
 - F is not a clean label. By eye (RC1/2, andy/25): the flat segment is clearly worse where it turns the yellow fur
   grey, which S-CIELAB calls closer, and about as good where it makes andy's hair plain black and cyan. F near 0.5

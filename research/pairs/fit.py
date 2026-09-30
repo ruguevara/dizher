@@ -31,7 +31,7 @@ from common import DATA   # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 MAX_TERMS, L2, BOOT = 4, 1.0, 30
-ANCHORS = ('scielab_dE', 'blur_dE_4', 'blur_dE_8', 'blur_rmse', 'hue_family_miss')
+ANCHORS = ('lpips_eye', 'dists_eye', 'scielab_dE', 'blur_dE_4', 'blur_dE_8', 'blur_rmse', 'hue_family_miss')
 SLACK = 0.02   # the accuracy a fidelity anchor may cost
 FREE = ('two_colour_share', 'dot_contrast')   # no known better direction; every other metric is an error, weight >= 0
 TRAIN, SOURCES = ('B', 'C', 'cal'), ('B', 'C', 'cal', 'F')

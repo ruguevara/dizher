@@ -2,7 +2,7 @@
 seams and no cell-to-cell change inside the segment, assumed worse than the painting. A judge of smoothness alone
 would prefer it; fit.py reports how often the judge does, without training on it.
 
-    python research/pairs/flat.py [NAME...]      the projects build.py made; writes data/flat/NAME.json"""
+    python research/pairs/flat.py [NAME...]      the projects build.py made; writes data/flat/NAME.json, .npz"""
 import json
 import sys
 import time
@@ -24,17 +24,19 @@ def build(name: str):
     z = np.load(DATA / f'{name}.npz')
     T, A = z['target'].astype(np.float32) / 255, z['A'].astype(np.float32) / 255
     painted, seg = z['painted'], z['segments']
-    meta = []
+    meta, renders = [], {}
     for m in json.loads((DATA / f'{name}.json').read_text()):
         cells = seg == m['segment']
         F = painted.copy()
         F[cells] = np.bincount(painted[cells]).argmax()
         if (F == painted).all():
             continue
-        mask = window(cells)
-        meta.append(dict(id=m['id'], image=name, cells=int(cells.sum()),
-                         A=all_metrics(A, T, mask), B=all_metrics(p.render(F), T, mask)))
+        mask, X = window(cells), p.render(F)
+        renders[f'F{m["segment"]}'] = np.round(X * 255).astype(np.uint8)
+        meta.append(dict(id=m['id'], image=name, segment=m['segment'], cells=int(cells.sum()),
+                         A=all_metrics(A, T, mask), B=all_metrics(X, T, mask)))
     OUT.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(OUT / f'{name}.npz', **renders)
     (OUT / f'{name}.json').write_text(json.dumps(meta, indent=1))
     return name, len(meta), time.time() - t
 
