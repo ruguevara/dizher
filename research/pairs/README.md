@@ -14,6 +14,12 @@ that improved them. Plan and reasoning: the session's plan (methodology for find
   does not show do not count.
 - There is no single right colouring. The data are comparisons, and a metric is judged by how often it prefers what
   the user prefers.
+- Colourings are compared through a blur of about a pixel (the converter's default eye, `metrics.project_eye`), not
+  as raw pixels. At the user's viewing a Spectrum pixel is ~2.3' and the dots are visible, but the dither's grain is
+  not what the user judges: raw, LPIPS and DISTS measure the grain, and a re-dither of the same colouring moves them
+  about as much as a painted change. S-CIELAB at the user's viewing keeps the dots too (a re-dither 5.8 dE on the
+  changed cells, against 2.0 through the eye, where a painted change is ~25). Metrics that blur or average on their
+  own (the seams at 2 px, cell means, the coarse ones) need no eye in front: one costs them a little (section 4).
 
 ## Pairs
 
@@ -187,6 +193,9 @@ screen last on all 9, the painting over Select pairs on **7** (under on autumn a
 the only one picked first on resamples of the images; LPIPS earns its place as the counterweight to smoothness, which
 the one-sided labels cannot select.
 
+- The painted changes are plainly visible through the eye: on the changed cells a median 25 dE (the project's eye,
+  1 px), where a re-dither of the same colouring moves 2.0. 15 of the 229 are within twice that; the 4 under it no
+  metric gets right, and they are no labels.
 - F is not a clean label. By eye (RC1/2, andy/25): the flat segment is clearly worse where it turns the yellow fur
   grey, which S-CIELAB calls closer, and about as good where it makes andy's hair plain black and cyan. F near 0.5
   is no verdict; the judge's optimum (session B) and the user's votes on F pairs decide.

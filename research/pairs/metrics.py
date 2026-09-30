@@ -1,8 +1,12 @@
 """Candidate metrics of a rendered colouring X against the tuned picture T, each over a pixel mask, lower is better.
 
-The eye model here is the judge's, separate from the selection energy's (whose blur is capped at 4 px): S-CIELAB
-(Zhang & Wandell 1996) at the user's viewing: the app at 2x-3x on a 21" 2560x1440 monitor at arm's length (~65 cm),
-~31 Spectrum pixels per degree at 2x, ~21 at 3x."""
+Compare colourings through a blur of about a pixel, never as raw pixels: the user judges the colouring, not the
+dither's grain. At their viewing (the app at 2x-3x on a 21" 2560x1440 monitor at ~65 cm, ~31 Spectrum pixels per
+degree at 2x, ~21 at 3x) a pixel is ~2.3' and the dots are visible, so S-CIELAB at that viewing (Zhang & Wandell 1996)
+keeps them: a re-dither of the same colouring moves it 5.8 dE, against 2.0 through the converter's eye
+(`project_eye`, a Gaussian of 1 px), where a painted change is ~25. LPIPS and DISTS are a coin toss raw and agree with
+the user through that eye (eyes.py). Metrics that blur or average on their own (the seams at 2 px, cell means, the
+coarse ones) need no eye in front."""
 import cv2
 import numpy as np
 
