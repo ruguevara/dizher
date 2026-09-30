@@ -12,7 +12,9 @@ P(A better) = sigmoid(sum_k w_k (f_k(other) - f_k(A)) / s_k), s_k the RMS of tha
 Every metric is an error, so its weight is >= 0, but for the FREE ones, whose better direction is not known: unbounded,
 the fit learns "further from the picture is better" from these one-sided labels (the painting always leaves the
 colorimetric optimum). Terms are added one at a time, up to MAX_TERMS, the one that most raises the
-leave-one-image-out accuracy (the mean over the three sources) each time. The labels hold nothing against a colouring
+leave-one-image-out accuracy (the mean over the three sources) each time; the selection is repeated on BOOT
+resamples of the images, and the judge keeps only the term most often picked first, as the later ones come and go
+with the images drawn (a step gains about one vote). The labels hold nothing against a colouring
 that is smooth but wrong, so a fidelity term (ANCHORS) is then fixed at the heaviest weight that costs at most SLACK
 of that accuracy. Prints the single metrics, the selection path, the anchor sweep, the judge's weights in the
 metrics' own units for metrics.JUDGE, and the judge on whole pictures."""
@@ -28,7 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import DATA   # noqa: E402
 
 HERE = Path(__file__).resolve().parent
-MAX_TERMS, L2 = 4, 1.0
+MAX_TERMS, L2, BOOT = 4, 1.0, 30
 ANCHORS = ('scielab_dE', 'blur_dE_4', 'blur_dE_8', 'blur_rmse', 'hue_family_miss')
 SLACK = 0.02   # the accuracy a fidelity anchor may cost
 FREE = ('two_colour_share', 'dot_contrast')   # no known better direction; every other metric is an error, weight >= 0
@@ -87,6 +89,25 @@ def loio(X, y, w, src, images, bounds):
     return {s: right[src == s].mean() for s in SOURCES if (src == s).any()}
 
 
+def select(X, y, src, images, bound):
+    """Forward selection by the leave-one-image-out mean accuracy over TRAIN: (chosen, best, [(term, mean, acc)])."""
+    w = np.array([1 / (src == s).sum() if s in TRAIN else 0.0 for s in src])
+    chosen, best, path = [], 0.0, []
+    while len(chosen) < MAX_TERMS:
+        trials = []
+        for j in range(X.shape[1]):
+            if j not in chosen:
+                acc = loio(X[:, chosen + [j]], y, w, src, images, [bound[i] for i in chosen + [j]])
+                trials.append((np.mean([acc[s] for s in TRAIN]), j, acc))
+        score, j, acc = max(trials, key=lambda t: t[0])
+        if score <= best:
+            break
+        chosen.append(j)
+        best = score
+        path.append((j, score, acc))
+    return chosen, best, path
+
+
 def main():
     features, rows = load()
     src = np.array([r[0] for r in rows])
@@ -104,25 +125,31 @@ def main():
     row = lambda acc: ''.join(f' {acc[s]:5.2f}' for s in SOURCES if s in acc)
     print(f"{'single metric, lower better':28}{head}")
     for j, k in enumerate(features):
-        print(f"{k:28}" + row({s: ((D[src == s, j] > 0) == (y[src == s] == 1)).mean() for s in SOURCES if counts[s]}))
+        print(f"{k:28}" + row({s: np.where(D[src == s, j] == 0, 0.5, (D[src == s, j] > 0) == (y[src == s] == 1)).mean()
+                                 for s in SOURCES if counts[s]}))   # a tie counts half
 
     print(f"\nforward selection, leave one image out, mean over {TRAIN}:\n{'+ term':28}{head}  mean")
-    chosen, best = [], 0.0
-    while len(chosen) < MAX_TERMS:
-        trials = []
-        for j in range(len(features)):
-            if j not in chosen:
-                acc = loio(X[:, chosen + [j]], y, w, src, images, [bound[i] for i in chosen + [j]])
-                trials.append((np.mean([acc[s] for s in TRAIN]), j, acc))
-        score, j, acc = max(trials)
-        if score <= best:
-            break
-        chosen.append(j)
-        best = score
+    chosen, best, path = select(X, y, src, images, bound)
+    for j, score, acc in path:
         print(f"{features[j]:28}{row(acc)} {score:5.2f}")
 
+    rng, picks = np.random.default_rng(0), []
+    names = np.unique(images)
+    for _ in range(BOOT):   # the selection again on images drawn with replacement
+        idx = np.concatenate([np.nonzero(images == im)[0] for im in rng.choice(names, len(names))])
+        picks.append([features[j] for j in select(X[idx], y[idx], src[idx], images[idx], bound)[0]])
+    print(f"\nthe selection on {BOOT} resamples of the images, how often each term is picked (first / at all):")
+    for k in sorted({k for p in picks for k in p}, key=lambda k: -sum(k in p for p in picks)):
+        print(f"{k:28} {sum(p[0] == k for p in picks):3} {sum(k in p for p in picks):4}")
+    # the terms after the first come and go with the images drawn: the judge keeps the one picked first most often
+    first = max(set(p[0] for p in picks), key=lambda k: sum(p[0] == k for p in picks))
+    chosen = [features.index(first)]
+    acc = loio(X[:, chosen], y, w, src, images, [bound[chosen[0]]])
+    best = np.mean([acc[s] for s in TRAIN])
+    print(f"\nthe judge's structure term: {first},{row(acc)} {best:5.2f}")
+
     print(f"\na fidelity anchor at a fixed standardised weight, the rest refitted:\n{'anchor':18} {'weight':>6}{head}  mean")
-    anchors = {}
+    trials = []
     for k in ANCHORS:
         a = features.index(k)
         cols = chosen + [a] if a not in chosen else chosen
@@ -130,14 +157,15 @@ def main():
             acc = loio(X[:, cols], y, w, src, images, [bound[i] if i != a else (v, v) for i in cols])
             score = np.mean([acc[s] for s in TRAIN])
             print(f"{k:18} {v:6.1f}{row(acc)} {score:5.2f}")
-            if score >= best - SLACK:
-                anchors[k] = (v, score, cols)
+            trials.append((k, v, score, cols))
 
-    k, (v, score, cols) = max(anchors.items(), key=lambda kv: (kv[1][0], kv[1][1]))
+    ok = [t for t in trials if t[2] >= best - SLACK]   # none: the best scoring one, lightest first
+    k, v, score, cols = max(ok, key=lambda t: (t[1], t[2])) if ok else max(trials, key=lambda t: (t[2], -t[1]))
     a = features.index(k)
     b = fit(X[:, cols], y, w, [bound[i] if i != a else (v, v) for i in cols])
     judge = {features[j]: bj / scale[j] for j, bj in zip(cols, b) if bj}
-    print(f"\nchosen anchor {k} at {v} (the heaviest within {SLACK} of the best mean)\nJUDGE = {{")
+    print(f"\nchosen anchor {k} at {v}, mean {score:.2f} ({'the heaviest within' if ok else 'none within'} {SLACK} of "
+          f"the best mean)\nJUDGE = {{")
     for f, wt in judge.items():
         print(f"    '{f}': {wt:.4g},")
     print('}')

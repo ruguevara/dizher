@@ -170,6 +170,24 @@ def ms_dssim(X, T, mask, channel=0, scales=(2, 4, 8)):
     return float(np.mean(out)) if out else 0.0
 
 
+_DEEP = {}
+
+
+def deep(X, T, mask, name):
+    """LPIPS or DISTS (piq, VGG features) over the bounding box of mask, both images at 2x as the app shows them.
+    Research only: needs torch and piq, not the app's dependencies."""
+    import piq
+    import torch
+    if name not in _DEEP:
+        torch.set_num_threads(1)   # one per worker process
+        _DEEP[name] = {'lpips': piq.LPIPS, 'dists': piq.DISTS}[name]().eval()
+    ys, xs = np.nonzero(mask)
+    crop = lambda a: torch.from_numpy(np.ascontiguousarray(np.repeat(np.repeat(
+        a[ys.min():ys.max() + 1, xs.min():xs.max() + 1], 2, 0), 2, 1))).permute(2, 0, 1)[None].float()
+    with torch.no_grad():
+        return float(_DEEP[name](crop(X), crop(T)))
+
+
 def all_metrics(X, T, mask) -> dict:
     """Every candidate metric of X against T over mask."""
     sx, st = scielab(X), scielab(T)
@@ -210,17 +228,16 @@ def all_metrics(X, T, mask) -> dict:
         'hue_family_miss': hue_family_miss(X, T, mask),
         'blur_dE_4': masked_mean(np.linalg.norm(lab_blurred(X, 4) - lab_blurred(T, 4), axis=-1), mask),
         'blur_dE_8': masked_mean(np.linalg.norm(lab_blurred(X, 8) - lab_blurred(T, 8), axis=-1), mask),
+        'lpips': deep(X, T, mask, 'lpips'),
+        'dists': deep(X, T, mask, 'dists'),
     }
 
 
-# judge v1 (fit.py, 2026-09-30): three seam terms, the share of two-colour cells (more is better) and S-CIELAB as a
-# fidelity anchor at the heaviest weight that costs no agreement with the user; fitted on painted segments only
+# judge v1 (fit.py, 2026-09-30): the seam term, the one the data hold to, and S-CIELAB as a fidelity anchor at the
+# heaviest weight that costs no agreement with the user; fitted on painted segments and the user's votes
 JUDGE = {
-    'seam_excess': 0.6125,
-    'seam_L_2': 1.713,
-    'seam_ab_1': 0.4247,
-    'two_colour_share': -3.496,
-    'scielab_dE': 0.05416,
+    'seam_excess': 1.035,
+    'scielab_dE': 0.05418,
 }
 
 
