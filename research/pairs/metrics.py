@@ -217,6 +217,12 @@ def project_eye(srgb):
     return encode(eye_blur(linear(srgb).astype(np.float32), 1.4, 2.0))
 
 
+def seen_change(X, Y, mask):
+    """Mean dE between X and Y through the converter's eye over mask: how visible a change is."""
+    lab = lambda img: xyz2lab(linear(project_eye(img)) @ SRGB2XYZ.T)
+    return masked_mean(np.linalg.norm(lab(X) - lab(Y), axis=-1), mask)
+
+
 def all_metrics(X, T, mask) -> dict:
     """Every candidate metric of X against T over mask."""
     sx, st = scielab(X), scielab(T)
@@ -266,10 +272,10 @@ def all_metrics(X, T, mask) -> dict:
 
 # judge v2 (fit.py, 2026-09-30): the seam term, the one the data hold to, and LPIPS through the converter's eye as the
 # anchor that keeps a smooth but wrong colouring from winning, at the heaviest weight that costs no agreement with the
-# user; fitted on the painted segments and the user's votes
+# user; fitted on the painted segments whose change the eye tells from a re-dither and on the user's votes
 JUDGE = {
-    'seam_excess': 0.8827,
-    'lpips_eye': 27.06,
+    'seam_excess': 0.8097,
+    'lpips_eye': 53.59,
 }
 
 
