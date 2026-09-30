@@ -11,7 +11,7 @@ from mokit.graph import Memo, evaluate
 from dizher import ops
 from dizher.converter.dither import Ordered
 
-IMAGE = Path(__file__).parent / 'images' / 'goldhill-256.png'
+IMAGE = Path(__file__).parent / 'images' / 'goldhill.png'
 
 
 def pipeline(**optimise):
@@ -99,6 +99,34 @@ def test_brush_brightness():
     assert same_bright(c64.HIRES.palette, 1, 9) == (1, 9)
 
 
+def test_fix_overrides():
+    """Fix paints every cell with the colours it shows: an unpainted cell its selected pair, no -1 left, a pair the
+    Spectrum cannot show the one shown, each painted colour in its role; the result keeps its colours and a fixed field
+    fixes to itself; a cell off the screen is kept as painted."""
+    memo = Memo()
+    graph = pipeline()
+    selection = evaluate(graph, 'select', memo)
+    R, C = selection.best_attr_indexes.shape
+    pairs = list(selection.palette.iter_idxs_pairs())
+    colours = lambda conv: selection.color_pairs[conv.best_attr_indexes]   # (R, C, 2, 3): the two blacks alike
+    painted = lambda cells: evaluate(
+        graph.with_params('overpaint', replace(graph['overpaint'].params, overrides=cells)), 'overpaint', memo)
+    cells = ((0, 0, 7, 1), (0, 1, 2, 14), (3, 5, -1, 14), (4, 4, 2, -1), (5, 5, -1, 8), (99, 0, 0, 7))   # 14 bright Y
+    fixed = ops.fix_overrides(selection, cells)
+    cell = {o[:2]: o[2:] for o in fixed}
+    assert len(fixed) == R * C + 1 and cell[99, 0] == (0, 7) and list(fixed) == sorted(fixed)
+    assert all(-1 not in o for o in fixed), fixed
+    assert cell[0, 0] == (7, 1)                         # a pair the Spectrum shows stays as painted
+    assert cell[0, 1] == (10, 14)                       # r/Y: the paper brightened, as Overpaint shows it
+    assert cell[3, 5][1] == 14 and cell[4, 4][0] == 2 and cell[5, 5][1] == 8   # painted colours in their painted roles
+    assert cell[10, 10] == pairs[selection.best_attr_indexes[10, 10]]           # unpainted: the selected pair
+    np.testing.assert_array_equal(colours(painted(fixed)), colours(painted(cells)))
+    assert ops.fix_overrides(selection, fixed) == fixed
+    whole = ops.fix_overrides(selection, ())
+    assert len(whole) == R * C and all(o[2:] == pairs[selection.best_attr_indexes[o[:2]]] for o in whole)
+    np.testing.assert_array_equal(colours(painted(whole)), colours(selection))
+
+
 def test_host_reruns_only_downstream_of_an_edit():
     from dizher.ui.app import Pipeline
     host = Pipeline()
@@ -120,6 +148,34 @@ def test_host_reruns_only_downstream_of_an_edit():
     assert 'target' in host.errors                   # C64 has no colour 16: an error on its block
     host.open(IMAGE.with_name('david.png'))          # another image is a new document
     assert host.shown('detail') is None and host.shown('optimise') is None and not host.errors   # nothing left on screen
+    host.close()
+
+
+def test_host_unpainted_view():
+    """Hide: the stages run without the painted cells, which stay in the graph, with no undo step; both conversions
+    stay in RAM, so switching either way reruns nothing; an edit of the painted cells shows them again."""
+    from dizher.ui.app import Pipeline
+    host = Pipeline()
+    host.open(IMAGE)
+    host.set_params('halftoner', replace(host.graph['halftoner'].params, halftoner=Ordered.label))
+    host.set_params('optimise', replace(host.graph['optimise'].params, enabled=False))
+    settle(host)
+    selected = host.result('select').best_attr_indexes
+    pairs = list(host.result('select').palette.iter_idxs_pairs())
+    paint = next(p for p in pairs if p != pairs[selected[0, 0]] and p[0] != p[1])
+    host.set_params('overpaint', replace(host.graph['overpaint'].params, overrides=((0, 0, *paint),)))
+    assert settle(host) == ['overpaint', 'halftone', 'optimise']
+    painted, graph, steps = host.result('optimise'), host.graph, len(host.past)
+    host.set_unpainted(True)
+    assert settle(host) == [], 'the conversion from before the painting is still in RAM'
+    assert (host.result('overpaint').best_attr_indexes == selected).all() and host.result('optimise') is not painted
+    assert host.graph is graph and len(host.past) == steps, 'a view: the painted cells stay, no undo step'
+    host.set_unpainted(False)
+    assert settle(host) == [] and host.result('optimise') is painted, 'the painted result is still in RAM'
+    host.set_unpainted(True)
+    assert settle(host) == []
+    host.set_params('overpaint', replace(host.graph['overpaint'].params, overrides=()))
+    assert not host.unpainted, 'an edit of the painted cells shows them'
     host.close()
 
 
@@ -232,7 +288,6 @@ def test_project_round_trip_and_restore():
     host.close(), loaded.close()
 
 
-
 def test_selection_methods():
     """New documents score pairs by the newest method with the values it was tuned with; a project saved before the
     choice existed opens as Halftoned, develop's scoring; picking a method brings its Metric and Select pairs values."""
@@ -280,10 +335,9 @@ def test_undo_redo():
         host.undo()
     assert host.graph == start and not host.past
     host.redo()
-    host.open(Path(__file__).parent / 'images' / 'goldhill-256.png')   # a new document has no history
+    host.open(Path(__file__).parent / 'images' / 'goldhill.png')   # a new document has no history
     assert not host.past and not host.future
     host.close()
-
 
 
 def test_host_watches_the_source_file():
@@ -351,7 +405,9 @@ if __name__ == '__main__':
     test_pipeline_converts_and_reuses_upstream()
     test_pipeline_matches_single_converter()
     test_overpaint()
+    test_fix_overrides()
     test_host_reruns_only_downstream_of_an_edit()
+    test_host_unpainted_view()
     test_host_discards_stale_completions()
     test_project_round_trip_and_restore()
     test_selection_methods()

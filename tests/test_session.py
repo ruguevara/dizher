@@ -6,7 +6,7 @@ from pathlib import Path
 
 from mokit import project
 
-IMAGE = Path(__file__).parent / 'images' / 'goldhill-256.png'
+IMAGE = Path(__file__).parent / 'images' / 'goldhill.png'
 
 
 def restarted(window):
