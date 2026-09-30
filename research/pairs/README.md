@@ -43,6 +43,8 @@ over its cells grown by two cells (`common.window`).
     python research/pairs/flat.py           # ~7 min: flat counterexamples, data/flat/
     python research/pairs/fit.py            # the judge: selection, anchor, whole pictures (section 4)
     python research/pairs/eyes.py           # ~10 min: every metric through 4 eye models; --deep: LPIPS/DISTS grid
+    python research/pairs/optimum.py N [--full --mps]   # a judge's optimum, round N (~25 min fast, ~1.5 h full on the GPU)
+    python research/pairs/optimum.py N --pairs          # ~7 min: round N's optima as counterexamples for fit.py
     python research/pairs/views.py OUT [N]  # blind images of N pairs for judging by eye, with key.json
 
 ## Results
@@ -221,5 +223,33 @@ energy offline.
 - Seven of round 1's kept-cell pairs no longer rebuilt as voted in the first rebuild, six in the next ones (other cell
   counts; one run of `variants.py` in three differed on diver-sunset and could not be repeated, pooled or not). Those
   are left out. `round.py` now writes each sheet's cells into the key.
+
+### 5. Session B: the judges' optima (2026-10-01)
+
+`optimum.py` looks for the colouring a judge likes best: from Select pairs, each cell in turn takes, of every distinct
+colour pair (71), the one the judge rates best on the cells around it, for up to 4 passes, on renders without DBS (the
+judge decides the painted segments the same way on them in 0.90-0.94, rank correlation 0.96); the result is rendered
+through the project's pipeline. `--pairs` turns a round's optima into local labels (O): per picture segment where the
+optimum shows other colours, the painting against itself with that segment from the optimum, the painting better
+(assumed; visible changes only). The full judge's search runs LPIPS batched on the GPU (`--mps`, ~0.3 s a cell).
+
+- Round 1, fast judge v2 (seams + SSIM of lightness): the optimum drains the colour, black and white cells and outlines
+  where the picture is chromatic (andy's face, golden-axe's green and blue). The user: worse than the painting in 8 of
+  9 pictures, slightly better in one. SSIM of lightness is colour-blind and the seam term rewards one hue.
+- With round 1's counterexamples the full judge's data pick LPIPS through the eye by themselves: **full judge v3** =
+  16.4 `lpips_eye` + 1.46 `seam_L_1`, leaving one image out B 0.68, C 0.77, cal 0.85, O 0.76, F 0.71; on whole
+  pictures black last on 9, the painting over Select pairs on 7 and over the round 1 optimum on 8. New torch-free
+  terms for a drained colouring: `grey_share` (cells shown near grey where the picture is chromatic),
+  `chroma_deficit_eye` (the first colour term that agrees with the user and catches the optimum alone: B 0.58, C 0.63,
+  cal 0.61, O 0.77), `colourfulness_deficit` (no use: a Spectrum render is always more colourful).
+- **Fast judge v3** = 0.41 `seam_ab_1` + 1.23 `seam_L_1` + 13.95 `grey_share`: B 0.75, C 0.77, cal 0.73, O 0.65.
+  Round 2, its optimum: flat light grey and yellow cells instead of grey ones, detail lost; the full judge rates it
+  below the painting on 8 of 9. With both rounds' counterexamples no torch-free combination holds the user's labels
+  and the counterexamples together: whatever resists the optima (detail lost, chroma lost) is what the paintings also
+  give up against Select pairs. The fast judge stays v3, **for ranking finished conversions only, never as a target**
+  (the user's decision). The full judge is the target for tuning the converter offline.
+- Round 3, the full judge v3's optimum: colourful and detailed, closer to the painting (25% of painted cells get the
+  painted colours, 10-15% for the fast judge's), but to Claude's eye with colour noise: saturated blocks and specks
+  from cell to cell. Its seam term sees lightness only.
 
 Summary and next steps: `HANDOFF.md`.
