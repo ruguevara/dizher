@@ -1,0 +1,201 @@
+<title>Какая раскраска лучше</title>
+<style>
+/* One comparison at a time: the sheet at its own pixel size on a graphite matte, the verdict bar under it,
+   the round's progress as a strip of cells above, like the attribute grid of a Spectrum screen. */
+:root {
+  --bg: #eceae6;
+  --panel: #f7f6f3;
+  --matte: #3b3d42;
+  --fg: #1f2024;
+  --muted: #676a72;
+  --line: #d3d0ca;
+  --accent: #1f5fd1;          /* ZX blue, lifted */
+  --accent-ink: #ffffff;
+  --done: #2f8f5b;
+  --warn: #b5541c;
+  --display: "Pixelify Sans", "Golos Text", system-ui, sans-serif;
+  --body: "Golos Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17181b; --panel: #202226; --matte: #2a2c31; --fg: #e8e7e3; --muted: #9a9ca3; --line: #34373d;
+    --accent: #6c9bff; --accent-ink: #0d1016; --done: #5cc48a; --warn: #f08a4b; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #17181b; --panel: #202226; --matte: #2a2c31; --fg: #e8e7e3; --muted: #9a9ca3; --line: #34373d;
+  --accent: #6c9bff; --accent-ink: #0d1016; --done: #5cc48a; --warn: #f08a4b; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font: 15px/1.45 var(--body); }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 18px 40px; display: grid; gap: 14px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; }
+h1 { font: 500 1.6rem/1.1 var(--display); margin: 0; letter-spacing: 0.02em; text-wrap: balance; }
+.count { font: 500 0.95rem var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.intro { margin: 0; color: var(--muted); max-width: 70ch; }
+.strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(26px, 1fr)); gap: 3px; }
+.strip button { height: 22px; border: 1px solid var(--line); background: var(--panel); border-radius: 2px; padding: 0;
+  font: 0.62rem var(--mono); color: var(--muted); cursor: pointer; }
+.strip button.voted { background: var(--done); border-color: var(--done); color: var(--panel); }
+.strip button.here { outline: 2px solid var(--accent); outline-offset: 1px; }
+.stage { background: var(--matte); border-radius: 6px; padding: 12px; display: grid; justify-items: center; gap: 8px; overflow: hidden; }
+.stage img { image-rendering: pixelated; image-rendering: crisp-edges; max-width: 100%; height: auto; display: block; }
+.legend { color: #c9cbd0; font: 0.8rem var(--mono); text-align: center; }
+.legend b { color: #ffffff; font-weight: 600; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: grid; gap: 12px; }
+.scale { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.scale button, .chips button, .row button { font: 0.92rem var(--body); border: 1px solid var(--line); background: var(--bg);
+  color: var(--fg); border-radius: 4px; padding: 9px 6px; cursor: pointer; }
+.scale button small { display: block; font: 0.7rem var(--mono); color: var(--muted); margin-top: 2px; }
+.scale button.on, .chips button.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.scale button.on small { color: var(--accent-ink); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chips span, .label { color: var(--muted); font-size: 0.85rem; }
+.bad { display: flex; align-items: center; gap: 6px; }
+input[type="text"] { flex: 1 1 260px; min-width: 0; font: 0.92rem var(--body); padding: 8px 10px; border: 1px solid var(--line);
+  border-radius: 4px; background: var(--bg); color: var(--fg); }
+.nav { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.keys { color: var(--muted); font: 0.75rem var(--mono); }
+.status { font-size: 0.85rem; color: var(--muted); min-height: 1.2em; }
+.status.err { color: var(--warn); }
+.done-note { background: var(--panel); border: 1px solid var(--done); border-radius: 6px; padding: 12px 14px; }
+footer { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; color: var(--muted); font-size: 0.85rem; }
+footer textarea { width: 100%; min-height: 80px; font: 0.75rem var(--mono); background: var(--bg); color: var(--fg); border: 1px solid var(--line); }
+@media (max-width: 560px) { .scale { grid-template-columns: repeat(2, minmax(0, 1fr)); } .scale button:nth-child(3) { grid-column: 1 / -1; grid-row: 2; } }
+@media (prefers-reduced-motion: no-preference) { .strip button, .scale button { transition: background-color 120ms, border-color 120ms; } }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Pixelify+Sans:wght@500&display=swap">
+
+<div class="wrap">
+  <header>
+    <h1>Какая раскраска лучше</h1>
+    <span class="count" id="count">0 из 0</span>
+  </header>
+  <p class="intro">Два варианта отличаются только в обведённых клетках (и немного в точках DBS вокруг). Смотри как
+    обычно, 2x–3x, можно с прищуром. Выбирай, какой вариант ты оставил бы в финальной картинке. Если правильного ответа
+    нет, «одинаково»; если оба плохие, отметь это отдельно. Тип проблемы и заметка по желанию.</p>
+  <nav class="strip" id="strip" aria-label="Все сравнения"></nav>
+  <section class="stage">
+    <img id="sheet" alt="Сравнение: сверху исходник, вариант 1 и вариант 2 крупно; снизу оба экрана целиком">
+    <div class="legend">сверху: <b>исходник</b> · <b>1</b> · <b>2</b> &nbsp;|&nbsp; снизу: экран <b>1</b> · экран <b>2</b>, клетки обведены</div>
+  </section>
+  <section class="panel">
+    <div class="scale" id="scale">
+      <button data-v="-2" id="v-2">1 намного лучше<small>Shift ←</small></button>
+      <button data-v="-1" id="v-1">1 лучше<small>←</small></button>
+      <button data-v="0" id="v0">одинаково<small>пробел</small></button>
+      <button data-v="1" id="v1">2 лучше<small>→</small></button>
+      <button data-v="2" id="v2">2 намного лучше<small>Shift →</small></button>
+    </div>
+    <div class="row">
+      <label class="bad"><input type="checkbox" id="bad"> обе плохие <span class="keys">B</span></label>
+      <div class="chips" id="chips"><span>что не так у худшей:</span>
+        <button data-p="hue">оттенок</button><button data-p="blocks">блоки</button><button data-p="noise">шум</button>
+        <button data-p="detail">детали</button><button data-p="other">другое</button>
+      </div>
+    </div>
+    <div class="row"><input type="text" id="note" placeholder="Заметка: почему (по желанию)"></div>
+    <div class="nav">
+      <button id="prev" class="navbtn">← назад <span class="keys">[</span></button>
+      <span class="status" id="status" role="status"></span>
+      <button id="next" class="navbtn">дальше <span class="keys">]</span> →</button>
+    </div>
+  </section>
+  <div class="done-note" id="done" hidden>Все сравнения оценены. Напиши в чат «проголосовал»: я прочитаю голоса отсюда.</div>
+  <footer>
+    <button id="copy">Скопировать голоса как JSON</button>
+    <span id="store">подключаю хранилище…</span>
+    <textarea id="dump" hidden readonly aria-label="Голоса в JSON"></textarea>
+  </footer>
+</div>
+
+<script>
+const SHEETS = __SHEETS__;
+const $ = (id) => document.getElementById(id);
+const votes = {};                     // sheet -> {verdict, bad, problem, note, at}
+let i = 0, db = null, draft = {bad: false, problem: null};
+
+try { Object.assign(votes, JSON.parse(localStorage.getItem('dizher-votes') || '{}')); } catch (e) {}
+const keepLocal = () => { try { localStorage.setItem('dizher-votes', JSON.stringify(votes)); } catch (e) {} };
+
+function render() {
+  const name = SHEETS[i], v = votes[name] || {};
+  $('sheet').src = 'img/' + name + '.png';
+  $('count').textContent = `${Object.keys(votes).filter((k) => SHEETS.includes(k)).length} из ${SHEETS.length} · №${i + 1} (${name})`;
+  document.querySelectorAll('#scale button').forEach((b) => b.classList.toggle('on', v.verdict !== undefined && +b.dataset.v === v.verdict));
+  draft = {bad: v.bad || false, problem: v.problem || null};
+  $('bad').checked = draft.bad;
+  document.querySelectorAll('#chips button').forEach((b) => b.classList.toggle('on', b.dataset.p === draft.problem));
+  $('note').value = v.note || '';
+  document.querySelectorAll('#strip button').forEach((b, j) => {
+    b.classList.toggle('voted', SHEETS[j] in votes);
+    b.classList.toggle('here', j === i);
+  });
+  $('done').hidden = !SHEETS.every((s) => s in votes);
+  const nextImg = new Image(); nextImg.src = 'img/' + SHEETS[(i + 1) % SHEETS.length] + '.png';
+}
+
+function go(j) { i = (j + SHEETS.length) % SHEETS.length; $('status').textContent = ''; $('status').className = 'status'; render(); }
+function nextOpen() {
+  for (let k = 1; k <= SHEETS.length; k++) { const j = (i + k) % SHEETS.length; if (!(SHEETS[j] in votes)) return go(j); }
+  go(i + 1);
+}
+
+async function vote(verdict) {
+  const name = SHEETS[i];
+  const v = {verdict, bad: draft.bad, problem: draft.problem, note: $('note').value.trim(), at: new Date().toISOString()};
+  votes[name] = v; keepLocal();
+  if (db) {
+    try { await db.doc('votes/' + name).set(v); }
+    catch (e) { $('status').textContent = 'Не сохранилось в хранилище (' + (e && e.code || 'ошибка') + '), голос остался в этом браузере.'; $('status').className = 'status err'; render(); return; }
+  }
+  nextOpen();
+}
+
+function build() {
+  const strip = $('strip');
+  SHEETS.forEach((s, j) => {
+    const b = document.createElement('button');
+    b.textContent = j + 1; b.title = s; b.addEventListener('click', () => go(j));
+    strip.appendChild(b);
+  });
+  document.querySelectorAll('#scale button').forEach((b) => b.addEventListener('click', () => vote(+b.dataset.v)));
+  document.querySelectorAll('#chips button').forEach((b) => b.addEventListener('click', () => {
+    draft.problem = draft.problem === b.dataset.p ? null : b.dataset.p;
+    document.querySelectorAll('#chips button').forEach((c) => c.classList.toggle('on', c.dataset.p === draft.problem));
+  }));
+  $('bad').addEventListener('change', () => { draft.bad = $('bad').checked; });
+  $('prev').addEventListener('click', () => go(i - 1));
+  $('next').addEventListener('click', () => go(i + 1));
+  $('copy').addEventListener('click', async () => {
+    const text = JSON.stringify(votes, null, 1);
+    try { await navigator.clipboard.writeText(text); $('status').textContent = 'Голоса скопированы.'; }
+    catch (e) { $('dump').hidden = false; $('dump').value = text; $('dump').select(); $('status').textContent = 'Выдели текст ниже и скопируй.'; }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' && e.target.type === 'text') return;
+    const map = {ArrowLeft: e.shiftKey ? -2 : -1, ArrowRight: e.shiftKey ? 2 : 1, ' ': 0};
+    if (e.key in map) { e.preventDefault(); vote(map[e.key]); }
+    else if (e.key === '[') go(i - 1);
+    else if (e.key === ']') go(i + 1);
+    else if (e.key === 'b' || e.key === 'B' || e.key === 'и' || e.key === 'И') { $('bad').checked = !$('bad').checked; draft.bad = $('bad').checked; }
+  });
+  const first = SHEETS.findIndex((s) => !(s in votes));
+  go(first < 0 ? 0 : first);
+}
+
+async function connect() {
+  try { db = await window.claude?.use?.('db'); } catch (e) { db = null; }
+  if (!db) { $('store').textContent = 'Хранилище недоступно: голоса остаются в этом браузере, в конце скопируй их кнопкой.'; return; }
+  $('store').textContent = 'Голоса сохраняются в хранилище страницы.';
+  db.collection('votes').onSnapshot((snap) => {
+    snap.docs.forEach((d) => { if (d.exists) votes[d.id] = d.data(); });
+    keepLocal(); render();
+  }, (e) => { $('store').textContent = 'Связь с хранилищем прервалась (' + e.code + '): голоса остаются в этом браузере.'; });
+}
+
+build();
+connect();
+</script>
