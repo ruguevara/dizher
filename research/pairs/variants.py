@@ -76,6 +76,6 @@ def build(name: str):
 
 if __name__ == '__main__':
     names = sys.argv[1:] or sorted(p.parent.name for p in IMAGES.glob('*/project.json'))
-    with Pool(4) as pool:
+    with Pool(min(len(names), 9)) as pool:
         for name, n, s in pool.imap_unordered(build, names):
             print(f'{name}: {n} pairs, {s:.0f} s', flush=True)
