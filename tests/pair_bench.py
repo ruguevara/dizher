@@ -6,9 +6,11 @@
                                                       each painted project converted with its painting hidden, under
                                                       its own settings (default: what the user corrected) or under a
                                                       method's tuned Metric and Select values, and scored against the
-                                                      reference: cells agreeing, and the distance of the picture it
-                                                      shows to the reference picture (de2000:4 and the other judge
-                                                      metrics; the painting is judged as a picture, not by attributes)
+                                                      reference: cells agreeing (fixed: of the cells the user
+                                                      corrected; kept: of the rest), and the distance of the picture
+                                                      it shows to the reference picture (de2000:4 whole and over the
+                                                      corrected cells, and the other judge metrics; the painting is
+                                                      judged as a picture, not by attributes)
     python tests/pair_bench.py compare [NAME...] [--sheets DIR]
                                                       the project's own settings and every method side by side
     python tests/pair_bench.py regions NAME [--out DIR] [--k N]
@@ -75,7 +77,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from bench import render as R, variants as V, judge as J, zxart as Z, metrics as M, fit as F         # noqa: E402
 from bench.scr import pair_name, parse_pair, black, label_pairs, matches, score, render_scr   # noqa: E402
 from bench.project import (IMAGES, DEFAULTS, project_graph, select, finish, reference,                  # noqa: E402
-                           has_reference, convert_as_saved)
+                           has_reference, convert_as_saved, changed_cells)
 import bench.project                                                                                  # noqa: E402
 
 JUDGED = ('anubis', 'rocket-rackoon', 'jojo', 'andy', 'david', 'vangog')   # the calibration set
@@ -124,13 +126,22 @@ def parse_sets(items):
 
 def scored(name, conv, final, seconds=0.0):
     """Cell agreement of a selection with the reference, and the distances of the finished picture to the reference
-    picture (bench/metrics.py DISTANCES), with the spot checks."""
+    picture (bench/metrics.py DISTANCES), with the spot checks. The reference grew out of the project's own
+    conversion, and the user corrected only what looked wrong, so the cells that were changed and the cells that
+    were kept are told apart: fixed is the share of corrected cells the selection gets as the user painted them, kept
+    the share of the other cells it leaves as the user accepted, de2000_fixed the picture distance over the corrected
+    cells alone."""
     bitmap, ref_idx, ref, painted = reference(name)
     got = label_pairs(conv, conv.best_attr_indexes)
     s = score(ref, got, painted)
+    ok, changed = matches(ref, got), changed_cells(name)
+    s['fixed'] = ok[changed].mean() if changed.any() else np.nan
+    s['kept'] = ok[~changed].mean() if (~changed).any() else np.nan
+    s['changed'] = int(changed.sum())
     ref_img = render_scr(bitmap, ref_idx, conv.palette)
     pairs = np.array(list(conv.palette.iter_idxs_pairs()))[conv.best_attr_indexes]
     s.update(M.distances(conv, ref_img, final.dithered_result, pairs))
+    s['de2000_fixed'] = M.de2000_masked(ref_img, final.dithered_result, conv.expand_cells(changed), 4)
     s['name'], s['seconds'], s['spots'] = name, seconds, spots(name, ref, got, painted)
     return s
 
@@ -150,16 +161,16 @@ def convert(name, method, memo, **sets):
 
 
 def print_rows(rows):
-    print(f"{'image':16} {'agree':>6} {'painted':>7} {'false':>6} {'changes':>7} {'de2000':>7} {'scielab':>7} "
-          f"{'opp2':>7} {'msssim':>7} {'s':>5}")
+    print(f"{'image':16} {'agree':>6} {'fixed':>6} {'kept':>6} {'chg':>4} {'false':>6} {'changes':>7} {'de2000':>7} "
+          f"{'dE_fix':>7} {'scielab':>7} {'msssim':>7} {'s':>5}")
     for s in rows:
-        print(f"{s['name']:16} {s['agree']:6.3f} {s['painted']:7.3f} {s['false_seams']:6.3f} {s['pair_changes']:7d} "
-              f"{s['de2000:4']:7.3f} {s['scielab']:7.3f} {s['opp_blur:2']:7.4f} {s['msssim_ab']:7.3f} "
-              f"{s['seconds']:5.1f}  {s['spots']}")
+        print(f"{s['name']:16} {s['agree']:6.3f} {s['fixed']:6.3f} {s['kept']:6.3f} {s['changed']:4d} "
+              f"{s['false_seams']:6.3f} {s['pair_changes']:7d} {s['de2000:4']:7.3f} {s['de2000_fixed']:7.3f} "
+              f"{s['scielab']:7.3f} {s['msssim_ab']:7.3f} {s['seconds']:5.1f}  {s['spots']}")
     mean = lambda k: np.nanmean([s[k] for s in rows])
-    print(f"{'mean':16} {mean('agree'):6.3f} {mean('painted'):7.3f} {mean('false_seams'):6.3f} "
-          f"{mean('pair_changes'):7.0f} {mean('de2000:4'):7.3f} {mean('scielab'):7.3f} {mean('opp_blur:2'):7.4f} "
-          f"{mean('msssim_ab'):7.3f}")
+    print(f"{'mean':16} {mean('agree'):6.3f} {mean('fixed'):6.3f} {mean('kept'):6.3f} {mean('changed'):4.0f} "
+          f"{mean('false_seams'):6.3f} {mean('pair_changes'):7.0f} {mean('de2000:4'):7.3f} {mean('de2000_fixed'):7.3f} "
+          f"{mean('scielab'):7.3f} {mean('msssim_ab'):7.3f}")
 
 
 def run(names, sets, sheets=None, memos=None, quiet=False, method=PROJECT):

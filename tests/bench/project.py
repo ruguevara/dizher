@@ -17,7 +17,9 @@ from mokit.project import load_project
 from dizher import ops
 from dizher.converter.energy import NEWEST
 
-from .scr import read_scr, shown
+import numpy as np
+
+from .scr import read_scr, shown, matches
 
 IMAGES = Path(__file__).parent.parent / 'images'
 DEFAULTS = ('metric', 'eye', 'select')      # nodes a run resets, so every image is judged under one setting
@@ -67,22 +69,40 @@ def has_reference(name) -> bool:
 
 
 def freeze(name, force=False, log=None) -> Path:
-    """The project as saved converted whole (painting included) to cache/reference.scr, unless it is there for this
-    project.json already; returns the file."""
+    """The project as saved converted whole (painting included) to cache/reference.scr, and with the painting hidden
+    to cache/unpainted.scr (the conversion the user corrected), unless they are there for this project.json already;
+    returns the reference file."""
     cache = IMAGES / name / 'cache'
-    scr, meta = cache / 'reference.scr', cache / 'reference.json'
+    scr, unpainted, meta = cache / 'reference.scr', cache / 'unpainted.scr', cache / 'reference.json'
     h = project_hash(name)
-    if not force and scr.exists() and meta.exists() and json.loads(meta.read_text()).get('project') == h:
+    if not force and scr.exists() and unpainted.exists() and meta.exists() \
+            and json.loads(meta.read_text()).get('project') == h:
         return scr
     graph = project_graph(name)
     t = time.time()
-    conv = evaluate(graph, 'optimise', Memo())
+    memo = Memo()
+    conv = evaluate(graph, 'optimise', memo)
     cache.mkdir(parents=True, exist_ok=True)
     conv.save(str(scr))
+    hidden = graph.with_params('overpaint', replace(graph['overpaint'].params, overrides=()))
+    evaluate(hidden, 'optimise', memo).save(str(unpainted))
     meta.write_text(json.dumps(dict(project=h, painted=len(painted_cells(graph)), frozen=time.strftime('%Y-%m-%d'))))
     if log:
         log(f'{name}: reference frozen, {len(painted_cells(graph))} painted cells, {time.time() - t:.1f} s')
     return scr
+
+
+def changed_cells(name) -> np.ndarray:
+    """(R, C) bool: the cells the painting changed, where the reference shows other colours than the project's own
+    conversion with the painting hidden. Fix paints every cell, so painted cells are not corrected ones; a project
+    with a screen of its own (zxart) has no such conversion, and every cell counts."""
+    own = IMAGES / name / 'reference.scr'
+    if own.exists():
+        return np.ones((24, 32), bool)
+    freeze(name)
+    ref = shown(*read_scr(IMAGES / name / 'cache' / 'reference.scr'))
+    before = shown(*read_scr(IMAGES / name / 'cache' / 'unpainted.scr'))
+    return ~matches(before, ref) | ~matches(ref, before)
 
 
 def reference_file(name) -> Path:

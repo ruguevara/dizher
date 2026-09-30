@@ -277,6 +277,14 @@ def scielab(c: Case):
     return float(deltaE_ciede2000(lab(a), lab(b)).mean())
 
 
+def de2000_masked(a_rgb, b_rgb, mask, sigma) -> float:
+    """Mean CIEDE2000 after a blur over the masked pixels; nan for an empty mask."""
+    if not mask.any():
+        return float('nan')
+    d = deltaE_ciede2000(lab(blurred_srgb(a_rgb, sigma)), lab(blurred_srgb(b_rgb, sigma)))
+    return float(d[mask].mean())
+
+
 def _de2000(sigma):
     def f(c: Case):
         return float(deltaE_ciede2000(lab(blurred_srgb(c.source, sigma)), lab(blurred_srgb(c.result, sigma))).mean())

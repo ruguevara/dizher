@@ -290,6 +290,15 @@ def test_reference_frozen_from_the_project(tmp_path, monkeypatch):
     assert P.reference('pic')[3] == {(0, 0), (0, 1)} and frozen.stat().st_mtime_ns != stamp
     g, conv, final, _ = P.convert_as_saved('pic')
     assert g['overpaint'].params.overrides == () and final.dithered_result.shape == (192, 256, 3)
+    # the corrected cells: painted ones the painting changed away from the project's own conversion
+    from bench.scr import read_scr as rd, shown as sh, matches as mt
+    assert (tmp_path / 'pic' / 'cache' / 'unpainted.scr').exists()
+    changed = P.changed_cells('pic')
+    before, after = sh(*rd(tmp_path / 'pic' / 'cache' / 'unpainted.scr')), sh(*rd(frozen))
+    assert changed.shape == (24, 32) and changed[2:].sum() == 0 and changed[:1, 2:].sum() == 0
+    for r, c in ((0, 0), (0, 1)):
+        assert changed[r, c] == (not mt(before, after)[r, c] or not mt(after, before)[r, c])
+    assert changed.any()                                          # a smooth grey source never picks bright red at (0, 1)
 
 
 def test_fit_energy_to_judgments(tmp_path, monkeypatch):
