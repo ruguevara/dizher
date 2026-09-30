@@ -31,8 +31,11 @@ over its cells grown by two cells (`common.window`).
 
 ## Run
 
-    python research/pairs/build.py          # ~30 min on 4 cores: data/NAME.npz, data/NAME.json (not in git)
+    python research/pairs/build.py          # ~15 min on 9 processes: data/NAME.npz, data/NAME.json (not in git)
     python research/pairs/score.py          # data/metrics.csv and the table below
+    python research/pairs/variants.py       # ~3 min: kept cells against other coherences, data/variants/
+    python research/pairs/flat.py           # ~7 min: flat counterexamples, data/flat/
+    python research/pairs/fit.py            # the judge: selection, anchor, whole pictures (section 4)
     python research/pairs/views.py OUT [N]  # blind images of N pairs for judging by eye, with key.json
 
 ## Results
@@ -110,5 +113,47 @@ saw the same sheets both ways, by eye only.
 - Metrics against the user's decisive votes on the pilot segments: seam_excess 16/19, neighbour_excess 13/19,
   scielab_dE 9/19, hue_angle 8/19, ms_dssim_L 7/19.
 - Judges on these hard pairs: split in 34% of pairs; where both they and the user decided, they agreed 13 of 18.
+
+### 4. Judge v1 (2026-09-30)
+
+The rebuild reproduces the 229 segments and 36 null pairs and every number in section 1. New candidates in
+`metrics.py`: the seam step split into lightness and colour (a, b) at blur 1, 2 and 4 px (`seam_L_*`, `seam_ab_*`);
+purity: `two_colour_share` (cells showing two colours), `dot_contrast` (the spread of a cell's pixels in CIELAB),
+`texture_excess` (that spread after the eye beyond the picture's); `hue_family_miss` (a cell's mean colour nearest
+another Spectrum hue, or grey, than the picture's); coarse fidelity `blur_dE_4`, `blur_dE_8`. `flat.py` adds a
+counterexample per segment, **F**: the whole segment on its most common painted pair, smooth by construction.
+
+`fit.py` fits a logistic regression on the metrics' differences between the two sides, no intercept, L2, three
+sources weighted alike: B (229), C (229) and the user's decisive votes of round 1 (cal, 32: the painting or kept cells
+31, the other 1). F is only reported. Accuracy leaving one image out:
+
+| judge | B | C | cal | F |
+|---|---|---|---|---|
+| seam_excess alone | 0.65 | 0.77 | 0.78 | 0.41 |
+| + seam_L_2, seam_ab_1, two_colour_share | 0.71 | 0.82 | 0.78 | 0.54 |
+| **+ scielab_dE fixed at 0.2 (judge v1)** | **0.69** | **0.80** | **0.81** | **0.58** |
+| unconstrained: blur_dE_8 with a negative weight, alone | 0.77 | 0.65 | 0.81 | 0.35 |
+
+- These labels are one-sided: the painting always leaves the colorimetric optimum. Unconstrained, the fit's first
+  term is coarse fidelity with a negative weight, "further from the picture is better", which prefers the flat
+  segment two times in three. Every error metric's weight is now >= 0; only the purity terms are free.
+- Nothing in the labels speaks against a colouring that is smooth but wrong, so a fidelity anchor is fixed at the
+  heaviest weight that costs at most 0.02 of the mean accuracy. S-CIELAB at 0.2 (standardised) costs nothing; the
+  coarse ones (`blur_dE_4/8`, `blur_rmse`) and `hue_family_miss` cost more at every weight tried.
+- `judge_score(X, T)` in `metrics.py`. On whole pictures it ranks a black screen last on all 9 images and the painting
+  over Select pairs on 7; not RC1 and golden-axe, both painted in part.
+- The gain over `seam_excess` alone is 0.03-0.06 on 9 images, within what selection among 27 candidates can find by
+  chance. The third of the painted segments that no metric explains stays unexplained:
+  - `hue_family_miss` 0.31: the painting leaves the picture's hue family more often than Select pairs do (RC1's brown
+    fur painted yellow on black). "The right family" is not the nearest Spectrum hue to the picture's colour.
+  - `two_colour_share` 0.14: the painting shows two colours in more cells than Select pairs. Purity as fewer mixed
+    cells runs the wrong way; its weight in the judge is negative, which a noisy colouring could exploit.
+- F is not a clean label. By eye (RC1/2, andy/25): the flat segment is clearly worse where it turns the yellow fur
+  grey, which S-CIELAB calls closer, and about as good where it makes andy's hair plain black and cyan. F near 0.5
+  is no verdict; the judge's optimum (session B) and the user's votes on F pairs decide.
+- Seven of the round's kept-cell pairs no longer rebuild as voted (other cell counts; the code and projects are
+  unchanged since, so the round was made from an earlier state of the data) and are left out. `round.py` now writes
+  each sheet's cells into the key.
+- LPIPS/DISTS not tried: torch is not installed.
 
 Summary and next steps: `HANDOFF.md`.

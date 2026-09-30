@@ -86,6 +86,53 @@ def cell_means(lab_img, cell=8):
     return lab_img.reshape(R, cell, C, cell, -1).mean((1, 3))
 
 
+def cells_of(img, cell=8):
+    """(R, C, cell * cell, channels): each cell's pixels."""
+    R, C = img.shape[0] // cell, img.shape[1] // cell
+    return img.reshape(R, cell, C, cell, -1).transpose(0, 2, 1, 3, 4).reshape(R, C, cell * cell, -1)
+
+
+def cell_mask(mask, cell=8):
+    """(R, C) the cells mostly inside the pixel mask."""
+    return cell_means(mask[..., None].astype(float), cell)[..., 0] > 0.5
+
+
+def mean_lab(srgb, cell=8):
+    """(R, C, 3) CIELAB of each cell's mean colour in linear light."""
+    return xyz2lab(cell_means(linear(srgb), cell) @ SRGB2XYZ.T)
+
+
+def two_colour_share(X, mask, cell=8):
+    """Share of the cells in mask that show two colours rather than one."""
+    q = (cells_of(X, cell) * 255).round().astype(np.int64)
+    code = np.sort((q[..., 0] << 16) | (q[..., 1] << 8) | q[..., 2], axis=-1)
+    two = (code[..., 1:] != code[..., :-1]).any(-1)
+    return float(two[cell_mask(mask, cell)].mean())
+
+
+def cell_spread(lab, cell=8):
+    """(R, C) RMS distance of each cell's pixels from the cell's mean, in the given CIELAB image."""
+    px = cells_of(lab, cell)
+    return np.sqrt(((px - px.mean(2, keepdims=True)) ** 2).sum(-1).mean(-1))
+
+
+# the hues of the Spectrum's chromatic colours, CIELAB angles: red, yellow, green, cyan, blue, magenta
+ZX_HUES = np.arctan2(*(lambda lab: (lab[:, 2], lab[:, 1]))(xyz2lab(linear(np.array(
+    [[1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1], [1, 0, 1]], float)) @ SRGB2XYZ.T)))
+
+
+def hue_family(lab, neutral=12.0):
+    """Index of the nearest Spectrum hue, -1 where the colour is near grey (chroma < neutral)."""
+    d = np.abs((np.arctan2(lab[..., 2], lab[..., 1])[..., None] - ZX_HUES + np.pi) % (2 * np.pi) - np.pi)
+    return np.where(chroma(lab) < neutral, -1, d.argmin(-1))
+
+
+def hue_family_miss(X, T, mask, cell=8):
+    """Share of the cells in mask whose mean colour falls in another hue family (or grey) than the picture's."""
+    m = cell_mask(mask, cell)
+    return float((hue_family(mean_lab(X, cell)) != hue_family(mean_lab(T, cell)))[m].mean())
+
+
 def neighbour_excess(X, T, mask, cell=8):
     """Cells' mean colours (linear light, then CIELAB): over 4-neighbour cells both in mask, how much more X changes
     from cell to cell than the picture does: blocks and noise where the picture is smooth."""
@@ -134,6 +181,12 @@ def all_metrics(X, T, mask) -> dict:
     fx, ft = lab_blurred(X, 0.5), lab_blurred(T, 0.5)
     b2x, b2t = lab_blurred(X, 2.0), lab_blurred(T, 2.0)
     rmse = np.linalg.norm(blur(linear(X), 1.0) - blur(linear(T), 1.0), axis=-1)
+    cm = cell_mask(mask)
+    seams = {}
+    for s in (1.0, 2.0, 4.0):
+        bx, bt = (b2x, b2t) if s == 2.0 else (lab_blurred(X, s), lab_blurred(T, s))
+        seams[f'seam_L_{s:g}'] = seam_excess(bx[..., :1], bt[..., :1], mask)
+        seams[f'seam_ab_{s:g}'] = seam_excess(bx[..., 1:], bt[..., 1:], mask)
     return {
         'scielab_dE': masked_mean(dE, mask),
         'scielab_dE_p95': float(np.percentile(dE[mask], 95)),
@@ -150,4 +203,29 @@ def all_metrics(X, T, mask) -> dict:
         'ms_dssim_a': ms_dssim(X, T, mask, 1, (4, 8)),
         'ms_dssim_b': ms_dssim(X, T, mask, 2, (4, 8)),
         'blur_rmse': masked_mean(rmse, mask),
+        **seams,
+        'two_colour_share': two_colour_share(X, mask),
+        'dot_contrast': float(cell_spread(xyz2lab(linear(X) @ SRGB2XYZ.T))[cm].mean()),
+        'texture_excess': float(np.maximum(cell_spread(sx) - cell_spread(st), 0)[cm].mean()),
+        'hue_family_miss': hue_family_miss(X, T, mask),
+        'blur_dE_4': masked_mean(np.linalg.norm(lab_blurred(X, 4) - lab_blurred(T, 4), axis=-1), mask),
+        'blur_dE_8': masked_mean(np.linalg.norm(lab_blurred(X, 8) - lab_blurred(T, 8), axis=-1), mask),
     }
+
+
+# judge v1 (fit.py, 2026-09-30): three seam terms, the share of two-colour cells (more is better) and S-CIELAB as a
+# fidelity anchor at the heaviest weight that costs no agreement with the user; fitted on painted segments only
+JUDGE = {
+    'seam_excess': 0.6125,
+    'seam_L_2': 1.713,
+    'seam_ab_1': 0.4247,
+    'two_colour_share': -3.496,
+    'scielab_dE': 0.05416,
+}
+
+
+def judge_score(X, T, mask=None) -> float:
+    """Judge v1 of the rendered colouring X against the tuned picture T over mask (the whole picture by default),
+    lower is better; the lower of two sides by 1 is preferred at odds of about e to 1."""
+    m = all_metrics(X, T, np.ones(X.shape[:2], bool) if mask is None else mask)
+    return sum(w * m[k] for k, w in JUDGE.items())
