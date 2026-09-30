@@ -8,7 +8,8 @@ Three parts, one sheet per pair (sides at random), under shuffled names:
   - kept:   cells the user kept from Select pairs against a smoother or looser coherence's (variants.py), where the
             structure terms (seam, neighbour) and S-CIELAB disagree about which is better, half each way;
   - repeat: a few of the above again with the sides swapped, for the user's self-agreement.
-key.json maps each sheet to its pair and to the side the painting (or the kept cells) is on."""
+key.json maps each sheet to its pair and to the side the painting (or the kept cells) is on; swapped/ has every
+sheet with the sides the other way, for the judges."""
 import json
 import sys
 from collections import Counter
@@ -88,6 +89,8 @@ def main(out: Path, seed=1):
         X1, X2 = (A, B) if side == 1 else (B, A)
         name = names.pop()
         cv2.imwrite(str(out / f'{name}.png'), cv2.cvtColor(sheet(T, X1, X2, cells), cv2.COLOR_RGB2BGR))
+        (out / 'swapped').mkdir(exist_ok=True)   # the judges see each sheet both ways
+        cv2.imwrite(str(out / 'swapped' / f'{name}.png'), cv2.cvtColor(sheet(T, X2, X1, cells), cv2.COLOR_RGB2BGR))
         key[name] = dict(id=pid, kind=kind, repeat=repeat, painting=side, cells=int(cells.sum()),
                          **({'struct': round(r['struct'], 2), 'fid': round(r['fid'], 2)} if r else {}))
     (out / 'key.json').write_text(json.dumps(dict(sorted(key.items())), indent=1))
