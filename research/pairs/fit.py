@@ -4,11 +4,13 @@
     python research/pairs/fit.py --fast   the same without the torch metrics (DEEP), anchored by a structure term,
                                           for metrics.JUDGE_FAST; also how often it agrees with metrics.JUDGE
 
-Labels, three sources, each weighted to the same total:
+Labels, four sources, each weighted to the same total:
   B    the 229 painted segments: the painting (A) better than Select pairs' cells (B)
   C    the same segments: the painting better than the next best pair by the energy (C), assumed
        (B and C only where the change is plainly more than the dither's: VISIBLE; the user's votes all count)
   cal  the user's decisive votes in calibration round 1, both ways, repeats included
+  O    optimum.py's counterexamples: the painting better than itself with a segment from a judge's optimum, assumed
+       (the user found the optima worse in 8 of 9 pictures; visible changes only, as B and C)
 and one only reported, not trained on (weight 0):
   F    flat.py's counterexamples: the painting better than its segment all on one pair, assumed
 P(A better) = sigmoid(sum_k w_k (f_k(other) - f_k(A)) / s_k), s_k the RMS of that difference, no intercept, L2.
@@ -16,8 +18,8 @@ Every metric is an error, so its weight is >= 0, but for the FREE ones, whose be
 the fit learns "further from the picture is better" from these one-sided labels (the painting always leaves the
 colorimetric optimum). Terms are added one at a time, up to MAX_TERMS, the one that most raises the
 leave-one-image-out accuracy (the mean over the three sources) each time; the selection is repeated on BOOT
-resamples of the images, and the judge keeps only the term most often picked first, as the later ones come and go
-with the images drawn (a step gains about one vote). The labels hold nothing against a colouring
+resamples of the images, and the judge keeps the terms picked in at least half of them (the first alone if none), as
+the others come and go with the images drawn (a step gains about one vote). The labels hold nothing against a colouring
 that is smooth but wrong, so a fidelity term (ANCHORS) is then fixed at the heaviest weight that costs at most SLACK
 of that accuracy. Prints the single metrics, the selection path, the anchor sweep, the judge's weights in the
 metrics' own units for metrics.JUDGE, and the judge on whole pictures."""
@@ -36,12 +38,14 @@ HERE = Path(__file__).resolve().parent
 MAX_TERMS, L2, BOOT = 4, 1.0, 30
 VISIBLE = 2   # a B or C pair counts when its change is at least this many times a re-dither's
 DEEP = ('lpips', 'dists', 'lpips_eye', 'dists_eye')   # torch: out of the fast judge, which the app can run
+COLOUR = ('grey_share', 'chroma_deficit_eye', 'colourfulness_deficit', 'hue_angle', 'hue_family_miss', 'chroma_deficit')
+# ^ what the first optima gave up
 FAST_ANCHORS = ('detail_deficit_1', 'detail_deficit_2', 'gmsd_eye', 'gmsm_eye', 'dssim_eye', 'ms_dssim_eye',
-                'scielab_dE')
-ANCHORS = ('lpips_eye', 'dists_eye', 'scielab_dE', 'blur_dE_4', 'blur_dE_8', 'blur_rmse', 'hue_family_miss')
+                'scielab_dE') + COLOUR
+ANCHORS = ('lpips_eye', 'dists_eye', 'scielab_dE', 'blur_dE_4', 'blur_dE_8', 'blur_rmse') + COLOUR
 SLACK = 0.02   # the accuracy a fidelity anchor may cost
 FREE = ('two_colour_share', 'dot_contrast')   # no known better direction; every other metric is an error, weight >= 0
-TRAIN, SOURCES = ('B', 'C', 'cal'), ('B', 'C', 'cal', 'F')
+TRAIN, SOURCES = ('B', 'C', 'cal', 'O'), ('B', 'C', 'cal', 'O', 'F')
 
 
 def load():
@@ -75,6 +79,14 @@ def load():
             print(f"cal: {name} {k['id']} not rebuilt as voted on, left out")
             continue
         rows.append(('cal', k['id'].split('/')[0], diff(m['A'], m['B']), 1 if won else 0))
+    hidden = 0
+    for f in sorted((DATA / 'optimum').glob('r*/pairs-*.json')):
+        for m in json.loads(f.read_text()):
+            if m['change'] < VISIBLE * noise:
+                hidden += 1
+            else:
+                rows.append(('O', m['image'], diff(m['A'], m['B']), 1))
+    print(f'O pairs within {VISIBLE}x the dither noise, left out: {hidden}')
     for f in (DATA / 'flat').glob('*.json'):
         rows += [('F', m['image'], diff(m['A'], m['B']), 1) for m in json.loads(f.read_text())]
     return features, rows
@@ -157,16 +169,19 @@ def main(fast=False):
     print(f"\nthe selection on {BOOT} resamples of the images, how often each term is picked (first / at all):")
     for k in sorted({k for p in picks for k in p}, key=lambda k: -sum(k in p for p in picks)):
         print(f"{k:28} {sum(p[0] == k for p in picks):3} {sum(k in p for p in picks):4}")
-    # the terms after the first come and go with the images drawn: the judge keeps the one picked first most often
-    first = max(set(p[0] for p in picks), key=lambda k: sum(p[0] == k for p in picks))
-    chosen = [features.index(first)]
-    acc = loio(X[:, chosen], y, w, src, images, [bound[chosen[0]]])
+    # the terms that come and go with the images drawn are left out
+    stable = sorted({k for p in picks for k in p if sum(k in q for q in picks) >= BOOT / 2},
+                    key=lambda k: -sum(k in p for p in picks))
+    stable = stable or [max(set(p[0] for p in picks), key=lambda k: sum(p[0] == k for p in picks))]
+    chosen = [features.index(k) for k in stable]
+    acc = loio(X[:, chosen], y, w, src, images, [bound[i] for i in chosen])
     best = np.mean([acc[s] for s in TRAIN])
-    print(f"\nthe judge's structure term: {first},{row(acc)} {best:5.2f}")
+    print(f"\nthe judge's stable terms: {', '.join(stable)},{row(acc)} {best:5.2f}")
 
     W = whole_metrics()
-    print(f"\na fidelity anchor at a fixed standardised weight, the rest refitted; on the 9 whole pictures, black last and "
-          f"the painting over Select pairs:\n{'anchor':18} {'weight':>6}{head}  mean black paint")
+    print(f"\na fidelity anchor at a fixed standardised weight, the rest refitted; on the 9 whole pictures, black last, "
+          f"the painting over Select pairs and over the last optimum:\n{'anchor':18} {'weight':>6}{head}  mean black paint"
+          f"   opt")
     trials = []
     for k in anchors:
         a = features.index(k)
@@ -176,8 +191,8 @@ def main(fast=False):
             score = np.mean([acc[s] for s in TRAIN])
             bnds = [bound[i] if i != a else (v, v) for i in cols]
             full = {features[j]: bj / scale[j] for j, bj in zip(cols, fit(X[:, cols], y, w, bnds))}
-            black, paint = gates(full, W)
-            print(f"{k:18} {v:6.1f}{row(acc)} {score:5.2f} {black:5} {paint:5}")
+            black, paint, opt = gates(full, W)
+            print(f"{k:18} {v:6.1f}{row(acc)} {score:5.2f} {black:5} {paint:5} {opt:5}")
             if black == len(W):   # a judge that ever rates a black screen above a render is broken
                 trials.append((k, v, score, cols))
 
@@ -198,28 +213,34 @@ def main(fast=False):
         b = sum(wt * D[:, features.index(k)] for k, wt in judge.items()) > 0
         print('agreement with the full judge (metrics.JUDGE): ' +
               ', '.join(f'{s} {(a == b)[src == s].mean():.2f}' for s in SOURCES if counts[s]))
-    print(f"\nwhole pictures, judge score (lower better):\n{'image':16} {'painting':>9} {'Select':>9} {'black':>9}")
+    print(f"\nwhole pictures, judge score (lower better):\n{'image':16} {'painting':>9} {'Select':>9} {'black':>9} "
+          f"{'optimum':>9}")
     for name, m in W.items():
-        a, h, k = (sum(wt * r[f] for f, wt in judge.items()) for r in m)
-        print(f"{name:16} {a:9.3f} {h:9.3f} {k:9.3f}")
+        a, h, k, o = (sum(wt * r[f] for f, wt in judge.items()) for r in m)
+        print(f"{name:16} {a:9.3f} {h:9.3f} {k:9.3f} {o:9.3f}")
 
 
 def whole_metrics():
-    """{image: the metrics of the painting, of Select pairs alone and of a black screen} over the whole picture."""
+    """{image: the metrics of the painting, of Select pairs alone, of a black screen and of the last round's optimum}
+    over the whole picture."""
     from metrics import all_metrics
+    last = max((DATA / 'optimum').glob('r*'), key=lambda p: int(p.name[1:]))
     out = {}
     for path in sorted(DATA.glob('*.npz')):
         z = np.load(path)
         T, mask = z['target'].astype(np.float32) / 255, np.ones(z['target'].shape[:2], bool)
-        out[path.stem] = [all_metrics(X, T, mask) for X in (z['A'].astype(np.float32) / 255,
-                                                            z['H'].astype(np.float32) / 255, np.zeros_like(T))]
+        f = lambda a: a.astype(np.float32) / 255
+        out[path.stem] = [all_metrics(X, T, mask) for X in (f(z['A']), f(z['H']), np.zeros_like(T),
+                                                            f(np.load(last / path.name)['O']))]
     return out
 
 
 def gates(judge, W):
-    """On how many whole pictures the judge rates a black screen worst, and the painting over Select pairs."""
+    """On how many whole pictures the judge rates a black screen worst, the painting over Select pairs, and the
+    painting over the last optimum."""
     s = {name: [sum(wt * r[f] for f, wt in judge.items()) for r in m] for name, m in W.items()}
-    return sum(k > max(a, h) for a, h, k in s.values()), sum(a < h for a, h, k in s.values())
+    return (sum(k > max(a, h) for a, h, k, o in s.values()), sum(a < h for a, h, k, o in s.values()),
+            sum(a < o for a, h, k, o in s.values()))
 
 
 if __name__ == '__main__':
