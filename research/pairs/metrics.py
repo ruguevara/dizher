@@ -193,6 +193,7 @@ def ms_dssim(X, T, mask, channel=0, scales=(2, 4, 8)):
 
 
 _DEEP = {}
+DEVICE = 'cpu'   # 'mps' on Apple silicon for batched searches (optimum.py --mps)
 
 
 def deep(X, T, mask, name):
@@ -375,13 +376,13 @@ def deep_batch(Xs, T, mask, name):
     key = (name, 'batch')
     if key not in _DEEP:
         torch.set_num_threads(1)
-        _DEEP[key] = {'lpips': piq.LPIPS, 'dists': piq.DISTS}[name](reduction='none').eval()
+        _DEEP[key] = {'lpips': piq.LPIPS, 'dists': piq.DISTS}[name](reduction='none').eval().to(DEVICE)
     ys, xs = np.nonzero(mask)
     crop = lambda a: np.repeat(np.repeat(a[ys.min():ys.max() + 1, xs.min():xs.max() + 1], 2, 0), 2, 1)
-    xb = torch.from_numpy(np.stack([crop(x) for x in Xs])).permute(0, 3, 1, 2).float()
-    tb = torch.from_numpy(crop(T)[None].copy()).permute(0, 3, 1, 2).float().expand_as(xb)
+    xb = torch.from_numpy(np.stack([crop(x) for x in Xs])).permute(0, 3, 1, 2).float().to(DEVICE)
+    tb = torch.from_numpy(crop(T)[None].copy()).permute(0, 3, 1, 2).float().to(DEVICE).expand_as(xb)
     with torch.no_grad():
-        return _DEEP[key](xb, tb).reshape(-1).numpy().astype(float)
+        return _DEEP[key](xb, tb).reshape(-1).cpu().numpy().astype(float)
 
 
 def score(judge, X, T, mask=None) -> float:

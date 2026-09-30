@@ -2,8 +2,9 @@
 noise)? Started from Select pairs, each cell in turn takes the pair the judge rates best on the cells around it, until
 a pass changes nothing.
 
-    python research/pairs/optimum.py ROUND [--full] [NAME...]   the fast judge's optimum, or the full one's (LPIPS,
-                                                        slow); the projects build.py made; data/optimum/rROUND/NAME.*
+    python research/pairs/optimum.py ROUND [--full [--mps]] [NAME...]   the fast judge's optimum, or the full one's
+                                        (LPIPS: --mps on Apple silicon, else ~80 min a pass a picture); the projects
+                                        build.py made; writes data/optimum/rROUND/NAME.*
     python research/pairs/optimum.py ROUND --pairs      counterexamples from that round's optima, for fit.py
 
 The optima are worse than the paintings (the user, round 1: in 8 of 9 pictures, the other slightly better). --pairs
@@ -132,10 +133,15 @@ def counterexamples(job):
     return name, len(meta)
 
 
+def use_mps():
+    import metrics
+    metrics.DEVICE = 'mps'   # the network terms on the GPU: ~20x a CPU thread for a cell's candidates
+
+
 if __name__ == '__main__':
     out, args = ROOT / f'r{sys.argv[1]}', sys.argv[2:]
-    pairs, full = '--pairs' in args, '--full' in args
+    pairs, full, mps = '--pairs' in args, '--full' in args, '--mps' in args
     names = [a for a in args if not a.startswith('--')] or sorted(f.stem for f in DATA.glob('*.npz'))
-    with Pool(min(len(names), 9)) as pool:
+    with Pool(min(len(names), 3 if mps else 9), initializer=use_mps if mps else None) as pool:
         for rep in pool.imap_unordered(counterexamples if pairs else run, [(n, out, full) for n in names]):
             print(json.dumps(rep), flush=True)
