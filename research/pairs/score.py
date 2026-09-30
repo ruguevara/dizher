@@ -6,6 +6,8 @@ For each metric, over the pairs (lower is better for every metric):
   user>alg   the share of segments where it rates the painting (A) better than Select pairs' cells there (B);
              the project's own energy loses nearly all of them, as B is its optimum
   user>next  the same against the cells' next best pair by the energy (C), assumed worse than the painting
+  change     (in the csv) how visible each side's change from A is: mean dE through the converter's eye over the
+             changed cells; for N, the dither's own
   noise      median |A - N| over the null pairs (the same colouring from another halftone start) over the median
              |A - B|: near 0, the metric sees the change, not the dither
 The ranges are 95% bootstrap intervals over images.
@@ -20,7 +22,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import DATA, window   # noqa: E402
-from metrics import all_metrics   # noqa: E402
+from metrics import all_metrics, seen_change   # noqa: E402
 
 
 def score_image(path: Path) -> list:
@@ -38,6 +40,11 @@ def score_image(path: Path) -> list:
         n = all_metrics(f('N'), T, mask) if m['null'] else None
         if n is not None:
             n['energy'] = a['energy']
+        changed = np.repeat(np.repeat(z['diff'] & (z['segments'] == s), 8, 0), 8, 1)   # the changed cells' pixels
+        a['change'] = 0.0
+        for k, vals in (('B', b), ('C', c), ('N', n)):
+            if vals is not None:
+                vals['change'] = seen_change(f(k if k == 'N' else f'{k}{s}'), A, changed)
         for variant, vals in (('A', a), ('B', b), ('C', c), ('N', n)):
             if vals is not None:
                 rows.append(dict(id=m['id'], image=m['image'], cells=m['cells'], variant=variant, **vals))
@@ -60,9 +67,9 @@ def main():
     files = sorted(DATA.glob('*.npz'))
     with Pool(4) as pool:
         rows = [r for rs in pool.map(score_image, files) for r in rs]
-    keys = [k for k in rows[0] if k not in ('id', 'image', 'cells', 'variant')]
+    keys = [k for k in rows[0] if k not in ('id', 'image', 'cells', 'variant', 'change')]
     with open(DATA / 'metrics.csv', 'w', newline='') as out:
-        w = csv.DictWriter(out, ['id', 'image', 'cells', 'variant'] + keys)
+        w = csv.DictWriter(out, ['id', 'image', 'cells', 'variant', 'change'] + keys)
         w.writeheader()
         w.writerows(rows)
     table = {}

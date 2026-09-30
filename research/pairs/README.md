@@ -187,15 +187,19 @@ candidate. Mean agreement over B, C and cal; F; noise (the null pairs' change ov
 - LPIPS through the project's eye (Gaussian 1 px, fixed before the grid) is the first metric that agrees with the
   labels and prefers the painting to the flat segment: B 0.57, C 0.71, cal 0.70, F 0.71.
 
-**Judge v2** (`metrics.judge_score`) = 0.883 `seam_excess` + 27.06 `lpips_eye`, LPIPS at the heaviest anchor weight
-within 0.02 of the best mean: leaving one image out B 0.65, C 0.76, cal 0.79, **F 0.68**. On whole pictures: a black
-screen last on all 9, the painting over Select pairs on **7** (under on autumn and golden-axe). The seam term is still
-the only one picked first on resamples of the images; LPIPS earns its place as the counterweight to smoothness, which
-the one-sided labels cannot select.
+**Judge v2** (`metrics.judge_score`) = 0.810 `seam_excess` + 53.59 `lpips_eye`, LPIPS at the heaviest anchor weight
+within 0.02 of the best mean, B and C pairs within twice the dither noise left out (24 of 458, below): leaving one image
+out B 0.64, C 0.77, cal 0.73, **F 0.68**. On whole pictures: a black screen last on all 9, the painting over Select
+pairs on **7** (under on autumn and golden-axe). The seam term is still the only one picked first on resamples of the
+images; LPIPS earns its place as the counterweight to smoothness, which the one-sided labels cannot select. The anchor
+at half that weight scores the same within two votes (cal 0.79, F 0.68).
 
 - The painted changes are plainly visible through the eye: on the changed cells a median 25 dE (the project's eye,
   1 px), where a re-dither of the same colouring moves 2.0. 15 of the 229 are within twice that; the 4 under it no
-  metric gets right, and they are no labels.
+  metric gets right. A B or C pair within twice the dither's change is no label and `fit.py` leaves it out (15 B,
+  9 C); the user's votes all count, a decisive vote being itself a difference seen.
+- The judges' sheets are whole pictures through the eye (`views.judge_sheet`): the tuned picture and the two sides at
+  2x, no crops, no outlined cells. The user's sheets keep the crops.
 - F is not a clean label. By eye (RC1/2, andy/25): the flat segment is clearly worse where it turns the yellow fur
   grey, which S-CIELAB calls closer, and about as good where it makes andy's hair plain black and cyan. F near 0.5
   is no verdict; the judge's optimum (session B) and the user's votes on F pairs decide.

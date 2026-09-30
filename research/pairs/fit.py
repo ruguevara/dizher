@@ -5,6 +5,7 @@
 Labels, three sources, each weighted to the same total:
   B    the 229 painted segments: the painting (A) better than Select pairs' cells (B)
   C    the same segments: the painting better than the next best pair by the energy (C), assumed
+       (B and C only where the change is plainly more than the dither's: VISIBLE; the user's votes all count)
   cal  the user's decisive votes in calibration round 1, both ways, repeats included
 and one only reported, not trained on (weight 0):
   F    flat.py's counterexamples: the painting better than its segment all on one pair, assumed
@@ -31,6 +32,7 @@ from common import DATA   # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 MAX_TERMS, L2, BOOT = 4, 1.0, 30
+VISIBLE = 2   # a B or C pair counts when its change is at least this many times a re-dither's
 ANCHORS = ('lpips_eye', 'dists_eye', 'scielab_dE', 'blur_dE_4', 'blur_dE_8', 'blur_rmse', 'hue_family_miss')
 SLACK = 0.02   # the accuracy a fidelity anchor may cost
 FREE = ('two_colour_share', 'dot_contrast')   # no known better direction; every other metric is an error, weight >= 0
@@ -46,9 +48,15 @@ def load():
     features = [k for k in next(iter(variants.values()))['A'] if k in next(iter(table.values()))['A']]
     diff = lambda a, o: {k: float(o[k]) - float(a[k]) for k in features}
     rows = []
+    noise = np.median([float(t['N']['change']) for t in table.values() if 'N' in t])
+    hidden = 0
     for pid, t in table.items():
         for side in 'BC':
+            if float(t[side]['change']) < VISIBLE * noise:   # the eye cannot tell it from a re-dither: no label
+                hidden += 1
+                continue
             rows.append((side, t['A']['image'], diff(t['A'], t[side]), 1))
+    print(f'B and C pairs within {VISIBLE}x the dither noise ({noise:.1f} dE through the eye), left out: {hidden}')
     key = json.loads((HERE / 'rounds' / 'cal1' / 'key.json').read_text())
     votes = json.loads((HERE / 'rounds' / 'cal1' / 'votes.json').read_text())
     for name, k in key.items():
