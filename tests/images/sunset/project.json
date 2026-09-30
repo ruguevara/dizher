@@ -40,11 +40,67 @@
     "levels": {
       "op": "dizher.ops:levels",
       "params": {
+        "mode": "Levels",
         "in_black": 0,
         "in_white": 255,
         "gamma": 1.0,
         "out_black": 0,
-        "out_white": 255
+        "out_white": 255,
+        "channels": [
+          [
+            0.0,
+            255.0,
+            1.0,
+            0.0,
+            255.0
+          ],
+          [
+            0.0,
+            255.0,
+            1.0,
+            0.0,
+            255.0
+          ],
+          [
+            0.0,
+            255.0,
+            1.0,
+            0.0,
+            255.0
+          ]
+        ],
+        "curves": [
+          [
+            0.0,
+            0.0,
+            255.0,
+            255.0
+          ],
+          [
+            0.0,
+            0.0,
+            255.0,
+            255.0
+          ],
+          [
+            0.0,
+            0.0,
+            255.0,
+            255.0
+          ],
+          [
+            0.0,
+            0.0,
+            255.0,
+            255.0
+          ]
+        ],
+        "picks": [],
+        "targets": [
+          -1,
+          -1,
+          -1
+        ]
       },
       "inputs": [
         "light"
@@ -142,8 +198,8 @@
         "halftoner": "Stohastic",
         "matrix": "Void dispersed dots",
         "kernel": "Shiau-Fan 3",
-        "noise_x": 0,
-        "noise_y": 0
+        "noise_x": 3,
+        "noise_y": 121
       },
       "inputs": []
     },
