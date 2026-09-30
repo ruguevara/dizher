@@ -76,7 +76,7 @@ def main():
         a = np.array([table[i]['A'][k] for i in ids])
         b = np.array([table[i]['B'][k] for i in ids])
         c = np.array([table[i]['C'][k] for i in ids])
-        wb, wc = (a < b).astype(float), (a < c).astype(float)
+        wb, wc = (a < b) + 0.5 * (a == b), (a < c) + 0.5 * (a == c)   # a tie counts half
         nulls = [abs(table[i]['A'][k] - table[i]['N'][k]) for i in ids if 'N' in table[i]]
         noise = np.median(nulls) / max(np.median(np.abs(a - b)), 1e-12) if nulls else np.nan
         lb, hb = boot(images, wb)
