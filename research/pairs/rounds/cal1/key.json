@@ -1,0 +1,389 @@
+{
+ "c001": {
+  "id": "david/loose/16",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 2,
+  "cells": 11,
+  "struct": 0.52,
+  "fid": -0.97
+ },
+ "c002": {
+  "id": "golden-axe/2",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 2,
+  "cells": 1
+ },
+ "c003": {
+  "id": "autumn/2",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 2,
+  "cells": 2
+ },
+ "c004": {
+  "id": "golden-axe/smooth/28",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 1,
+  "cells": 6,
+  "struct": -0.77,
+  "fid": 1.73
+ },
+ "c005": {
+  "id": "jojo/19",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 2,
+  "cells": 20
+ },
+ "c006": {
+  "id": "RC1/25",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 1,
+  "cells": 2
+ },
+ "c007": {
+  "id": "golden-axe/smooth/6",
+  "kind": "kept",
+  "repeat": true,
+  "painting": 1,
+  "cells": 5,
+  "struct": -1.12,
+  "fid": 0.05
+ },
+ "c008": {
+  "id": "andy/smooth/30",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 2,
+  "cells": 18,
+  "struct": 0.71,
+  "fid": -1.25
+ },
+ "c009": {
+  "id": "RC1/21",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 2,
+  "cells": 23
+ },
+ "c010": {
+  "id": "sunset/smooth/5",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 2,
+  "cells": 4,
+  "struct": 0.58,
+  "fid": -0.4
+ },
+ "c011": {
+  "id": "anubis/13",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 1,
+  "cells": 1
+ },
+ "c012": {
+  "id": "golden-axe/19",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 2,
+  "cells": 7
+ },
+ "c013": {
+  "id": "autumn/16",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 1,
+  "cells": 1
+ },
+ "c014": {
+  "id": "burning-hand/loose/8",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 2,
+  "cells": 16,
+  "struct": 1.52,
+  "fid": -0.78
+ },
+ "c015": {
+  "id": "jojo/19",
+  "kind": "pilot",
+  "repeat": true,
+  "painting": 1,
+  "cells": 20
+ },
+ "c016": {
+  "id": "golden-axe/smooth/25",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 1,
+  "cells": 9,
+  "struct": -0.54,
+  "fid": 1.74
+ },
+ "c017": {
+  "id": "autumn/loose/27",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 1,
+  "cells": 11,
+  "struct": 1.44,
+  "fid": -0.33
+ },
+ "c018": {
+  "id": "autumn/loose/15",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 2,
+  "cells": 9,
+  "struct": 4.26,
+  "fid": -3.9
+ },
+ "c019": {
+  "id": "sunset/19",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 1,
+  "cells": 11
+ },
+ "c020": {
+  "id": "sunset/9",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 2,
+  "cells": 1
+ },
+ "c021": {
+  "id": "andy/loose/26",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 1,
+  "cells": 12,
+  "struct": -0.01,
+  "fid": 0.0
+ },
+ "c022": {
+  "id": "jojo/0",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 2,
+  "cells": 5
+ },
+ "c023": {
+  "id": "autumn/loose/12",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 2,
+  "cells": 9,
+  "struct": 1.33,
+  "fid": -0.6
+ },
+ "c024": {
+  "id": "anubis/smooth/7",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 2,
+  "cells": 14,
+  "struct": -0.03,
+  "fid": 1.21
+ },
+ "c025": {
+  "id": "rocket-rackoon/smooth/10",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 2,
+  "cells": 5,
+  "struct": -0.1,
+  "fid": 2.29
+ },
+ "c026": {
+  "id": "golden-axe/29",
+  "kind": "pilot",
+  "repeat": true,
+  "painting": 1,
+  "cells": 13
+ },
+ "c027": {
+  "id": "diver-sunset/10",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 2,
+  "cells": 8
+ },
+ "c028": {
+  "id": "sunset/smooth/15",
+  "kind": "kept",
+  "repeat": true,
+  "painting": 1,
+  "cells": 9,
+  "struct": 0.55,
+  "fid": -0.4
+ },
+ "c029": {
+  "id": "burning-hand/loose/1",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 1,
+  "cells": 19,
+  "struct": 2.51,
+  "fid": -0.43
+ },
+ "c030": {
+  "id": "golden-axe/25",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 2,
+  "cells": 7
+ },
+ "c031": {
+  "id": "burning-hand/loose/9",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 1,
+  "cells": 35,
+  "struct": 2.37,
+  "fid": -2.64
+ },
+ "c032": {
+  "id": "RC1/21",
+  "kind": "pilot",
+  "repeat": true,
+  "painting": 1,
+  "cells": 23
+ },
+ "c033": {
+  "id": "RC1/11",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 2,
+  "cells": 15
+ },
+ "c034": {
+  "id": "RC1/smooth/21",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 2,
+  "cells": 4,
+  "struct": -0.05,
+  "fid": 0.01
+ },
+ "c035": {
+  "id": "autumn/23",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 2,
+  "cells": 6
+ },
+ "c036": {
+  "id": "golden-axe/29",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 2,
+  "cells": 13
+ },
+ "c037": {
+  "id": "RC1/4",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 1,
+  "cells": 5
+ },
+ "c038": {
+  "id": "anubis/smooth/21",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 2,
+  "cells": 15,
+  "struct": -0.74,
+  "fid": 0.42
+ },
+ "c039": {
+  "id": "golden-axe/smooth/6",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 2,
+  "cells": 5,
+  "struct": -1.12,
+  "fid": 0.05
+ },
+ "c040": {
+  "id": "sunset/smooth/15",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 2,
+  "cells": 9,
+  "struct": 0.55,
+  "fid": -0.4
+ },
+ "c041": {
+  "id": "rocket-rackoon/1",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 1,
+  "cells": 6
+ },
+ "c042": {
+  "id": "rocket-rackoon/smooth/18",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 1,
+  "cells": 11,
+  "struct": -0.55,
+  "fid": 2.15
+ },
+ "c043": {
+  "id": "autumn/18",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 2,
+  "cells": 4
+ },
+ "c044": {
+  "id": "golden-axe/17",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 2,
+  "cells": 10
+ },
+ "c045": {
+  "id": "diver-sunset/20",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 1,
+  "cells": 2
+ },
+ "c046": {
+  "id": "autumn/25",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 1,
+  "cells": 1
+ },
+ "c047": {
+  "id": "diver-sunset/4",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 1,
+  "cells": 2
+ },
+ "c048": {
+  "id": "diver-sunset/15",
+  "kind": "pilot",
+  "repeat": false,
+  "painting": 2,
+  "cells": 1
+ },
+ "c049": {
+  "id": "diver-sunset/smooth/19",
+  "kind": "kept",
+  "repeat": false,
+  "painting": 1,
+  "cells": 6,
+  "struct": -0.46,
+  "fid": 1.92
+ }
+}
