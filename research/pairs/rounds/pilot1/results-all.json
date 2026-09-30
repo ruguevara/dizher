@@ -1,0 +1,940 @@
+[
+ {
+  "file": "v000",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "detail",
+  "note": "Colouring 1 puts a short grey line at the red stripe's lower edge, echoing the original's pale edge highlight, while colouring 2 only extends the red staircase; the difference is a few pixels."
+ },
+ {
+  "file": "v001",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 1 keeps the Z-shaped road cells and the leafy cell by the fence orange (red/yellow) as in the original, with one flat light-grey cell, while colouring 2 turns the Z cells pinkish red/white intruding into the orange band and darkens the leaf cell to black/yellow."
+ },
+ {
+  "file": "v002",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 1 renders several flame and hat cells in dull olive/red patches, while colouring 2 uses bright red/yellow orange that matches the fire and its neighbours."
+ },
+ {
+  "file": "v003",
+  "verdict": "=",
+  "confidence": "high",
+  "problem": "none",
+  "note": "Every judged cell uses the same ink/paper pair in both colourings; only the dither pattern differs."
+ },
+ {
+  "file": "v004",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 2 draws the bright cream line under the car consistently in white and adds blue dots to the dark blue body, while colouring 1 makes parts of the line and texture dim grey, so the line alternates grey and white."
+ },
+ {
+  "file": "v005",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 1 keeps the letter-top serifs and the B's counter edges bright yellow like the gold letters, while colouring 2 makes them dim olive bars that read greenish and cell-aligned against the bright letter bodies."
+ },
+ {
+  "file": "v006",
+  "verdict": "2",
+  "confidence": "high",
+  "problem": "hue",
+  "note": "Colouring 1 scatters grey, green and bright red specks over the warm brown torch, hat and face, while colouring 2 keeps these cells olive/yellow on black in the picture's warm palette."
+ },
+ {
+  "file": "v007",
+  "verdict": "=",
+  "confidence": "high",
+  "problem": "none",
+  "note": "The only difference is a single green pixel in a near-black area, which is invisible at normal viewing distance."
+ },
+ {
+  "file": "v008",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 1 puts a stray bright-white hook at the dark edge of the sunset, while colouring 2 continues the dark-red staircase of the edge smoothly."
+ },
+ {
+  "file": "v009",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "blocks",
+  "note": "Colouring 2 fills the 2x2 cells with a flat dark-red square that stands out as a block among dithered reds, while colouring 1 keeps a red/black dither continuous with the cells above, though darker and noisier than the smooth original."
+ },
+ {
+  "file": "v010",
+  "verdict": "2",
+  "confidence": "high",
+  "problem": "hue",
+  "note": "Colouring 1 dithers red dots and black into the purple-to-blue gradient, while colouring 2 uses sparse magenta on blue that reads as the original's violet-blue."
+ },
+ {
+  "file": "v011",
+  "verdict": "2",
+  "confidence": "low",
+  "problem": "hue",
+  "note": "In the one changed cell, colouring 1 uses dark yellow on black (olive) and colouring 2 a clump of bright red on black; the original there is brownish orange, which red is closer to, but the red clump shows as a spot."
+ },
+ {
+  "file": "v012",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 1 puts bright yellow strokes on the white lettering and the cream/grey edge below it; colouring 2 keeps them white, which matches the pale original."
+ },
+ {
+  "file": "v013",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "hue",
+  "note": "Colouring 2 puts green dots into the olive-brown hair, yellow where the original is reddish brown and white on brown; colouring 1 uses yellow and red there, which fit better, though colouring 2's red for one hair cell is slightly better."
+ },
+ {
+  "file": "v014",
+  "verdict": "2",
+  "confidence": "high",
+  "problem": "blocks",
+  "note": "Colouring 1 fills two cells with flat dark red, which show as squares in the dithered bright red and black; colouring 2 continues the dither smoothly."
+ },
+ {
+  "file": "v015",
+  "verdict": "=",
+  "confidence": "low",
+  "problem": "none",
+  "note": "The only difference is dark magenta instead of bright magenta dots in two roof-edge cells, which is hardly visible at a normal viewing distance."
+ },
+ {
+  "file": "v016",
+  "verdict": "2",
+  "confidence": "high",
+  "problem": "blocks",
+  "note": "Colouring 1 turns four cells of the golden-yellow area into flat olive (dark yellow) patches that stand out as blocks; colouring 2 keeps bright yellow with black dots, which blends with the neighbouring cells."
+ },
+ {
+  "file": "v017",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "blocks",
+  "note": "Colouring 2 renders five flame cells in dark red and dark yellow, which show as dull khaki squares next to bright red and yellow cells; colouring 1 keeps the flame bright and continuous."
+ },
+ {
+  "file": "v018",
+  "verdict": "=",
+  "confidence": "high",
+  "problem": "none",
+  "note": "Both use the same colour pairs in every cell, so they differ only in dithering noise."
+ },
+ {
+  "file": "v019",
+  "verdict": "2",
+  "confidence": "high",
+  "problem": "blocks",
+  "note": "Colouring 1 renders the pink sky and lavender clouds with dark magenta on black and a grey-pink magenta and white checker, giving dark blotchy cells; colouring 2 uses bright magenta with blue, so the sky stays smooth and the clouds read as bluish."
+ },
+ {
+  "file": "v020",
+  "verdict": "=",
+  "confidence": "high",
+  "problem": "none",
+  "note": "The outlined cells on the leaf-covered path use the same ink/paper pairs (red/yellow, red/white, black/yellow) in both, differing only in dither noise."
+ },
+ {
+  "file": "v021",
+  "verdict": "=",
+  "confidence": "high",
+  "problem": "none",
+  "note": "The outlined dragon-head cells (green/blue, black/green) have the same colours and proportions in both colourings; only the dither pattern differs."
+ },
+ {
+  "file": "v022",
+  "verdict": "2",
+  "confidence": "high",
+  "problem": "hue",
+  "note": "Colouring 1 renders the light-blue bikini as magenta on black (purple) and the pale pink highlight as dark magenta, while colouring 2 uses cyan and magenta/white, much closer to the original."
+ },
+ {
+  "file": "v023",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "blocks",
+  "note": "Colouring 2 puts nearly black cells into the lit belt and arm (black/blue, sparse yellow) where colouring 1 keeps a light belt (white on black, yellow/blue) and the red arm."
+ },
+ {
+  "file": "v024",
+  "verdict": "=",
+  "confidence": "high",
+  "problem": "none",
+  "note": "The outlined row of the purple sky uses the same blue/magenta mix at the same ratios in both; only the dither texture differs."
+ },
+ {
+  "file": "v025",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "hue",
+  "note": "Near the moon, colouring 1 keeps the pale cream/green/pink tints (patchy between cells) where colouring 2 turns them into white and noisy grey black/white dither, though colouring 2's green/blue on the dragon cheek suits it better than colouring 1's yellow-on-black."
+ },
+ {
+  "file": "v026",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "noise",
+  "note": "Colouring 1 renders the pale straw highlight as noisy yellow-on-black and the light skin next to the white as yellow with red dots, while colouring 2 uses yellow/grey and yellow/white, lighter and smoother as in the original."
+ },
+ {
+  "file": "v027",
+  "verdict": "=",
+  "confidence": "high",
+  "problem": "none",
+  "note": "The single outlined foliage cell has the same dim red/yellow colours and ratio in both colourings."
+ },
+ {
+  "file": "v028",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "hue",
+  "note": "The single outlined foliage cell is dim red/yellow (orange, blending with its neighbours) in colouring 1 and bright red/yellow (redder spot) in colouring 2; the original is a plain orange, so the difference is small."
+ },
+ {
+  "file": "v029",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "detail",
+  "note": "In the dragon's jaw, colouring 2 turns every cell to bright red, making a flat red blob that loses the darker jaw curve; colouring 1 keeps the darker red-brown jaw and the teeth, though some of its interior cells are too dark and olive."
+ },
+ {
+  "file": "v030",
+  "verdict": "2",
+  "confidence": "high",
+  "problem": "hue",
+  "note": "Colouring 1 puts light-grey cells into the flat cyan background, where colouring 2 keeps it cyan with a few green specks as in the original."
+ },
+ {
+  "file": "v031",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 1 shows the mint-green area as green; colouring 2 turns it into a noisy yellow-and-black dither that reads olive."
+ },
+ {
+  "file": "v032",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 1 fills the golden hat with a flat olive dark-yellow block; colouring 2's red-on-yellow dither reads closer to the original orange-gold."
+ },
+ {
+  "file": "v033",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 1 draws the pale blue bikini in cyan, while colouring 2 makes it magenta/purple, which does not match the original."
+ },
+ {
+  "file": "v034",
+  "verdict": "=",
+  "confidence": "high",
+  "problem": "none",
+  "note": "The two differ only in where the magenta and black dither dots fall inside the same blue cell, so they look the same."
+ },
+ {
+  "file": "v035",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 1 renders the golden hat as yellow dithered with red (reads orange-gold, blends in), while colouring 2 fills it with a flat dark-yellow block that reads olive and stands out as a rectangle."
+ },
+ {
+  "file": "v036",
+  "verdict": "2",
+  "confidence": "low",
+  "problem": "detail",
+  "note": "At the belt, colouring 1 has a solid black cell where the original is light and blue, and colouring 2 continues the blue loincloth and the buckle highlight; the other changes are minor."
+ },
+ {
+  "file": "v037",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "In the orange-brown carved texture, colouring 1 uses white-on-black cells, while colouring 2 uses dark yellow and red, which match the warm tone better."
+ },
+ {
+  "file": "v038",
+  "verdict": "1",
+  "confidence": "high",
+  "problem": "blocks",
+  "note": "Colouring 1 shows the lavender clouds as blue on the pink sky; colouring 2 makes them blocky dark black-and-magenta patches and adds a pale strip at the top."
+ },
+ {
+  "file": "v039",
+  "verdict": "1",
+  "confidence": "high",
+  "problem": "blocks",
+  "note": "Colouring 1 keeps the pale-cyan band of the sky gradient smooth; colouring 2 puts a white-and-blue dithered strip there, with visible seams against the cyan cells on either side."
+ },
+ {
+  "file": "v040",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "detail",
+  "note": "Colouring 2 keeps the red glasses rim and the blue/cyan around the eye; colouring 1 turns the area into magenta-and-black noise and loses the rim."
+ },
+ {
+  "file": "v041",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "blocks",
+  "note": "Colouring 2 keeps the denim jacket in consistent blue dither, while colouring 1 turns several cells cyan, giving a teal patchwork with visible cell seams (2 has only a few stray magenta dots)."
+ },
+ {
+  "file": "v042",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "blocks",
+  "note": "Colouring 1 keeps the left edge of the sunset a uniform dark red, while colouring 2 adds a bright-red cell, a grey/white fragment and a dark-yellow block at the coastline that clash with neighbours."
+ },
+ {
+  "file": "v043",
+  "verdict": "=",
+  "confidence": "medium",
+  "problem": "none",
+  "note": "The magenta/blue sky over the dark rooftops looks the same in both colourings apart from dither noise."
+ },
+ {
+  "file": "v044",
+  "verdict": "=",
+  "confidence": "medium",
+  "problem": "none",
+  "note": "The bottom of the white JOJO letters over the red stripe is rendered practically identically in both colourings."
+ },
+ {
+  "file": "v045",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 2 renders the knuckles of the orange hand in dark yellow and red, while colouring 1 uses grey patches that read as metal rather than skin."
+ },
+ {
+  "file": "v046",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "blocks",
+  "note": "Colouring 1 keeps the chin skin as continuous orange (red with yellow dots), while colouring 2 inserts a dark-red cell block with grey dots that reads dull pinkish-brown and forms a visible rectangle."
+ },
+ {
+  "file": "v047",
+  "verdict": "2",
+  "confidence": "low",
+  "problem": "hue",
+  "note": "Colouring 2 renders the dark foliage edge with green dots matching the original's green-teal leaves, while colouring 1 uses yellow and white dots that read olive/yellow."
+ },
+ {
+  "file": "v048",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "other",
+  "note": "Colouring 1 has a clean red-to-black coastline edge, while colouring 2 adds a stray white pixel cluster in the dark water where the original has none."
+ },
+ {
+  "file": "v049",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "detail",
+  "note": "Colouring 1 shows the dark branch marks in the orange foliage (somewhat heavy black), while colouring 2 loses them in uniform red/yellow dither."
+ },
+ {
+  "file": "v050",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 1 draws the light cream edge below the dark jacket in consistent grey/white, while colouring 2 breaks it with saturated yellow segments and a stray red cell that read as clashes."
+ },
+ {
+  "file": "v051",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "detail",
+  "note": "Colouring 1 keeps sparse blue dots suggesting the blue stone blocks in the lower-left dark area, which colouring 2 leaves almost plain black, and 2 also turns half of one green eye grey."
+ },
+ {
+  "file": "v052",
+  "verdict": "2",
+  "confidence": "low",
+  "problem": "detail",
+  "note": "Colouring 2 adds a short grey line along the red/black stripe boundary where the original has a thin light edge, while colouring 1 omits it; the difference is tiny at full-screen scale."
+ },
+ {
+  "file": "v053",
+  "verdict": "1",
+  "confidence": "high",
+  "problem": "blocks",
+  "note": "Colouring 2 fills the cells with a flat dark-red square that shows as a blocky L-shaped patch against the bright red, whereas colouring 1 shades the same area smoothly with black dither on red."
+ },
+ {
+  "file": "v054",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 2 renders the pale teal/green smear in green and cyan like the original, while colouring 1 turns it into a bright yellow/black maze pattern that reads as the wrong colour."
+ },
+ {
+  "file": "v055",
+  "verdict": "2",
+  "confidence": "low",
+  "problem": "blocks",
+  "note": "The differences are small; colouring 1 has a solid green cell and a red blob beside the figure that stand out as blocks, where colouring 2 uses thinner green and scattered red dots closer to the dark shadowed hair."
+ },
+ {
+  "file": "v056",
+  "verdict": "=",
+  "confidence": "low",
+  "problem": "none",
+  "note": "A single cell differs: colouring 1 has a small red blob on yellow/black dither, colouring 2 plain yellow/black, and neither clearly matches the orange-and-dark texture better at normal distance."
+ },
+ {
+  "file": "v057",
+  "verdict": "2",
+  "confidence": "low",
+  "problem": "hue",
+  "note": "In the busy neck/beard area colouring 1 puts a solid black block where the original is lavender and blue, while colouring 2 uses blue/cyan and magenta dither that follows the original colours slightly better."
+ },
+ {
+  "file": "v058",
+  "verdict": "1",
+  "confidence": "high",
+  "problem": "blocks",
+  "note": "Colouring 2 leaves a darker-blue rectangle with black dots, and the magenta dither ends sharply at a cell edge, a visible seam in the smooth purple-blue gradient, while colouring 1 keeps a smooth magenta-on-blue fade."
+ },
+ {
+  "file": "v059",
+  "verdict": "1",
+  "confidence": "high",
+  "problem": "hue",
+  "note": "Colouring 2 puts red-on-blue cells and a dark-blue block into the purple band, which reads as a red clash in a smooth gradient, while colouring 1 keeps an even magenta-on-blue transition."
+ },
+ {
+  "file": "v060",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "hue",
+  "note": "Colouring 1 renders the foliage edge with green and cyan dots that read as the original's green-teal leaves, while colouring 2 uses mostly yellow and a few white dots on black, which reads more olive."
+ },
+ {
+  "file": "v061",
+  "verdict": "1",
+  "confidence": "high",
+  "problem": "blocks",
+  "note": "Colouring 2 puts grey-and-green blocks into the smooth cyan sky where the original has only small yellow-green leaf specks, while colouring 1 keeps the cyan clean with small green dots."
+ },
+ {
+  "file": "v062",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "blocks",
+  "note": "Colouring 2 turns several cells into grey/magenta, grey/yellow and yellow/black patches, a blocky clash; colouring 1 keeps white highlights at top right and green/blue cells for the teal demon face."
+ },
+ {
+  "file": "v063",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "detail",
+  "note": "Colouring 1 keeps the bright yellow diagonal edge of the leaf, but its skin band has darker red with grey dots; colouring 2 has smoother orange skin but loses that highlight to red and black."
+ },
+ {
+  "file": "v064",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 1 renders the pale highlight as white/yellow and the leaf-edge highlight as olive with light dots, while colouring 2 uses white/red (pinkish) and olive/black, which read darker and off-hue."
+ },
+ {
+  "file": "v065",
+  "verdict": "1",
+  "confidence": "high",
+  "problem": "blocks",
+  "note": "Colouring 2 puts two flat olive (dark yellow) patches into the smooth orange-yellow area, visible seams; colouring 1 keeps a consistent yellow/red dither."
+ },
+ {
+  "file": "v066",
+  "verdict": "1",
+  "confidence": "high",
+  "problem": "blocks",
+  "note": "Colouring 2 adds olive (dark yellow) patches in two cells of the smooth orange background, while colouring 1 keeps an even red/yellow dither that reads as orange."
+ },
+ {
+  "file": "v067",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "blocks",
+  "note": "Colouring 1 makes the cell a flat darker red square that stands out against the black-dithered red around it, while colouring 2's red/black dither blends in like the original's smooth dark red."
+ },
+ {
+  "file": "v068",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "hue",
+  "note": "Colouring 1 renders the middle cell as bright red/yellow orange, which matches the original's bright orange leaves, while colouring 2 makes it dark red/olive, a browner cell."
+ },
+ {
+  "file": "v069",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "blocks",
+  "note": "Colouring 2 fills the light cyan/lavender collar area with grey, flat cyan and black cells, a patchwork, while colouring 1 uses magenta/cyan and blue dithers that read closer to the original's lavender and blue."
+ },
+ {
+  "file": "v070",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "blocks",
+  "note": "Colouring 1 puts flat olive patches on the top of the I, the B's bowl and the S where the gold letters should be, while colouring 2 keeps them in the same yellow/red dither as the rest of the lettering."
+ },
+ {
+  "file": "v071",
+  "verdict": "2",
+  "confidence": "low",
+  "problem": "hue",
+  "note": "Colouring 2 dithers white into the red band, so it reads as the lighter pink of the original sky, while colouring 1 leaves it flat saturated red; colouring 2's band is a bit speckled and has a harder edge."
+ },
+ {
+  "file": "v072",
+  "verdict": "2",
+  "confidence": "high",
+  "problem": "hue",
+  "note": "Colouring 1 has one dull olive/white cell that stands out as a greenish-grey patch in the light peach area, while colouring 2 continues the red/white dither of its neighbours."
+ },
+ {
+  "file": "v073",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 1 puts dull olive cells (one with a black arc stroke) into the bright orange field, while colouring 2 keeps the red/yellow dither consistent but loses a short piece of the dark arc."
+ },
+ {
+  "file": "v074",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 1 has stray red strokes and magenta dots in the dark blue stone area, while colouring 2 draws the same accents in yellow and blue, which match the original gold highlights and blue stone."
+ },
+ {
+  "file": "v075",
+  "verdict": "=",
+  "confidence": "high",
+  "problem": "none",
+  "note": "The two differ only in a few black/red pixels at the lower-left edge under the letters, with no visible difference at normal viewing distance."
+ },
+ {
+  "file": "v076",
+  "verdict": "2",
+  "confidence": "low",
+  "problem": "blocks",
+  "note": "Colouring 1 draws the pale cream banner edge as broken yellow bits that switch colour partway along the edge, while colouring 2 draws it as one continuous grey/white line consistent with the rest of the edge."
+ },
+ {
+  "file": "v077",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "In the light-pink band, colouring 1 dithers red with white and reads as pink like the original; colouring 2 is flat saturated red there (1 has one odd grey cell at the left)."
+ },
+ {
+  "file": "v078",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 1 keeps the red glasses rim and the blue/red patches of the painted face, while colouring 2 turns the region into dark magenta/black dither and loses the rim and the blue."
+ },
+ {
+  "file": "v079",
+  "verdict": "2",
+  "confidence": "high",
+  "problem": "blocks",
+  "note": "Colouring 1 breaks the boy's face into clashing olive/red/white/yellow blocks with no features, while colouring 2 draws a clean white face with black features, yellow shading and white fingers."
+ },
+ {
+  "file": "v080",
+  "verdict": "2",
+  "confidence": "low",
+  "problem": "detail",
+  "note": "Colouring 2 has a fully green eye matching the other one and a few more blue dots for the stone texture on the lower left, while colouring 1 has a half-grey eye and a barer dark area; the differences are small."
+ },
+ {
+  "file": "v081",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "blocks",
+  "note": "The two swap one dark black/yellow cell: colouring 1 puts it on the darker cell next to the bark, where it continues the trunk edge; colouring 2 puts a dark bump into brighter orange leaves."
+ },
+ {
+  "file": "v082",
+  "verdict": "=",
+  "confidence": "medium",
+  "problem": "none",
+  "note": "The only difference is three stray white pixels in colouring 1 in a dark brown cell, invisible at viewing distance."
+ },
+ {
+  "file": "v083",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "detail",
+  "note": "Colouring 1 uses grey on black to draw the goggle glint and the light strap line where the original has light highlights; colouring 2 turns them into red specks and loses the detail."
+ },
+ {
+  "file": "v084",
+  "verdict": "1",
+  "confidence": "high",
+  "problem": "hue",
+  "note": "In the violet-to-blue sky band, colouring 1 dithers blue with magenta and blends smoothly; colouring 2 puts red dots into the blue (a reddish band), then blue/black."
+ },
+ {
+  "file": "v085",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "detail",
+  "note": "Colouring 1 keeps the cream diagonal line bright white all along and adds a few dark-blue coat dots; colouring 2 turns part of the line dull grey and the coat plain black, a small difference."
+ },
+ {
+  "file": "v086",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "blocks",
+  "note": "Both put dark olive (black/yellow) cells into the bright orange skin, but colouring 2 has about six on the abdomen against three in colouring 1, so its torso is blockier."
+ },
+ {
+  "file": "v087",
+  "verdict": "=",
+  "confidence": "high",
+  "problem": "none",
+  "note": "The crops are pixel-identical (all black), so there is no visible difference."
+ },
+ {
+  "file": "v088",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "hue",
+  "note": "Colouring 1 keeps the violet glow row at normal brightness with dense magenta, matching the original's purple (small black-dot patch at the left); colouring 2 makes it bright blue with sparse magenta, bluer than the original, with a few stray red dots."
+ },
+ {
+  "file": "v089",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "blocks",
+  "note": "In the smooth orange gradient, colouring 1 makes darker non-bright red rectangles with yellow dots that stand out as patches; colouring 2 stays bright red with black/yellow dots and blends smoothly."
+ },
+ {
+  "file": "v090",
+  "verdict": "2",
+  "confidence": "low",
+  "problem": "detail",
+  "note": "Colouring 2 renders the right-hand fingers with white/grey dots so the light hand shape reads, while colouring 1 leaves them mostly black with sparse dots."
+ },
+ {
+  "file": "v091",
+  "verdict": "2",
+  "confidence": "high",
+  "problem": "blocks",
+  "note": "Colouring 1 has a visible rectangular patch of dark red cells in the red gradient, while colouring 2 keeps a smooth bright-red and black dither."
+ },
+ {
+  "file": "v092",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "In the dark brown hair area colouring 1 uses sparse white specks, while colouring 2 uses magenta specks that read as purple, off the original's brown."
+ },
+ {
+  "file": "v093",
+  "verdict": "=",
+  "confidence": "high",
+  "problem": "none",
+  "note": "Both are nearly all black with a few blue dots; the only difference is a single cyan dot in colouring 2."
+ },
+ {
+  "file": "v094",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 2 adds a green-dithered cell and stray white/grey spots in the warm torch and hat area, while colouring 1 stays in consistent yellow, red and black."
+ },
+ {
+  "file": "v095",
+  "verdict": "1",
+  "confidence": "high",
+  "problem": "blocks",
+  "note": "Colouring 1 keeps a readable face with eyes and mouth, while colouring 2 breaks the face into a blocky patchwork of yellow, dark yellow and red cells that loses the features."
+ },
+ {
+  "file": "v096",
+  "verdict": "=",
+  "confidence": "high",
+  "problem": "none",
+  "note": "Both render the red-to-purple-to-blue gradient with the same dither and differ only in noise."
+ },
+ {
+  "file": "v097",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 1 fills the centre with dull grey and dark-yellow blocks, while colouring 2 uses bright yellow, white and cyan that match the original's pop-art streak."
+ },
+ {
+  "file": "v098",
+  "verdict": "2",
+  "confidence": "high",
+  "problem": "blocks",
+  "note": "Colouring 1 puts a red/black dither patch and a blue/black cell into the purple band, making visible seams, while colouring 2 keeps a smooth magenta/blue gradient."
+ },
+ {
+  "file": "v099",
+  "verdict": "2",
+  "confidence": "high",
+  "problem": "blocks",
+  "note": "Colouring 1 inserts a row of white/blue dithered cells that stands out as a seam in the blue-to-cyan gradient, while colouring 2 steps smoothly through blue/cyan to cyan/white."
+ },
+ {
+  "file": "v100",
+  "verdict": "=",
+  "confidence": "low",
+  "problem": "none",
+  "note": "Both render the dark-red to red gradient with nearly identical red/black dithering; colouring 2 is marginally darker near the top with one stray dot, no meaningful difference."
+ },
+ {
+  "file": "v101",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 1 keeps the gun body red/black like the original's dark red, while colouring 2 puts grey/white cells there that read as metal-grey patches."
+ },
+ {
+  "file": "v102",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "blocks",
+  "note": "Colouring 1 renders the mouth as bright red/yellow close to the original's orange, while colouring 2 mixes dark red and olive cells beside bright ones, giving muddy blocky seams."
+ },
+ {
+  "file": "v103",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 1 shows the orange-brown face/hands as yellow and red on black, while colouring 2 uses white on black there, turning the warm skin grey."
+ },
+ {
+  "file": "v104",
+  "verdict": "2",
+  "confidence": "high",
+  "problem": "blocks",
+  "note": "Colouring 1 inserts a grey cell with green dots and a yellow/black blob into the cyan sky and cuts the tan shape with a hard vertical cell edge, while colouring 2 follows the shape's diagonal edge with red on cyan."
+ },
+ {
+  "file": "v105",
+  "verdict": "2",
+  "confidence": "low",
+  "problem": "other",
+  "note": "Colouring 1 has a bright-red block, stray grey pixels and an olive cell at the sunset's left edge, while colouring 2 keeps a uniform dark red with no artefacts."
+ },
+ {
+  "file": "v106",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "hue",
+  "note": "Colouring 2 adds bright yellow pixels to the bottom of a white letter where the original has only a faint beige tint, which reads as a stray colour; colouring 1 keeps it white/black."
+ },
+ {
+  "file": "v107",
+  "verdict": "=",
+  "confidence": "low",
+  "problem": "none",
+  "note": "Both render the torso and hip cells in similar red/yellow/olive mixes with small differences in which cells are olive; neither clearly reads closer to the original skin."
+ },
+ {
+  "file": "v108",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "blocks",
+  "note": "Colouring 1 keeps a smooth red/black dither over the orange-red surface, while colouring 2 drops in two solid dark-red squares that show as blocks."
+ },
+ {
+  "file": "v109",
+  "verdict": "2",
+  "confidence": "high",
+  "problem": "hue",
+  "note": "Colouring 2 dithers the tan shape in red and yellow, which reads orange-tan like the original, while colouring 1 uses red and grey (pinkish) with an olive/black stripe below."
+ },
+ {
+  "file": "v110",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 2 puts a grey/dim-yellow cell into the pale orange road, which stands out as a greyish square; colouring 1 keeps red/white matching the surroundings."
+ },
+ {
+  "file": "v111",
+  "verdict": "=",
+  "confidence": "high",
+  "problem": "none",
+  "note": "Both render the dark cell as black with a single green dot; no visible difference."
+ },
+ {
+  "file": "v112",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "blocks",
+  "note": "Colouring 2 uses solid grey blocks and a white blotch in the brown/orange textured area, while colouring 1 uses warmer yellow tones that read closer to the original browns."
+ },
+ {
+  "file": "v113",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 2 introduces a grey blotch in the orange/white road and a red block in the dark fence area, while colouring 1 blends with the surroundings."
+ },
+ {
+  "file": "v114",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 2 puts grey into the middle of the orange hand where colouring 1 keeps red/yellow skin tones."
+ },
+ {
+  "file": "v115",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 2 adds red streaks and magenta dots in the dark blue Anubis background, where colouring 1 uses blue dots and yellow matching the original."
+ },
+ {
+  "file": "v116",
+  "verdict": "=",
+  "confidence": "medium",
+  "problem": "none",
+  "note": "The only difference is a single grey dot in colouring 2, invisible at normal viewing distance."
+ },
+ {
+  "file": "v117",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "blocks",
+  "note": "Colouring 2 renders the faint dark twigs as a heavy black L-shaped cell block that reads as a blocky patch, while colouring 1 keeps the foliage uniform orange."
+ },
+ {
+  "file": "v118",
+  "verdict": "2",
+  "confidence": "low",
+  "problem": "hue",
+  "note": "Colouring 1 renders the brown/tan fur below the hair as flat grey cells (plus a white block and blue dots), while colouring 2 uses dark yellow that reads warmer and closer to the tan leopard-like texture, though it also has a dull olive block and a red cell; mixed but slightly favouring 2."
+ },
+ {
+  "file": "v119",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 1 renders the tan area as red/dim-yellow reading orange-tan, while colouring 2 uses red/grey that reads pinkish, plus a yellow strip in the brown wood."
+ },
+ {
+  "file": "v120",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "Colouring 2 draws the tan claw fingers in dim yellow matching the original, while colouring 1 makes them grey/white."
+ },
+ {
+  "file": "v121",
+  "verdict": "1",
+  "confidence": "medium",
+  "problem": "blocks",
+  "note": "In the smooth orange-to-dark-red gradient, colouring 2 switches several cells to dark red, leaving visible rectangular patches, while colouring 1 stays in bright red with yellow dots and blends smoothly."
+ },
+ {
+  "file": "v122",
+  "verdict": "1",
+  "confidence": "low",
+  "problem": "blocks",
+  "note": "The original has a thin dark crack across orange texture; colouring 1 hints at it with a darker red band, while colouring 2 turns the cell black and yellow, making a square black blob in the orange."
+ },
+ {
+  "file": "v123",
+  "verdict": "=",
+  "confidence": "high",
+  "problem": "none",
+  "note": "The only difference is one stray cyan dot in a black night area, which cannot be seen at normal distance."
+ },
+ {
+  "file": "v124",
+  "verdict": "2",
+  "confidence": "low",
+  "problem": "hue",
+  "note": "In the dark brown hair, colouring 1 scatters magenta dots that give a purple cast, while colouring 2 uses white specks that read as neutral strands, slightly noisier but closer in hue."
+ },
+ {
+  "file": "v125",
+  "verdict": "=",
+  "confidence": "high",
+  "problem": "none",
+  "note": "The outlined cells use the same colour pairs in both, so the only differences are dithering patterns, with nothing visible at normal distance."
+ },
+ {
+  "file": "v126",
+  "verdict": "2",
+  "confidence": "medium",
+  "problem": "hue",
+  "note": "On the blue denim jacket, colouring 1 uses dim dark-blue dots with stray magenta dots and reads too dark and purplish, while colouring 2 uses bright blue and cyan highlights that read as denim."
+ },
+ {
+  "file": "v127",
+  "verdict": "1",
+  "confidence": "high",
+  "problem": "hue",
+  "note": "Where the original is pale white or cyan with a yellow streak, colouring 2 puts large muddy dark-yellow and grey blocks, while colouring 1 keeps bright white, cyan and yellow that match the original."
+ },
+ {
+  "file": "v128",
+  "verdict": "2",
+  "confidence": "low",
+  "problem": "hue",
+  "note": "In the purple-to-blue sky gradient, colouring 1 puts black dots in a cell that should be violet-blue, while colouring 2 uses sparse magenta dots that continue the purple haze more faithfully."
+ },
+ {
+  "file": "v129",
+  "verdict": "2",
+  "confidence": "low",
+  "problem": "blocks",
+  "note": "Along the tree-trunk edge, colouring 1 alternates dark and orange cells down the column, while colouring 2 keeps the dark cells together along the trunk edge and orange below, which reads more coherently."
+ },
+ {
+  "file": "v130",
+  "verdict": "=",
+  "confidence": "medium",
+  "problem": "none",
+  "note": "Both render the very dark green-blue area as solid black; colouring 2 only adds one stray green dot, invisible at normal viewing distance."
+ },
+ {
+  "file": "v131",
+  "verdict": "=",
+  "confidence": "low",
+  "problem": "none",
+  "note": "Both fade from black to red with a similar dither gradient; colouring 2 carries the dark dots slightly lower on the right, and neither reads clearly better."
+ },
+ {
+  "file": "v132",
+  "verdict": "1",
+  "confidence": "high",
+  "problem": "hue",
+  "note": "Colouring 2 puts a grey-and-green cell in the cyan sky plus a yellow/black cell and black strokes that the original lacks, while colouring 1 keeps the cyan with red specks and a cleaner tan area."
+ },
+ {
+  "file": "v133",
+  "verdict": "2",
+  "confidence": "low",
+  "problem": "blocks",
+  "note": "Colouring 1 turns the thin dark crack into an isolated black-and-yellow 8x8 blob, while colouring 2 keeps the orange red/yellow dither even and loses only the faint line."
+ }
+]

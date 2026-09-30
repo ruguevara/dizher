@@ -71,3 +71,28 @@ null pairs. Share of segments where the metric rates the painting better, 95% bo
   construction. Where the user kept Select pairs' choice, fidelity may be what mattered. Pairs the user judges
   without having painted them (the calibration round) are needed to weigh the two.
 - The project's own energy prefers the next best pair to the painting in 70% of segments.
+
+### 2. Pilot: Claude as a judge (2026-09-30)
+
+60 painted segments sampled evenly over the 9 images and 7 null pairs, each as two blind sheets with the sides
+swapped (`views.py`), judged by 14 independent subagents, 10 sheets each, the two sheets of a pair never with one
+judge. The prompt named the user's three faults (a colour that does not read as the original's, blocky seams where
+the picture is smooth, noisy cell-to-cell change) and asked for 1, 2 or =, a confidence and the worse one's problem.
+Key and verdicts: `rounds/pilot1/`; `python research/pairs/judge.py research/pairs/rounds/pilot1`.
+
+- Both sheets of a pair agreed on 47 of 60 segments (78%): the painting 36, Select pairs 7, even 4; 13 split.
+  Of the decisive, the painting in 0.84 (Wilson 95% about 0.70-0.92).
+- By confidence, per sheet: high 26 painting, 0 other; medium 40 to 8 (0.83); low 18 to 17, a coin toss.
+- Null pairs: 7 of 7 called even in both orders. Dither noise is not mistaken for a change.
+- Side bias small: "1" 60 times, "2" 49.
+- Against the judge's decisive verdicts: seam_excess agrees 0.72, neighbour_excess 0.65, scielab_dE 0.63.
+- Where the judge went against the painting it mostly held to the picture's colour: diver-sunset/10, red dithered
+  with white read as the sky's pink, where the user painted flat red; RC1's brown hair and fur, dark yellow over grey
+  and white over magenta specks. These are the user's taste against fidelity, to put to the user.
+- Protocol fault for the next round: some judges wrote helper scripts (zooms, crops) into one shared scratch folder
+  and overwrote each other's. Next time each judge gets its own folder, or looks only.
+
+Gate (plan: order agreement >= 85%, null pairs even >= 80%, decisive agreement >= 80% with the lower bound >= 70%):
+nulls pass, decisive agreement passes at the edge, order agreement 78% falls short. Low-confidence verdicts carry no
+information; counting medium and high only, 66 to 8 (0.89). The segments are easy ones, the user's own overrides, so
+this is necessary, not sufficient: the calibration round with the user decides.
