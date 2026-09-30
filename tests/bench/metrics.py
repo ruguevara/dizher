@@ -21,7 +21,7 @@ from dizher.converter.energy import METHODS, LRGB2OPP, lightness_gain
 
 from .project import project_graph, DEFAULTS, select
 from .scr import render_scr, pairs_to_labels, same_region, black
-from .variants import read_variant, listing, reference_id, RANGES
+from .variants import read_variant, listing, reference_id, RANGES, variant_meta
 
 GAMMA = 2.2
 METRICS = {}
@@ -41,6 +41,7 @@ class Case:
     pairs: np.ndarray       # (R, C, 2) palette indexes of the screen
     conv: object            # the project's selection converter under the default method (energy calculated)
     convs: dict             # method -> selection converter under that method's preset
+    meta: dict = None       # the variant's record (its method and params) when it is one
 
     def labels(self, conv=None):
         return pairs_to_labels(conv or self.conv, self.pairs)
@@ -62,7 +63,8 @@ class Picture:
 
     def case(self, variant) -> Case:
         bitmap, idx = read_variant(self.name, variant)
-        return Case(self.source, render_scr(bitmap, idx, self.conv.palette), idx, self.conv, self.convs)
+        return Case(self.source, render_scr(bitmap, idx, self.conv.palette), idx, self.conv, self.convs,
+                    variant_meta(self.name, variant))
 
     def energy_set(self, method) -> 'Energies':
         """The method's energy as a function of its params, on a converter of its own."""
@@ -200,30 +202,54 @@ for _s in (1, 2, 4, 8):
 METRICS['opp_blur:2:nogain'] = _opp_blur(2, gained=False)
 
 
-def mixture(conv, labels):
+def levels_for(conv, chroma):
+    """Every pair's per-pixel mixture level for the target under a chroma weight (Converter.fit_duocolors under
+    that weight), cached on the converter."""
+    cache = conv.__dict__.setdefault('_bench_levels', {})
+    key = round(float(chroma), 4)
+    if key not in cache:
+        from dizher.converter.dither import duo_levels
+        w = np.sqrt(np.array([1.0, chroma, chroma], dtype=np.float32))
+        weighted = lambda lrgb: (lrgb.astype(np.float32) @ LRGB2OPP.T) * w
+        target = weighted(conv.image_lrgb)
+        levels = np.empty((len(conv.color_pairs), *conv.size), np.float32)
+        for i, (c1, c2) in enumerate(conv.palette.iter_color_pairs()):
+            levels[i] = duo_levels(target, weighted(c1 ** GAMMA), weighted(c2 ** GAMMA))
+        cache[key] = levels
+    return cache[key]
+
+
+def mixture(conv, labels, levels=None):
     """What the Exact mixture energy scores: each cell's pair mixed in linear light at each pixel's level, sRGB."""
     rows, cols = np.indices(conv.size)
     idx = conv.expand_cells(labels)
     pairs = lin(conv.color_pairs[idx])                                              # (H, W, 2, 3)
-    t = conv.levels[idx, rows, cols][..., None].astype(np.float32)
+    levels = conv.levels if levels is None else levels
+    t = levels[idx, rows, cols][..., None].astype(np.float32)
     return (pairs[..., 0, :] + t * (pairs[..., 1, :] - pairs[..., 0, :])) ** (1 / GAMMA)
 
 
-def _mix_blur(sigma):
+def _mix_blur(sigma, own=False):
     """The blurred opponent error, no gain, of the mixture composite of the result's pairs instead of the result:
-    what the selection energy looks at, measured as the judge measures."""
+    what the selection energy looks at, measured as the judge measures. own: the levels under the variant's own
+    chroma weight (its record), as its picture was made, instead of the preset's."""
     def f(c: Case):
         conv = c.convs.get('Exact mixture', c.conv)
         labels = c.labels(conv)
         if (labels < 0).any():
             return float('nan')
-        e = opp(mixture(conv, labels)) - opp(c.source)
+        levels = None
+        if own:
+            chroma = (c.meta or {}).get('params', {}).get('chroma', conv.energy.weights['Chroma'])
+            levels = levels_for(conv, chroma)
+        e = opp(mixture(conv, labels, levels)) - opp(c.source)
         return float((blur(e, sigma) ** 2).sum(-1).mean())
     return f
 
 
 for _s in (1, 2):
     METRICS[f'mix_blur:{_s}'] = _mix_blur(_s)
+    METRICS[f'mix_blur:{_s}:own'] = _mix_blur(_s, own=True)
 
 
 def _eye_trunc(scale):
