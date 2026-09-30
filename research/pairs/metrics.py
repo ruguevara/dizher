@@ -6,6 +6,8 @@ The eye model here is the judge's, separate from the selection energy's (whose b
 import cv2
 import numpy as np
 
+from dizher.converter.eye import eye_blur
+
 PPD = 26.0   # Spectrum pixels per degree of visual angle, between 2x and 3x
 
 SRGB2XYZ = np.array([[0.4124, 0.3576, 0.1805],
@@ -37,15 +39,31 @@ def blur(img, sigma):
         if sigma > 0 else img
 
 
-def scielab(srgb, ppd=PPD):
-    """CIELAB of the image as the eye sees it at ppd pixels per degree: opponent channels each filtered by their
-    sum of Gaussians, back to XYZ, then CIELAB."""
+def seen_xyz(srgb, ppd=PPD):
+    """XYZ of the image as the eye sees it at ppd pixels per degree: opponent channels each filtered by their sum of
+    Gaussians (S-CIELAB), back to XYZ."""
     opp = linear(srgb) @ SRGB2XYZ.T @ XYZ2OPP.T
     out = np.zeros_like(opp)
     for k, parts in enumerate(FILTERS):
         for w, s in parts:
             out[..., k] += w * blur(opp[..., k], s * ppd / np.sqrt(2))
-    return xyz2lab(out @ np.linalg.inv(XYZ2OPP).T)
+    return out @ np.linalg.inv(XYZ2OPP).T
+
+
+def scielab(srgb, ppd=PPD):
+    """CIELAB of the image as the eye sees it at ppd pixels per degree."""
+    return xyz2lab(seen_xyz(srgb, ppd))
+
+
+def encode(lin):
+    """sRGB 0..1 of linear RGB, clipped."""
+    lin = np.clip(lin, 0, 1)
+    return np.where(lin <= 0.0031308, 12.92 * lin, 1.055 * lin ** (1 / 2.4) - 0.055).astype(np.float32)
+
+
+def seen_srgb(srgb, ppd=PPD):
+    """sRGB 0..1 of the image as the eye sees it, clipped: what a network metric is shown."""
+    return encode(seen_xyz(srgb, ppd) @ np.linalg.inv(SRGB2XYZ).T)
 
 
 def lab_blurred(srgb, sigma):
@@ -188,6 +206,13 @@ def deep(X, T, mask, name):
         return float(_DEEP[name](crop(X), crop(T)))
 
 
+def project_eye(srgb):
+    """The converter's default eye: a Gaussian of sigma 1 px on linear RGB. The network metrics see the dither
+    through it: raw, LPIPS and DISTS are a coin toss on the painted segments; blurred 0.75-1.5 px they agree with the
+    user best (eyes.py), and this one was fixed before the grid."""
+    return encode(eye_blur(linear(srgb).astype(np.float32), 1.4, 2.0))
+
+
 def all_metrics(X, T, mask) -> dict:
     """Every candidate metric of X against T over mask."""
     sx, st = scielab(X), scielab(T)
@@ -230,19 +255,22 @@ def all_metrics(X, T, mask) -> dict:
         'blur_dE_8': masked_mean(np.linalg.norm(lab_blurred(X, 8) - lab_blurred(T, 8), axis=-1), mask),
         'lpips': deep(X, T, mask, 'lpips'),
         'dists': deep(X, T, mask, 'dists'),
+        'lpips_eye': deep(project_eye(X), project_eye(T), mask, 'lpips'),
+        'dists_eye': deep(project_eye(X), project_eye(T), mask, 'dists'),
     }
 
 
-# judge v1 (fit.py, 2026-09-30): the seam term, the one the data hold to, and S-CIELAB as a fidelity anchor at the
-# heaviest weight that costs no agreement with the user; fitted on painted segments and the user's votes
+# judge v2 (fit.py, 2026-09-30): the seam term, the one the data hold to, and LPIPS through the converter's eye as the
+# anchor that keeps a smooth but wrong colouring from winning, at the heaviest weight that costs no agreement with the
+# user; fitted on the painted segments and the user's votes
 JUDGE = {
-    'seam_excess': 1.035,
-    'scielab_dE': 0.05418,
+    'seam_excess': 0.8827,
+    'lpips_eye': 27.06,
 }
 
 
 def judge_score(X, T, mask=None) -> float:
-    """Judge v1 of the rendered colouring X against the tuned picture T over mask (the whole picture by default),
+    """The judge of the rendered colouring X against the tuned picture T over mask (the whole picture by default),
     lower is better; the lower of two sides by 1 is preferred at odds of about e to 1."""
     m = all_metrics(X, T, np.ones(X.shape[:2], bool) if mask is None else mask)
     return sum(w * m[k] for k, w in JUDGE.items())
