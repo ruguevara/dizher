@@ -237,7 +237,7 @@ def test_metrics_zero_on_self_and_rank_by_closeness(tmp_path, monkeypatch):
     pic = synthetic_picture(tmp_path, monkeypatch)
     self_case = pic.case('good')
     self_case = M.Case(self_case.result, self_case.result, self_case.pairs, self_case.conv, self_case.convs)
-    distance_like = [m for m in M.METRICS if not m.startswith(('energy', 'label_noise', 'region_pairs', 'lpips', 'dists'))]
+    distance_like = [m for m in M.METRICS if not m.startswith(('energy', 'label_noise', 'region_pairs', 'lpips', 'dists', 'mix_blur'))]   # mix_blur scores the pairs' mixture, never the screen
     for m in distance_like:
         assert abs(M.METRICS[m](self_case)) < 1e-4, m
     from bench import variants as V

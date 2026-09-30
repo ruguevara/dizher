@@ -200,6 +200,50 @@ for _s in (1, 2, 4, 8):
 METRICS['opp_blur:2:nogain'] = _opp_blur(2, gained=False)
 
 
+def mixture(conv, labels):
+    """What the Exact mixture energy scores: each cell's pair mixed in linear light at each pixel's level, sRGB."""
+    rows, cols = np.indices(conv.size)
+    idx = conv.expand_cells(labels)
+    pairs = lin(conv.color_pairs[idx])                                              # (H, W, 2, 3)
+    t = conv.levels[idx, rows, cols][..., None].astype(np.float32)
+    return (pairs[..., 0, :] + t * (pairs[..., 1, :] - pairs[..., 0, :])) ** (1 / GAMMA)
+
+
+def _mix_blur(sigma):
+    """The blurred opponent error, no gain, of the mixture composite of the result's pairs instead of the result:
+    what the selection energy looks at, measured as the judge measures."""
+    def f(c: Case):
+        conv = c.convs.get('Exact mixture', c.conv)
+        labels = c.labels(conv)
+        if (labels < 0).any():
+            return float('nan')
+        e = opp(mixture(conv, labels)) - opp(c.source)
+        return float((blur(e, sigma) ** 2).sum(-1).mean())
+    return f
+
+
+for _s in (1, 2):
+    METRICS[f'mix_blur:{_s}'] = _mix_blur(_s)
+
+
+def _eye_trunc(scale):
+    """The opponent error through the converter's own kernels at a scale (alpha 2, support capped at half a cell as
+    in pair selection), no gain: the judge's measure with the energy's truncation."""
+    def f(c: Case):
+        from dizher.converter.eye import eye_kernel
+        radius = min(c.conv.cell) // 2
+        h = eye_kernel(scale, 2.0, max_radius=radius)
+        e = opp(c.result) - opp(c.source)
+        b = np.stack([cv2.filter2D(np.ascontiguousarray(e[..., k]), -1, h, borderType=cv2.BORDER_REFLECT_101)
+                      for k in range(3)], axis=-1)
+        return float((b ** 2).sum(-1).mean())
+    return f
+
+
+for _sc in (1.4, 2.8):
+    METRICS[f'eye_trunc:{_sc}'] = _eye_trunc(_sc)
+
+
 @metric('scielab')
 def scielab(c: Case):
     """S-CIELAB: opponent channels blurred as the eye model does (the converter's kernels), CIEDE2000 between them."""
