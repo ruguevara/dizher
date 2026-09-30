@@ -1,0 +1,688 @@
+{
+ "j000": {
+  "sheet": "c043",
+  "swapped": false,
+  "id": "autumn/18",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j001": {
+  "sheet": "c013",
+  "swapped": false,
+  "id": "autumn/16",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j002": {
+  "sheet": "c014",
+  "swapped": false,
+  "id": "burning-hand/loose/8",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j003": {
+  "sheet": "c023",
+  "swapped": true,
+  "id": "autumn/loose/12",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j004": {
+  "sheet": "c007",
+  "swapped": false,
+  "id": "golden-axe/smooth/6",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j005": {
+  "sheet": "c034",
+  "swapped": true,
+  "id": "RC1/smooth/21",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j006": {
+  "sheet": "c035",
+  "swapped": false,
+  "id": "autumn/23",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j007": {
+  "sheet": "c029",
+  "swapped": false,
+  "id": "burning-hand/loose/1",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j008": {
+  "sheet": "c009",
+  "swapped": true,
+  "id": "RC1/21",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j009": {
+  "sheet": "c022",
+  "swapped": true,
+  "id": "jojo/0",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j010": {
+  "sheet": "c012",
+  "swapped": false,
+  "id": "golden-axe/19",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j011": {
+  "sheet": "c049",
+  "swapped": true,
+  "id": "diver-sunset/smooth/19",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j012": {
+  "sheet": "c028",
+  "swapped": false,
+  "id": "sunset/smooth/15",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j013": {
+  "sheet": "c028",
+  "swapped": true,
+  "id": "sunset/smooth/15",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j014": {
+  "sheet": "c007",
+  "swapped": true,
+  "id": "golden-axe/smooth/6",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j015": {
+  "sheet": "c038",
+  "swapped": true,
+  "id": "anubis/smooth/21",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j016": {
+  "sheet": "c021",
+  "swapped": false,
+  "id": "andy/loose/26",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j017": {
+  "sheet": "c034",
+  "swapped": false,
+  "id": "RC1/smooth/21",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j018": {
+  "sheet": "c031",
+  "swapped": true,
+  "id": "burning-hand/loose/9",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j019": {
+  "sheet": "c011",
+  "swapped": false,
+  "id": "anubis/13",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j020": {
+  "sheet": "c048",
+  "swapped": false,
+  "id": "diver-sunset/15",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j021": {
+  "sheet": "c047",
+  "swapped": true,
+  "id": "diver-sunset/4",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j022": {
+  "sheet": "c011",
+  "swapped": true,
+  "id": "anubis/13",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j023": {
+  "sheet": "c018",
+  "swapped": false,
+  "id": "autumn/loose/15",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j024": {
+  "sheet": "c009",
+  "swapped": false,
+  "id": "RC1/21",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j025": {
+  "sheet": "c042",
+  "swapped": true,
+  "id": "rocket-rackoon/smooth/18",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j026": {
+  "sheet": "c003",
+  "swapped": false,
+  "id": "autumn/2",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j027": {
+  "sheet": "c019",
+  "swapped": true,
+  "id": "sunset/19",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j028": {
+  "sheet": "c027",
+  "swapped": false,
+  "id": "diver-sunset/10",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j029": {
+  "sheet": "c039",
+  "swapped": false,
+  "id": "golden-axe/smooth/6",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j030": {
+  "sheet": "c030",
+  "swapped": true,
+  "id": "golden-axe/25",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j031": {
+  "sheet": "c032",
+  "swapped": true,
+  "id": "RC1/21",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j032": {
+  "sheet": "c010",
+  "swapped": false,
+  "id": "sunset/smooth/5",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j033": {
+  "sheet": "c037",
+  "swapped": true,
+  "id": "RC1/4",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j034": {
+  "sheet": "c033",
+  "swapped": true,
+  "id": "RC1/11",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j035": {
+  "sheet": "c031",
+  "swapped": false,
+  "id": "burning-hand/loose/9",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j036": {
+  "sheet": "c026",
+  "swapped": false,
+  "id": "golden-axe/29",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j037": {
+  "sheet": "c040",
+  "swapped": false,
+  "id": "sunset/smooth/15",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j038": {
+  "sheet": "c039",
+  "swapped": true,
+  "id": "golden-axe/smooth/6",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j039": {
+  "sheet": "c049",
+  "swapped": false,
+  "id": "diver-sunset/smooth/19",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j040": {
+  "sheet": "c020",
+  "swapped": false,
+  "id": "sunset/9",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j041": {
+  "sheet": "c048",
+  "swapped": true,
+  "id": "diver-sunset/15",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j042": {
+  "sheet": "c002",
+  "swapped": false,
+  "id": "golden-axe/2",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j043": {
+  "sheet": "c044",
+  "swapped": true,
+  "id": "golden-axe/17",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j044": {
+  "sheet": "c033",
+  "swapped": false,
+  "id": "RC1/11",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j045": {
+  "sheet": "c037",
+  "swapped": false,
+  "id": "RC1/4",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j046": {
+  "sheet": "c019",
+  "swapped": false,
+  "id": "sunset/19",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j047": {
+  "sheet": "c013",
+  "swapped": true,
+  "id": "autumn/16",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j048": {
+  "sheet": "c023",
+  "swapped": false,
+  "id": "autumn/loose/12",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j049": {
+  "sheet": "c010",
+  "swapped": true,
+  "id": "sunset/smooth/5",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j050": {
+  "sheet": "c004",
+  "swapped": false,
+  "id": "golden-axe/smooth/28",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j051": {
+  "sheet": "c005",
+  "swapped": true,
+  "id": "jojo/19",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j052": {
+  "sheet": "c041",
+  "swapped": true,
+  "id": "rocket-rackoon/1",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j053": {
+  "sheet": "c008",
+  "swapped": false,
+  "id": "andy/smooth/30",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j054": {
+  "sheet": "c005",
+  "swapped": false,
+  "id": "jojo/19",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j055": {
+  "sheet": "c024",
+  "swapped": true,
+  "id": "anubis/smooth/7",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j056": {
+  "sheet": "c036",
+  "swapped": false,
+  "id": "golden-axe/29",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j057": {
+  "sheet": "c004",
+  "swapped": true,
+  "id": "golden-axe/smooth/28",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j058": {
+  "sheet": "c042",
+  "swapped": false,
+  "id": "rocket-rackoon/smooth/18",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j059": {
+  "sheet": "c025",
+  "swapped": true,
+  "id": "rocket-rackoon/smooth/10",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j060": {
+  "sheet": "c046",
+  "swapped": true,
+  "id": "autumn/25",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j061": {
+  "sheet": "c032",
+  "swapped": false,
+  "id": "RC1/21",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j062": {
+  "sheet": "c016",
+  "swapped": true,
+  "id": "golden-axe/smooth/25",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j063": {
+  "sheet": "c020",
+  "swapped": true,
+  "id": "sunset/9",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j064": {
+  "sheet": "c008",
+  "swapped": true,
+  "id": "andy/smooth/30",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j065": {
+  "sheet": "c015",
+  "swapped": false,
+  "id": "jojo/19",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j066": {
+  "sheet": "c045",
+  "swapped": true,
+  "id": "diver-sunset/20",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j067": {
+  "sheet": "c017",
+  "swapped": false,
+  "id": "autumn/loose/27",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j068": {
+  "sheet": "c006",
+  "swapped": true,
+  "id": "RC1/25",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j069": {
+  "sheet": "c043",
+  "swapped": true,
+  "id": "autumn/18",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j070": {
+  "sheet": "c012",
+  "swapped": true,
+  "id": "golden-axe/19",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j071": {
+  "sheet": "c036",
+  "swapped": true,
+  "id": "golden-axe/29",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j072": {
+  "sheet": "c035",
+  "swapped": true,
+  "id": "autumn/23",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j073": {
+  "sheet": "c045",
+  "swapped": false,
+  "id": "diver-sunset/20",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j074": {
+  "sheet": "c024",
+  "swapped": false,
+  "id": "anubis/smooth/7",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j075": {
+  "sheet": "c021",
+  "swapped": true,
+  "id": "andy/loose/26",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j076": {
+  "sheet": "c041",
+  "swapped": false,
+  "id": "rocket-rackoon/1",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j077": {
+  "sheet": "c046",
+  "swapped": false,
+  "id": "autumn/25",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j078": {
+  "sheet": "c047",
+  "swapped": false,
+  "id": "diver-sunset/4",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j079": {
+  "sheet": "c025",
+  "swapped": false,
+  "id": "rocket-rackoon/smooth/10",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j080": {
+  "sheet": "c029",
+  "swapped": true,
+  "id": "burning-hand/loose/1",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j081": {
+  "sheet": "c044",
+  "swapped": false,
+  "id": "golden-axe/17",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j082": {
+  "sheet": "c015",
+  "swapped": true,
+  "id": "jojo/19",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j083": {
+  "sheet": "c026",
+  "swapped": true,
+  "id": "golden-axe/29",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j084": {
+  "sheet": "c002",
+  "swapped": true,
+  "id": "golden-axe/2",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j085": {
+  "sheet": "c027",
+  "swapped": true,
+  "id": "diver-sunset/10",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j086": {
+  "sheet": "c018",
+  "swapped": true,
+  "id": "autumn/loose/15",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j087": {
+  "sheet": "c040",
+  "swapped": true,
+  "id": "sunset/smooth/15",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j088": {
+  "sheet": "c001",
+  "swapped": false,
+  "id": "david/loose/16",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j089": {
+  "sheet": "c014",
+  "swapped": true,
+  "id": "burning-hand/loose/8",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j090": {
+  "sheet": "c016",
+  "swapped": false,
+  "id": "golden-axe/smooth/25",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j091": {
+  "sheet": "c006",
+  "swapped": false,
+  "id": "RC1/25",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j092": {
+  "sheet": "c022",
+  "swapped": false,
+  "id": "jojo/0",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j093": {
+  "sheet": "c003",
+  "swapped": true,
+  "id": "autumn/2",
+  "kind": "pilot",
+  "painting": 1
+ },
+ "j094": {
+  "sheet": "c030",
+  "swapped": false,
+  "id": "golden-axe/25",
+  "kind": "pilot",
+  "painting": 2
+ },
+ "j095": {
+  "sheet": "c038",
+  "swapped": false,
+  "id": "anubis/smooth/21",
+  "kind": "kept",
+  "painting": 2
+ },
+ "j096": {
+  "sheet": "c001",
+  "swapped": true,
+  "id": "david/loose/16",
+  "kind": "kept",
+  "painting": 1
+ },
+ "j097": {
+  "sheet": "c017",
+  "swapped": true,
+  "id": "autumn/loose/27",
+  "kind": "kept",
+  "painting": 2
+ }
+}

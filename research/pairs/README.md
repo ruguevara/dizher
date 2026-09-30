@@ -96,3 +96,19 @@ Gate (plan: order agreement >= 85%, null pairs even >= 80%, decisive agreement >
 nulls pass, decisive agreement passes at the edge, order agreement 78% falls short. Low-confidence verdicts carry no
 information; counting medium and high only, 66 to 8 (0.89). The segments are easy ones, the user's own overrides, so
 this is necessary, not sufficient: the calibration round with the user decides.
+
+### 3. Calibration round 1 (2026-09-30)
+
+49 blind sheets (`round.py`, key in `rounds/cal1/`): 24 pilot segments the judges disputed, 20 kept-cell pairs where
+seam/neighbour and S-CIELAB disagree (half each way), 5 repeats. The user voted on the page (`vote.html`); 10 judges
+saw the same sheets both ways, by eye only.
+
+- The user confirmed the painting on the pilot's disputed segments 18 times, against 1, even 5. Repeats: 4 of 5 the
+  same.
+- Kept cells against coherence x3 / 0: kept 14, the variant 1, even 5; where structure and S-CIELAB disagreed, the
+  user sided with structure 10 times, with S-CIELAB 5.
+- Metrics against the user's decisive votes on the pilot segments: seam_excess 16/19, neighbour_excess 13/19,
+  scielab_dE 9/19, hue_angle 8/19, ms_dssim_L 7/19.
+- Judges on these hard pairs: split in 34% of pairs; where both they and the user decided, they agreed 13 of 18.
+
+Summary and next steps: `HANDOFF.md`.
