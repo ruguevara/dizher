@@ -223,6 +223,28 @@ def seen_change(X, Y, mask):
     return masked_mean(np.linalg.norm(lab(X) - lab(Y), axis=-1), mask)
 
 
+def gradient(lab):
+    """(H, W) gradient magnitude of a CIELAB image, all three channels (Sobel, per pixel)."""
+    g = [cv2.Sobel(lab[..., k].astype(np.float32), cv2.CV_32F, dx, 1 - dx, ksize=3) for k in range(3) for dx in (0, 1)]
+    return np.sqrt(sum(x * x for x in g)) / 8
+
+
+def structure(ex, et, mask) -> dict:
+    """Torch-free structure terms of X against T, both CIELAB through the converter's eye: what the picture has that X
+    lacks (the counterpart of the seam excess, which a flat colouring wins), GMSD and SSIM of lightness."""
+    out = {}
+    for s in (0, 1, 2):
+        gx, gt = (gradient(blur(ex, s)), gradient(blur(et, s)))
+        out[f'detail_deficit_{s}'] = masked_mean(np.maximum(gt - gx, 0), mask)
+    lx, lt = gradient(ex[..., :1].repeat(3, -1)) / np.sqrt(3), gradient(et[..., :1].repeat(3, -1)) / np.sqrt(3)
+    c = 170.0 / 255 * 100   # GMSD's constant for 0..255, in L* units
+    gms = (2 * lx * lt + c) / (lx ** 2 + lt ** 2 + c)
+    out['gmsd_eye'] = float(gms[mask].std())
+    out['gmsm_eye'] = 1 - float(gms[mask].mean())   # the mean similarity: GMSD's spread rates a black screen well
+    out['dssim_eye'] = 1 - masked_mean(ssim_map(ex[..., 0], et[..., 0]), mask)
+    return out
+
+
 def all_metrics(X, T, mask) -> dict:
     """Every candidate metric of X against T over mask."""
     sx, st = scielab(X), scielab(T)
@@ -265,6 +287,8 @@ def all_metrics(X, T, mask) -> dict:
         'blur_dE_8': masked_mean(np.linalg.norm(lab_blurred(X, 8) - lab_blurred(T, 8), axis=-1), mask),
         'lpips': deep(X, T, mask, 'lpips'),
         'dists': deep(X, T, mask, 'dists'),
+        **structure(xyz2lab(linear(project_eye(X)) @ SRGB2XYZ.T), xyz2lab(linear(project_eye(T)) @ SRGB2XYZ.T), mask),
+        'ms_dssim_eye': ms_dssim(project_eye(X), project_eye(T), mask, 0, (1, 2, 4)),
         'lpips_eye': deep(project_eye(X), project_eye(T), mask, 'lpips'),
         'dists_eye': deep(project_eye(X), project_eye(T), mask, 'dists'),
     }
@@ -277,6 +301,21 @@ JUDGE = {
     'seam_excess': 0.8097,
     'lpips_eye': 53.59,
 }
+
+
+# the fast judge (fit.py --fast): the same seam term, anchored by multiscale SSIM of lightness through the converter's
+# eye; numpy and OpenCV only, no torch, so the app can run it
+JUDGE_FAST = {
+    'seam_excess': 0.9727,
+    'ms_dssim_eye': 8.019,
+}
+
+
+def judge_fast_score(X, T, mask=None) -> float:
+    """The fast judge of X against T over mask (the whole picture by default), lower is better; only its two terms."""
+    mask = np.ones(X.shape[:2], bool) if mask is None else mask
+    return (JUDGE_FAST['seam_excess'] * seam_excess(lab_blurred(X, 2.0), lab_blurred(T, 2.0), mask)
+            + JUDGE_FAST['ms_dssim_eye'] * ms_dssim(project_eye(X), project_eye(T), mask, 0, (1, 2, 4)))
 
 
 def judge_score(X, T, mask=None) -> float:

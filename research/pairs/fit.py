@@ -1,6 +1,8 @@
 """Fit the judge: a logistic regression on the differences of the candidate metrics between the two sides of a pair.
 
     python research/pairs/fit.py          needs data/metrics.csv (score.py) and data/variants/*.json (variants.py)
+    python research/pairs/fit.py --fast   the same without the torch metrics (DEEP), anchored by a structure term,
+                                          for metrics.JUDGE_FAST; also how often it agrees with metrics.JUDGE
 
 Labels, three sources, each weighted to the same total:
   B    the 229 painted segments: the painting (A) better than Select pairs' cells (B)
@@ -33,6 +35,9 @@ from common import DATA   # noqa: E402
 HERE = Path(__file__).resolve().parent
 MAX_TERMS, L2, BOOT = 4, 1.0, 30
 VISIBLE = 2   # a B or C pair counts when its change is at least this many times a re-dither's
+DEEP = ('lpips', 'dists', 'lpips_eye', 'dists_eye')   # torch: out of the fast judge, which the app can run
+FAST_ANCHORS = ('detail_deficit_1', 'detail_deficit_2', 'gmsd_eye', 'gmsm_eye', 'dssim_eye', 'ms_dssim_eye',
+                'scielab_dE')
 ANCHORS = ('lpips_eye', 'dists_eye', 'scielab_dE', 'blur_dE_4', 'blur_dE_8', 'blur_rmse', 'hue_family_miss')
 SLACK = 0.02   # the accuracy a fidelity anchor may cost
 FREE = ('two_colour_share', 'dot_contrast')   # no known better direction; every other metric is an error, weight >= 0
@@ -116,8 +121,11 @@ def select(X, y, src, images, bound):
     return chosen, best, path
 
 
-def main():
+def main(fast=False):
     features, rows = load()
+    if fast:
+        features = [k for k in features if k not in DEEP]
+    anchors = FAST_ANCHORS if fast else ANCHORS
     src = np.array([r[0] for r in rows])
     images = np.array([r[1] for r in rows])
     D = np.array([[r[2][k] for k in features] for r in rows])
@@ -156,16 +164,22 @@ def main():
     best = np.mean([acc[s] for s in TRAIN])
     print(f"\nthe judge's structure term: {first},{row(acc)} {best:5.2f}")
 
-    print(f"\na fidelity anchor at a fixed standardised weight, the rest refitted:\n{'anchor':18} {'weight':>6}{head}  mean")
+    W = whole_metrics()
+    print(f"\na fidelity anchor at a fixed standardised weight, the rest refitted; on the 9 whole pictures, black last and "
+          f"the painting over Select pairs:\n{'anchor':18} {'weight':>6}{head}  mean black paint")
     trials = []
-    for k in ANCHORS:
+    for k in anchors:
         a = features.index(k)
         cols = chosen + [a] if a not in chosen else chosen
         for v in (0.1, 0.2, 0.3, 0.5, 1.0):
             acc = loio(X[:, cols], y, w, src, images, [bound[i] if i != a else (v, v) for i in cols])
             score = np.mean([acc[s] for s in TRAIN])
-            print(f"{k:18} {v:6.1f}{row(acc)} {score:5.2f}")
-            trials.append((k, v, score, cols))
+            bnds = [bound[i] if i != a else (v, v) for i in cols]
+            full = {features[j]: bj / scale[j] for j, bj in zip(cols, fit(X[:, cols], y, w, bnds))}
+            black, paint = gates(full, W)
+            print(f"{k:18} {v:6.1f}{row(acc)} {score:5.2f} {black:5} {paint:5}")
+            if black == len(W):   # a judge that ever rates a black screen above a render is broken
+                trials.append((k, v, score, cols))
 
     ok = [t for t in trials if t[2] >= best - SLACK]   # none: the best scoring one, lightest first
     k, v, score, cols = max(ok, key=lambda t: (t[1], t[2])) if ok else max(trials, key=lambda t: (t[2], -t[1]))
@@ -177,21 +191,36 @@ def main():
     for f, wt in judge.items():
         print(f"    '{f}': {wt:.4g},")
     print('}')
-    whole(judge)
-
-
-def whole(judge):
-    """The judge on whole pictures: the painting against Select pairs alone and against a black screen."""
-    from metrics import all_metrics
+    if fast:
+        from metrics import JUDGE
+        full = {k: D[:, features.index(k)] if k in features else np.array([r[2][k] for r in rows]) for k in JUDGE}
+        a = sum(wt * full[k] for k, wt in JUDGE.items()) > 0
+        b = sum(wt * D[:, features.index(k)] for k, wt in judge.items()) > 0
+        print('agreement with the full judge (metrics.JUDGE): ' +
+              ', '.join(f'{s} {(a == b)[src == s].mean():.2f}' for s in SOURCES if counts[s]))
     print(f"\nwhole pictures, judge score (lower better):\n{'image':16} {'painting':>9} {'Select':>9} {'black':>9}")
+    for name, m in W.items():
+        a, h, k = (sum(wt * r[f] for f, wt in judge.items()) for r in m)
+        print(f"{name:16} {a:9.3f} {h:9.3f} {k:9.3f}")
+
+
+def whole_metrics():
+    """{image: the metrics of the painting, of Select pairs alone and of a black screen} over the whole picture."""
+    from metrics import all_metrics
+    out = {}
     for path in sorted(DATA.glob('*.npz')):
         z = np.load(path)
         T, mask = z['target'].astype(np.float32) / 255, np.ones(z['target'].shape[:2], bool)
-        m = [all_metrics(X, T, mask) for X in (z['A'].astype(np.float32) / 255, z['H'].astype(np.float32) / 255,
-                                                np.zeros_like(T))]
-        a, h, k = (sum(wt * r[f] for f, wt in judge.items()) for r in m)
-        print(f"{path.stem:16} {a:9.3f} {h:9.3f} {k:9.3f}")
+        out[path.stem] = [all_metrics(X, T, mask) for X in (z['A'].astype(np.float32) / 255,
+                                                            z['H'].astype(np.float32) / 255, np.zeros_like(T))]
+    return out
+
+
+def gates(judge, W):
+    """On how many whole pictures the judge rates a black screen worst, and the painting over Select pairs."""
+    s = {name: [sum(wt * r[f] for f, wt in judge.items()) for r in m] for name, m in W.items()}
+    return sum(k > max(a, h) for a, h, k in s.values()), sum(a < h for a, h, k in s.values())
 
 
 if __name__ == '__main__':
-    main()
+    main('--fast' in sys.argv)

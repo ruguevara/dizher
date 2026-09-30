@@ -194,6 +194,21 @@ pairs on **7** (under on autumn and golden-axe). The seam term is still the only
 images; LPIPS earns its place as the counterweight to smoothness, which the one-sided labels cannot select. The anchor
 at half that weight scores the same within two votes (cal 0.79, F 0.68).
 
+**Fast judge** (`metrics.judge_fast_score`, `fit.py --fast`; numpy and OpenCV only, for the app, which has no torch)
+= 0.973 `seam_excess` + 8.02 `ms_dssim_eye` (multiscale SSIM of lightness through the converter's eye, 1-4 px):
+leaving one image out B 0.64, C 0.74, cal 0.79, F 0.55; on whole pictures a black screen last on all 9, the painting
+over Select pairs on 7 (under on RC1 and golden-axe). It decides as the full judge does on 0.78 of B, 0.80 of C, 0.70
+of the votes and 0.66 of F. 24 ms a whole picture against 1.6 s. The full judge stays for tuning the converter and its
+energy offline.
+
+- Torch-free anchors tried: what the picture has that the render lacks (`detail_deficit_*`: F 0.73-0.74 alone, but
+  the painting has less fine detail than Select pairs, so it costs B and C), GMSD and its mean GMSM through the eye,
+  SSIM single and multiscale, S-CIELAB. Every anchor weight must also rank a black screen last on all 9 whole
+  pictures: GMSD and GMSM fail that at most weights (GMSD is a spread, and a uniformly wrong screen is even).
+- For the full judge DISTS through the eye at 0.2-0.3 does as well as LPIPS (B 0.68, C 0.77, cal 0.76-0.79, F
+  0.60-0.65) and puts the painting over Select pairs on all 9 whole pictures; the rule kept LPIPS, and the difference
+  is a few votes.
+
 - The painted changes are plainly visible through the eye: on the changed cells a median 25 dE (the project's eye,
   1 px), where a re-dither of the same colouring moves 2.0. 15 of the 229 are within twice that; the 4 under it no
   metric gets right. A B or C pair within twice the dither's change is no label and `fit.py` leaves it out (15 B,
