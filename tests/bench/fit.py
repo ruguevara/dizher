@@ -11,7 +11,7 @@ from dizher.converter.energy import METHODS
 from .metrics import Energies, judged_pairs
 from .variants import RANGES
 
-FLARES = (0.03, 0.1, 0.3, 0.6, 1.0)   # the first fits landed on the grid's top, so it goes past the UI's range
+FLARES = (0.03, 0.1, 0.3, 1.0, 3.0, 10.0)   # past the UI's range: at 10 the gain is flat, and the fits keep going up there
 FREE = ('chroma', 'coherence', 'edge', 'chroma_noise', 'luma_noise')
 
 
