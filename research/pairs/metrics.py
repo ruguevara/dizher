@@ -1,0 +1,153 @@
+"""Candidate metrics of a rendered colouring X against the tuned picture T, each over a pixel mask, lower is better.
+
+The eye model here is the judge's, separate from the selection energy's (whose blur is capped at 4 px): S-CIELAB
+(Zhang & Wandell 1996) at the user's viewing: the app at 2x-3x on a 21" 2560x1440 monitor at arm's length (~65 cm),
+~31 Spectrum pixels per degree at 2x, ~21 at 3x."""
+import cv2
+import numpy as np
+
+PPD = 26.0   # Spectrum pixels per degree of visual angle, between 2x and 3x
+
+SRGB2XYZ = np.array([[0.4124, 0.3576, 0.1805],
+                     [0.2126, 0.7152, 0.0722],
+                     [0.0193, 0.1192, 0.9505]])
+XYZ2OPP = np.array([[0.279, 0.72, -0.107],
+                    [-0.449, 0.29, -0.077],
+                    [0.086, -0.59, 0.501]])
+WHITE = SRGB2XYZ @ np.ones(3)
+# S-CIELAB's spatial filters: per opponent channel, (weight, spread in degrees) of Gaussians exp(-r^2 / s^2)
+FILTERS = (((1.00327, 0.05), (0.114416, 0.225), (-0.117686, 7.0)),
+           ((0.616725, 0.0685), (0.383275, 0.826)),
+           ((0.567885, 0.0920), (0.432115, 0.6451)))
+
+
+def linear(srgb):
+    s = np.asarray(srgb, np.float64)
+    return np.where(s <= 0.04045, s / 12.92, ((s + 0.055) / 1.055) ** 2.4)
+
+
+def xyz2lab(xyz):
+    t = xyz / WHITE
+    f = np.where(t > (6 / 29) ** 3, np.cbrt(np.maximum(t, 0)), t / (3 * (6 / 29) ** 2) + 4 / 29)
+    return np.stack([116 * f[..., 1] - 16, 500 * (f[..., 0] - f[..., 1]), 200 * (f[..., 1] - f[..., 2])], -1)
+
+
+def blur(img, sigma):
+    return cv2.GaussianBlur(img.astype(np.float32), (0, 0), sigma, borderType=cv2.BORDER_REFLECT_101) \
+        if sigma > 0 else img
+
+
+def scielab(srgb, ppd=PPD):
+    """CIELAB of the image as the eye sees it at ppd pixels per degree: opponent channels each filtered by their
+    sum of Gaussians, back to XYZ, then CIELAB."""
+    opp = linear(srgb) @ SRGB2XYZ.T @ XYZ2OPP.T
+    out = np.zeros_like(opp)
+    for k, parts in enumerate(FILTERS):
+        for w, s in parts:
+            out[..., k] += w * blur(opp[..., k], s * ppd / np.sqrt(2))
+    return xyz2lab(out @ np.linalg.inv(XYZ2OPP).T)
+
+
+def lab_blurred(srgb, sigma):
+    """CIELAB of the image blurred in linear light, one Gaussian for all channels."""
+    return xyz2lab(blur(linear(srgb), sigma) @ SRGB2XYZ.T)
+
+
+def chroma(lab):
+    return np.hypot(lab[..., 1], lab[..., 2])
+
+
+def hue_angle(x, t):
+    """|hue angle difference| in radians, 0..pi."""
+    d = np.arctan2(x[..., 2], x[..., 1]) - np.arctan2(t[..., 2], t[..., 1])
+    return np.abs((d + np.pi) % (2 * np.pi) - np.pi)
+
+
+def masked_mean(v, mask):
+    return float(v[mask].mean())
+
+
+def seam_excess(L, T, mask, cell=8):
+    """Mean over the cell seams inside mask of how much more X steps across the seam than the picture does."""
+    xs = np.arange(cell, L.shape[1], cell)
+    ys = np.arange(cell, L.shape[0], cell)
+    step = lambda a, axis, at: np.linalg.norm(np.take(a, at, axis) - np.take(a, at - 1, axis), axis=-1)
+    vals = []
+    for axis, at in ((1, xs), (0, ys)):
+        ex = np.maximum(step(L, axis, at) - step(T, axis, at), 0)
+        m = np.take(mask, at, axis) & np.take(mask, at - 1, axis)
+        vals.append(ex[m])
+    v = np.concatenate(vals)
+    return float(v.mean()) if v.size else 0.0
+
+
+def cell_means(lab_img, cell=8):
+    R, C = lab_img.shape[0] // cell, lab_img.shape[1] // cell
+    return lab_img.reshape(R, cell, C, cell, -1).mean((1, 3))
+
+
+def neighbour_excess(X, T, mask, cell=8):
+    """Cells' mean colours (linear light, then CIELAB): over 4-neighbour cells both in mask, how much more X changes
+    from cell to cell than the picture does: blocks and noise where the picture is smooth."""
+    mx = xyz2lab(cell_means(linear(X), cell) @ SRGB2XYZ.T)
+    mt = xyz2lab(cell_means(linear(T), cell) @ SRGB2XYZ.T)
+    mc = cell_means(mask[..., None].astype(float), cell)[..., 0] > 0.5
+    vals = []
+    for d in ((1, 0), (0, 1)):
+        a = (slice(d[0], None), slice(d[1], None))
+        b = (slice(None, mx.shape[0] - d[0]), slice(None, mx.shape[1] - d[1]))
+        ex = np.maximum(np.linalg.norm(mx[a] - mx[b], axis=-1) - np.linalg.norm(mt[a] - mt[b], axis=-1), 0)
+        vals.append(ex[mc[a] & mc[b]])
+    v = np.concatenate(vals)
+    return float(v.mean()) if v.size else 0.0
+
+
+def ssim_map(x, y, sigma=1.5):
+    C1, C2 = (0.01 * 100) ** 2, (0.03 * 100) ** 2   # L* spans 0..100
+    mx, my = blur(x, sigma), blur(y, sigma)
+    vx, vy = blur(x * x, sigma) - mx ** 2, blur(y * y, sigma) - my ** 2
+    cov = blur(x * y, sigma) - mx * my
+    return ((2 * mx * my + C1) * (2 * cov + C2)) / ((mx ** 2 + my ** 2 + C1) * (vx + vy + C2))
+
+
+def ms_dssim(X, T, mask, channel=0, scales=(2, 4, 8)):
+    """1 - SSIM of one CIELAB channel, the images first averaged over s x s pixels in linear light, over the scales."""
+    out = []
+    for s in scales:
+        h, w = X.shape[0] // s, X.shape[1] // s
+        down = lambda img: xyz2lab(cv2.resize(linear(img).astype(np.float32), (w, h), interpolation=cv2.INTER_AREA)
+                                   @ SRGB2XYZ.T)[..., channel].astype(np.float32)
+        m = cv2.resize(mask.astype(np.float32), (w, h), interpolation=cv2.INTER_AREA) > 0.5
+        if m.any():
+            out.append(1 - masked_mean(ssim_map(down(X), down(T)), m))
+    return float(np.mean(out)) if out else 0.0
+
+
+def all_metrics(X, T, mask) -> dict:
+    """Every candidate metric of X against T over mask."""
+    sx, st = scielab(X), scielab(T)
+    dE = np.linalg.norm(sx - st, axis=-1)
+    cx, ct = chroma(sx), chroma(st)
+    dL = np.abs(sx[..., 0] - st[..., 0])
+    dC = cx - ct
+    dH = np.sqrt(np.maximum(dE ** 2 - (sx[..., 0] - st[..., 0]) ** 2 - dC ** 2, 0))
+    fx, ft = lab_blurred(X, 0.5), lab_blurred(T, 0.5)
+    b2x, b2t = lab_blurred(X, 2.0), lab_blurred(T, 2.0)
+    rmse = np.linalg.norm(blur(linear(X), 1.0) - blur(linear(T), 1.0), axis=-1)
+    return {
+        'scielab_dE': masked_mean(dE, mask),
+        'scielab_dE_p95': float(np.percentile(dE[mask], 95)),
+        'scielab_dL': masked_mean(dL, mask),
+        'scielab_dH': masked_mean(dH, mask),
+        'chroma_excess': masked_mean(np.maximum(dC, 0), mask),
+        'chroma_excess_neutral': masked_mean(np.maximum(dC, 0) * np.exp(-ct / 15), mask),
+        'chroma_deficit': masked_mean(np.maximum(-dC, 0), mask),
+        'hue_angle': masked_mean(hue_angle(sx, st) * ct / (ct + 20), mask),
+        'fine_chroma_excess': masked_mean(np.maximum(chroma(fx) - chroma(ft), 0) * np.exp(-chroma(ft) / 15), mask),
+        'seam_excess': seam_excess(b2x, b2t, mask),
+        'neighbour_excess': neighbour_excess(X, T, mask),
+        'ms_dssim_L': ms_dssim(X, T, mask, 0),
+        'ms_dssim_a': ms_dssim(X, T, mask, 1, (4, 8)),
+        'ms_dssim_b': ms_dssim(X, T, mask, 2, (4, 8)),
+        'blur_rmse': masked_mean(rmse, mask),
+    }
