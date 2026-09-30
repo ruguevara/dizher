@@ -2,8 +2,10 @@
 
     python research/pairs/views.py OUT [N]     N pairs sampled evenly over the images (all by default), with a key
 
-Per pair, one PNG: on top the tuned picture's crop, colouring 1's and colouring 2's, each at 4x nearest; below, the
-two whole screens at 2x with the judged cells outlined. Integer zoom only, so the dots stay dots."""
+Per pair, two PNGs, one with the sides swapped, under shuffled names: on top the tuned picture's crop, colouring 1's
+and colouring 2's, each at 2-6x nearest; below, the two whole screens at 2x with the judged cells outlined. Integer
+zoom only, so the dots stay dots. Null pairs (the painting against itself from another halftone origin) come along,
+one in eight, so a judge that sees a difference in any two renders shows."""
 import json
 import sys
 from pathlib import Path
@@ -65,18 +67,22 @@ def main(out: Path, n=None, seed=0):
         for v in by.values():
             rng.shuffle(v)
         pairs = [v[i] for i in range(max(map(len, by.values()))) for v in by.values() if i < len(v)][:n]
+    jobs = [(path, m, 'user') for path, m in pairs]
+    nulls = [(path, m, 'null') for path, m in pairs if m['null']]
+    jobs += nulls[:max(1, len(pairs) // 8)]
+    names = [f'v{i:03d}' for i in rng.permutation(2 * len(jobs))]
     key, cache = {}, {}
-    for j, (path, m) in enumerate(pairs):
+    for j, (path, m, kind) in enumerate(jobs):
         z = cache.setdefault(path, np.load(path))
         s = m['segment']
         cells = z['diff'] & (z['segments'] == s)
-        user_first = bool(rng.integers(2))
-        X1, X2 = (z['A'], z[f'B{s}']) if user_first else (z[f'B{s}'], z['A'])
-        name = f'p{j:03d}'
-        cv2.imwrite(str(out / f'{name}.png'), cv2.cvtColor(sheet(z['target'], X1, X2, cells), cv2.COLOR_RGB2BGR))
-        key[name] = dict(id=m['id'], user=1 if user_first else 2, cells=m['cells'])
-    (out / 'key.json').write_text(json.dumps(key, indent=1))
-    print(f'{len(key)} pairs in {out}')
+        other = z['N'] if kind == 'null' else z[f'B{s}']
+        for side, (X1, X2) in ((1, (z['A'], other)), (2, (other, z['A']))):
+            name = names.pop()
+            cv2.imwrite(str(out / f'{name}.png'), cv2.cvtColor(sheet(z['target'], X1, X2, cells), cv2.COLOR_RGB2BGR))
+            key[name] = dict(id=m['id'], kind=kind, user=side, cells=m['cells'])
+    (out / 'key.json').write_text(json.dumps(dict(sorted(key.items())), indent=1))
+    print(f'{len(key)} sheets of {len(jobs)} pairs in {out}')
 
 
 if __name__ == '__main__':
