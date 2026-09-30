@@ -116,44 +116,56 @@ saw the same sheets both ways, by eye only.
 
 ### 4. Judge v1 (2026-09-30)
 
-The rebuild reproduces the 229 segments and 36 null pairs and every number in section 1. New candidates in
-`metrics.py`: the seam step split into lightness and colour (a, b) at blur 1, 2 and 4 px (`seam_L_*`, `seam_ab_*`);
-purity: `two_colour_share` (cells showing two colours), `dot_contrast` (the spread of a cell's pixels in CIELAB),
+The rebuild reproduces the 229 segments and 36 null pairs and section 1. New candidates in `metrics.py`: the seam
+step split into lightness and colour (a, b) at blur 1, 2 and 4 px (`seam_L_*`, `seam_ab_*`); purity:
+`two_colour_share` (cells showing two colours), `dot_contrast` (the spread of a cell's pixels in CIELAB),
 `texture_excess` (that spread after the eye beyond the picture's); `hue_family_miss` (a cell's mean colour nearest
-another Spectrum hue, or grey, than the picture's); coarse fidelity `blur_dE_4`, `blur_dE_8`. `flat.py` adds a
-counterexample per segment, **F**: the whole segment on its most common painted pair, smooth by construction.
+another Spectrum hue, or grey, than the picture's); coarse fidelity `blur_dE_4`, `blur_dE_8`; `lpips` and `dists`
+(piq, VGG) over the window's bounding box at 2x. `flat.py` adds a counterexample per segment, **F**: the whole segment
+on its most common painted pair, smooth by construction.
+
+Single metrics, share where the metric prefers the painting (a tie counts half; the purity and hue family terms tie in
+about two pairs of three):
+
+| metric | B | C | cal | F |
+|---|---|---|---|---|
+| seam_excess | 0.66 | 0.78 | 0.76 | 0.41 |
+| seam_L_1 / seam_ab_1 | 0.68 / 0.67 | 0.70 / 0.77 | 0.70 / 0.64 | 0.56 / 0.47 |
+| scielab_dE | 0.37 | 0.50 | 0.42 | 0.74 |
+| ms_dssim_L | 0.54 | 0.64 | 0.48 | 0.68 |
+| lpips | 0.51 | 0.65 | 0.45 | 0.63 |
+| dists | 0.50 | 0.50 | 0.52 | 0.61 |
+| two_colour_share | 0.48 | 0.44 | 0.48 | 0.39 |
+| hue_family_miss | 0.46 | 0.50 | 0.39 | 0.58 |
+| blur_dE_8 | 0.22 | 0.34 | 0.19 | 0.65 |
+
+- LPIPS and DISTS are no better than a coin on the painted segments and the user's votes, and dither noise moves them
+  0.44 and 0.66 as much as the change does (`seam_excess` 0.15). Like MS-SSIM, they side with fidelity.
+- Purity and hue family explain nothing: at chance on B, C and the votes. The unexplained third stays unexplained.
 
 `fit.py` fits a logistic regression on the metrics' differences between the two sides, no intercept, L2, three
-sources weighted alike: B (229), C (229) and the user's decisive votes of round 1 (cal, 32: the painting or kept cells
-31, the other 1). F is only reported. Accuracy leaving one image out:
-
-| judge | B | C | cal | F |
-|---|---|---|---|---|
-| seam_excess alone | 0.65 | 0.77 | 0.78 | 0.41 |
-| + seam_L_2, seam_ab_1, two_colour_share | 0.71 | 0.82 | 0.78 | 0.54 |
-| **+ scielab_dE fixed at 0.2 (judge v1)** | **0.69** | **0.80** | **0.81** | **0.58** |
-| unconstrained: blur_dE_8 with a negative weight, alone | 0.77 | 0.65 | 0.81 | 0.35 |
+sources weighted alike: B (229), C (229) and the user's decisive votes of round 1 (cal, 33: the painting or kept cells
+32, the other 1). F is only reported.
 
 - These labels are one-sided: the painting always leaves the colorimetric optimum. Unconstrained, the fit's first
-  term is coarse fidelity with a negative weight, "further from the picture is better", which prefers the flat
-  segment two times in three. Every error metric's weight is now >= 0; only the purity terms are free.
+  term was coarse fidelity with a negative weight, "further from the picture is better" (B 0.77, F 0.35). Every error
+  metric's weight is now >= 0; only the purity terms are free.
+- Forward selection is noise after the first term: each step gains about one vote, and the path changed completely
+  when one vote and two candidates were added. On 30 resamples of the images a seam term is picked first 27 times
+  (`seam_excess` 17); every later term turns up in a minority. The judge keeps `seam_excess` only.
 - Nothing in the labels speaks against a colouring that is smooth but wrong, so a fidelity anchor is fixed at the
-  heaviest weight that costs at most 0.02 of the mean accuracy. S-CIELAB at 0.2 (standardised) costs nothing; the
-  coarse ones (`blur_dE_4/8`, `blur_rmse`) and `hue_family_miss` cost more at every weight tried.
-- `judge_score(X, T)` in `metrics.py`. On whole pictures it ranks a black screen last on all 9 images and the painting
-  over Select pairs on 7; not RC1 and golden-axe, both painted in part.
-- The gain over `seam_excess` alone is 0.03-0.06 on 9 images, within what selection among 27 candidates can find by
-  chance. The third of the painted segments that no metric explains stays unexplained:
-  - `hue_family_miss` 0.31: the painting leaves the picture's hue family more often than Select pairs do (RC1's brown
-    fur painted yellow on black). "The right family" is not the nearest Spectrum hue to the picture's colour.
-  - `two_colour_share` 0.14: the painting shows two colours in more cells than Select pairs. Purity as fewer mixed
-    cells runs the wrong way; its weight in the judge is negative, which a noisy colouring could exploit.
+  heaviest weight that costs at most 0.02 of the mean accuracy: S-CIELAB at 0.2 (standardised). The coarse anchors and
+  `hue_family_miss` cost more at every weight.
+
+**Judge v1** = 1.035 `seam_excess` + 0.054 `scielab_dE` (`metrics.judge_score`), leaving one image out: B 0.62, C 0.74,
+cal 0.79, F 0.55. On whole pictures it ranks a black screen last on all 9 images; the painting over Select pairs on 4,
+even on 2 (autumn, sunset), under on 3 (RC1, golden-axe, andy).
+
 - F is not a clean label. By eye (RC1/2, andy/25): the flat segment is clearly worse where it turns the yellow fur
   grey, which S-CIELAB calls closer, and about as good where it makes andy's hair plain black and cyan. F near 0.5
   is no verdict; the judge's optimum (session B) and the user's votes on F pairs decide.
-- Seven of the round's kept-cell pairs no longer rebuild as voted (other cell counts; the code and projects are
-  unchanged since, so the round was made from an earlier state of the data) and are left out. `round.py` now writes
-  each sheet's cells into the key.
-- LPIPS/DISTS not tried: torch is not installed.
+- Seven of round 1's kept-cell pairs no longer rebuilt as voted in the first rebuild, six in the next ones (other cell
+  counts; one run of `variants.py` in three differed on diver-sunset and could not be repeated, pooled or not). Those
+  are left out. `round.py` now writes each sheet's cells into the key.
 
 Summary and next steps: `HANDOFF.md`.
