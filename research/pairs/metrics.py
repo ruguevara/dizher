@@ -245,6 +245,27 @@ def structure(ex, et, mask) -> dict:
     return out
 
 
+def colourfulness(srgb, mask):
+    """Hasler & Suesstrunk's colourfulness of the pixels in mask (sRGB 0..1)."""
+    r, g, b = (srgb[..., k][mask] * 255 for k in range(3))
+    rg, yb = r - g, (r + g) / 2 - b
+    return float(np.hypot(rg.std(), yb.std()) + 0.3 * np.hypot(rg.mean(), yb.mean()))
+
+
+def drain(X, T, mask, cell=8, grey=12.0, chromatic=15.0) -> dict:
+    """What a colouring drained of colour loses: the share of cells showing only near-grey colours where the picture's
+    cell is chromatic, chroma lost through the converter's eye, and colourfulness below the picture's."""
+    px = cells_of(X, cell)
+    lab = xyz2lab(linear(px) @ SRGB2XYZ.T)
+    all_grey = (chroma(lab) < grey).all(-1)                       # (R, C) every pixel near grey
+    m = cell_mask(mask, cell)
+    colourful = (chroma(mean_lab(T, cell)) > chromatic) & m
+    ex, et = (xyz2lab(linear(project_eye(img)) @ SRGB2XYZ.T) for img in (X, T))
+    return {'grey_share': float((all_grey & colourful).sum() / max(m.sum(), 1)),
+            'chroma_deficit_eye': masked_mean(np.maximum(chroma(et) - chroma(ex), 0), mask),
+            'colourfulness_deficit': max(colourfulness(project_eye(T), mask) - colourfulness(project_eye(X), mask), 0.0)}
+
+
 def all_metrics(X, T, mask) -> dict:
     """Every candidate metric of X against T over mask."""
     sx, st = scielab(X), scielab(T)
@@ -289,37 +310,103 @@ def all_metrics(X, T, mask) -> dict:
         'dists': deep(X, T, mask, 'dists'),
         **structure(xyz2lab(linear(project_eye(X)) @ SRGB2XYZ.T), xyz2lab(linear(project_eye(T)) @ SRGB2XYZ.T), mask),
         'ms_dssim_eye': ms_dssim(project_eye(X), project_eye(T), mask, 0, (1, 2, 4)),
+        **drain(X, T, mask),
         'lpips_eye': deep(project_eye(X), project_eye(T), mask, 'lpips'),
         'dists_eye': deep(project_eye(X), project_eye(T), mask, 'dists'),
     }
 
 
-# judge v2 (fit.py, 2026-09-30): the seam term, the one the data hold to, and LPIPS through the converter's eye as the
-# anchor that keeps a smooth but wrong colouring from winning, at the heaviest weight that costs no agreement with the
-# user; fitted on the painted segments whose change the eye tells from a re-dither and on the user's votes
+# the full judge v3 (fit.py, 2026-10-01): LPIPS through the converter's eye and the lightness seam step, both picked by
+# the data once the first optimum's counterexamples joined the labels; LPIPS held at the heaviest weight that costs no
+# agreement. Fitted on the painted segments, the user's votes and the counterexamples, all visible through the eye
 JUDGE = {
-    'seam_excess': 0.8097,
-    'lpips_eye': 53.59,
+    'lpips_eye': 16.41,
+    'seam_L_1': 1.459,
 }
 
 
-# the fast judge (fit.py --fast): the same seam term, anchored by multiscale SSIM of lightness through the converter's
-# eye; numpy and OpenCV only, no torch, so the app can run it
+# the fast judge v3 (fit.py --fast): the seam steps in lightness and colour, anchored by the share of cells shown
+# grey where the picture is chromatic (the first optimum drained the colour); numpy and OpenCV only, for the app
 JUDGE_FAST = {
-    'seam_excess': 0.9727,
-    'ms_dssim_eye': 8.019,
+    'seam_ab_1': 0.4145,
+    'seam_L_1': 1.234,
+    'chroma_deficit_eye': 0.004768,
+    'grey_share': 13.95,
 }
+
+
+def _scielab_terms(X, T, mask):
+    sx, st = scielab(X), scielab(T)
+    dE, ct = np.linalg.norm(sx - st, axis=-1), chroma(st)
+    return {'scielab_dE': masked_mean(dE, mask), 'chroma_deficit': masked_mean(np.maximum(ct - chroma(sx), 0), mask),
+            'hue_angle': masked_mean(hue_angle(sx, st) * ct / (ct + 20), mask)}
+
+
+_eye_lab = lambda img: xyz2lab(linear(project_eye(img)) @ SRGB2XYZ.T)
+# one metric at a time, for searches that score many candidates (all_metrics computes every one); the rest fall back
+# to all_metrics
+TERMS = {
+    'seam_excess': lambda X, T, m: seam_excess(lab_blurred(X, 2.0), lab_blurred(T, 2.0), m),
+    **{f'seam_{part}_{s:g}': (lambda s, sl: lambda X, T, m: seam_excess(lab_blurred(X, s)[..., sl],
+                                                                        lab_blurred(T, s)[..., sl], m))(s, sl)
+       for s in (1.0, 2.0, 4.0) for part, sl in (('L', slice(0, 1)), ('ab', slice(1, 3)))},
+    'neighbour_excess': neighbour_excess,
+    'ms_dssim_eye': lambda X, T, m: ms_dssim(project_eye(X), project_eye(T), m, 0, (1, 2, 4)),
+    **{k: (lambda k: lambda X, T, m: structure(_eye_lab(X), _eye_lab(T), m)[k])(k)
+       for k in ('detail_deficit_0', 'detail_deficit_1', 'detail_deficit_2', 'gmsd_eye', 'gmsm_eye', 'dssim_eye')},
+    **{k: (lambda k: lambda X, T, m: drain(X, T, m)[k])(k)
+       for k in ('grey_share', 'chroma_deficit_eye', 'colourfulness_deficit')},
+    **{k: (lambda k: lambda X, T, m: _scielab_terms(X, T, m)[k])(k) for k in ('scielab_dE', 'chroma_deficit', 'hue_angle')},
+    'hue_family_miss': hue_family_miss,
+    'lpips_eye': lambda X, T, m: deep(project_eye(X), project_eye(T), m, 'lpips'),
+    'dists_eye': lambda X, T, m: deep(project_eye(X), project_eye(T), m, 'dists'),
+}
+BATCHED = {'lpips_eye': 'lpips', 'dists_eye': 'dists'}   # network terms, one call for many candidates
+
+
+def term(name, X, T, mask):
+    return TERMS[name](X, T, mask) if name in TERMS else all_metrics(X, T, mask)[name]
+
+
+def deep_batch(Xs, T, mask, name):
+    """LPIPS or DISTS of each of Xs against T, one network call; as deep() for each."""
+    import piq
+    import torch
+    key = (name, 'batch')
+    if key not in _DEEP:
+        torch.set_num_threads(1)
+        _DEEP[key] = {'lpips': piq.LPIPS, 'dists': piq.DISTS}[name](reduction='none').eval()
+    ys, xs = np.nonzero(mask)
+    crop = lambda a: np.repeat(np.repeat(a[ys.min():ys.max() + 1, xs.min():xs.max() + 1], 2, 0), 2, 1)
+    xb = torch.from_numpy(np.stack([crop(x) for x in Xs])).permute(0, 3, 1, 2).float()
+    tb = torch.from_numpy(crop(T)[None].copy()).permute(0, 3, 1, 2).float().expand_as(xb)
+    with torch.no_grad():
+        return _DEEP[key](xb, tb).reshape(-1).numpy().astype(float)
+
+
+def score(judge, X, T, mask=None) -> float:
+    """A judge (metric -> weight) of the rendered colouring X against the tuned picture T over mask (the whole picture
+    by default), lower is better."""
+    mask = np.ones(X.shape[:2], bool) if mask is None else mask
+    return sum(w * term(k, X, T, mask) for k, w in judge.items())
+
+
+def score_batch(judge, Xs, T, mask) -> np.ndarray:
+    """score() of each of Xs, the network terms in one call."""
+    out = np.zeros(len(Xs))
+    for k, w in judge.items():
+        if k in BATCHED:
+            out += w * deep_batch([project_eye(x) for x in Xs], project_eye(T), mask, BATCHED[k])
+        else:
+            out += w * np.array([term(k, x, T, mask) for x in Xs])
+    return out
 
 
 def judge_fast_score(X, T, mask=None) -> float:
-    """The fast judge of X against T over mask (the whole picture by default), lower is better; only its two terms."""
-    mask = np.ones(X.shape[:2], bool) if mask is None else mask
-    return (JUDGE_FAST['seam_excess'] * seam_excess(lab_blurred(X, 2.0), lab_blurred(T, 2.0), mask)
-            + JUDGE_FAST['ms_dssim_eye'] * ms_dssim(project_eye(X), project_eye(T), mask, 0, (1, 2, 4)))
+    """The fast judge (JUDGE_FAST), lower is better: numpy and OpenCV only."""
+    return score(JUDGE_FAST, X, T, mask)
 
 
 def judge_score(X, T, mask=None) -> float:
-    """The judge of the rendered colouring X against the tuned picture T over mask (the whole picture by default),
-    lower is better; the lower of two sides by 1 is preferred at odds of about e to 1."""
-    m = all_metrics(X, T, np.ones(X.shape[:2], bool) if mask is None else mask)
-    return sum(w * m[k] for k, w in JUDGE.items())
+    """The full judge (JUDGE), lower is better."""
+    return score(JUDGE, X, T, mask)
