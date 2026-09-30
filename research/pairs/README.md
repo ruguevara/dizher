@@ -37,4 +37,37 @@ over its cells grown by two cells (`common.window`).
 
 ## Results
 
-(filled in as rounds come)
+### 1. Metrics on the painted segments (2026-09-30)
+
+229 segments on 9 projects (RC1, andy, anubis, autumn, diver-sunset, golden-axe, jojo, rocket-rackoon, sunset), 36
+null pairs. Share of segments where the metric rates the painting better, 95% bootstrap over images:
+
+| metric | painting > Select pairs | painting > next best | null / real |
+|---|---|---|---|
+| scielab_dE | 0.36 (0.26-0.48) | 0.50 | 0.13 |
+| scielab_dE_p95 | 0.46 | 0.51 | 0.33 |
+| scielab_dL | 0.48 | 0.55 | 0.10 |
+| scielab_dH | 0.31 (0.21-0.41) | 0.43 | 0.17 |
+| chroma_excess | 0.44 | 0.41 | 0.13 |
+| chroma_excess_neutral | 0.39 | 0.43 | 0.07 |
+| chroma_deficit | 0.44 | 0.52 | 0.11 |
+| hue_angle | 0.31 (0.22-0.40) | 0.41 | 0.08 |
+| fine_chroma_excess | 0.33 | 0.43 | 0.10 |
+| **seam_excess** | **0.65 (0.61-0.70)** | **0.77** | 0.15 |
+| **neighbour_excess** | **0.65 (0.60-0.70)** | **0.81** | 0.12 |
+| ms_dssim_L | 0.53 | 0.63 | 0.30 |
+| ms_dssim_a | 0.46 | 0.52 | 0.07 |
+| ms_dssim_b | 0.40 | 0.48 | 0.08 |
+| blur_rmse | 0.34 (0.21-0.48) | 0.49 | 0.06 |
+| energy (the project's) | 0.07 | 0.30 | 0 |
+
+- Every fidelity measure against the tuned picture, the judge's S-CIELAB included, prefers Select pairs' cells in
+  about two segments of three. The painting gives up colour accuracy.
+- What it gains is structure: fewer false steps across cell seams and less cell-to-cell change where the picture is
+  smooth. Both terms prefer the painting on every image (0.50-0.78), and over the next best pair four times in five.
+- scielab_dE + lambda * (seam + neighbour), each standardised: 0.36 at lambda 0, 0.57 at 1, 0.64-0.65 from 2 on;
+  the fidelity term adds nothing on these segments. A third of the painted segments stay unexplained.
+- Caveat: these are the places the user overrode a colorimetric optimum, so fidelity measures lose here by
+  construction. Where the user kept Select pairs' choice, fidelity may be what mattered. Pairs the user judges
+  without having painted them (the calibration round) are needed to weigh the two.
+- The project's own energy prefers the next best pair to the painting in 70% of segments.
