@@ -2,10 +2,13 @@
 
     python research/pairs/views.py OUT [N]     N pairs sampled evenly over the images (all by default), with a key
 
-Per pair, two PNGs, one with the sides swapped, under shuffled names: on top the tuned picture's crop, colouring 1's
-and colouring 2's, each at 2-6x nearest; below, the two whole screens at 2x with the judged cells outlined. Integer
-zoom only, so the dots stay dots. Null pairs (the painting against itself from another halftone origin) come along,
-one in eight, so a judge that sees a difference in any two renders shows."""
+Two kinds of sheet. The user's (sheet): on top the tuned picture's crop, colouring 1's and colouring 2's, each at
+2-6x nearest; below, the two whole screens at 2x with the judged cells outlined. The judges' (judge_sheet): only the
+three whole pictures, the tuned one, colouring 1 and colouring 2, at 2x as the eye sees them (the converter's eye,
+1 Spectrum pixel), no crops, no outlines: a judge cannot squint, and a zoomed crop of raw dots shows what nobody sees.
+main makes judges' sheets, per pair two, one with the sides swapped, under shuffled names. Null pairs (the painting
+against itself from another halftone origin) come along, one in eight, so a judge that sees a difference in any two
+renders shows."""
 import json
 import sys
 from pathlib import Path
@@ -15,6 +18,8 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import DATA, window   # noqa: E402
+from dizher.converter.eye import eye_blur   # noqa: E402
+from metrics import encode, linear   # noqa: E402
 
 GAP = 8
 
@@ -53,6 +58,19 @@ def sheet(T, X1, X2, cells):
     return np.concatenate([pad(top), np.full((GAP, w, 3), 90, np.uint8), pad(bottom)], 0)
 
 
+def seen(img, k=2):
+    """uint8: the whole picture at k x as the eye sees it, the converter's eye (a Gaussian of 1 Spectrum pixel)."""
+    blurred = eye_blur(linear(up(img, k) / 255).astype(np.float32), 1.4 * k, 2.0)
+    return (encode(blurred) * 255).round().astype(np.uint8)
+
+
+def judge_sheet(T, X1, X2):
+    """The tuned picture, colouring 1 and colouring 2, whole, side by side, through the eye."""
+    pics = [seen(img) for img in (T, X1, X2)]
+    gap = np.full((pics[0].shape[0], GAP, 3), 90, np.uint8)
+    return np.concatenate([pics[0], gap, pics[1], gap, pics[2]], 1)
+
+
 def main(out: Path, n=None, seed=0):
     out.mkdir(parents=True, exist_ok=True)
     rng = np.random.default_rng(seed)
@@ -79,7 +97,7 @@ def main(out: Path, n=None, seed=0):
         other = z['N'] if kind == 'null' else z[f'B{s}']
         for side, (X1, X2) in ((1, (z['A'], other)), (2, (other, z['A']))):
             name = names.pop()
-            cv2.imwrite(str(out / f'{name}.png'), cv2.cvtColor(sheet(z['target'], X1, X2, cells), cv2.COLOR_RGB2BGR))
+            cv2.imwrite(str(out / f'{name}.png'), cv2.cvtColor(judge_sheet(z['target'], X1, X2), cv2.COLOR_RGB2BGR))
             key[name] = dict(id=m['id'], kind=kind, user=side, cells=m['cells'])
     (out / 'key.json').write_text(json.dumps(dict(sorted(key.items())), indent=1))
     print(f'{len(key)} sheets of {len(jobs)} pairs in {out}')

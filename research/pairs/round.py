@@ -8,8 +8,9 @@ Three parts, one sheet per pair (sides at random), under shuffled names:
   - kept:   cells the user kept from Select pairs against a smoother or looser coherence's (variants.py), where the
             structure terms (seam, neighbour) and S-CIELAB disagree about which is better, half each way;
   - repeat: a few of the above again with the sides swapped, for the user's self-agreement.
-key.json maps each sheet to its pair and to the side the painting (or the kept cells) is on; swapped/ has every
-sheet with the sides the other way, for the judges."""
+key.json maps each sheet to its pair and to the side the painting (or the kept cells) is on. judges/ has every
+sheet as the judges see it (views.judge_sheet: whole pictures through the eye, no crops, no outlines), judges/swapped/
+the same with the sides the other way."""
 import json
 import sys
 from collections import Counter
@@ -20,7 +21,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import DATA   # noqa: E402
-from views import sheet   # noqa: E402
+from views import judge_sheet, sheet   # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 KEPT, PER_IMAGE, REPEATS = 20, 3, 5
@@ -89,8 +90,9 @@ def main(out: Path, seed=1):
         X1, X2 = (A, B) if side == 1 else (B, A)
         name = names.pop()
         cv2.imwrite(str(out / f'{name}.png'), cv2.cvtColor(sheet(T, X1, X2, cells), cv2.COLOR_RGB2BGR))
-        (out / 'swapped').mkdir(exist_ok=True)   # the judges see each sheet both ways
-        cv2.imwrite(str(out / 'swapped' / f'{name}.png'), cv2.cvtColor(sheet(T, X2, X1, cells), cv2.COLOR_RGB2BGR))
+        (out / 'judges' / 'swapped').mkdir(parents=True, exist_ok=True)   # the judges see each sheet both ways
+        for folder, (Y1, Y2) in ((out / 'judges', (X1, X2)), (out / 'judges' / 'swapped', (X2, X1))):
+            cv2.imwrite(str(folder / f'{name}.png'), cv2.cvtColor(judge_sheet(T, Y1, Y2), cv2.COLOR_RGB2BGR))
         key[name] = dict(id=pid, kind=kind, repeat=repeat, painting=side, cells=int(cells.sum()),
                          at=np.argwhere(cells).tolist(),   # the cells, so a rebuild can be checked against them
                          **({'struct': round(r['struct'], 2), 'fid': round(r['fid'], 2)} if r else {}))
