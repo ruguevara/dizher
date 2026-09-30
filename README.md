@@ -220,16 +220,26 @@ judge.
   the eye-model views under them, and crops of a cell range at twice the zoom. `regions NAME`
   groups cells into numbered regions and `paint NAME spec.json` colours regions or cells into the
   project's Overpaint, so a colouring can be corrected region by region and looked at again.
+* References: a hand-painted project is its own reference. The painting is meant with the project's
+  Tune and converter settings as saved, so the reference is the project converted as saved, painting
+  included, frozen to its `cache/reference.scr` and refrozen when the project changes; it is judged
+  as the picture it shows, never attribute by attribute (`freeze` refreezes by hand). `run` converts
+  each painted project with its painting hidden, under its own settings (what the user corrected) or
+  under a method's tuned values (`--method`), and scores the result against the reference: cells
+  agreeing, and the distance of the finished picture to the reference picture by the judge metrics
+  (CIEDE2000 after a 4 px blur first). `compare` puts the project's settings and every method side
+  by side.
 * Variants: `variants NAME --n 24` converts a project under sampled Metric and Select pairs values
   of every method, finished as the app would, each a screen in the project's `cache/variants/`.
 * Judgments: `judge pairs NAME --n 8` picks pairs of variants (the reference among them) and draws
   a target | A | B sheet per pair; `judge record NAME --by user "12 a hue, 13 same, 14 b noise"`
   files a judge's verdicts with the faults named (hue: a colour the original has not; clash:
   seams between cells; noise: pairs varying over one surface; tone; other), one per line, semicolon
-  or comma, a note after `--`; `judge agree` measures how far two judges agree, by fault. Judged
-  pairs and their screens live in `tests/images/NAME/judgments.json` and `variants/`. There is no
-  one right colouring: a picture has many accepted ones and its rejected ones, and the judgments
-  are pairwise.
+  or comma, a note after `--` to the end of the line; `judge agree` measures how far two judges
+  agree, by fault. Judged pairs and their screens live in `tests/images/NAME/judgments.json` and
+  `variants/`, the reference among them as a snapshot named by its hash, so a repaint does not
+  change what was judged. There is no one right colouring: a picture has many accepted ones and
+  its rejected ones, and the judgments are pairwise.
 * Artists' screens: `zxart fetch --n 50` lists the top standard pictures on zxart.ee and downloads
   their screens (the list `tests/images/zxart/index.json` is in git, the works are not);
   `zxart prepare` makes each a project whose source is the screen through a wider eye blur and

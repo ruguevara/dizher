@@ -21,7 +21,7 @@ from dizher.converter.energy import METHODS, LRGB2OPP, lightness_gain
 
 from .project import project_graph, DEFAULTS, select
 from .scr import render_scr, pairs_to_labels, same_region, black
-from .variants import read_variant, REFERENCE, listing
+from .variants import read_variant, listing, reference_id
 
 GAMMA = 2.2
 METRICS = {}
@@ -300,6 +300,16 @@ for _k in ('dists', 'haarpsi', 'gmsd'):
 
 # ----- ranking the metrics by the judgments ---------------------------------------------------------------------
 
+DISTANCES = ('de2000:4', 'scielab', 'opp_blur:2', 'msssim_ab', 'hue_shift:2')   # a result against the reference picture
+
+
+def distances(conv, reference_rgb, result_rgb, pairs, metrics=DISTANCES) -> dict:
+    """metric -> distance between two pictures of one project (conv its selection converter, for the eye kernels and
+    the lightness gain): the judge metrics with the reference picture as the source."""
+    c = Case(reference_rgb, result_rgb, pairs, conv, {})
+    return {m: METRICS[m](c) for m in metrics}
+
+
 def scores(picture: Picture, variants, metrics=None) -> dict:
     """variant -> metric -> value."""
     metrics = metrics or list(METRICS)
@@ -337,13 +347,13 @@ def agreement(pairs, values: dict, metrics) -> dict:
     return out
 
 
-def reference_rank(values: dict, metrics) -> dict:
+def reference_rank(values: dict, metrics, rid) -> dict:
     """metric -> share of variants the metric puts below the reference (0: the reference is best)."""
     out = {}
-    ref = values.get(REFERENCE)
+    ref = values.get(rid)
     if ref is None:
         return {m: (float('nan'), 0) for m in metrics}
-    others = [v for k, v in values.items() if k != REFERENCE]
+    others = [v for k, v in values.items() if k != rid]
     for m in metrics:
         vals = [v[m] for v in others if not np.isnan(v[m])]
         out[m] = (sum(x < ref[m] for x in vals) / len(vals) if vals and not np.isnan(ref[m]) else float('nan'), len(vals))
@@ -369,8 +379,9 @@ def rank(names, judgments_of, by='user', metrics=None, with_reference=True, log=
         per_picture[name] = agreement(pairs, values, metrics)
         all_pairs += [(f'{name}/{w}', f'{name}/{l}', t) for w, l, t in pairs]
         all_values.update({f'{name}/{v}': s for v, s in values.items()})
-        if with_reference and REFERENCE in values:
-            ref_ranks[name] = reference_rank(values, metrics)
+        rid = reference_id(name)
+        if with_reference and rid in values:
+            ref_ranks[name] = reference_rank(values, metrics, rid)
         for w, l, t in pairs:
             for tag in t:
                 tags.setdefault(tag, []).append((f'{name}/{w}', f'{name}/{l}', t))

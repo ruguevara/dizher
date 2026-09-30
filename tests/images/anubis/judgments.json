@@ -42,7 +42,7 @@
   },
   {
    "k": 3,
-   "a": "reference",
+   "a": "ref-7b330a49",
    "b": "2054f490",
    "verdicts": {
     "claude": {
@@ -111,7 +111,7 @@
   {
    "k": 6,
    "a": "bddb6198",
-   "b": "reference",
+   "b": "ref-7b330a49",
    "verdicts": {
     "claude": {
      "verdict": "b",

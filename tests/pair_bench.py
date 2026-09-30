@@ -1,12 +1,16 @@
 """Pair selection against hand-checked attribute maps. Run by hand, not collected by pytest:
 
-    python tests/pair_bench.py freeze NAME...         reference.scr from the project as saved, painted cells included
+    python tests/pair_bench.py freeze NAME...         the reference refrozen: the project converted as saved, painted
+                                                      cells included, to cache/reference.scr (run does it when needed)
     python tests/pair_bench.py run [NAME...] [--method M] [--set k=v ...] [--sheets DIR]
-                                                      select pairs by a method with the Metric and Select values it was
-                                                      tuned with (default the newest; each project keeps its Tune params,
-                                                      palette and halftoner) and score them
+                                                      each painted project converted with its painting hidden, under
+                                                      its own settings (default: what the user corrected) or under a
+                                                      method's tuned Metric and Select values, and scored against the
+                                                      reference: cells agreeing, and the distance of the picture it
+                                                      shows to the reference picture (de2000:4 and the other judge
+                                                      metrics; the painting is judged as a picture, not by attributes)
     python tests/pair_bench.py compare [NAME...] [--sheets DIR]
-                                                      every method side by side, each with the values it was tuned with
+                                                      the project's own settings and every method side by side
     python tests/pair_bench.py regions NAME [--out DIR] [--k N]
                                                       the cells grouped into numbered regions, for painting by region
     python tests/pair_bench.py paint NAME FILE.json   regions (and cells) to Overpaint overrides in the project
@@ -44,9 +48,10 @@
                                                       energy agrees most with the judge (bench/fit.py), with the
                                                       agreement of its preset and of a fit without each picture
 
-A project is tests/images/NAME/project.json; its reference is reference.scr beside it. The reference is judged per
-cell as the colours it shows: a cell whose bitmap is all paper or all ink is solid, and any pair holding that colour
-matches it. Pairs are unordered, and the two blacks are one colour.
+A project is tests/images/NAME/project.json; its reference is the project converted as saved, painting included
+(bench/project.py), or a reference.scr beside it (the zxart set). Cell agreement counts the colours a cell shows: a
+cell whose bitmap is all paper or all ink is solid, and any pair holding that colour matches it; pairs are unordered,
+the two blacks one colour. The picture distances need no such care.
 """
 import argparse
 import json
@@ -62,15 +67,22 @@ from mokit.graph import Memo, evaluate
 from mokit.project import load_project, save_project
 
 from dizher import ops
-from dizher.converter.energy import METHODS, NEWEST
+from dizher.converter.energy import METHODS
 
 sys.path.insert(0, str(Path(__file__).parent))
 from bench import render as R, variants as V, judge as J, zxart as Z, metrics as M, fit as F         # noqa: E402
 from bench.scr import pair_name, parse_pair, black, label_pairs, matches, score, render_scr   # noqa: E402
-from bench.project import IMAGES, DEFAULTS, project_graph, painted_cells, select, finish, reference    # noqa: E402
+from bench.project import (IMAGES, DEFAULTS, project_graph, select, finish, reference,                  # noqa: E402
+                           has_reference, convert_as_saved)
+import bench.project                                                                                  # noqa: E402
 
-SET = ('anubis', 'rocket-rackoon', 'jojo')
 JUDGED = ('anubis', 'rocket-rackoon', 'jojo', 'andy', 'david', 'vangog')   # the calibration set
+
+
+def painted_set() -> tuple:
+    """Every project with a reference: painted cells, or a screen of its own (not the zxart set, run by name)."""
+    return tuple(sorted(d.name for d in IMAGES.iterdir()
+                        if (d / 'project.json').exists() and d.name != 'zxart' and has_reference(d.name)))
 
 
 def _count(got, cells, names):
@@ -96,12 +108,8 @@ def spots(name, ref, got, painted) -> str:
 
 
 def freeze(names):
-    for name in names:
-        graph = project_graph(name)
-        t = time.time()
-        conv = evaluate(graph, 'optimise', Memo())
-        conv.save(str(IMAGES / name / 'reference.scr'))
-        print(f'{name}: reference.scr, {len(painted_cells(graph))} painted cells, {time.time() - t:.1f} s')
+    for name in names or painted_set():
+        bench.project.freeze(name, force=True, log=print)
 
 
 def parse_sets(items):
@@ -112,71 +120,89 @@ def parse_sets(items):
     return out
 
 
-def scored(name, got, seconds=0.0):
-    _, _, ref, painted = reference(name)
+def scored(name, conv, final, seconds=0.0):
+    """Cell agreement of a selection with the reference, and the distances of the finished picture to the reference
+    picture (bench/metrics.py DISTANCES), with the spot checks."""
+    bitmap, ref_idx, ref, painted = reference(name)
+    got = label_pairs(conv, conv.best_attr_indexes)
     s = score(ref, got, painted)
+    ref_img = render_scr(bitmap, ref_idx, conv.palette)
+    pairs = np.array(list(conv.palette.iter_idxs_pairs()))[conv.best_attr_indexes]
+    s.update(M.distances(conv, ref_img, final.dithered_result, pairs))
     s['name'], s['seconds'], s['spots'] = name, seconds, spots(name, ref, got, painted)
     return s
 
 
-def run(names, sets, sheets=None, memos=None, quiet=False, method=NEWEST):
+PROJECT = 'project'     # the project's own settings, as the user saw it before painting
+
+
+def convert(name, method, memo, **sets):
+    """(graph, selection, final, seconds) under a method's preset, or PROJECT: the project's own settings."""
+    if method == PROJECT:
+        assert not sets, 'sets apply to a method'
+        return convert_as_saved(name, memo)
+    graph = ops.apply_preset(project_graph(name, DEFAULTS), method)
+    t = time.time()
+    conv = select(graph, memo, **sets)
+    return graph, conv, finish(graph, memo, conv), time.time() - t
+
+
+def print_rows(rows):
+    print(f"{'image':16} {'agree':>6} {'painted':>7} {'false':>6} {'changes':>7} {'de2000':>7} {'scielab':>7} "
+          f"{'opp2':>7} {'msssim':>7} {'s':>5}")
+    for s in rows:
+        print(f"{s['name']:16} {s['agree']:6.3f} {s['painted']:7.3f} {s['false_seams']:6.3f} {s['pair_changes']:7d} "
+              f"{s['de2000:4']:7.3f} {s['scielab']:7.3f} {s['opp_blur:2']:7.4f} {s['msssim_ab']:7.3f} "
+              f"{s['seconds']:5.1f}  {s['spots']}")
+    mean = lambda k: np.nanmean([s[k] for s in rows])
+    print(f"{'mean':16} {mean('agree'):6.3f} {mean('painted'):7.3f} {mean('false_seams'):6.3f} "
+          f"{mean('pair_changes'):7.0f} {mean('de2000:4'):7.3f} {mean('scielab'):7.3f} {mean('opp_blur:2'):7.4f} "
+          f"{mean('msssim_ab'):7.3f}")
+
+
+def run(names, sets, sheets=None, memos=None, quiet=False, method=PROJECT):
     rows = []
-    for name in [n for n in names if (IMAGES / n / 'reference.scr').exists()]:
-        graph = ops.apply_preset(project_graph(name, DEFAULTS), method)
+    for name in [n for n in names if has_reference(n)]:
         memo = memos.setdefault(name, Memo()) if memos is not None else Memo()
-        t = time.time()
-        conv = select(graph, memo, **sets)
-        bitmap, ref_idx, ref, painted = reference(name)
-        got = label_pairs(conv, conv.best_attr_indexes)
-        s = scored(name, got, time.time() - t)
+        graph, conv, final, seconds = convert(name, method, memo, **sets)
+        s = scored(name, conv, final, seconds)
         rows.append(s)
         if sheets:
+            bitmap, ref_idx, ref, painted = reference(name)
+            got = label_pairs(conv, conv.best_attr_indexes)
             wrong = list(zip(*np.nonzero(~matches(ref, got))))
             ref_img = render_scr(bitmap, ref_idx, conv.palette)
-            composite = conv.snapshot(labels=conv.best_attr_indexes).dithered_result
-            R.save(Path(sheets) / f'{name}.png', R.sheet([('target', conv.image_rgb), ('reference', ref_img),
-                                                          ('selection', composite)], 2, marks={'selection': wrong}))
-            final = finish(graph, memo, conv).dithered_result
-            R.save(Path(sheets) / f'{name}-final.png', R.sheet([('reference', ref_img), (method, final)], 2))
+            R.save(Path(sheets) / f'{name.replace("/", "-")}.png',
+                   R.sheet([('target', conv.image_rgb), ('reference', ref_img), (method, final.dithered_result)], 2,
+                           marks={method: wrong}))
     if not quiet:
-        print(f"{'image':16} {'agree':>6} {'painted':>7} {'rest':>6} {'false':>6} {'missed':>6} {'changes':>7} {'s':>5}")
-        for s in rows:
-            print(f"{s['name']:16} {s['agree']:6.3f} {s['painted']:7.3f} {s['rest']:6.3f} {s['false_seams']:6.3f} "
-                  f"{s['missed_seams']:6.3f} {s['pair_changes']:7d} {s['seconds']:5.1f}  {s['spots']}")
-        mean = lambda k: np.nanmean([s[k] for s in rows])
-        print(f"{'mean':16} {mean('agree'):6.3f} {mean('painted'):7.3f} {mean('rest'):6.3f} {mean('false_seams'):6.3f} "
-              f"{mean('missed_seams'):6.3f}")
+        print(f'== {method}')
+        print_rows(rows)
     return rows
 
 
 def compare(names, sheets=None):
-    """Every method with its tuned values on each reference: painted cells matched, false seams and the spot checks.
-    With sheets: per image, the reference | each method's final result."""
-    names = [n for n in names if (IMAGES / n / 'reference.scr').exists()]
-    columns = {m: {} for m in METHODS}
+    """The project's own settings and every method with its tuned values on each reference: cells agreeing and the
+    distance of the finished picture to the reference picture. With sheets: per image, the reference | each result."""
+    names = [n for n in names if has_reference(n)]
+    columns = {m: {} for m in (PROJECT, *METHODS)}
     finals, palettes = {n: [] for n in names}, {}
     for name in names:
         memo = Memo()
-        for method in METHODS:
-            graph = ops.apply_preset(project_graph(name, DEFAULTS), method)
-            t = time.time()
-            conv = select(graph, memo)
-            columns[method][name] = scored(name, label_pairs(conv, conv.best_attr_indexes), time.time() - t)
+        for method in columns:
+            graph, conv, final, seconds = convert(name, method, memo)
+            columns[method][name] = scored(name, conv, final, seconds)
             palettes[name] = conv.palette
             if sheets:
-                finals[name].append((method, finish(graph, memo, conv).dithered_result))
+                finals[name].append((method, final.dithered_result))
     for label, rows in columns.items():
         print(f'== {label}')
-        print(f"{'image':16} {'painted':>7} {'false':>6} {'changes':>7}")
-        for s in rows.values():
-            print(f"{s['name']:16} {s['painted']:7.3f} {s['false_seams']:6.3f} {s['pair_changes']:7d}  {s['spots']}")
-        print(f"{'mean':16} {np.nanmean([s['painted'] for s in rows.values()]):7.3f} "
-              f"{np.nanmean([s['false_seams'] for s in rows.values()]):6.3f}")
+        print_rows(list(rows.values()))
     if sheets:
         for name in names:
             bitmap, ref_idx, _, _ = reference(name)
             tiles = [('reference', render_scr(bitmap, ref_idx, palettes[name]))] + finals[name]
-            R.save(Path(sheets) / f'{name}-compare.png', R.sheet(tiles, 2))
+            R.save(Path(sheets) / f'{name.replace("/", "-")}-compare.png', R.sheet(tiles, 2))
 
 
 def regions(name, out, k):
@@ -240,13 +266,12 @@ def paint(name, spec_path):
     print(f'{name}: {len(overrides)} painted cells')
 
 
-def render(name, out, zoom=3, crops=(), variant=None, eye=True, method=NEWEST):
+def render(name, out, zoom=3, crops=(), variant=None, eye=True, method=PROJECT):
     """target | reference | result with rulers, eye views and crops: NAME.png (NAME-ID.png for a variant)."""
-    graph = ops.apply_preset(project_graph(name, DEFAULTS), method)
     memo = Memo()
-    conv = select(graph, memo)
+    graph, conv, final, _ = convert(name, method, memo)
     columns, marks, ref = [('target', conv.image_rgb)], {}, None
-    if (IMAGES / name / 'reference.scr').exists():
+    if has_reference(name):
         bitmap, ref_idx, ref, _ = reference(name)
         columns.append(('reference', render_scr(bitmap, ref_idx, conv.palette)))
     if variant:
@@ -255,7 +280,7 @@ def render(name, out, zoom=3, crops=(), variant=None, eye=True, method=NEWEST):
         columns.append((title, render_scr(bitmap, idx, conv.palette)))
     else:
         title, got = method, label_pairs(conv, conv.best_attr_indexes)
-        columns.append((title, finish(graph, memo, conv).dithered_result))
+        columns.append((title, final.dithered_result))
     if ref is not None:
         marks[title] = list(zip(*np.nonzero(~matches(ref, got))))
     img = R.sheet(columns, zoom, conv.eye_view if eye else None, crops, marks=marks)
@@ -331,7 +356,8 @@ def main(argv=None):
                                         'zxart', 'rank', 'fit'))
     ap.add_argument('args', nargs='*')
     ap.add_argument('--set', action='append', help='Metric, Eye or Select param=value')
-    ap.add_argument('--method', default=None, choices=tuple(METHODS), help='selection method (run, render: the newest; fit: each)')
+    ap.add_argument('--method', default=None, choices=(PROJECT, *METHODS),
+                    help="selection method; run and render default to the project's own settings, fit to each method")
     ap.add_argument('--sheets', help='folder for contact sheets')
     ap.add_argument('--out', default='.')
     ap.add_argument('--k', type=int, default=12)
@@ -354,15 +380,15 @@ def main(argv=None):
     elif a.command == 'run':
         if a.sheets:
             Path(a.sheets).mkdir(parents=True, exist_ok=True)
-        run(a.args or SET, parse_sets(a.set), a.sheets, method=a.method or NEWEST)
+        run(a.args or painted_set(), parse_sets(a.set), a.sheets, method=a.method or PROJECT)
     elif a.command == 'compare':
         if a.sheets:
             Path(a.sheets).mkdir(parents=True, exist_ok=True)
-        compare(a.args or SET, a.sheets)
+        compare(a.args or painted_set(), a.sheets)
     elif a.command == 'regions':
         regions(a.args[0], a.out, a.k)
     elif a.command == 'render':
-        render(a.args[0], a.out, a.zoom, [parse_crop(c) for c in a.crop], a.variant, not a.no_eye, a.method or NEWEST)
+        render(a.args[0], a.out, a.zoom, [parse_crop(c) for c in a.crop], a.variant, not a.no_eye, a.method or PROJECT)
     elif a.command == 'variants':
         variants(a.args or JUDGED, a.n or 24, a.seed, a.fast)
     elif a.command == 'judge':

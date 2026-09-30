@@ -13,12 +13,20 @@ from mokit.graph import Memo
 
 from dizher.converter.energy import METHODS
 
-from .project import IMAGES, convert, reference_file
+from .project import IMAGES, convert, reference_file, has_reference
 from .scr import read_scr
 
 RANGES = dict(chroma=(0.5, 3.0), coherence=(0.0, 8.0), edge=(0.05, 0.4), chroma_noise=(0.0, 0.1),
               luma_noise=(0.0, 0.1), flare=(0.0, 0.3))
-REFERENCE = 'reference'
+REFERENCE = 'reference'     # the picture's current reference, whichever snapshot that is now
+
+
+def reference_id(name):
+    """The current reference's snapshot id, 'ref-' + 8 hex digits of its screen, or None without one. A judged pair
+    keeps the snapshot it was judged on: a repaint makes a new one."""
+    if not has_reference(name):
+        return None
+    return 'ref-' + hashlib.sha1(reference_file(name).read_bytes()).hexdigest()[:8]
 
 
 def variant_id(params: dict) -> str:
@@ -49,8 +57,8 @@ def folders(name):
 
 
 def variant_file(name, variant) -> Path:
-    """A variant's screen by id (kept, else cached), 'reference', or a path."""
-    if variant == REFERENCE:
+    """A variant's screen by id (kept, else cached), 'reference' (the current one), or a path."""
+    if variant == REFERENCE or variant == reference_id(name):
         return reference_file(name)
     for folder in folders(name):
         f = folder / f'{variant}.scr'
@@ -72,23 +80,30 @@ def read_variant(name, variant):
 
 
 def listing(name) -> dict:
-    """id -> meta of every variant of a picture, kept and cached; the reference when there is one."""
+    """id -> meta of every variant of a picture, kept and cached, and the current reference under its snapshot id
+    (meta reference True); older reference snapshots among the kept ones carry it too."""
     out = {}
     for folder in folders(name):
         for f in sorted(folder.glob('*.json')):
             meta = json.loads(f.read_text())
             out.setdefault(meta['id'], meta)
-    if reference_file(name).exists():
-        out.setdefault(REFERENCE, dict(id=REFERENCE, params={}))
+    rid = reference_id(name)
+    if rid:
+        out.setdefault(rid, dict(id=rid, method='reference', params={}, reference=True))
     return out
 
 
 def keep(name, variant) -> None:
-    """A cached variant copied to the kept folder (judged variants stay in git)."""
+    """A cached variant (or the current reference snapshot) copied to the kept folder: judged variants stay in git."""
     kept, cache = folders(name)
-    if variant == REFERENCE or (kept / f'{variant}.scr').exists():
+    if (kept / f'{variant}.scr').exists():
         return
     kept.mkdir(parents=True, exist_ok=True)
+    if variant == reference_id(name):
+        shutil.copy(reference_file(name), kept / f'{variant}.scr')
+        (kept / f'{variant}.json').write_text(json.dumps(dict(id=variant, name=name, method='reference', params={},
+                                                              reference=True), indent=1))
+        return
     for ext in ('.scr', '.json'):
         shutil.copy(cache / f'{variant}{ext}', kept / f'{variant}{ext}')
 

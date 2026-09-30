@@ -20,7 +20,7 @@ from mokit.graph import Memo, evaluate
 from . import render as R
 from .project import IMAGES, DEFAULTS, project_graph
 from .scr import render_scr
-from .variants import REFERENCE, listing, read_variant, keep, distance
+from .variants import listing, read_variant, keep, distance, reference_id
 
 TAGS = ('hue', 'clash', 'noise', 'tone', 'other')   # wrong colour, block seams, pairs varying over one surface, lightness
 VERDICTS = {'a': 'a', 'b': 'b', 'same': 'same', '=': 'same', 's': 'same'}
@@ -44,7 +44,8 @@ def pick(name, n, seed=0, judged=()):
     against a variant (when there is one); none repeated, A/B order random."""
     rng = np.random.default_rng(seed)
     metas = listing(name)
-    ids = [i for i in metas if i != REFERENCE]
+    rid = reference_id(name)
+    ids = [i for i in metas if not metas[i].get('reference')]
     assert len(ids) >= 2, f'{name}: generate variants first'
     seen = {frozenset(p) for p in judged}
     pairs = []
@@ -52,7 +53,7 @@ def pick(name, n, seed=0, judged=()):
     cands.sort(key=lambda t: -t[0])
     far = [(a, b) for _, a, b in cands]
     random = [far[i] for i in rng.permutation(len(far))]
-    refs = [(REFERENCE, i) for i in rng.permutation(ids)] if REFERENCE in metas else []
+    refs = [(rid, i) for i in rng.permutation(ids)] if rid else []
     pools = [far, random, refs]
     turn = 0
     while len(pairs) < n and any(pools):

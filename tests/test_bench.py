@@ -121,13 +121,17 @@ def test_judgments_parse_record_agree(tmp_path, monkeypatch):
         (cache / f'v{i}.json').write_text(json.dumps(meta))
         (cache / f'v{i}.scr').write_bytes(bytes(6912))
     (tmp_path / 'pic' / 'reference.scr').write_bytes(bytes(6912))
-    assert len(V.listing('pic')) == 5
+    rid = V.reference_id('pic')
+    assert rid.startswith('ref-') and len(V.listing('pic')) == 5 and V.listing('pic')[rid]['reference']
     pairs = J.pick('pic', 6, seed=1)
     assert len(pairs) == 6 and len({frozenset(p) for p in pairs}) == 6
-    assert sum('reference' in p for p in pairs) == 2
+    assert sum(rid in p for p in pairs) == 2
     entries = J.add_pairs('pic', pairs)
     assert [e['k'] for e in entries] == [1, 2, 3, 4, 5, 6]
     assert (tmp_path / 'pic' / 'variants' / 'v0.scr').exists()             # judged variants are kept
+    assert (tmp_path / 'pic' / 'variants' / f'{rid}.scr').exists()          # the reference snapshot too
+    (tmp_path / 'pic' / 'reference.scr').write_bytes(bytes([1]) + bytes(6911))   # a repaint: a new snapshot id
+    assert V.reference_id('pic') != rid and rid in V.listing('pic') and V.reference_id('pic') in V.listing('pic')
     more = J.pick('pic', 2, seed=1, judged=[(e['a'], e['b']) for e in entries])
     assert not {frozenset(p) for p in more} & {frozenset(p) for p in pairs}
     assert J.record('pic', '1 a hue, 2 b, 3 same, 4 a noise', 'user') == 4
@@ -236,7 +240,9 @@ def test_metrics_zero_on_self_and_rank_by_closeness(tmp_path, monkeypatch):
     distance_like = [m for m in M.METRICS if not m.startswith(('energy', 'label_noise', 'region_pairs', 'lpips', 'dists'))]
     for m in distance_like:
         assert abs(M.METRICS[m](self_case)) < 1e-4, m
-    values = M.scores(pic, ['good', 'bad', 'reference'])
+    from bench import variants as V
+    rid = V.reference_id('pic')
+    values = M.scores(pic, ['good', 'bad', rid])
     colour_blind = ('gmsd', 'haarpsi')                        # gradient metrics on luminance: magenta is a fine grey
     for m in [m for m in distance_like if m not in colour_blind] + ['energy:Exact mixture', 'energy:Halftoned']:
         assert values['good'][m] < values['bad'][m], m
@@ -248,6 +254,42 @@ def test_metrics_zero_on_self_and_rank_by_closeness(tmp_path, monkeypatch):
     assert result['overall']['label_noise'][0] == 0.0                                   # the spoiled copy is quieter
     assert result['reference']['pic']['opp_blur:2'] == (0.0, 2)                         # the reference is the good one
     M.print_rank(result, ['opp_blur:2', 'de2000:2', 'label_noise'])
+    d = M.distances(pic.conv, pic.case('good').result, pic.case('bad').result, pic.case('bad').pairs)
+    assert set(d) == set(M.DISTANCES) and all(v > 0 for v in d.values())
+    same = M.distances(pic.conv, pic.case('good').result, pic.case('good').result, pic.case('good').pairs)
+    assert all(abs(v) < 1e-4 for v in same.values())
+
+
+def test_reference_frozen_from_the_project(tmp_path, monkeypatch):
+    """A painted project's reference is the project converted as saved, frozen to its cache and refrozen only when
+    project.json changes; a project with its own reference.scr keeps it; an unpainted project has none."""
+    import json
+    from dataclasses import replace
+    from mokit.project import load_project, save_project
+    import bench.project as P
+    from bench import variants as V
+    synthetic_picture(tmp_path, monkeypatch)
+    (tmp_path / 'pic' / 'reference.scr').unlink()
+    (tmp_path / 'pic' / 'cache' / 'variants' / 'good.json').unlink()
+    assert not P.has_reference('pic') and V.reference_id('pic') is None
+    project = load_project(tmp_path / 'pic')
+    graph = project.graph.with_params('overpaint', replace(project.graph['overpaint'].params, overrides=((0, 0, 0, 14),)))
+    save_project(project.folder, graph, project.view)
+    assert P.has_reference('pic')
+    frozen = P.reference_file('pic')
+    assert frozen == tmp_path / 'pic' / 'cache' / 'reference.scr' and frozen.stat().st_size == 6912
+    meta = json.loads((tmp_path / 'pic' / 'cache' / 'reference.json').read_text())
+    assert meta['painted'] == 1 and meta['project'] == P.project_hash('pic')
+    bitmap, idx, shown, painted = P.reference('pic')
+    assert tuple(idx[0, 0] % 8) in ((0, 6), (6, 0)) and painted == {(0, 0)}      # black shares yellow's brightness
+    stamp = frozen.stat().st_mtime_ns
+    P.reference_file('pic')
+    assert frozen.stat().st_mtime_ns == stamp                              # the same project: not refrozen
+    graph = graph.with_params('overpaint', replace(graph['overpaint'].params, overrides=((0, 0, 0, 14), (0, 1, 0, 10))))
+    save_project(project.folder, graph, project.view)
+    assert P.reference('pic')[3] == {(0, 0), (0, 1)} and frozen.stat().st_mtime_ns != stamp
+    g, conv, final, _ = P.convert_as_saved('pic')
+    assert g['overpaint'].params.overrides == () and final.dithered_result.shape == (192, 256, 3)
 
 
 def test_fit_energy_to_judgments(tmp_path, monkeypatch):
