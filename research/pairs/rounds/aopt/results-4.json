@@ -1,0 +1,12 @@
+[
+{"file": "a034.png", "verdict": "2", "confidence": "medium", "problem": "colour", "note": "Colouring 1 drains the faces to grey-white and turns the blue jacket into pale lavender blocks, with a yellow block on the boy's face."},
+{"file": "a075.png", "verdict": "2", "confidence": "low", "problem": "colour", "note": "Colouring 1 floods the man's shirt with red and scatters magenta/cyan specks over Anubis."},
+{"file": "a033.png", "verdict": "2", "confidence": "medium", "problem": "seams", "note": "Colouring 1 has blocky white and blue patches over the left figure that drain its warm colours."},
+{"file": "a010.png", "verdict": "2", "confidence": "medium", "problem": "seams", "note": "Colouring 1 has bright white blocks along the fence and a pinkish-white patch on the road."},
+{"file": "a044.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "The two are nearly identical."},
+{"file": "a014.png", "verdict": "2", "confidence": "low", "problem": "colour", "note": "Colouring 1 turns the tan shirt red and leaves magenta specks on Anubis."},
+{"file": "a007.png", "verdict": "1", "confidence": "medium", "problem": "seams", "note": "Colouring 2 has blocky grey-white and yellow patches on the right of the face and red/green blocks at the bottom, and loses the blue-purple shading."},
+{"file": "a003.png", "verdict": "=", "confidence": "low", "problem": "seams", "note": "Both are equally blocky in the sky and background, with trade-offs in the foliage colour."},
+{"file": "a057.png", "verdict": "2", "confidence": "medium", "problem": "seams", "note": "Colouring 1 has blocky white and blue patches over the left figure and loses the dragon's green."},
+{"file": "a065.png", "verdict": "2", "confidence": "medium", "problem": "seams", "note": "Colouring 1 has grey-pink blocky patches in the sunset and cyan specks across the trees."}
+]

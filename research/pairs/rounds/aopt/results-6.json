@@ -1,0 +1,12 @@
+[
+{"file": "a032.png", "verdict": "2", "confidence": "medium", "problem": "seams", "note": "Colouring 1 has grey-khaki block patches on the path and stray red and blue specks on the trunk."},
+{"file": "a055.png", "verdict": "2", "confidence": "high", "problem": "seams", "note": "Colouring 1 has grey and lavender square blocks scattered over the sky, trees and street."},
+{"file": "a046.png", "verdict": "2", "confidence": "medium", "problem": "seams", "note": "Colouring 1 has more scattered grey-khaki patches on the path and red and blue specks on the trunk."},
+{"file": "a008.png", "verdict": "1", "confidence": "medium", "problem": "seams", "note": "Colouring 2 breaks the raccoon's body into grey and olive cell patches."},
+{"file": "a061.png", "verdict": "1", "confidence": "low", "problem": "seams", "note": "Colouring 2 has pale lavender blocks across the pink clouds and a grey patch in the blue sky."},
+{"file": "a054.png", "verdict": "2", "confidence": "low", "problem": "noise", "note": "Colouring 1 is full of noisy red, blue and magenta cell specks around the figure."},
+{"file": "a021.png", "verdict": "2", "confidence": "high", "problem": "colour", "note": "Colouring 1 has green-yellow patches in the horizon band and a black hole in the red foreground."},
+{"file": "a017.png", "verdict": "2", "confidence": "medium", "problem": "colour", "note": "Colouring 1 turns the face into magenta blocks and drains the rest to grey, losing the red, blue and yellow brushwork."},
+{"file": "a019.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "The two look essentially identical."},
+{"file": "a077.png", "verdict": "2", "confidence": "high", "problem": "colour", "note": "Colouring 1 has lavender blocks on the coat, a yellow block on the face and greyed-out faces."}
+]
