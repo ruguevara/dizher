@@ -4,559 +4,559 @@
   "image": "rocket-rackoon",
   "round": 3,
   "vs": "painting",
-  "optimum": 1
+  "x": 1
  },
  "a001": {
   "id": "sunset/r3/painting",
   "image": "sunset",
   "round": 3,
   "vs": "painting",
-  "optimum": 2
+  "x": 2
  },
  "a002": {
   "id": "anubis/r4/select",
   "image": "anubis",
   "round": 4,
   "vs": "select",
-  "optimum": 2
+  "x": 2
  },
  "a003": {
   "id": "RC1/r4/select",
   "image": "RC1",
   "round": 4,
   "vs": "select",
-  "optimum": 1
+  "x": 1
  },
  "a004": {
   "id": "golden-axe/r4/painting",
   "image": "golden-axe",
   "round": 4,
   "vs": "painting",
-  "optimum": 2
+  "x": 2
  },
  "a005": {
   "id": "rocket-rackoon/r0/null",
   "image": "rocket-rackoon",
   "round": 0,
   "vs": "null",
-  "optimum": 2
+  "x": 2
  },
  "a006": {
   "id": "rocket-rackoon/r3/select",
   "image": "rocket-rackoon",
   "round": 3,
   "vs": "select",
-  "optimum": 2
+  "x": 2
  },
  "a007": {
   "id": "andy/r3/select",
   "image": "andy",
   "round": 3,
   "vs": "select",
-  "optimum": 1
+  "x": 1
  },
  "a008": {
   "id": "rocket-rackoon/r4/select",
   "image": "rocket-rackoon",
   "round": 4,
   "vs": "select",
-  "optimum": 1
+  "x": 1
  },
  "a009": {
   "id": "sunset/r4/select",
   "image": "sunset",
   "round": 4,
   "vs": "select",
-  "optimum": 1
+  "x": 1
  },
  "a010": {
   "id": "autumn/r4/select",
   "image": "autumn",
   "round": 4,
   "vs": "select",
-  "optimum": 1
+  "x": 1
  },
  "a011": {
   "id": "golden-axe/r0/null",
   "image": "golden-axe",
   "round": 0,
   "vs": "null",
-  "optimum": 2
+  "x": 2
  },
  "a012": {
   "id": "autumn/r3/painting",
   "image": "autumn",
   "round": 3,
   "vs": "painting",
-  "optimum": 2
+  "x": 2
  },
  "a013": {
   "id": "diver-sunset/r0/null",
   "image": "diver-sunset",
   "round": 0,
   "vs": "null",
-  "optimum": 1
+  "x": 1
  },
  "a014": {
   "id": "anubis/r3/painting",
   "image": "anubis",
   "round": 3,
   "vs": "painting",
-  "optimum": 1
+  "x": 1
  },
  "a015": {
   "id": "anubis/r4/painting",
   "image": "anubis",
   "round": 4,
   "vs": "painting",
-  "optimum": 2
+  "x": 2
  },
  "a016": {
   "id": "rocket-rackoon/r4/painting",
   "image": "rocket-rackoon",
   "round": 4,
   "vs": "painting",
-  "optimum": 1
+  "x": 1
  },
  "a017": {
   "id": "andy/r4/painting",
   "image": "andy",
   "round": 4,
   "vs": "painting",
-  "optimum": 1
+  "x": 1
  },
  "a018": {
   "id": "RC1/r4/painting",
   "image": "RC1",
   "round": 4,
   "vs": "painting",
-  "optimum": 1
+  "x": 1
  },
  "a019": {
   "id": "anubis/r0/null",
   "image": "anubis",
   "round": 0,
   "vs": "null",
-  "optimum": 1
+  "x": 1
  },
  "a020": {
   "id": "diver-sunset/r0/null",
   "image": "diver-sunset",
   "round": 0,
   "vs": "null",
-  "optimum": 2
+  "x": 2
  },
  "a021": {
   "id": "sunset/r3/select",
   "image": "sunset",
   "round": 3,
   "vs": "select",
-  "optimum": 1
+  "x": 1
  },
  "a022": {
   "id": "jojo/r3/painting",
   "image": "jojo",
   "round": 3,
   "vs": "painting",
-  "optimum": 2
+  "x": 2
  },
  "a023": {
   "id": "diver-sunset/r4/painting",
   "image": "diver-sunset",
   "round": 4,
   "vs": "painting",
-  "optimum": 2
+  "x": 2
  },
  "a024": {
   "id": "sunset/r3/select",
   "image": "sunset",
   "round": 3,
   "vs": "select",
-  "optimum": 2
+  "x": 2
  },
  "a025": {
   "id": "golden-axe/r4/select",
   "image": "golden-axe",
   "round": 4,
   "vs": "select",
-  "optimum": 2
+  "x": 2
  },
  "a026": {
   "id": "jojo/r3/painting",
   "image": "jojo",
   "round": 3,
   "vs": "painting",
-  "optimum": 1
+  "x": 1
  },
  "a027": {
   "id": "sunset/r4/painting",
   "image": "sunset",
   "round": 4,
   "vs": "painting",
-  "optimum": 2
+  "x": 2
  },
  "a028": {
   "id": "andy/r4/select",
   "image": "andy",
   "round": 4,
   "vs": "select",
-  "optimum": 1
+  "x": 1
  },
  "a029": {
   "id": "autumn/r4/painting",
   "image": "autumn",
   "round": 4,
   "vs": "painting",
-  "optimum": 2
+  "x": 2
  },
  "a030": {
   "id": "anubis/r4/painting",
   "image": "anubis",
   "round": 4,
   "vs": "painting",
-  "optimum": 1
+  "x": 1
  },
  "a031": {
   "id": "andy/r3/painting",
   "image": "andy",
   "round": 3,
   "vs": "painting",
-  "optimum": 2
+  "x": 2
  },
  "a032": {
   "id": "autumn/r3/painting",
   "image": "autumn",
   "round": 3,
   "vs": "painting",
-  "optimum": 1
+  "x": 1
  },
  "a033": {
   "id": "golden-axe/r4/select",
   "image": "golden-axe",
   "round": 4,
   "vs": "select",
-  "optimum": 1
+  "x": 1
  },
  "a034": {
   "id": "jojo/r4/select",
   "image": "jojo",
   "round": 4,
   "vs": "select",
-  "optimum": 1
+  "x": 1
  },
  "a035": {
   "id": "anubis/r4/select",
   "image": "anubis",
   "round": 4,
   "vs": "select",
-  "optimum": 1
+  "x": 1
  },
  "a036": {
   "id": "jojo/r4/select",
   "image": "jojo",
   "round": 4,
   "vs": "select",
-  "optimum": 2
+  "x": 2
  },
  "a037": {
   "id": "jojo/r3/select",
   "image": "jojo",
   "round": 3,
   "vs": "select",
-  "optimum": 1
+  "x": 1
  },
  "a038": {
   "id": "anubis/r3/select",
   "image": "anubis",
   "round": 3,
   "vs": "select",
-  "optimum": 2
+  "x": 2
  },
  "a039": {
   "id": "rocket-rackoon/r4/select",
   "image": "rocket-rackoon",
   "round": 4,
   "vs": "select",
-  "optimum": 2
+  "x": 2
  },
  "a040": {
   "id": "diver-sunset/r3/select",
   "image": "diver-sunset",
   "round": 3,
   "vs": "select",
-  "optimum": 2
+  "x": 2
  },
  "a041": {
   "id": "golden-axe/r3/select",
   "image": "golden-axe",
   "round": 3,
   "vs": "select",
-  "optimum": 1
+  "x": 1
  },
  "a042": {
   "id": "jojo/r4/painting",
   "image": "jojo",
   "round": 4,
   "vs": "painting",
-  "optimum": 2
+  "x": 2
  },
  "a043": {
   "id": "autumn/r4/painting",
   "image": "autumn",
   "round": 4,
   "vs": "painting",
-  "optimum": 1
+  "x": 1
  },
  "a044": {
   "id": "golden-axe/r0/null",
   "image": "golden-axe",
   "round": 0,
   "vs": "null",
-  "optimum": 1
+  "x": 1
  },
  "a045": {
   "id": "rocket-rackoon/r3/select",
   "image": "rocket-rackoon",
   "round": 3,
   "vs": "select",
-  "optimum": 1
+  "x": 1
  },
  "a046": {
   "id": "autumn/r3/select",
   "image": "autumn",
   "round": 3,
   "vs": "select",
-  "optimum": 1
+  "x": 1
  },
  "a047": {
   "id": "rocket-rackoon/r3/painting",
   "image": "rocket-rackoon",
   "round": 3,
   "vs": "painting",
-  "optimum": 2
+  "x": 2
  },
  "a048": {
   "id": "andy/r3/select",
   "image": "andy",
   "round": 3,
   "vs": "select",
-  "optimum": 2
+  "x": 2
  },
  "a049": {
   "id": "golden-axe/r3/painting",
   "image": "golden-axe",
   "round": 3,
   "vs": "painting",
-  "optimum": 1
+  "x": 1
  },
  "a050": {
   "id": "RC1/r4/select",
   "image": "RC1",
   "round": 4,
   "vs": "select",
-  "optimum": 2
+  "x": 2
  },
  "a051": {
   "id": "jojo/r3/select",
   "image": "jojo",
   "round": 3,
   "vs": "select",
-  "optimum": 2
+  "x": 2
  },
  "a052": {
   "id": "rocket-rackoon/r4/painting",
   "image": "rocket-rackoon",
   "round": 4,
   "vs": "painting",
-  "optimum": 2
+  "x": 2
  },
  "a053": {
   "id": "autumn/r4/select",
   "image": "autumn",
   "round": 4,
   "vs": "select",
-  "optimum": 2
+  "x": 2
  },
  "a054": {
   "id": "RC1/r3/select",
   "image": "RC1",
   "round": 3,
   "vs": "select",
-  "optimum": 1
+  "x": 1
  },
  "a055": {
   "id": "diver-sunset/r4/painting",
   "image": "diver-sunset",
   "round": 4,
   "vs": "painting",
-  "optimum": 1
+  "x": 1
  },
  "a056": {
   "id": "autumn/r3/select",
   "image": "autumn",
   "round": 3,
   "vs": "select",
-  "optimum": 2
+  "x": 2
  },
  "a057": {
   "id": "golden-axe/r4/painting",
   "image": "golden-axe",
   "round": 4,
   "vs": "painting",
-  "optimum": 1
+  "x": 1
  },
  "a058": {
   "id": "anubis/r3/painting",
   "image": "anubis",
   "round": 3,
   "vs": "painting",
-  "optimum": 2
+  "x": 2
  },
  "a059": {
   "id": "RC1/r3/select",
   "image": "RC1",
   "round": 3,
   "vs": "select",
-  "optimum": 2
+  "x": 2
  },
  "a060": {
   "id": "anubis/r0/null",
   "image": "anubis",
   "round": 0,
   "vs": "null",
-  "optimum": 2
+  "x": 2
  },
  "a061": {
   "id": "diver-sunset/r3/select",
   "image": "diver-sunset",
   "round": 3,
   "vs": "select",
-  "optimum": 1
+  "x": 1
  },
  "a062": {
   "id": "diver-sunset/r3/painting",
   "image": "diver-sunset",
   "round": 3,
   "vs": "painting",
-  "optimum": 2
+  "x": 2
  },
  "a063": {
   "id": "RC1/r3/painting",
   "image": "RC1",
   "round": 3,
   "vs": "painting",
-  "optimum": 2
+  "x": 2
  },
  "a064": {
   "id": "andy/r4/select",
   "image": "andy",
   "round": 4,
   "vs": "select",
-  "optimum": 2
+  "x": 2
  },
  "a065": {
   "id": "diver-sunset/r3/painting",
   "image": "diver-sunset",
   "round": 3,
   "vs": "painting",
-  "optimum": 1
+  "x": 1
  },
  "a066": {
   "id": "diver-sunset/r4/select",
   "image": "diver-sunset",
   "round": 4,
   "vs": "select",
-  "optimum": 1
+  "x": 1
  },
  "a067": {
   "id": "sunset/r3/painting",
   "image": "sunset",
   "round": 3,
   "vs": "painting",
-  "optimum": 1
+  "x": 1
  },
  "a068": {
   "id": "golden-axe/r3/select",
   "image": "golden-axe",
   "round": 3,
   "vs": "select",
-  "optimum": 2
+  "x": 2
  },
  "a069": {
   "id": "RC1/r3/painting",
   "image": "RC1",
   "round": 3,
   "vs": "painting",
-  "optimum": 1
+  "x": 1
  },
  "a070": {
   "id": "andy/r4/painting",
   "image": "andy",
   "round": 4,
   "vs": "painting",
-  "optimum": 2
+  "x": 2
  },
  "a071": {
   "id": "rocket-rackoon/r0/null",
   "image": "rocket-rackoon",
   "round": 0,
   "vs": "null",
-  "optimum": 1
+  "x": 1
  },
  "a072": {
   "id": "sunset/r4/painting",
   "image": "sunset",
   "round": 4,
   "vs": "painting",
-  "optimum": 1
+  "x": 1
  },
  "a073": {
   "id": "diver-sunset/r4/select",
   "image": "diver-sunset",
   "round": 4,
   "vs": "select",
-  "optimum": 2
+  "x": 2
  },
  "a074": {
   "id": "golden-axe/r3/painting",
   "image": "golden-axe",
   "round": 3,
   "vs": "painting",
-  "optimum": 2
+  "x": 2
  },
  "a075": {
   "id": "anubis/r3/select",
   "image": "anubis",
   "round": 3,
   "vs": "select",
-  "optimum": 1
+  "x": 1
  },
  "a076": {
   "id": "andy/r3/painting",
   "image": "andy",
   "round": 3,
   "vs": "painting",
-  "optimum": 1
+  "x": 1
  },
  "a077": {
   "id": "jojo/r4/painting",
   "image": "jojo",
   "round": 4,
   "vs": "painting",
-  "optimum": 1
+  "x": 1
  },
  "a078": {
   "id": "RC1/r4/painting",
   "image": "RC1",
   "round": 4,
   "vs": "painting",
-  "optimum": 2
+  "x": 2
  },
  "a079": {
   "id": "sunset/r4/select",
   "image": "sunset",
   "round": 4,
   "vs": "select",
-  "optimum": 2
+  "x": 2
  }
 }

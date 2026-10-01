@@ -1,0 +1,12 @@
+[
+{"file": "c015.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "Both share the same blocky face patches and grey speckle in the hair; no clear difference."},
+{"file": "c017.png", "verdict": "2", "confidence": "low", "problem": "colour", "note": "Colouring 1 has more grey-white cells on the left figure and monster, where the original is warm orange and teal."},
+{"file": "c003.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "Both have the same dark red background blocks and dotted olive wall; hard to tell apart."},
+{"file": "c010.png", "verdict": "2", "confidence": "medium", "problem": "noise", "note": "Colouring 1 has a noisier dark-dotted background and grainier hair."},
+{"file": "c007.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "Nearly identical; both blocky in the face with grey speckle in the hair."},
+{"file": "c037.png", "verdict": "2", "confidence": "low", "problem": "colour", "note": "Colouring 1 turns more of the left warrior and the monster's head grey-white instead of warm colours."},
+{"file": "c023.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "Same red background blocks and dotted wall in both; no clear winner."},
+{"file": "c005.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "Both show the same face block patches and hair speckle; equally good."},
+{"file": "c021.png", "verdict": "2", "confidence": "low", "problem": "colour", "note": "Colouring 1 has more grey-white patches on the left figure where the original is orange skin."},
+{"file": "c009.png", "verdict": "2", "confidence": "low", "problem": "colour", "note": "Colouring 1 drains more of the left warrior and monster to grey-white."}
+]

@@ -294,4 +294,27 @@ So the agents work as a veto beside the numeric judges: a change counts as a can
 is better and the agents, both orders, do not call it worse; the user's blind verdict on held-out pictures still
 decides. They cost ~40 s per 10 sheets, enough for finalists, not for a sweep.
 
+### 7. Session C: the converter's settings (2026-10-01)
+
+`tune.py`. The base is the Exact mixture preset over each project's own Tune, Target, Halftoner, Eye and Optimise,
+nothing painted; tuning on RC1, anubis, autumn, diver-sunset, jojo, rocket-rackoon; held out andy, sunset, golden-axe
+(painted) and david, burning-hand (not).
+
+- DBS stays in the search: the judges' ranks of 20 one-setting changes with DBS against without correlate 0.14-0.94;
+  DBS moves a score about as much as the settings differ. 8.6 s a conversion.
+- One setting at a time, 6 values over each slider, noise from the base at 4 halftone origins: no value is better by
+  all three judges on most pictures. All three agree with the preset about what is worse (low chroma weight, flare 0,
+  coherence 0, chroma_noise above 0.02, extreme eye blurs). `edge` 0.32 is better on RC1, jojo, autumn and worse on
+  rocket-rackoon, anubis; `luma_noise` splits the judges (fast for, v4 against).
+- Eye chroma blur, finely (0.7-1.2, every value at 4 origins): 1.1 better by all three judges beyond two standard
+  errors on 3 of 6 training pictures, worse on none; held out, better on 3 of 5 (andy, golden-axe, burning-hand),
+  david unchanged (almost no colour).
+- Round c1 (`rounds/c1/`), held out, base against 1.1: the user, blind, even on andy, burning-hand, david, 1.1 better
+  on sunset, worse on golden-axe, where all three judges had put it clearly better. The agents (20 pairs, both
+  orders) decided no pair: ties and splits, nearly all low confidence.
+
+**Conclusion: the settings are at their best for what the user sees.** What the judges still find around the preset is
+below what the user or the agents can see, and on golden-axe against the user. By the plan, new energy terms (step 4)
+were to follow only a gain here; there is none.
+
 Summary and next steps: `HANDOFF.md`.

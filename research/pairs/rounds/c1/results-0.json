@@ -1,0 +1,12 @@
+[
+{"file": "c030.png", "verdict": "2", "confidence": "medium", "problem": "noise", "note": "Colouring 1 has a busier dotted grain in the smooth grey background and a darker, mottled hair."},
+{"file": "c012.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "Practically identical; only a few stray specks in the blue band and black ground differ."},
+{"file": "c016.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "Practically identical; small speck differences only."},
+{"file": "c024.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "Both share the same blocky flame seams and olive background dots; no clear difference."},
+{"file": "c026.png", "verdict": "2", "confidence": "low", "problem": "noise", "note": "Colouring 1 has slightly noisier background dither and heavier dark speckle in the hair."},
+{"file": "c025.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "Practically identical; stray specks differ slightly in position."},
+{"file": "c001.png", "verdict": "2", "confidence": "medium", "problem": "noise", "note": "Colouring 1 has a coarser dotted background and darker, noisier hair than the original's smooth grey."},
+{"file": "c033.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "Both have the same patchy cell blocks on the face; no visible difference."},
+{"file": "c036.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "Practically identical gradients and specks."},
+{"file": "c027.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "Both show the same flame seams and background dots; no clear difference."}
+]
