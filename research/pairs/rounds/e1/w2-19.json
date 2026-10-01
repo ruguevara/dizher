@@ -1,0 +1,12 @@
+[
+{"item": "e196a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 leaves the swirl's centre whitish lavender where the original is light cyan."},
+{"item": "e627b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 puts a magenta cell into a pale star at the top edge."},
+{"item": "e099b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 has magenta specks on the dark coat beside the man's collar."},
+{"item": "e737b", "verdict": "=", "confidence": "low", "problem": "none", "where": "C2", "note": "The boy's face is a blocky yellow/white checker in both; I can't tell them apart."},
+{"item": "e290a", "verdict": "2", "confidence": "low", "problem": "noise", "where": "D3", "note": "Colouring 1 scatters magenta and cyan specks over the dark village on the right."},
+{"item": "e783a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 2 turns part of the man's warm face grey-white."},
+{"item": "e975a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A2", "note": "Magenta in 1 against cyan in 2 behind the tree on the left; the original has both hues there."},
+{"item": "e695b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e268a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 1 has a lavender cell in the light cyan sky at the upper left."},
+{"item": "e246a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A1", "note": "Any difference near the torch flame is too small to judge."}
+]

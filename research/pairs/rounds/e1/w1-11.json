@@ -1,0 +1,12 @@
+[
+{"item": "e953b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "B3", "note": "Only a stray cyan speck under the cyan bar moves; neither is worse."},
+{"item": "e082b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 1 turns part of the khaki shirt bottom red where the original is yellowish."},
+{"item": "e241a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D3", "note": "Colouring 2 loses the green of the water at the right edge, making it olive and dark."},
+{"item": "e706a", "verdict": "2", "confidence": "low", "problem": "detail", "where": "A3", "note": "Colouring 1 drops the faint blue hint of the backpack in the lower left."},
+{"item": "e611a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "B2", "note": "Colouring 2 puts a whiter cell on the woman's face, making it more checkered."},
+{"item": "e638b", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "C1", "note": "Colouring 1 sprinkles white specks into the plain blue sky at the top."},
+{"item": "e073a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 2 has a grey-lavender cell in the orange reflection of the leg."},
+{"item": "e255b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A3", "note": "The two differ only slightly around the girl's hand and dress; neither is clearly worse."},
+{"item": "e745b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 2 makes the light tail stripe olive green instead of orange."},
+{"item": "e337a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I could not see a difference."}
+]

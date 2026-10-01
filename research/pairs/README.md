@@ -419,4 +419,51 @@ plain or taste prompt), three they agreed on.
   the judges still gave them confident verdicts (jojo 0.5 6 of 6). A two-way choice cannot say "both bad"; the judges'
   verdict there is noise for the energy and must not become a label.
 
+### 10. Session E step 3: Claude judges where Select pairs is unsure (2026-10-01)
+
+`dp.py`. Base: Select pairs at the Exact mixture preset, nothing painted, on the 6 training pictures and the 6 loose
+ones (goldhill, gradient, kotofey, landscape, tv_out, vangog: a new project's graph, untuned); the 5 held-out
+pictures stay out. Per segment the alternatives the converter makes itself: next, its cells on their next best pair
+by the energy's own term; coherence x2, edge 0.32, eye chroma blur 1.1, luma_noise 0.1, the segment's labels from
+Select pairs at that setting put into the base. Each rendered by the base pipeline, only the segment changed.
+
+- The plan's filter (the lowest third of energy margins, then 15 dE through the eye) picked the smallest changes: the
+  total margin grows with the cells, and its lowest third had a median of 1 cell, which judges do not see (step 1).
+  Now: 3 cells or more, the margin per changed cell, per picture its lowest half, then 10 dE or more. Margin and
+  visible change go together (Spearman 0.45 over 918 alternatives): the lowest third and 15 dE leave 48 pairs, the
+  lowest half and 10 dE 158.
+- The untuned loose pictures barely change (median 3-6 dE): goldhill, kotofey and landscape give no pair, gradient
+  and tv_out 4 each (gradient's all next); vangog 35.
+
+158 pairs and 8 nulls (a picture's base from another halftone origin), each to 6 fresh judges, 3 per order (pilot 40
+pairs, 24 judges; then 126, 76 judges in a workflow). Prompt `curve.PROMPT` with four answers: 1, 2, = both fine, x
+both bad. A label is the answer of more than half the 6 votes.
+
+| pairs | n | alternative better | base better | = | split |
+|---|---|---|---|---|---|
+| next | 20 | 3 | 13 | 2 | 2 |
+| coherence x2 | 27 | 2 | 7 | 14 | 4 |
+| edge 0.32 | 47 | 10 | 7 | 19 | 11 |
+| eye chroma 1.1 | 20 | 7 | 1 | 6 | 6 |
+| luma_noise 0.1 | 44 | 12 | 16 | 8 | 8 |
+| 10-15 dE | 71 | 14 | 26 | 18 | 13 |
+| 15-20 dE | 36 | 9 | 5 | 12 | 10 |
+| 20-30 dE | 36 | 8 | 11 | 14 | 3 |
+| 30 dE and more | 15 | 3 | 2 | 5 | 5 |
+| **all** | **158** | **34** | **44** | **49** | **31** |
+| null | 8 | | | 7 | 1 |
+
+- **127 labels of 158**: 78 sides, 49 even; 31 splits. Nulls pass (7 of 8 even by majority, one split). Sides
+  even (colouring 1 318 votes, 2 299); x almost unused (6 votes of 996).
+- The labels hold across the orders: of the 78 side labels, 72 have both orders' own majority (3 votes each) on the
+  label's side; 40 are 6 of 6.
+- **Where Select pairs is unsure, the energy's choice is a coin toss for the judges**: base better 44, alternative
+  better 34. The margin per cell does not tell them apart (median 0.036 both, Mann-Whitney p 0.86). The judges side
+  with next least (3 of 16), with eye chroma 1.1 most (7 of 8). Of 9 alternatives with lower energy than the base
+  (the DP not at the minimum), the judges prefer the base on 2 and the alternative on 1.
+- Unlike step 2, 10-15 dE is decided as often as larger changes (40 sides of 71): these change several cells, a
+  lone segment needed ~20 dE.
+
+Labels and key: `rounds/e1/` (key out of git until the user's check, step 4); renders `data/dp/raw/`.
+
 Summary and next steps: `HANDOFF.md`.

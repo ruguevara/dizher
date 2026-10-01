@@ -1,0 +1,12 @@
+[
+{"item": "e883b", "verdict": "=", "confidence": "low", "problem": "none", "where": "D3", "note": "Only a tiny cyan-versus-white speck among the village lights; cannot tell them apart."},
+{"item": "e908a", "verdict": "2", "confidence": "medium", "problem": "detail", "where": "B3", "note": "Colouring 1 turns the oncoming headlights into flat yellow dither and loses the bright white glare."},
+{"item": "e948a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 puts a stray magenta cell in the dark blue sky at the top edge."},
+{"item": "e268a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A1", "note": "Only a cell or two in the pale sky differ, cyan versus lavender; no clear preference."},
+{"item": "e436b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "A3", "note": "Colouring 2 scatters cyan and green cells through the bottom-left water, so it looks patchier."},
+{"item": "e106b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D3", "note": "Colouring 2 puts dull olive cells into the orange leaf carpet at the bottom right."},
+{"item": "e478a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C1", "note": "Only one cyan cell in a star's halo differs; no clear preference."},
+{"item": "e043b", "verdict": "=", "confidence": "low", "problem": "none", "where": "C2", "note": "Yellow versus white specks on the dark creature; negligible."},
+{"item": "e378b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C1", "note": "Colouring 2 adds dark olive cells into the bright orange canopy at the top."},
+{"item": "e428b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C3", "note": "Colouring 2 turns part of the light blue hill dark blue and adds a stray magenta cell in the village."}
+]

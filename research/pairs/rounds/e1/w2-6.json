@@ -1,0 +1,12 @@
+[
+{"item": "e528a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 1 puts magenta cells on the bottom rooftops where the original is blue houses."},
+{"item": "e454b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e290a", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "D3", "note": "Colouring 1 scatters magenta and cyan cells over the blue village at the lower right."},
+{"item": "e800a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 has a bit more magenta on the boy's blue jacket."},
+{"item": "e198a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C3", "note": "Only a tiny change in a couple of cells in the reflection, neither reads better."},
+{"item": "e044a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e086a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 turns more of the dark tree branches magenta where the original shows dark tree against blue sky."},
+{"item": "e934a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 1 drains the glowing cyan-green waterfall light to black-and-white dither."},
+{"item": "e434b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 1 turns more of the dark tree branches magenta where the original shows dark tree against blue sky."},
+{"item": "e580a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 2 has a larger pink block and a greenish speck on the pale path."}
+]

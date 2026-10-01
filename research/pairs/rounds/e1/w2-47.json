@@ -1,0 +1,12 @@
+[
+{"item": "e535a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "1 paints the light highlight on the arm yellow-green where the original is pale cream, which 2 shows as white."},
+{"item": "e961a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "The only difference is a few dark cells by the belt, too small to choose between."},
+{"item": "e689b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "1 puts an orange-red cell in the yellow-green fence and meadow, where it clashes with the cells around it."},
+{"item": "e672b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A2", "note": "1 turns part of the yellow band at the left edge into grey-white cells."},
+{"item": "e804b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "D3", "note": "1 has a stray magenta cell in the blue village area."},
+{"item": "e875b", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "D1", "note": "In 2 the moon's red ring turns into a blocky square of cells with pale patches, so it is no longer round."},
+{"item": "e051a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B3", "note": "1 puts a cyan cell on the girl's grey-dark legs, a colour the original does not have there."},
+{"item": "e857a", "verdict": "1", "confidence": "low", "problem": "detail", "where": "C3", "note": "2 flattens the stump's bark lines into plainer red and white."},
+{"item": "e825a", "verdict": "2", "confidence": "high", "problem": "colour", "where": "C2", "note": "1 puts magenta cells and cyan specks into the blue hills."},
+{"item": "e050a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B1", "note": "Yellow cells in 1 against pale green cells in 2 in the yellow-green glow; both are about as far from the original."}
+]

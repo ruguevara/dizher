@@ -1,0 +1,12 @@
+[
+{"item": "e706b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I cannot see any difference between the two."},
+{"item": "e255a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A3", "note": "Only a tiny change near the girl's hand; neither is worse."},
+{"item": "e614a", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A1", "note": "In 1 the dither starts a cell further left in the top rows only, so the black-to-grey edge has a blocky step that the smooth gradient doesn't have."},
+{"item": "e620b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "C2", "note": "In 1 a red speck sits at the top of the dark trunk among the orange leaves."},
+{"item": "e241b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D3", "note": "On the right edge, 1 turns the greenish water olive-yellow; 2 keeps it green."},
+{"item": "e421a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I cannot see any difference between the two."},
+{"item": "e991a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C2", "note": "2 puts stray purple specks in the dark coat area to the right of the moustached man's head."},
+{"item": "e257a", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "D3", "note": "2 puts a solid magenta cell in the blue village at lower right, where it reads as a blotch."},
+{"item": "e082b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B3", "note": "1 colours the belt and buckle area red instead of the original's golden-brown."},
+{"item": "e155a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D2", "note": "1 makes the pale cyan-white glow by the waterfall a white dither on black, so it loses its brightness."}
+]

@@ -1,0 +1,11 @@
+[
+{"item": "e043a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I see no difference between the two."},
+{"item": "e689a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D2", "note": "2 puts an orange-red cell into the pale sunlit yellow behind the fence."},
+{"item": "e839b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I see no difference between the two."},
+{"item": "e601b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Only a faint change along the stripe edge under the boy; neither is worse."},
+{"item": "e084a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "1 has more magenta specks among the blue-white village roofs."},
+{"item": "e356b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "1 renders the dark green trees top left as olive yellow instead of green."},
+{"item": "e055a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "1 turns more of the blue denim jacket's left arm and shoulder magenta."},
+{"item": "e436b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A3", "note": "1 leaves the green water reflection bottom left as olive-black dots, while 2 brings back some green and cyan, though with patchy cells."},
+{"item": "e009a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "2 washes the blue-cyan sky around the top glow out to paler blocks."}
+]

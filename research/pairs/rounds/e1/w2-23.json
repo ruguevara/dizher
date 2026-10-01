@@ -1,0 +1,12 @@
+[
+{"item": "e883a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e237a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 1 puts more magenta on the boy's blue jacket arm."},
+{"item": "e983b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 1 has an orange-red block in the green grass behind the fence."},
+{"item": "e994a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Only a few stray pixels differ near the right figure; no preference."},
+{"item": "e037b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 1 makes the pale path patch pinker and blotchier with clashing yellow-white cells."},
+{"item": "e106a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Practically identical; maybe a tiny patch in the bottom right leaves."},
+{"item": "e039b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Practically identical; a small foliage cell differs near the right trunk."},
+{"item": "e705b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 1 turns the bluish sky at the left edge magenta."},
+{"item": "e267a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 loses the gold of Anubis's headdress stripes to grey."},
+{"item": "e460a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."}
+]

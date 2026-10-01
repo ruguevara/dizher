@@ -1,0 +1,12 @@
+[
+{"item": "e352b", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A2", "note": "Colouring 2 pushes dots into the black band as a blocky bulge, breaking the straight smooth gradient edge."},
+{"item": "e751b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A3", "note": "Only a tiny shift of red and yellow cells at the lower left arm; neither reads better."},
+{"item": "e991b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "D2", "note": "Colouring 1 has extra purple specks on the dark right-hand figure that are not in the original."},
+{"item": "e864b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 1 renders the brown creature's head as grey black-and-white, losing its warm hue."},
+{"item": "e611a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "The face cells differ barely; both have similar yellow and red patches."},
+{"item": "e146a", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A3", "note": "Colouring 1 has a blocky bulge of dots into the black band, breaking the straight gradient edge."},
+{"item": "e082a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Only a small shift of red cells near the belt; no visible preference."},
+{"item": "e996b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C3", "note": "Colouring 2 adds cyan specks on the road around the headlights where the original is dark."},
+{"item": "e481b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e241a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D3", "note": "Colouring 2 turns the dark green water at the right edge into olive yellow dots, losing the green."}
+]

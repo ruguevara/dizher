@@ -1,0 +1,12 @@
+[
+{"item": "e695b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e263a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e136a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "Any difference near the middle trunk is too small to matter."},
+{"item": "e714a", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B3", "note": "Colouring 1 loses part of the light edge line along the top of the black title band."},
+{"item": "e597a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 paints the raccoon's orange arm in olive green instead of orange with a light highlight."},
+{"item": "e488b", "verdict": "1", "confidence": "low", "problem": "seams", "where": "B1", "note": "Colouring 2 puts dull olive cells into the orange foliage, adding blocky patches."},
+{"item": "e948b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e981b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "A3", "note": "Colouring 2 scatters more dark specks around the girl's red sleeve at the lower left."},
+{"item": "e883b", "verdict": "=", "confidence": "low", "problem": "none", "where": "D3", "note": "Only a few cyan specks in the village lights differ; both read the same."},
+{"item": "e267b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A1", "note": "Small differences around the torch flame; neither reads worse."}
+]

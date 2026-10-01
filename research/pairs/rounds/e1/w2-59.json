@@ -1,0 +1,12 @@
+[
+{"item": "e875a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D1", "note": "Colouring 1 washes the moon out to pale white, losing the yellow ring around the orange core."},
+{"item": "e980b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A1", "note": "The two differ only in a few pale sky cells near the top left, and both read about the same."},
+{"item": "e535a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "The only difference is a small highlight on the raccoon's leg, and both are acceptable."},
+{"item": "e075a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A1", "note": "A couple of red and orange cells by the torch on the wall are shifted, and neither is clearly worse."},
+{"item": "e011a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "B3", "note": "Colouring 2 adds stray green specks around the yellow headlights."},
+{"item": "e232b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "The cross-strap area on the shirt mixes red and yellow differently, and both read about equally."},
+{"item": "e844a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 renders the green hill behind the tree trunk as olive dither instead of green."},
+{"item": "e055a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 turns much of the boy's blue jacket sleeve purple."},
+{"item": "e640a", "verdict": "=", "confidence": "low", "problem": "none", "where": "D2", "note": "One rock cell on the right is olive in one and dark in the other, and both are plausible."},
+{"item": "e326b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "C1", "note": "Colouring 1 puts a stray pale dither blob in the plain blue sky at the top."}
+]

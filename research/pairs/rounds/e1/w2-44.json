@@ -1,0 +1,12 @@
+[
+{"item": "e881a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C3", "note": "2 scatters cyan specks over the dark road and car where the picture is dark."},
+{"item": "e217b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e043b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e460b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e689a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D2", "note": "2 turns the pale yellow field behind the fence into an orange cell."},
+{"item": "e791b", "verdict": "2", "confidence": "low", "problem": "seams", "where": "D1", "note": "1 breaks the moon's yellow disc with white and cyan cells on its left side."},
+{"item": "e839a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e573b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "1 renders the green hill behind the figure as drab olive dither instead of green."},
+{"item": "e136a", "verdict": "1", "confidence": "low", "problem": "detail", "where": "B2", "note": "2 loses part of the grey distant trunks at the end of the path to orange."},
+{"item": "e695b", "verdict": "=", "confidence": "low", "problem": "none", "where": "C1", "note": "Small change above the head (light green vs olive), neither clearly worse."}
+]

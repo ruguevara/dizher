@@ -1,0 +1,12 @@
+[
+{"item": "e023a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not find a visible difference between the two."},
+{"item": "e849b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 puts magenta specks in the dark blue behind Anubis's head, which is the wrong hue."},
+{"item": "e194b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not find a visible difference between the two."},
+{"item": "e620a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C2", "note": "Colouring 2 has a stray red-black speck at the top of the right trunk, where colouring 1 keeps the neighbouring yellow-green."},
+{"item": "e264b", "verdict": "1", "confidence": "low", "problem": "detail", "where": "D2", "note": "Colouring 2 turns part of the grey fence yellow, so the fence reads less clearly."},
+{"item": "e481b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "B3", "note": "Colouring 2 has a few extra dark specks along the bottom edge of the smooth leaf carpet."},
+{"item": "e073b", "verdict": "x", "confidence": "low", "problem": "colour", "where": "B3", "note": "Both are wrong in the orange reflection: colouring 1 has a flat grey block and colouring 2 has white and magenta specks."},
+{"item": "e797a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A2", "note": "Colouring 2 replaces more of the yellow band on the left with white, so it reads less like the original's yellow."},
+{"item": "e537a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 2 fills the dark cypress with garish magenta dots instead of dark blue."},
+{"item": "e369a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 has magenta patches on Anubis's head and ear, where the original is dark blue."}
+]

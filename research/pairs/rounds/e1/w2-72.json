@@ -1,0 +1,11 @@
+[
+{"item": "e050a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 1 turns the lime-green glow above the yellow light into a flat yellow block, where 2 keeps pale green that reads closer to the original."},
+{"item": "e229a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e334b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 paints the sky at the left edge between the trees as a magenta column, where the original is blue."},
+{"item": "e672a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A2", "note": "Colouring 2 breaks the yellow band at the left edge with a grey-white chunk, so it reads less yellow."},
+{"item": "e998a", "verdict": "=", "confidence": "low", "problem": "none", "where": "D3", "note": "The two differ only in a few cyan or olive cells in the water at the bottom right, and both read the same."},
+{"item": "e031a", "verdict": "=", "confidence": "low", "problem": "colour", "where": "A3", "note": "Both put stray magenta and cyan into the dark hills at the bottom left, as a block in 1 and as dots in 2."},
+{"item": "e428a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 1 adds magenta cells to the light-blue village and drops the light dots on the hill above it."},
+{"item": "e902a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 2 washes the right end of the yellow band to pale white and adds orange specks, so the band reads less yellow."},
+{"item": "e011a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "They differ only in a few green dots near the headlights, which is not noticeable."}
+]

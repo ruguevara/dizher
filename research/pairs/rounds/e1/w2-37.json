@@ -1,0 +1,12 @@
+[
+{"item": "e460a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e779b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No clear difference; at most a speck near the tail base."},
+{"item": "e408a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e568a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A1", "note": "2 turns some dark green foliage cells at the top left olive/black."},
+{"item": "e400a", "verdict": "=", "confidence": "low", "problem": "noise", "where": "C3", "note": "Town cells swap magenta for black-white specks, neither closer to the original."},
+{"item": "e192a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B2", "note": "2 puts a pale green cell where the yellow band starts."},
+{"item": "e651b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "C2", "note": "1 has a stray red-black speck at the top of the trunk instead of foliage."},
+{"item": "e844b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "2 drains the green hill on the right to olive."},
+{"item": "e739a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "2 adds a clashing magenta cell in the blue sky by the yellow band."},
+{"item": "e603a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "Small blue versus lavender cell swap below the star, neither clearly worse."}
+]

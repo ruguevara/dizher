@@ -1,0 +1,12 @@
+[
+{"item": "e421b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C1", "note": "The small moon at the top edge turns redder in 2, away from the original's orange-yellow."},
+{"item": "e082a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B3", "note": "Around the belt, 2 puts a red block where the original's shirt and belt are khaki-brown."},
+{"item": "e896b", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A3", "note": "2 has a stepped cell notch in the black-to-dither edge at the bottom left, where the gradient is smooth."},
+{"item": "e155b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D2", "note": "2 renders the waterfall glow as grey-white dither, losing the original's pale cyan tint."},
+{"item": "e253a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "2 extends magenta up the left edge, where the original shows blue sky through the dark tree."},
+{"item": "e614b", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A1", "note": "2 has a stepped cell notch at the top of the black-to-dither edge, where the gradient is smooth."},
+{"item": "e005b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "1 runs magenta down the left edge, where the original is blue sky through the dark tree."},
+{"item": "e102a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B2", "note": "In 2 the green gradient bar breaks into a wider olive block, where it should fade from green."},
+{"item": "e337b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e589a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A1", "note": "1 puts garish red cells in the top-left corner, where the original's stone wall is tan-orange."}
+]

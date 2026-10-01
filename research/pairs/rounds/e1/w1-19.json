@@ -1,0 +1,12 @@
+[
+{"item": "e194a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I could not see a difference between the two."},
+{"item": "e257b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference; at most a cell or two in the lower right."},
+{"item": "e005a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 fills the left-edge cells with magenta where the original shows blue sky through the tree."},
+{"item": "e751a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A2", "note": "The only difference is a few red cells by the left arm, and both read the same."},
+{"item": "e073b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "One cell in the leg reflection differs (grey vs pinkish), and neither matches the original better."},
+{"item": "e797b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 1 turns part of the yellow swirl on the left edge white."},
+{"item": "e023b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I could not see a difference between the two."},
+{"item": "e310a", "verdict": "2", "confidence": "low", "problem": "seams", "where": "B3", "note": "Colouring 1 has a greenish-yellow cell that breaks the smooth orange glow left of the trunk."},
+{"item": "e638a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C1", "note": "Colouring 2 adds a white-dotted speck patch in the plain blue sky at the top."},
+{"item": "e996a", "verdict": "2", "confidence": "low", "problem": "detail", "where": "C3", "note": "Colouring 1 turns the white headlights and reflections in the middle of the street cyan."}
+]

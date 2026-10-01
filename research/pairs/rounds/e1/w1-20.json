@@ -1,0 +1,12 @@
+[
+{"item": "e988a", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B2", "note": "Colouring 1 loses the two white buttons under the boy's collar, which turn into plain blue."},
+{"item": "e337b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I could see no difference between them."},
+{"item": "e706b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I could see no difference between them."},
+{"item": "e492a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 puts a red speckled patch inside the dark middle tree trunk, where the other trunks are grey and black."},
+{"item": "e534a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 2 tints part of the grey step band yellow-olive under the green bar."},
+{"item": "e481a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I could see no difference between them."},
+{"item": "e076b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "At most a slight change in the moon's orange core; I could not see which is better."},
+{"item": "e745b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "At most a small change in the olive patch on the tail; I could not see which is better."},
+{"item": "e005a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 turns the blue sky at the left edge, seen through the tree, into a column of magenta cells that the original does not have."},
+{"item": "e310b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "B3", "note": "Colouring 2 adds olive cell specks to the smooth orange area at bottom left."}
+]

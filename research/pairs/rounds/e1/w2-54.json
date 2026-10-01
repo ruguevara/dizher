@@ -1,0 +1,12 @@
+[
+{"item": "e136a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I cannot see a difference between the two."},
+{"item": "e580a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 2 has a bigger garish pink block and a green speck on the pale path."},
+{"item": "e039a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "C2", "note": "Colouring 2 has a few olive cells and a green speck clashing in the orange foliage right of the trunk."},
+{"item": "e106b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D3", "note": "Colouring 2 has a dark olive patch in the yellow-orange leaves at bottom right."},
+{"item": "e776a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 makes the top stars greenish-cyan instead of yellowish white."},
+{"item": "e825b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C3", "note": "Colouring 2 puts a magenta block on the blue hill and cyan specks in the village."},
+{"item": "e272a", "verdict": "=", "confidence": "low", "problem": "noise", "where": "B1", "note": "The only difference is a small blue speck in the pink cloud in colouring 2, which roughly matches a bluish cloud patch."},
+{"item": "e086a", "verdict": "=", "confidence": "low", "problem": "detail", "where": "B1", "note": "There is only a slight difference in the purple dots in the tree crown."},
+{"item": "e651b", "verdict": "=", "confidence": "low", "problem": "seams", "where": "C2", "note": "Colouring 1 has a red speck and colouring 2 a larger olive block at the top of the trunk, and both fit about as badly."},
+{"item": "e290b", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "D3", "note": "Colouring 2 scatters magenta and cyan cells over the blue village at right."}
+]

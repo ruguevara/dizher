@@ -1,0 +1,12 @@
+[
+{"item": "e954b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "C3", "note": "Colouring 1 breaks the bottom of the pale path patch into yellow and green specks; 2 has a cleaner pale bar."},
+{"item": "e735a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 turns the swirl's inner cells white where the original is cyan, which 2 keeps."},
+{"item": "e627a", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "A1", "note": "Colouring 1 puts a garish magenta speck beside the small top-left star."},
+{"item": "e737a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "The only difference is one cell on the boy's patchy face, pale in 1 and yellow in 2; neither is clearly better."},
+{"item": "e980b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 2 puts a lavender cell in the cyan-white glow of the sky."},
+{"item": "e378a", "verdict": "2", "confidence": "low", "problem": "noise", "where": "C1", "note": "Colouring 1 adds a dark olive cell beside the branch in the orange foliage."},
+{"item": "e795b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 2 puts a pinkish cell in the yellow band of cloud where the original has white-yellow highlights."},
+{"item": "e651a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C2", "note": "Colouring 2 puts a red speck at the top of the right trunk in the orange leaves."},
+{"item": "e498b", "verdict": "=", "confidence": "high", "problem": "none", "where": "", "note": "I could see no difference between the two colourings."},
+{"item": "e263b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C2", "note": "Colouring 2 scatters olive dots over the dark top of the right trunk."}
+]

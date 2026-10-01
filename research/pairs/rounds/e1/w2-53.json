@@ -1,0 +1,12 @@
+[
+{"item": "e436a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A3", "note": "Only a few water cells at the bottom left differ, cyan against olive, and neither is clearly closer to the green water."},
+{"item": "e629b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I could not see a difference."},
+{"item": "e334b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 paints a magenta column on the left edge where the original shows blue sky through the trees."},
+{"item": "e428b", "verdict": "1", "confidence": "low", "problem": "detail", "where": "C3", "note": "Colouring 2 puts a dark-blue cell into the light hill, which breaks its continuous bright band."},
+{"item": "e083a", "verdict": "=", "confidence": "low", "problem": "none", "where": "D3", "note": "Only a few cells near the mummy's hand and the bottom-right block differ, and the change is negligible."},
+{"item": "e067b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 2 puts a grey-white speck cell into the orange-red glow below the sunset."},
+{"item": "e825b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 2 adds a magenta block on the blue hill and stray cyan specks among the village roofs."},
+{"item": "e881a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C3", "note": "The road next to the car is dark-blue dots in one and cyan dots in the other, and both read about the same."},
+{"item": "e981a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A3", "note": "Only one small cell at the girl's sleeve differs, blue against grey, and both are slightly off the red."},
+{"item": "e229a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A3", "note": "I saw no meaningful difference, only a cell or two in the bottom-left water."}
+]

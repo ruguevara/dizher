@@ -1,0 +1,12 @@
+[
+{"item": "e067a", "verdict": "2", "confidence": "low", "problem": "seams", "where": "B3", "note": "Colouring 1 has a pale grey cell at the bottom-left of the orange glow that clashes with its neighbours."},
+{"item": "e011a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C3", "note": "Only a few dark street-light specks differ (cyan against green); neither reads worse."},
+{"item": "e994a", "verdict": "=", "confidence": "low", "problem": "none", "where": "D2", "note": "A few specks by the right-hand figure differ; no visible difference in quality."},
+{"item": "e378a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C1", "note": "A couple of olive cells in the top canopy shift; both look the same."},
+{"item": "e223a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C3", "note": "Village dots differ slightly between white and magenta; neither is clearly worse."},
+{"item": "e428a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 turns part of the light blue hill into dark blue blocks and a black stroke, losing the lighter hill."},
+{"item": "e267b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A2", "note": "Only small changes in the left wall cells; I cannot see a difference in quality."},
+{"item": "e791a", "verdict": "=", "confidence": "low", "problem": "none", "where": "D1", "note": "The cyan halo cells around the moon differ a little; both are acceptable."},
+{"item": "e434b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B1", "note": "One cell in the tree crown is magenta in one and blue in the other; both are plausible."},
+{"item": "e844a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 leaves the green hillside pale olive where the original is saturated green."}
+]

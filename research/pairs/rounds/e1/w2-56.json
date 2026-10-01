@@ -1,0 +1,12 @@
+[
+{"item": "e528b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 2 puts magenta stripes on the blue village roofs at the bottom where the original is blue and white."},
+{"item": "e712b", "verdict": "=", "confidence": "low", "problem": "none", "where": "C3", "note": "They differ only in a few grey specks on the dark road, which barely shows."},
+{"item": "e651a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C2", "note": "Colouring 2 has a dark red speck in the orange foliage above the right trunk."},
+{"item": "e055a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 turns more of the boy's blue sleeve magenta."},
+{"item": "e911b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e568b", "verdict": "=", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 2 has brighter green and cyan cells in the dark foliage at top left, colouring 1 darker olive; both pass for the original."},
+{"item": "e039b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "C2", "note": "Colouring 1 has a yellow-green speck in the orange foliage right of the trunk."},
+{"item": "e408b", "verdict": "=", "confidence": "low", "problem": "none", "where": "C3", "note": "They differ only in a few dots in the dark water at the bottom."},
+{"item": "e136b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "The dots between the distant trunks differ slightly, and neither is clearly worse."},
+{"item": "e631b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 2 puts a bright red block in the orange foliage above the right trunk."}
+]

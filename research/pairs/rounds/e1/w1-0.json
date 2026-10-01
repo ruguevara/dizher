@@ -1,0 +1,12 @@
+[
+{"item": "e194b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see any difference between the two."},
+{"item": "e255b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "A3", "note": "Colouring 2 has a few stray red specks in the black at the bottom left."},
+{"item": "e102b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 cuts the green gradient bar short and puts a wide olive cell where it should still be green."},
+{"item": "e996a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C3", "note": "Colouring 2 scatters grey-white specks over the dark road under the headlights."},
+{"item": "e953b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 2 puts a stray cyan cell below the yellow bar, where the black and white checker row is."},
+{"item": "e534a", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "", "note": "Colouring 1 has rougher, more irregular dither across the grey grid and the ruler, so the squares read less cleanly."},
+{"item": "e896a", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A3", "note": "In colouring 1 the dotted edge jumps a cell to the left at the bottom left, a blocky step in a smooth gradient."},
+{"item": "e614b", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A1", "note": "In colouring 2 the dotted edge jumps a cell to the left at the top left, a blocky step in a smooth gradient."},
+{"item": "e611b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 has a whitish block on the woman's face that clashes with the warm skin around it."},
+{"item": "e638b", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "C1", "note": "Colouring 1 puts isolated pale speckled patches in the plain blue sky at the top."}
+]

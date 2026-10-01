@@ -1,0 +1,12 @@
+[
+{"item": "e991b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "D2", "note": "Colouring 1 scatters more purple specks over the dark figure on the right."},
+{"item": "e241b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D3", "note": "Colouring 1 turns the dark green water at the right edge into olive yellow dither."},
+{"item": "e996b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 2 turns the car's white headlight and its reflection into cyan dots."},
+{"item": "e611a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could see no clear difference."},
+{"item": "e620a", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "C2", "note": "Colouring 2 puts an isolated dark-red speck cell in the orange foliage above the trunk."},
+{"item": "e614a", "verdict": "2", "confidence": "low", "problem": "seams", "where": "A1", "note": "Colouring 1 starts the dither a cell early only at the top, so the dark edge of the smooth gradient gets a blocky notch."},
+{"item": "e337a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could see no clear difference."},
+{"item": "e194b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 1 has duller olive cells in the bright orange foliage at the top right."},
+{"item": "e257a", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "D3", "note": "Colouring 2 puts a lone magenta cell in the blue village at the lower right."},
+{"item": "e253a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 paints the blue sky through the tree at the top left edge magenta."}
+]

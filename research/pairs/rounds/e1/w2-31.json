@@ -1,0 +1,12 @@
+[
+{"item": "e550a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two colourings."},
+{"item": "e651b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two colourings."},
+{"item": "e223b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two colourings."},
+{"item": "e400b", "verdict": "=", "confidence": "low", "problem": "none", "where": "C3", "note": "Only a tiny magenta/blue change in the village roofs; neither reads better."},
+{"item": "e376a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "In 2 the mummy's chest turns grey-white instead of the tan/yellow of the original."},
+{"item": "e714b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Only a few specks differ left of the title; indistinguishable at viewing size."},
+{"item": "e011b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Only a few headlight-glow specks change green vs cyan; no real difference."},
+{"item": "e083a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D3", "note": "1 leaves the bottom-right stone block darker, losing some of its tan/orange colour."},
+{"item": "e238a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A1", "note": "One sky cell is green instead of cyan; both read fine against the original."},
+{"item": "e404b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D2", "note": "1 renders the bright glow around the sword as black with white dither instead of the light cyan-white of the original."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "e055b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 turns more of the boy's blue left sleeve into magenta cells."},
+{"item": "e894b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No difference worth choosing on; at most a few cells around the boy's face."},
+{"item": "e272b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "C2", "note": "Colouring 1 has a pale blue speck cell in the magenta cloud band."},
+{"item": "e461a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "The two differ only in a few cells of the dark reflection below the figure, and neither is clearly better."},
+{"item": "e981a", "verdict": "2", "confidence": "low", "problem": "noise", "where": "A3", "note": "Colouring 1 adds stray red specks on the black band at lower left."},
+{"item": "e460b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I cannot see a difference between them."},
+{"item": "e857a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C3", "note": "The stump's top cells differ (red with streaks against white and yellow), and both are equally rough."},
+{"item": "e862b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A3", "note": "Colouring 2 puts a grey cell into the orange reflection of the leg."},
+{"item": "e037a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "C3", "note": "Colouring 2's path has a bigger pink block and patchier yellow and white cells."},
+{"item": "e478b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "C1", "note": "Colouring 1 has extra cyan speck cells around the upper middle star."}
+]

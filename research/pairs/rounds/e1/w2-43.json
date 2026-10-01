@@ -1,0 +1,12 @@
+[
+{"item": "e528b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 2 turns the blue rooftops at the bottom centre magenta, a hue the original does not have there."},
+{"item": "e043a", "verdict": "=", "confidence": "high", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e217a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Differences too small to see in the foliage."},
+{"item": "e267a", "verdict": "=", "confidence": "low", "problem": "colour", "where": "C2", "note": "Anubis snout cells are grey in 1 and yellow in 2; both read plausibly against the gold headdress."},
+{"item": "e272b", "verdict": "=", "confidence": "low", "problem": "none", "where": "C2", "note": "One small cell in the pink cloud, blue speck against magenta dots, barely visible."},
+{"item": "e238a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A2", "note": "One cell at the left edge green against cyan, negligible."},
+{"item": "e196b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 drains the light turquoise swirl centre to grey-white and spreads magenta into it."},
+{"item": "e434a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B1", "note": "Magenta dots extend slightly further into the dark tree in 2; hardly noticeable."},
+{"item": "e050a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 fills the bright yellow-green glow above the figure with a muddy olive block."},
+{"item": "e902b", "verdict": "2", "confidence": "low", "problem": "seams", "where": "D2", "note": "Colouring 1 breaks the yellow band at right with a pale white block and orange cells."}
+]

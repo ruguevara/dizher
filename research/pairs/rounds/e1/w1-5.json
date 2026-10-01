@@ -1,0 +1,12 @@
+[
+{"item": "e352b", "verdict": "1", "confidence": "high", "problem": "seams", "where": "A2", "note": "Colouring 2 pushes a block of dither into the black band, a cell-shaped bump breaking the smooth vertical gradient edge."},
+{"item": "e257b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D3", "note": "Colouring 1 seems to keep a stray magenta cell in the dark hill over the town that does not read as the original's blue."},
+{"item": "e481b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I cannot see a difference between the two."},
+{"item": "e988b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C2", "note": "Colouring 2 has a stray magenta speck and noisier dots on the blue jacket near the strap."},
+{"item": "e102a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 turns more of the green gradient bar's fading end into a dull yellow-olive block."},
+{"item": "e537a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 2 paints the dark cypress with magenta dots, a garish hue the original's dark blue-green tree does not have."},
+{"item": "e310b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 2 has an olive cell clashing with the orange field left of the leg."},
+{"item": "e264a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I cannot see a difference between the two."},
+{"item": "e534a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Differences in the grey strip and magenta bar are tiny and neither reads better."},
+{"item": "e023b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Only a faint shift in the yellow dither below the arm; neither reads better."}
+]

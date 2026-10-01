@@ -1,0 +1,12 @@
+[
+{"item": "e023a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see any difference between the two."},
+{"item": "e369a", "verdict": "2", "confidence": "high", "problem": "colour", "where": "C2", "note": "Colouring 1 puts purple cells into the dark blue stone around Anubis's head, a hue the original does not have."},
+{"item": "e155b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 2 turns the pale cyan glow by the sword into flat white-grey dither and loses the tint."},
+{"item": "e481a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see any difference between the two."},
+{"item": "e745a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "The only difference is a tiny one at the upper edge of the tail, and neither side matches the orange there better."},
+{"item": "e406a", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "C2", "note": "Colouring 2 drops the cyan between the last red bars of the red/cyan stripe row, leaving red outlines on white."},
+{"item": "e257a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D3", "note": "Colouring 2 has a stray magenta cell in the blue area over the village."},
+{"item": "e896b", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A3", "note": "Colouring 2 pushes the dither one cell column further left at the bottom, so the black edge of the smooth gradient has a step in it."},
+{"item": "e421b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 2 makes the small top planet mostly red and dark, losing its yellow rim."},
+{"item": "e352a", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A2", "note": "Colouring 1 has a block of dither sticking out into the black at the left of the smooth gradient, a blocky step."}
+]

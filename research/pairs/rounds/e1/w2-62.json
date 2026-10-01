@@ -1,0 +1,12 @@
+[
+{"item": "e737a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "Only a cell or two on the boy's face differ; both equally blocky."},
+{"item": "e400a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C3", "note": "Small change among the town roofs, neither reads clearly closer to the original."},
+{"item": "e334a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 puts more magenta down the dark left edge where the original is dark blue."},
+{"item": "e232b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 2 turns the bottom of the khaki shirt into dark red."},
+{"item": "e223a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C3", "note": "Differences in the town are a few specks, practically identical."},
+{"item": "e435a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "Slight orange versus yellow in the sunset glow, both plausible."},
+{"item": "e431a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 1 makes the torch flame redder and darker with a smaller bright core."},
+{"item": "e051b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 2 puts a cyan cell on the dark leg at the bottom left that is not in the original."},
+{"item": "e002a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e920a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 2 fills the dark cypress with garish magenta specks instead of dark blue."}
+]

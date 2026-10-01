@@ -1,0 +1,12 @@
+[
+{"item": "e591a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see a reliable difference between the two."},
+{"item": "e956b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B3", "note": "Colouring 1 breaks up the beige-yellow edge line above JOJO that 2 keeps more continuous."},
+{"item": "e980b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 2 puts a lavender cell in the pale blue-white glow at top left, which is off-hue against the cyan around it."},
+{"item": "e059a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see a difference."},
+{"item": "e117a", "verdict": "2", "confidence": "low", "problem": "noise", "where": "A3", "note": "Colouring 1 scatters red specks into the black left of the girl's dress."},
+{"item": "e535b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see a difference."},
+{"item": "e031a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "A3", "note": "Colouring 2 sprinkles cyan specks over the dark bottom-left corner."},
+{"item": "e434a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 pushes the magenta cells left into the treetop, where the original is dark blue sky through branches."},
+{"item": "e908b", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "B3", "note": "Colouring 2 loses the bright white core of the oncoming headlights, leaving only a yellow dither."},
+{"item": "e268b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 2 puts a lavender cell in the pale blue-white glow at top left, which is off-hue against the cyan around it."}
+]

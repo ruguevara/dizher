@@ -1,0 +1,12 @@
+[
+{"item": "e369b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 2 puts magenta patches into the dark blue wall beside Anubis's head, a hue the original does not have."},
+{"item": "e745a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see a difference between them."},
+{"item": "e406b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 loses some of the cyan stripes in the red-cyan stripe row, leaving grey where the original has cyan."},
+{"item": "e896a", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A3", "note": "Colouring 1 steps the dark edge of the gradient one cell left at the bottom, a blocky seam in a picture that is uniform from top to bottom."},
+{"item": "e537b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 1 turns the dark blue-green cypress magenta, which does not read as the original's colour."},
+{"item": "e492b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 2 dithers a dark tree trunk with red dots, which stands out against the grey-black of the other trunks."},
+{"item": "e953a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Both have one stray cyan cell under the cyan bar in slightly different places; I could not tell which is better."},
+{"item": "e589b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 2 puts blocky red and orange cells in the top-left corner of the hieroglyph wall, which is garish next to the yellow."},
+{"item": "e155a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 1 renders the glow right of the sword in plain grey-white, where the original is a pale cyan."},
+{"item": "e797a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see a difference between them."}
+]

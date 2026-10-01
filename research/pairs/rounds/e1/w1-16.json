@@ -1,0 +1,12 @@
+[
+{"item": "e537b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 1 paints the dark blue cypress with garish magenta speckle the original does not have."},
+{"item": "e102b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 cuts the green gradient bar short and fills more of it with a wrong olive-yellow block."},
+{"item": "e146b", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A3", "note": "Colouring 2 has a blocky step jutting out of the black edge where the gradient is smooth."},
+{"item": "e005b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 turns the blue sky at the left edge into a magenta speckled column."},
+{"item": "e745b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "The two tails differ only in a small olive patch, neither reads better."},
+{"item": "e253b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 makes the blue sky at the left edge magenta all the way up."},
+{"item": "e751b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A2", "note": "Colouring 2 loses the reddish forearm at the left edge to yellow."},
+{"item": "e076b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D1", "note": "Colouring 2 breaks the sun's yellow ring on its left side into pale grey-blue."},
+{"item": "e369b", "verdict": "1", "confidence": "high", "problem": "colour", "where": "C2", "note": "Colouring 2 puts garish magenta patches on Anubis and the blue wall."},
+{"item": "e255a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 2 puts a white-grey patch on the girl's red sleeve."}
+]
