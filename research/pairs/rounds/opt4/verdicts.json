@@ -1,0 +1,13 @@
+{
+ "about": "the user's verdicts on data/optimum/r4 (full judge v4's optimum), whole pictures, 2026-10-01: optimum against Select pairs / against the painting; + better, = even, - worse",
+ "judge": {"lpips_eye": 18.06, "seam_ab_1": 0.6224},
+ "andy": ["-", "-"],
+ "anubis": ["-", "-"],
+ "autumn": ["-", "-"],
+ "diver-sunset": ["-", "-"],
+ "golden-axe": ["-", "-"],
+ "jojo": ["-", "-"],
+ "RC1": ["=", "-"],
+ "rocket-rackoon": ["-", "-"],
+ "sunset": ["-", "-"]
+}
