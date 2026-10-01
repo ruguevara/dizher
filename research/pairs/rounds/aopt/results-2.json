@@ -1,0 +1,12 @@
+[
+{"file": "a028.png", "verdict": "2", "confidence": "low", "problem": "seams", "note": "Colouring 1 has blocky pink and white cell patches across the face and loses the red strokes."},
+{"file": "a041.png", "verdict": "1", "confidence": "medium", "problem": "colour", "note": "Colouring 2 drowns everything in yellow, the teal dragon and varied hues are lost."},
+{"file": "a016.png", "verdict": "2", "confidence": "medium", "problem": "colour", "note": "Colouring 1 has stray white blocks in the raccoon and loses the cyan at the top."},
+{"file": "a076.png", "verdict": "2", "confidence": "medium", "problem": "seams", "note": "Colouring 1 has garish blue and red blocky cells across the face."},
+{"file": "a013.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "The two are practically identical."},
+{"file": "a071.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "The two are practically identical."},
+{"file": "a045.png", "verdict": "2", "confidence": "medium", "problem": "seams", "note": "Colouring 1 has olive-green blocky patches in the yellow background and cyan specks on the raccoon."},
+{"file": "a009.png", "verdict": "2", "confidence": "medium", "problem": "seams", "note": "Colouring 1 has pink and grey rectangular blocks in the smooth sky bands."},
+{"file": "a000.png", "verdict": "2", "confidence": "medium", "problem": "seams", "note": "Colouring 1 has olive-green blocky patches in the background and cyan specks."},
+{"file": "a067.png", "verdict": "2", "confidence": "high", "problem": "seams", "note": "Colouring 1 has green-yellow blocks along the horizon and patchy cells in the smooth gradient."}
+]

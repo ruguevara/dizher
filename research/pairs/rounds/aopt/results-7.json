@@ -1,0 +1,12 @@
+[
+{"file": "a056.png", "verdict": "1", "confidence": "high", "problem": "noise", "note": "Colouring 2 has stray blue, magenta and cyan specks on the trunk and fence and a patchy grey road."},
+{"file": "a024.png", "verdict": "1", "confidence": "medium", "problem": "colour", "note": "Colouring 2 drops dark red to black patches at top and bottom and adds yellow-green blotches at the horizon."},
+{"file": "a012.png", "verdict": "1", "confidence": "medium", "problem": "noise", "note": "Colouring 2 has blue and magenta specks on the trunk and a patchy grey-blocked road."},
+{"file": "a040.png", "verdict": "2", "confidence": "low", "problem": "colour", "note": "Colouring 1 fills the pink sky with drained lilac blocks and a stray white patch at the top."},
+{"file": "a039.png", "verdict": "2", "confidence": "low", "problem": "seams", "note": "Colouring 1 has olive chequered cells through the raccoon's body."},
+{"file": "a042.png", "verdict": "1", "confidence": "medium", "problem": "seams", "note": "Colouring 2 puts blocky lilac patches on the jacket and a yellow block on the face."},
+{"file": "a070.png", "verdict": "1", "confidence": "medium", "problem": "colour", "note": "Colouring 2 drains the face to grey with blocky magenta patches, losing the painting's colours."},
+{"file": "a059.png", "verdict": "2", "confidence": "low", "problem": "colour", "note": "Colouring 1 turns the green-cyan scene into drab olive and grey blocks."},
+{"file": "a060.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "The two are practically identical."},
+{"file": "a023.png", "verdict": "1", "confidence": "high", "problem": "seams", "note": "Colouring 2 scatters grey square blocks over the dark trees, sky and street."}
+]
