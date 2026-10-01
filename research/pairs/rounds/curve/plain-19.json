@@ -1,0 +1,12 @@
+[
+{"item": "p00b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 loses the teal of the dragon's body and head, which colouring 2 keeps with cyan cells."},
+{"item": "p39b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 puts grey-white and red cells in the golden stone wall at the top left."},
+{"item": "p30b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 1 drains the multicoloured forehead to flat magenta and grey, though its bright cyan on the left is closer."},
+{"item": "p09b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "C1", "note": "Colouring 1 breaks the smooth pink cloud into blocky pale pink-grey cells."},
+{"item": "p10b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I see no meaningful difference."},
+{"item": "p38a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 2 has a less natural pink-to-blue transition at the right end of the cloud, with a stray blue speck."},
+{"item": "p04a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A3", "note": "Colouring 2 has dull olive-brown cells along the lower edge of the orange sun glow."},
+{"item": "p47a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 2 turns the light blue bottle at the top white and adds grey blocks around the raccoon's head."},
+{"item": "p61a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "C2", "note": "Colouring 2 has more grey and olive patches around the raccoon's face and arm."},
+{"item": "p51b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Both are practically identical."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "p44b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D1", "note": "Colouring 1 loses the faint purple of the upper band on the right, leaving it plain blue."},
+{"item": "p09a", "verdict": "1", "confidence": "high", "problem": "seams", "where": "C1", "note": "Colouring 2 breaks the smooth magenta cloud into a blocky patchwork of pink, purple and red cells."},
+{"item": "p20b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 1 turns the green grass strips by the path into yellow-khaki dither, losing their hue."},
+{"item": "p02b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 1 lets the pink red-white dither of the path spread up into the orange leaves above it."},
+{"item": "p45a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 1 paints the pale path as a red-white dithered pink with two odd khaki cells at its corners."},
+{"item": "p27b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B2", "note": "Colouring 1 loses the red frame of the left lens and the blue around the left eye."},
+{"item": "p07a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 2 drains the greens to khaki and turns the sky into a patchy pastel mosaic."},
+{"item": "p23b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 2 makes the pale path a red-white dithered pink, though it does keep the green grass strips."},
+{"item": "p58b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A3", "note": "Colouring 1 renders the brown-orange bottom left as red-white dither and loses the right lens frame and yellow cheek."},
+{"item": "p63b", "verdict": "2", "confidence": "high", "problem": "detail", "where": "B2", "note": "Colouring 1 turns the boy's and the man's faces into a blocky yellow checkerboard with the features lost."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "p09b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "C1", "note": "Colouring 1 breaks the pink sunset clouds into blocky cells with drained pale-pink and greyish cells instead of the smooth magenta band."},
+{"item": "p45a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 2 turns the pale path into a flat grey-olive block with a stray pink cell."},
+{"item": "p63a", "verdict": "1", "confidence": "high", "problem": "seams", "where": "B2", "note": "Colouring 2 paints the boy's face as a patchwork of yellow cells and adds magenta blocks on the sleeve."},
+{"item": "p56a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "C1", "note": "Colouring 2 renders the man's face on the right as blocky yellow cells instead of a light face."},
+{"item": "p33b", "verdict": "2", "confidence": "high", "problem": "detail", "where": "C2", "note": "Colouring 1 fills the right lens with flat grey cells, losing the glasses rim and eye."},
+{"item": "p60a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A3", "note": "Colouring 2 has stray olive-brown cells in the orange glow and a pale patch in the blue band."},
+{"item": "p55a", "verdict": "1", "confidence": "high", "problem": "detail", "where": "C2", "note": "Colouring 2 fills the right lens with flat grey cells, losing the glasses rim and eye."},
+{"item": "p53a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 loses the cyan of the bottle at the top and adds stray olive cells at the edges."},
+{"item": "p22a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "p14a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "A2", "note": "Colouring 2 has an orange cell on the khaki sleeve that stands out from its neighbours."}
+]

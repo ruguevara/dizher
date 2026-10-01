@@ -1,0 +1,12 @@
+[
+{"item": "p43b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C3", "note": "Colouring 2 spreads red-white pink dither over the pale path and puts flat garish green cells on the right grass."},
+{"item": "p02a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Both have the same pink path and green strips; the dither texture differs only slightly."},
+{"item": "p08b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 paints Anubis's golden collar white and red instead of yellow and loses the mummies' green eyes."},
+{"item": "p06b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "A2", "note": "Colouring 1 has blocky cell seams and stray olive/green cells around the sun and mauve cells in the light-blue band."},
+{"item": "p25a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 drains the bottle's light blue to white and turns the striped tail olive and yellow."},
+{"item": "p52b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 1 loses the dragon's green-teal head and neck to yellow, though colouring 2's green cells are blocky."},
+{"item": "p31a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 2 dithers the hot-pink cloud with white into pale pink and yellows the headlights."},
+{"item": "p21a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "C1", "note": "Colouring 2 breaks the man's white face into a blocky yellow checker and puts a clashing magenta patch on the boy's blue jacket."},
+{"item": "p19b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 flattens the multicoloured face into grey/white and magenta halves and puts clashing flat cyan blocks in the hair, losing the blue patches and glasses detail."},
+{"item": "p23a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 1 turns the pale path into a large red-white pink dither and adds flat garish green strips on the grass."}
+]

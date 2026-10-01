@@ -1,0 +1,954 @@
+{
+ "p00": {
+  "id": "golden-axe/f0.25",
+  "kind": "frac",
+  "image": "golden-axe",
+  "f": 0.25,
+  "cells": 68,
+  "truth": [
+   "A2",
+   "A3",
+   "B1",
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "C3"
+  ],
+  "dE": 30.1
+ },
+ "p01": {
+  "id": "golden-axe/13",
+  "kind": "seg",
+  "image": "golden-axe",
+  "cells": 12,
+  "truth": [
+   "C1",
+   "C2"
+  ],
+  "dE": 33.2
+ },
+ "p02": {
+  "id": "autumn/19/null",
+  "kind": "null",
+  "image": "autumn",
+  "cells": 0,
+  "truth": [],
+  "dE": 0
+ },
+ "p03": {
+  "id": "RC1/f0.5",
+  "kind": "frac",
+  "image": "RC1",
+  "f": 0.5,
+  "cells": 265,
+  "truth": [
+   "A1",
+   "A2",
+   "A3",
+   "B1",
+   "B2",
+   "B3",
+   "C2",
+   "C3",
+   "D1",
+   "D2",
+   "D3"
+  ],
+  "dE": 27.9
+ },
+ "p04": {
+  "id": "sunset/1",
+  "kind": "seg",
+  "image": "sunset",
+  "cells": 5,
+  "truth": [
+   "A3"
+  ],
+  "dE": 19.4
+ },
+ "p05": {
+  "id": "anubis/f0.5",
+  "kind": "frac",
+  "image": "anubis",
+  "f": 0.5,
+  "cells": 158,
+  "truth": [
+   "A1",
+   "A2",
+   "B1",
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "C3",
+   "D1",
+   "D2",
+   "D3"
+  ],
+  "dE": 19.7
+ },
+ "p06": {
+  "id": "sunset/f1.0",
+  "kind": "frac",
+  "image": "sunset",
+  "f": 1.0,
+  "cells": 103,
+  "truth": [
+   "A1",
+   "A2",
+   "A3",
+   "B1",
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "D1"
+  ],
+  "dE": 21.6
+ },
+ "p07": {
+  "id": "RC1/f1.0",
+  "kind": "frac",
+  "image": "RC1",
+  "f": 1.0,
+  "cells": 500,
+  "truth": [
+   "A1",
+   "A2",
+   "A3",
+   "B1",
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "C3",
+   "D1",
+   "D2",
+   "D3"
+  ],
+  "dE": 27.3
+ },
+ "p08": {
+  "id": "anubis/f0.1",
+  "kind": "frac",
+  "image": "anubis",
+  "f": 0.1,
+  "cells": 30,
+  "truth": [
+   "B1",
+   "C1",
+   "C2",
+   "D3"
+  ],
+  "dE": 18.4
+ },
+ "p09": {
+  "id": "diver-sunset/f1.0",
+  "kind": "frac",
+  "image": "diver-sunset",
+  "f": 1.0,
+  "cells": 338,
+  "truth": [
+   "A1",
+   "A2",
+   "A3",
+   "B1",
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "C3",
+   "D1",
+   "D2",
+   "D3"
+  ],
+  "dE": 26.8
+ },
+ "p10": {
+  "id": "rocket-rackoon/12",
+  "kind": "seg",
+  "image": "rocket-rackoon",
+  "cells": 21,
+  "truth": [
+   "A1",
+   "A2"
+  ],
+  "dE": 2.9
+ },
+ "p11": {
+  "id": "rocket-rackoon/f0.1",
+  "kind": "frac",
+  "image": "rocket-rackoon",
+  "f": 0.1,
+  "cells": 10,
+  "truth": [
+   "B1",
+   "B2",
+   "C2",
+   "C3"
+  ],
+  "dE": 31.2
+ },
+ "p12": {
+  "id": "autumn/7",
+  "kind": "seg",
+  "image": "autumn",
+  "cells": 4,
+  "truth": [
+   "C3",
+   "D3"
+  ],
+  "dE": 31.7
+ },
+ "p13": {
+  "id": "jojo/10",
+  "kind": "seg",
+  "image": "jojo",
+  "cells": 21,
+  "truth": [
+   "B1",
+   "B2",
+   "C1",
+   "C2"
+  ],
+  "dE": 50.7
+ },
+ "p14": {
+  "id": "anubis/23",
+  "kind": "seg",
+  "image": "anubis",
+  "cells": 4,
+  "truth": [
+   "A2",
+   "B3"
+  ],
+  "dE": 12.1
+ },
+ "p15": {
+  "id": "anubis/f1.0",
+  "kind": "frac",
+  "image": "anubis",
+  "f": 1.0,
+  "cells": 302,
+  "truth": [
+   "A1",
+   "A2",
+   "A3",
+   "B1",
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "C3",
+   "D1",
+   "D2",
+   "D3"
+  ],
+  "dE": 25.1
+ },
+ "p16": {
+  "id": "anubis/10/C",
+  "kind": "C",
+  "image": "anubis",
+  "cells": 11,
+  "truth": [
+   "D1"
+  ],
+  "dE": 34.5
+ },
+ "p17": {
+  "id": "anubis/f0.25",
+  "kind": "frac",
+  "image": "anubis",
+  "f": 0.25,
+  "cells": 80,
+  "truth": [
+   "A1",
+   "A2",
+   "B2",
+   "C1",
+   "C2",
+   "C3",
+   "D1",
+   "D2",
+   "D3"
+  ],
+  "dE": 19.7
+ },
+ "p18": {
+  "id": "RC1/f0.25",
+  "kind": "frac",
+  "image": "RC1",
+  "f": 0.25,
+  "cells": 88,
+  "truth": [
+   "A2",
+   "A3",
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "C3",
+   "D2",
+   "D3"
+  ],
+  "dE": 23.4
+ },
+ "p19": {
+  "id": "andy/f1.0",
+  "kind": "frac",
+  "image": "andy",
+  "f": 1.0,
+  "cells": 467,
+  "truth": [
+   "A1",
+   "A2",
+   "A3",
+   "B1",
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "C3",
+   "D1",
+   "D2",
+   "D3"
+  ],
+  "dE": 33.1
+ },
+ "p20": {
+  "id": "autumn/f0.25",
+  "kind": "frac",
+  "image": "autumn",
+  "f": 0.25,
+  "cells": 14,
+  "truth": [
+   "A3",
+   "B3",
+   "C1",
+   "C2",
+   "C3",
+   "D1",
+   "D3"
+  ],
+  "dE": 34.2
+ },
+ "p21": {
+  "id": "jojo/f0.25",
+  "kind": "frac",
+  "image": "jojo",
+  "f": 0.25,
+  "cells": 43,
+  "truth": [
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "C3",
+   "D2"
+  ],
+  "dE": 35.1
+ },
+ "p22": {
+  "id": "anubis/23/C",
+  "kind": "C",
+  "image": "anubis",
+  "cells": 4,
+  "truth": [
+   "A2",
+   "B3"
+  ],
+  "dE": 25.0
+ },
+ "p23": {
+  "id": "autumn/f1.0",
+  "kind": "frac",
+  "image": "autumn",
+  "f": 1.0,
+  "cells": 71,
+  "truth": [
+   "A1",
+   "A2",
+   "A3",
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "C3",
+   "D1",
+   "D2",
+   "D3"
+  ],
+  "dE": 32.5
+ },
+ "p24": {
+  "id": "diver-sunset/f0.5",
+  "kind": "frac",
+  "image": "diver-sunset",
+  "f": 0.5,
+  "cells": 153,
+  "truth": [
+   "A1",
+   "A2",
+   "A3",
+   "B1",
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "C3",
+   "D1",
+   "D2"
+  ],
+  "dE": 24.5
+ },
+ "p25": {
+  "id": "rocket-rackoon/f0.25",
+  "kind": "frac",
+  "image": "rocket-rackoon",
+  "f": 0.25,
+  "cells": 31,
+  "truth": [
+   "A2",
+   "A3",
+   "B1",
+   "B2",
+   "C1",
+   "C2",
+   "D3"
+  ],
+  "dE": 35.6
+ },
+ "p26": {
+  "id": "RC1/15/null",
+  "kind": "null",
+  "image": "RC1",
+  "cells": 0,
+  "truth": [],
+  "dE": 0
+ },
+ "p27": {
+  "id": "andy/f0.1",
+  "kind": "frac",
+  "image": "andy",
+  "f": 0.1,
+  "cells": 63,
+  "truth": [
+   "B1",
+   "B2",
+   "C1",
+   "C2",
+   "D1",
+   "D2"
+  ],
+  "dE": 39.5
+ },
+ "p28": {
+  "id": "jojo/12",
+  "kind": "seg",
+  "image": "jojo",
+  "cells": 3,
+  "truth": [
+   "B1",
+   "C1"
+  ],
+  "dE": 12.3
+ },
+ "p29": {
+  "id": "anubis/15",
+  "kind": "seg",
+  "image": "anubis",
+  "cells": 16,
+  "truth": [
+   "A1"
+  ],
+  "dE": 51.2
+ },
+ "p30": {
+  "id": "andy/f0.5",
+  "kind": "frac",
+  "image": "andy",
+  "f": 0.5,
+  "cells": 239,
+  "truth": [
+   "A1",
+   "A2",
+   "A3",
+   "B1",
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "C3",
+   "D1",
+   "D2",
+   "D3"
+  ],
+  "dE": 32.6
+ },
+ "p31": {
+  "id": "diver-sunset/f0.25",
+  "kind": "frac",
+  "image": "diver-sunset",
+  "f": 0.25,
+  "cells": 60,
+  "truth": [
+   "A1",
+   "B1",
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "D2"
+  ],
+  "dE": 27.1
+ },
+ "p32": {
+  "id": "sunset/2",
+  "kind": "seg",
+  "image": "sunset",
+  "cells": 8,
+  "truth": [
+   "C1"
+  ],
+  "dE": 9.6
+ },
+ "p33": {
+  "id": "andy/3/C",
+  "kind": "C",
+  "image": "andy",
+  "cells": 25,
+  "truth": [
+   "C1",
+   "C2",
+   "D2"
+  ],
+  "dE": 22.3
+ },
+ "p34": {
+  "id": "golden-axe/13/C",
+  "kind": "C",
+  "image": "golden-axe",
+  "cells": 12,
+  "truth": [
+   "C1",
+   "C2"
+  ],
+  "dE": 30.8
+ },
+ "p35": {
+  "id": "diver-sunset/27",
+  "kind": "seg",
+  "image": "diver-sunset",
+  "cells": 20,
+  "truth": [
+   "A1"
+  ],
+  "dE": 6.6
+ },
+ "p36": {
+  "id": "jojo/f0.5",
+  "kind": "frac",
+  "image": "jojo",
+  "f": 0.5,
+  "cells": 63,
+  "truth": [
+   "A2",
+   "A3",
+   "B1",
+   "B2",
+   "B3",
+   "C1",
+   "C3",
+   "D2",
+   "D3"
+  ],
+  "dE": 26.3
+ },
+ "p37": {
+  "id": "sunset/f0.5",
+  "kind": "frac",
+  "image": "sunset",
+  "f": 0.5,
+  "cells": 58,
+  "truth": [
+   "A1",
+   "A2",
+   "A3",
+   "B1",
+   "B2",
+   "C2"
+  ],
+  "dE": 25.3
+ },
+ "p38": {
+  "id": "diver-sunset/f0.1",
+  "kind": "frac",
+  "image": "diver-sunset",
+  "f": 0.1,
+  "cells": 36,
+  "truth": [
+   "A3",
+   "B1",
+   "B2",
+   "D1",
+   "D2"
+  ],
+  "dE": 30.1
+ },
+ "p39": {
+  "id": "anubis/15/C",
+  "kind": "C",
+  "image": "anubis",
+  "cells": 16,
+  "truth": [
+   "A1"
+  ],
+  "dE": 40.6
+ },
+ "p40": {
+  "id": "RC1/10",
+  "kind": "seg",
+  "image": "RC1",
+  "cells": 14,
+  "truth": [
+   "A1",
+   "A2"
+  ],
+  "dE": 21.1
+ },
+ "p41": {
+  "id": "diver-sunset/14",
+  "kind": "seg",
+  "image": "diver-sunset",
+  "cells": 5,
+  "truth": [
+   "D3"
+  ],
+  "dE": 17.7
+ },
+ "p42": {
+  "id": "golden-axe/f0.5",
+  "kind": "frac",
+  "image": "golden-axe",
+  "f": 0.5,
+  "cells": 121,
+  "truth": [
+   "A1",
+   "A2",
+   "A3",
+   "B1",
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "C3",
+   "D1",
+   "D2",
+   "D3"
+  ],
+  "dE": 34.1
+ },
+ "p43": {
+  "id": "autumn/f0.5",
+  "kind": "frac",
+  "image": "autumn",
+  "f": 0.5,
+  "cells": 35,
+  "truth": [
+   "A1",
+   "A2",
+   "B2",
+   "B3",
+   "C2",
+   "C3",
+   "D1",
+   "D2",
+   "D3"
+  ],
+  "dE": 34.9
+ },
+ "p44": {
+  "id": "sunset/f0.1",
+  "kind": "frac",
+  "image": "sunset",
+  "f": 0.1,
+  "cells": 16,
+  "truth": [
+   "D1"
+  ],
+  "dE": 10.4
+ },
+ "p45": {
+  "id": "autumn/f0.1",
+  "kind": "frac",
+  "image": "autumn",
+  "f": 0.1,
+  "cells": 21,
+  "truth": [
+   "B3",
+   "C3"
+  ],
+  "dE": 28.4
+ },
+ "p46": {
+  "id": "RC1/f0.1",
+  "kind": "frac",
+  "image": "RC1",
+  "f": 0.1,
+  "cells": 42,
+  "truth": [
+   "A2",
+   "B2",
+   "C2",
+   "C3",
+   "D2",
+   "D3"
+  ],
+  "dE": 17.6
+ },
+ "p47": {
+  "id": "rocket-rackoon/f0.5",
+  "kind": "frac",
+  "image": "rocket-rackoon",
+  "f": 0.5,
+  "cells": 65,
+  "truth": [
+   "A1",
+   "A2",
+   "B1",
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "C3",
+   "D2"
+  ],
+  "dE": 16.7
+ },
+ "p48": {
+  "id": "rocket-rackoon/15/null",
+  "kind": "null",
+  "image": "rocket-rackoon",
+  "cells": 0,
+  "truth": [],
+  "dE": 0
+ },
+ "p49": {
+  "id": "RC1/21",
+  "kind": "seg",
+  "image": "RC1",
+  "cells": 23,
+  "truth": [
+   "B2",
+   "B3",
+   "C2",
+   "C3"
+  ],
+  "dE": 19.2
+ },
+ "p50": {
+  "id": "andy/27",
+  "kind": "seg",
+  "image": "andy",
+  "cells": 9,
+  "truth": [
+   "B1",
+   "C1"
+  ],
+  "dE": 23.6
+ },
+ "p51": {
+  "id": "golden-axe/10",
+  "kind": "seg",
+  "image": "golden-axe",
+  "cells": 5,
+  "truth": [
+   "A2",
+   "B2",
+   "B3"
+  ],
+  "dE": 23.1
+ },
+ "p52": {
+  "id": "golden-axe/f0.1",
+  "kind": "frac",
+  "image": "golden-axe",
+  "f": 0.1,
+  "cells": 44,
+  "truth": [
+   "A2",
+   "A3",
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "C3"
+  ],
+  "dE": 43.7
+ },
+ "p53": {
+  "id": "rocket-rackoon/f1.0",
+  "kind": "frac",
+  "image": "rocket-rackoon",
+  "f": 1.0,
+  "cells": 119,
+  "truth": [
+   "A1",
+   "A2",
+   "A3",
+   "B1",
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "C3",
+   "D1",
+   "D2",
+   "D3"
+  ],
+  "dE": 18.9
+ },
+ "p54": {
+  "id": "anubis/10",
+  "kind": "seg",
+  "image": "anubis",
+  "cells": 11,
+  "truth": [
+   "D1"
+  ],
+  "dE": 5.2
+ },
+ "p55": {
+  "id": "andy/3",
+  "kind": "seg",
+  "image": "andy",
+  "cells": 25,
+  "truth": [
+   "C1",
+   "C2",
+   "D2"
+  ],
+  "dE": 20.5
+ },
+ "p56": {
+  "id": "jojo/f0.1",
+  "kind": "frac",
+  "image": "jojo",
+  "f": 0.1,
+  "cells": 22,
+  "truth": [
+   "B1",
+   "C1",
+   "C2",
+   "D2"
+  ],
+  "dE": 38.2
+ },
+ "p57": {
+  "id": "golden-axe/f1.0",
+  "kind": "frac",
+  "image": "golden-axe",
+  "f": 1.0,
+  "cells": 252,
+  "truth": [
+   "A1",
+   "A2",
+   "A3",
+   "B1",
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "C3",
+   "D1",
+   "D2",
+   "D3"
+  ],
+  "dE": 35.0
+ },
+ "p58": {
+  "id": "andy/f0.25",
+  "kind": "frac",
+  "image": "andy",
+  "f": 0.25,
+  "cells": 100,
+  "truth": [
+   "A1",
+   "A3",
+   "B1",
+   "B3",
+   "C1",
+   "C2",
+   "C3",
+   "D2",
+   "D3"
+  ],
+  "dE": 30.8
+ },
+ "p59": {
+  "id": "RC1/19/null",
+  "kind": "null",
+  "image": "RC1",
+  "cells": 0,
+  "truth": [],
+  "dE": 0
+ },
+ "p60": {
+  "id": "sunset/f0.25",
+  "kind": "frac",
+  "image": "sunset",
+  "f": 0.25,
+  "cells": 37,
+  "truth": [
+   "A1",
+   "A3",
+   "C2",
+   "D1"
+  ],
+  "dE": 17.4
+ },
+ "p61": {
+  "id": "rocket-rackoon/23",
+  "kind": "seg",
+  "image": "rocket-rackoon",
+  "cells": 10,
+  "truth": [
+   "C2",
+   "C3"
+  ],
+  "dE": 25.5
+ },
+ "p62": {
+  "id": "rocket-rackoon/12/C",
+  "kind": "C",
+  "image": "rocket-rackoon",
+  "cells": 21,
+  "truth": [
+   "A1",
+   "A2"
+  ],
+  "dE": 24.9
+ },
+ "p63": {
+  "id": "jojo/f1.0",
+  "kind": "frac",
+  "image": "jojo",
+  "f": 1.0,
+  "cells": 153,
+  "truth": [
+   "A2",
+   "A3",
+   "B1",
+   "B2",
+   "B3",
+   "C1",
+   "C2",
+   "C3",
+   "D2",
+   "D3"
+  ],
+  "dE": 35.5
+ }
+}

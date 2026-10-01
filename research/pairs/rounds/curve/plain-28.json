@@ -1,0 +1,12 @@
+[
+{"item": "p46a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 2 turns the bright cyan-white glow of the waterfall into grey dither and the dark green foliage at the right into yellow."},
+{"item": "p24b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D1", "note": "Colouring 1 breaks the hot pink cloud into blocky red, purple and pale cells and greys the cells around the sun."},
+{"item": "p01b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 2 has a grey-white block and less cyan in the dragon's head, so it reads less as the green-cyan dragon."},
+{"item": "p09b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "C1", "note": "Colouring 1 renders the smooth magenta sunset as blocky pale, grey and red cells that lose the cloud shapes."},
+{"item": "p36a", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "B2", "note": "Colouring 1 scatters cyan cells over the blue jacket and paints the girl's face garish yellow."},
+{"item": "p23a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "B3", "note": "Colouring 2 turns the pale path into a flat grey-khaki block with a pink cell on top that clashes with the leaves."},
+{"item": "p11b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 loses the light-blue of the bottle at the top and draws it white."},
+{"item": "p52b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 1 drains the green-cyan dragon to yellow and puts purple patches on the left warrior."},
+{"item": "p05a", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "D2", "note": "Colouring 2 loses the mummies' green glowing eyes and paints Anubis's golden collar in red and white stripes."},
+{"item": "p62b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A2", "note": "Colouring 1 has a grey dithered strip and a flat red block at the left edge where the dark-red sky should shade smoothly."}
+]

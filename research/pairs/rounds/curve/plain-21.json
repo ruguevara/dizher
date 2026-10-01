@@ -1,0 +1,12 @@
+[
+{"item": "p54b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I could not see any difference between the two."},
+{"item": "p39b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 puts grey-white cells into the orange hieroglyph wall at the top left."},
+{"item": "p21a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "C1", "note": "Colouring 2 turns the moustached man's face into a blocky yellow-white checker, and the boy's shoulder becomes a magenta block."},
+{"item": "p56b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "C1", "note": "Colouring 1 turns the moustached man's face into a blocky yellow-white checker and loses its outline."},
+{"item": "p52b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 1 drains the green dragon's neck to plain yellow; 2 keeps some of its green and cyan, though blocky."},
+{"item": "p00a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 2 loses the dragon head's cyan and puts magenta onto the left warrior's legs."},
+{"item": "p55b", "verdict": "2", "confidence": "medium", "problem": "detail", "where": "C2", "note": "Colouring 1 breaks the right lens of the glasses into grey-white checker cells and loses the red frame."},
+{"item": "p20b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 has a red speck in the foliage by the right trunk and loses the green of the grass along the path."},
+{"item": "p19b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "C2", "note": "Colouring 1 is far blockier: harsh cyan slabs on the shoulders, magenta blotches and a grey-white checker across the right side of the face."},
+{"item": "p36a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 1 makes the girl's face and hair a yellow blob and streaks the blue sleeve with cyan."}
+]

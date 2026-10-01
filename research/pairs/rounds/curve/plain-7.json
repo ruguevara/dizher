@@ -1,0 +1,12 @@
+[
+{"item": "p23b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B3", "note": "The leaf-covered path is a drained grey block with stray yellow and white cells instead of the original's pale pinkish light."},
+{"item": "p59a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see a meaningful difference."},
+{"item": "p16a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "D1", "note": "The S of the title gets garish green and white cells that the gold lettering does not have."},
+{"item": "p47a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "The light-blue bottle at the top is drained to white, losing its only cool accent."},
+{"item": "p07b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "B1", "note": "Sky and foliage break into patchy grey, olive and pastel blocks, and the greens are lost."},
+{"item": "p42b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "The green dragon turns all yellow, and the left warrior's shorts become garish magenta."},
+{"item": "p15b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "The hat and the Anubis area fill with clashing red blocks and magenta specks, and the mummies' green eyes are lost."},
+{"item": "p45b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B3", "note": "The leaf-covered path is a blocky grey patch with stray yellow and white cells instead of the pale pinkish light."},
+{"item": "p49b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "B2", "note": "Magenta specks are scattered through the dark stump where the original is brown and green."},
+{"item": "p32a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C1", "note": "The purple band across the top gives way to plain blue in the middle, so less of the band reads as purple."}
+]

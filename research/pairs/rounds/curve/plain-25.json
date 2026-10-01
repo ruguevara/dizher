@@ -1,0 +1,12 @@
+[
+{"item": "p20b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 1 loses the green of the grass by the fence and under the trees, rendering it olive-yellow."},
+{"item": "p49b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 2 puts purple specks into the dark brown creature, a hue the original does not have."},
+{"item": "p31b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 washes the red-orange band under the pink cloud into pale pink-white blocks and dulls the headlights."},
+{"item": "p56a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "C1", "note": "Colouring 2 breaks the moustached man's face into a yellow-white checker of cells and loses his features."},
+{"item": "p61a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C2", "note": "They trade small cells around the arm and leg (yellow-green arm in 1, olive leg in 2) and come out about even."},
+{"item": "p08b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 turns Anubis's gold striped collar grey-white with red and drops the mummy's green eyes."},
+{"item": "p10b", "verdict": "2", "confidence": "low", "problem": "seams", "where": "A2", "note": "Colouring 1 has a flat red block on the left sky edge that seams against the dark-red dither around it."},
+{"item": "p55a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "C2", "note": "Colouring 2 fills the right lens and cheek with a grey-white checker, losing the cyan in the lens and the red glasses rim."},
+{"item": "p39a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 puts grey-white cells into the orange sandstone wall at the top left corner."},
+{"item": "p24a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D1", "note": "Colouring 2 makes the right part of the cloud dull purple and pale pink where the original is hot magenta."}
+]

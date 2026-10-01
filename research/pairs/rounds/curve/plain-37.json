@@ -1,0 +1,11 @@
+[
+{"item": "p57b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 1 drains the green dragon to yellow and adds garish purple and blue patches around the figures."},
+{"item": "p43a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D3", "note": "Colouring 1 has garish solid green blocks in the grass at right and a larger pink block on the path."},
+{"item": "p14a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "A2", "note": "Colouring 2 has an orange cell block on the yellow sleeve that clashes with its neighbours."},
+{"item": "p58b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A3", "note": "Colouring 1 loses the yellow-orange in the hair and turns the brown-orange at bottom left into plain red."},
+{"item": "p50b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B1", "note": "Only a few hair cells at the top differ, yellow against orange, both plausible."},
+{"item": "p25b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 loses the blue of the bottle at the top and has a yellow-green strip at the left edge."},
+{"item": "p18b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 1 drops the green foliage at right and bottom left to yellow and black."},
+{"item": "p31a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 1 renders the pink cloud band as harsher solid red with a stray blue speck."},
+{"item": "p29a", "verdict": "2", "confidence": "low", "problem": "detail", "where": "A1", "note": "Colouring 1 fills the top-left wall with red cells and loses the carved bird."}
+]

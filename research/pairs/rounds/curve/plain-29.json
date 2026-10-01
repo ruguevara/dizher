@@ -1,0 +1,12 @@
+[
+{"item": "p44a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "The two look the same; at most a faint change in the blue band on the right."},
+{"item": "p11a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "In 2 the light-blue beam at the top is drained to white and loses its cyan."},
+{"item": "p30a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "B3", "note": "2 has blocky flat bright-cyan cells on the left of the face and flat red blocks in the hair, where 1 is softer."},
+{"item": "p14a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see a meaningful difference between them."},
+{"item": "p25b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "1 turns the cyan beam at the top white and puts a greenish column on the lower-left edge."},
+{"item": "p07a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A2", "note": "2 drains the lush greens to olive and fills the sky with blocky pastel patches."},
+{"item": "p03b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "A2", "note": "1 drains the greens to olive and fills the sky with blocky pastel patches."},
+{"item": "p58b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A3", "note": "1 paints the brownish-orange lower left in flat red and puts flat red blocks in the hair."},
+{"item": "p04b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A3", "note": "1 has a few murky olive cells along the edge of the orange glow under the sun."},
+{"item": "p57b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "C1", "note": "1 loses the green-cyan dragon to olive and adds garish magenta and blue blocks on the figures."}
+]

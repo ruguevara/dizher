@@ -1,0 +1,12 @@
+[
+{"item": "p45b", "verdict": "2", "confidence": "low", "problem": "seams", "where": "B3", "note": "Colouring 1 turns the path into a patchwork of flat grey, pale yellow and pink cells that clash with each other and the leaves around them."},
+{"item": "p08b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 paints Anubis's gold collar white and grey and drops the green eyes in the dark."},
+{"item": "p17a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 2 paints Anubis's gold collar white and grey and loses the mummies' green eyes."},
+{"item": "p31a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 2 turns parts of the hot red-magenta cloud into pinkish red-white dither."},
+{"item": "p38a", "verdict": "2", "confidence": "low", "problem": "seams", "where": "D2", "note": "Colouring 1 puts blue cells into the pink cloud's lower right end and white dither at the tree edge, breaking the smooth band."},
+{"item": "p59a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I can see no meaningful difference between the two."},
+{"item": "p30b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 1 drains the forehead and right side of the face to grey and yellow and loses the cyan iris, though colouring 2 is noisier and greys the left shoulder."},
+{"item": "p18b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 has a grey-pink drained patch on the body and loses the green foliage at the edges."},
+{"item": "p27a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 loses the blue patches and red glasses rim on the left side and turns the green-yellow hair on the right to plain yellow and grey."},
+{"item": "p24a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "D1", "note": "Colouring 2 breaks the smooth magenta cloud on the right into a patchwork of purple, pink-white and red cells."}
+]

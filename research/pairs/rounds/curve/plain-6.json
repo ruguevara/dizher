@@ -1,0 +1,12 @@
+[
+{"item": "p36a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 turns part of the blue jacket arm into garish cyan stripes and gives the girl yellow hair."},
+{"item": "p51a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A2", "note": "Only a couple of cells on the left warrior's torso differ; neither is clearly worse."},
+{"item": "p13a", "verdict": "1", "confidence": "high", "problem": "seams", "where": "B1", "note": "Colouring 2 breaks the boy's face into a yellow/white/orange checkerboard of cells."},
+{"item": "p54a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "p32a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "C1", "note": "Colouring 2 drops the purple dither in a run of cells in the upper band, leaving a blocky solid-blue step."},
+{"item": "p59b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "Small cell differences around the woman's back; neither reads clearly better."},
+{"item": "p22a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A2", "note": "Colouring 2 makes part of the pale shirt sleeve more orange than the original."},
+{"item": "p19a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "B2", "note": "Colouring 2 loses the face's blues, turning it magenta on one side and patchy grey/yellow/white blocks on the other."},
+{"item": "p53a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A2", "note": "Colouring 2 has blocky darker-red cells in the smooth sky and loses the cyan of the bottle at top."},
+{"item": "p28a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "B1", "note": "Colouring 2 has orange fingers with stray red specks above the V sign."}
+]

@@ -1,0 +1,12 @@
+[
+  {"item": "p20a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C1", "note": "Colouring 2 adds a red speck by the trunk and a dark green cell in the orange canopy that clash with their neighbours."},
+  {"item": "p42b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 loses the dragon's green body and red mouth, turning them yellow and purple."},
+  {"item": "p00b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 1 has no teal on the dragon head and puts purple on the warrior's blue loincloth."},
+  {"item": "p59a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "B2", "note": "Colouring 2 cuts a blocky dark-red band across the smooth orange back."},
+  {"item": "p02b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 1 dulls more canopy cells to olive-brown where the leaves are bright orange."},
+  {"item": "p46b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 1 turns the pale blue glow and the green foliage on the right grey and olive."},
+  {"item": "p27b", "verdict": "2", "confidence": "medium", "problem": "detail", "where": "B2", "note": "Colouring 1 loses the red glasses rim around the left eye."},
+  {"item": "p53b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 makes the light-blue bottle white and leaves an olive strip down the left edge of the orange sky."},
+  {"item": "p60a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A3", "note": "Colouring 2 puts olive specks in the orange sun glow and a lilac block in the blue band."},
+  {"item": "p37b", "verdict": "2", "confidence": "low", "problem": "seams", "where": "A2", "note": "Colouring 1 makes the left half of the light band lilac where it should be pale blue, leaving a hard seam where it turns cyan."}
+]

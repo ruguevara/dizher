@@ -1,0 +1,11 @@
+[
+{"item": "p07b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 1 turns the greens into olive yellow and the sky into a patchwork of grey and pale blocks."},
+{"item": "p38b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 loses the red glow at the tree's edge where the cloud meets the branches, leaving dull purple."},
+{"item": "p49a", "verdict": "2", "confidence": "low", "problem": "noise", "where": "B2", "note": "Colouring 1 scatters stray purple specks through the dark tree trunk."},
+{"item": "p41b", "verdict": "=", "confidence": "low", "problem": "none", "where": "D3", "note": "They differ only in one car headlight being yellow or white; both read fine."},
+{"item": "p37a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 2 puts a blocky lilac stripe across the light cyan horizon band on the left."},
+{"item": "p27b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B2", "note": "Colouring 1 loses most of the red glasses frame and the blue tones on the left of the face."},
+{"item": "p33b", "verdict": "2", "confidence": "high", "problem": "detail", "where": "C2", "note": "Colouring 1 covers the right lens with grey blocks and loses the red glasses frame."},
+{"item": "p21b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "C1", "note": "Colouring 1 breaks the moustached man's face into pale yellow checker blocks and puts a purple patch on the boy's sleeve."},
+{"item": "p16b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "D1", "note": "Colouring 1 has garish green and white cells in the gold letter S of the title."}
+]

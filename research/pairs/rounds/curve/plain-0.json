@@ -1,0 +1,12 @@
+[
+{"item": "p46b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 1 turns the bright cyan-white glow and green foliage by the waterfall into black-and-white and dirty yellow dither."},
+{"item": "p32b", "verdict": "=", "confidence": "high", "problem": "none", "where": "", "note": "I could not see any difference between them."},
+{"item": "p29b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 puts grey-white cells in the warm tan wall at top left, and they clash with the orange around them."},
+{"item": "p07a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 2 drains the green foliage and water to a dirty olive yellow and fills the sky with greyish patchy cells."},
+{"item": "p59b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "B2", "note": "Colouring 1 puts slightly more red speckle in the smooth orange hip and thigh."},
+{"item": "p52a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C1", "note": "Colouring 2 turns the green-cyan dragon head yellow and the left warrior's blue loincloth magenta."},
+{"item": "p23a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "B3", "note": "Colouring 2 makes the pale path a blocky grey patch with stray pink and white cells and loses the green grass strips."},
+{"item": "p47a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 makes the light-blue bottle at the top plain white and adds grey-white blocks to the raised arm."},
+{"item": "p25a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 loses the cyan of the bottle at the top and has a yellow-green strip down the bottom-left edge."},
+{"item": "p00a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 2 shows the dragon all yellow and the left warrior's loincloth magenta, though 1's cyan cells there are scattered."}
+]

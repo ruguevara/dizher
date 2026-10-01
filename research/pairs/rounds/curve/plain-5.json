@@ -1,0 +1,12 @@
+[
+{"item": "p36b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 puts cyan cells on the blue denim arm and sleeve, a hue the original does not have, and they clash with the navy around them."},
+{"item": "p50a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 has a drab olive block in the yellow-white hair at the top, which looks muddy next to the bright yellow."},
+{"item": "p08b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 turns Anubis's gold collar white and red and loses the green glowing eyes in the dark at the lower right."},
+{"item": "p03a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 2 turns the lush greens of the foliage and water into olive-yellow, and the sky breaks into patchy pale cells."},
+{"item": "p07a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 2 turns the greens into olive-yellow, and the sky becomes a blocky patchwork of pale cells."},
+{"item": "p26b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I see no meaningful difference between the two."},
+{"item": "p49b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "B2", "note": "Colouring 2 scatters purple specks through the dark trunk area in the centre."},
+{"item": "p09a", "verdict": "1", "confidence": "high", "problem": "seams", "where": "C1", "note": "Colouring 2 breaks the smooth magenta sunset clouds into blocky pink, purple and red cells, and puts olive cells in the glow."},
+{"item": "p59b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "They look identical."},
+{"item": "p10b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "They look identical."}
+]

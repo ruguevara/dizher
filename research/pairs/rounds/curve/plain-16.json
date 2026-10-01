@@ -1,0 +1,12 @@
+[
+{"item": "p15b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 turns the tan hat and the area around it into a large red mass, loses the green mummy eyes and greys the gold Anubis collar."},
+{"item": "p51a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I could see no visible difference between the two."},
+{"item": "p56b", "verdict": "2", "confidence": "medium", "problem": "detail", "where": "C1", "note": "In colouring 1 the man's face on the right is a blocky yellow checkerboard with no features."},
+{"item": "p34b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C1", "note": "In colouring 1 the dragon's jaw and teeth turn into a dark blue-purple smudge and lose their white fangs."},
+{"item": "p17a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 2 loses the glowing green mummy eyes and turns the gold Anubis collar white and red."},
+{"item": "p21b", "verdict": "2", "confidence": "medium", "problem": "detail", "where": "C1", "note": "In colouring 1 the right man's face is a featureless yellow checkerboard, and the jacket shoulder has a purple patch."},
+{"item": "p36b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A2", "note": "Colouring 2 makes the left girl's hair a garish yellow and scatters cyan and purple specks over the jacket."},
+{"item": "p11a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 drains the blue bottle at the top to plain white."},
+{"item": "p27b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B2", "note": "Colouring 1 loses the red rim of the left lens of the glasses, though colouring 2 adds a little green to the hair on the right."},
+{"item": "p22b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I could see no visible difference between the two."}
+]

@@ -1,0 +1,11 @@
+[
+{"item": "p60b", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "A3", "note": "Colouring 1 has olive specks along the bottom of the orange sun glow and a cyan/lavender notch in the sky band."},
+{"item": "p08a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "C2", "note": "Colouring 2 turns Anubis's gold striped collar into grey-white and red and loses the green eyes lower right."},
+{"item": "p12b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 1 makes the grass patch by the fence olive instead of green."},
+{"item": "p20a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 2 drops the green grass to olive and adds a stray red speck on the tree trunk."},
+{"item": "p22b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A2", "note": "Colouring 1 has a duller olive patch on the hero's raised sleeve where the original is bright yellow."},
+{"item": "p54b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "p57a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 2 turns the green-cyan dragon yellow and adds garish purple cells in the middle."},
+{"item": "p25b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 loses the cyan of the bottle at the top and has an olive strip on the left edge."},
+{"item": "p37a", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "C2", "note": "Colouring 1 has two isolated lavender blocks in the cyan sky band that clash with their neighbours."}
+]

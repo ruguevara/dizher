@@ -1,0 +1,12 @@
+[
+{"item": "p17a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 2 loses the mummies' green eyes and the gun's cyan glint and turns the yellow collar into white and red cells."},
+{"item": "p21b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "C1", "note": "Colouring 1 breaks the man's face into a pale yellow checkerboard of cells and paints the boy's shoulder garish magenta."},
+{"item": "p05a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 puts stray cyan cells on the hat brim and shoulder, plus red specks on the face, though it does keep the green eyes."},
+{"item": "p40a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 2 turns the dark green foliage in the top-left corner into yellow specks on black."},
+{"item": "p57a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 2 drains the green dragon to yellow and throws in magenta patches the original does not have."},
+{"item": "p22b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I see no visible difference."},
+{"item": "p20a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C1", "note": "Colouring 2 has stray red and green specks in the canopy and loses the small green grass cells."},
+{"item": "p47b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 turns the light-blue beam at the top white, and its left sky has darker blocky red cells."},
+{"item": "p02b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "In colouring 1 the path is a harsher pink-white blob with hard edges against the orange leaves."},
+{"item": "p48a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Any differences are too slight to call."}
+]

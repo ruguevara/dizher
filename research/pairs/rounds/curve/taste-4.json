@@ -1,0 +1,12 @@
+[
+{"item": "p17a", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "D2", "note": "Colouring 2 loses the mummies' green eyes and turns the Anubis collar white and red instead of gold."},
+{"item": "p63b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "B2", "note": "Colouring 1 breaks Jojo's face into a pale checkerboard of cells and puts a magenta patch on the blue jacket."},
+{"item": "p45b", "verdict": "2", "confidence": "low", "problem": "seams", "where": "B3", "note": "Colouring 1 makes the light path a patchwork of grey, pale yellow and pink cells that clash with each other."},
+{"item": "p05b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 turns the Anubis collar white and red and drops the mummies' green eyes, though 2 adds some cyan specks on the hero's hat."},
+{"item": "p38b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 2 puts a blue blotch into the pink cloud at its right end."},
+{"item": "p26a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I can't see a difference that matters."},
+{"item": "p25a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 loses the cyan of the bottle at the top and adds olive-green cells at the lower left and on the tail."},
+{"item": "p08a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 2 turns the gold Anubis collar white and red and loses the green eyes in the dark."},
+{"item": "p43a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 1 spreads pink dither over more of the path and adds blocky flat-green strips in the grass on the right."},
+{"item": "p06b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "A2", "note": "Colouring 1 has blocky olive and green cells around the sun and lilac patches in the blue band where the gradient is smooth."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "p03a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A3", "note": "Colouring 2 turns the lush greens of the foliage and water into olive yellow, losing the picture's green cast."},
+{"item": "p44b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D1", "note": "Colouring 1 drops the purple band at the top right, so the violet stripe stops short where the original carries it across."},
+{"item": "p17b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 1 loses the green glowing eyes of the mummies and paints Anubis's gold collar white and red."},
+{"item": "p52a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C1", "note": "Colouring 2 paints the green-cyan dragon head plain yellow and the left warrior's blue shorts magenta."},
+{"item": "p29b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 1 has grey cells in the golden wall at the top left corner."},
+{"item": "p19b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "B2", "note": "Colouring 1 breaks the face into flat grey, yellow and magenta blocks with bright cyan slabs and loses the glasses."},
+{"item": "p13b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "B2", "note": "Colouring 1 turns Jojo's face into a blocky yellow and red checkerboard with no features."},
+{"item": "p50a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 has flat olive cells in the golden hair at the top of the head."},
+{"item": "p42a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D1", "note": "Colouring 2 loses the red dragon mouth and the greens of the dragon body and foliage, and adds magenta to the left warrior."},
+{"item": "p41a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D3", "note": "Colouring 1 makes the right car's yellowish headlights pure white."}
+]
