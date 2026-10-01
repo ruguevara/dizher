@@ -1,0 +1,12 @@
+[
+{"item": "e011b", "verdict": "=", "confidence": "low", "problem": "none", "where": "C3", "note": "Only a few specks around the street lights differ (green vs cyan); neither reads worse."},
+{"item": "e975b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A2", "note": "Colouring 1 turns the lilac spots by the left tree edge cyan where the original is pinkish."},
+{"item": "e378a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 1 has a larger olive-green blotch in the orange foliage at the top."},
+{"item": "e795b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 2 puts a pinkish cell into the yellow cloud band."},
+{"item": "e263b", "verdict": "1", "confidence": "low", "problem": "detail", "where": "C2", "note": "Colouring 2 thins the top of the dark right trunk with olive cells."},
+{"item": "e044a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e961b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Tiny purple/red change at the dark edge of the trousers; neither reads worse."},
+{"item": "e059b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Tiny purple/red change at the trouser edge; neither reads worse."},
+{"item": "e356b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "A1", "note": "Colouring 1 makes the dark green foliage at top left olive yellow."},
+{"item": "e117b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A3", "note": "Only a few specks on the red at bottom left differ."}
+]

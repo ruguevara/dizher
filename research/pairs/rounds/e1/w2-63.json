@@ -1,0 +1,12 @@
+[
+{"item": "e759a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "1 turns part of the green hill behind the water into cyan where the original is green."},
+{"item": "e739a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "2 adds a magenta cell in the blue sky beside the small swirl, a clashing speck."},
+{"item": "e735b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "2 spreads magenta through the swirl centre where the original is light blue, losing the cyan accents."},
+{"item": "e791b", "verdict": "=", "confidence": "low", "problem": "noise", "where": "", "note": "Same colours; 2 only has a slightly coarser, clumpier dither."},
+{"item": "e725b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A2", "note": "2 runs magenta cells up the top of the dark blue cypress, which clashes."},
+{"item": "e229a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I can't see a clear difference; the top sky cells differ only slightly in tint."},
+{"item": "e434a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "2 extends magenta into the tree branches against the blue sky, where the original is dark and blue."},
+{"item": "e895b", "verdict": "1", "confidence": "low", "problem": "detail", "where": "A1", "note": "2 shrinks the bright yellow core of the torch flame into more orange and red."},
+{"item": "e408b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e994a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "e725b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A2", "note": "Colouring 2 spreads magenta speckle higher up the dark cypress where the original is dark blue."},
+{"item": "e096b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A2", "note": "Only a faint dither difference along the left red edge; cannot tell them apart."},
+{"item": "e461b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 1 puts a grey-lilac cell in the orange leg reflection, which reads as a foreign colour."},
+{"item": "e980a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A1", "note": "Small differences in the pale cyan sky cells top left; both read as the bluish glow."},
+{"item": "e281a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 has a stray magenta cell in the dark blue sky at the top edge."},
+{"item": "e791a", "verdict": "=", "confidence": "low", "problem": "none", "where": "D1", "note": "Differences around the moon halo are slight and neither side is clearly worse."},
+{"item": "e002a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e863a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A3", "note": "Only a few specks differ at the left girl's lower body; indistinguishable at viewing size."},
+{"item": "e862a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 1 has a pale grey cell in the yellow-orange reflection where 2 keeps it yellow."},
+{"item": "e237a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 adds a purple cell on the boy's blue sleeve that clashes with the blue."}
+]

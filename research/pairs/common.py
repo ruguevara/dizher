@@ -28,9 +28,13 @@ def painted_projects() -> list:
 
 
 def project_graph(name: str):
-    """The project's graph in the current pipeline's shape (older projects lack nodes)."""
-    project = load_project(IMAGES / name)
+    """The project's graph in the current pipeline's shape (older projects lack nodes); a loose picture in
+    tests/images, without a project, gets a new project's graph, as the app opens it."""
     graph = ops.make_graph()
+    if not (IMAGES / name / 'project.json').exists():
+        path, = IMAGES.glob(f'{name}.*')
+        return graph.with_params('source', replace(graph['source'].params, path=path))
+    project = load_project(IMAGES / name)
     for nid in graph.ids():
         if nid in project.graph:
             graph = graph.with_params(nid, project.graph[nid].params)
@@ -40,9 +44,11 @@ def project_graph(name: str):
 class Project:
     """One test project: its graph, a memo shared by its renders, the selection and the pair list."""
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, **graph_params) -> None:
+        """graph_params: {node id: {param: value}} changed from the project's own, the selection and energy too."""
         self.name = name
         self.graph = project_graph(name)
+        self.graph = self.changed(**graph_params)
         self.memo = Memo()
         self.selection = evaluate(self.graph, 'select', self.memo)   # Select pairs at the project's settings
         self.pairs = np.array(list(self.selection.palette.iter_idxs_pairs()))   # label -> (paper, ink)

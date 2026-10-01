@@ -1,0 +1,12 @@
+[
+{"item": "e557b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 2 puts a pink and a cyan cell into the yellow band on the right where the original is yellow and white."},
+{"item": "e535b", "verdict": "=", "confidence": "low", "problem": "none", "where": "C2", "note": "Only a few specks around the raccoon's hand differ and neither reads worse."},
+{"item": "e844b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 2 turns the green hill cells right of the face into olive yellow, losing the green."},
+{"item": "e059b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 2 extends the magenta edge along the shirt, a hue not in the original."},
+{"item": "e431b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A2", "note": "Colouring 2 brightens the torch handle cells to orange so the dark handle blends into the flame."},
+{"item": "e875b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D1", "note": "Colouring 1 makes the moon's yellow ring a muddy olive instead of the original's bright yellow."},
+{"item": "e478b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "C1", "note": "Colouring 1 adds an extra cyan speck cell under the star where the original is white and yellow."},
+{"item": "e825b", "verdict": "1", "confidence": "high", "problem": "colour", "where": "C2", "note": "Colouring 2 puts magenta and cyan cells in the blue hills and village where the original has only blues."},
+{"item": "e229b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 puts dark teal-blue blocks into the bright white-blue glow at the top."},
+{"item": "e881b", "verdict": "=", "confidence": "low", "problem": "none", "where": "D3", "note": "Only the scatter of cyan and blue street-light dots differs, and both read as plausible."}
+]

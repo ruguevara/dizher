@@ -1,0 +1,12 @@
+[
+{"item": "e534b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C2", "note": "Colouring 2 puts more grey specks into the white bar of the central panel."},
+{"item": "e023a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e082b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 1 turns part of the yellow shirt near the belt into red cells."},
+{"item": "e253a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 makes the blue sky at the left edge magenta."},
+{"item": "e537b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 1 fills the dark cypress with garish magenta dots instead of blue."},
+{"item": "e849b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C1", "note": "Colouring 2 adds magenta specks around Anubis's ears where the original is blue."},
+{"item": "e589b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 turns the golden hieroglyph wall in the top-left corner into blocky red and orange cells."},
+{"item": "e620b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "C2", "note": "Colouring 1 has a dark red speck in the foliage above the right trunk."},
+{"item": "e005b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 makes the blue sky at the left edge magenta."},
+{"item": "e896b", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A3", "note": "Colouring 2 pushes a block of grey dither into the black area at the bottom, which breaks the straight edge of the gradient."}
+]

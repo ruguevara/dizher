@@ -1,0 +1,12 @@
+[
+{"item": "e629a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 spreads magenta cells up into the dark tree branches where the original is dark with blue sky gaps."},
+{"item": "e117a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e795b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 2 puts a pinkish cell into the yellow band where the original is yellow."},
+{"item": "e597a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 turns the orange leg with its white highlight into olive yellow-green cells."},
+{"item": "e881b", "verdict": "=", "confidence": "low", "problem": "noise", "where": "C3", "note": "Only the speck colours on the dark road differ (cyan against blue); neither clearly closer."},
+{"item": "e776b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 tints the top yellow-white stars green and cyan."},
+{"item": "e055b", "verdict": "1", "confidence": "high", "problem": "colour", "where": "B2", "note": "Colouring 2 turns much of the blue denim sleeve and arm purple."},
+{"item": "e902b", "verdict": "2", "confidence": "low", "problem": "seams", "where": "D2", "note": "Colouring 1 breaks the yellow band into blocky white cells, though 2 has one stray cyan cell."},
+{"item": "e956b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B3", "note": "Colouring 1 loses the gold edge line along the top of the title banner."},
+{"item": "e994b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "D2", "note": "Colouring 2 adds white specks on the right soldier's dark uniform."}
+]

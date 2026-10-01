@@ -1,0 +1,12 @@
+[
+{"item": "e705b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 1 runs magenta up the left edge where the original shows blue sky through the tree."},
+{"item": "e636a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e911a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Only a cell or two near the left water edge differ, not noticeably."},
+{"item": "e136b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Practically identical; tiny change in the grey fence cells behind the path."},
+{"item": "e075a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A1", "note": "Small orange/red cell shuffles in the hieroglyph panel, neither clearly better."},
+{"item": "e695a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No noticeable difference."},
+{"item": "e954a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "B3", "note": "Colouring 2 breaks the pale path into patchy yellow and white cells with green specks."},
+{"item": "e627a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 puts magenta cells on the top-left star where the original is yellow-white on blue."},
+{"item": "e356a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 turns the dark green trees at top left into olive yellow."},
+{"item": "e117b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No noticeable difference."}
+]

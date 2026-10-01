@@ -1,0 +1,12 @@
+[
+{"item": "e864a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 2 turns the brownish crocodile head next to the trunk into flat white and black, where 1 keeps some warm red and yellow."},
+{"item": "e953a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 2 lets a cyan cell spill below the cyan bar into the black-and-white checker row."},
+{"item": "e996b", "verdict": "1", "confidence": "low", "problem": "detail", "where": "C3", "note": "Colouring 2 loses the white headlight of the middle car and scatters cyan specks over the road."},
+{"item": "e797a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 2 breaks the yellow band at the left edge into grey-white cells."},
+{"item": "e310a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 1 puts a dull olive cell into the bright yellow glow below the tail."},
+{"item": "e194a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e849a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C1", "note": "Colouring 1 puts magenta specks into the dark blue around Anubis's head, where 2 keeps blue."},
+{"item": "e421a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e492b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 gives the dark tree trunk red specks, where 1 keeps the grey bark texture."},
+{"item": "e481a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."}
+]

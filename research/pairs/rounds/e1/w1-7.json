@@ -1,0 +1,12 @@
+[
+{"item": "e155a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 1 renders the pale cyan glow right of the centre as plain white speckle, losing the original's cyan tint."},
+{"item": "e614b", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A1", "note": "Colouring 2 has a blocky notch of dots sticking into the black band at the top left, breaking the smooth gradient edge."},
+{"item": "e988a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "The two differ only in a few specks around the boy's collar and sash; neither reads worse."},
+{"item": "e369b", "verdict": "1", "confidence": "high", "problem": "colour", "where": "C2", "note": "Colouring 2 puts magenta cells into the blue wall behind Anubis's head, a hue that is not in the original."},
+{"item": "e638a", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "C1", "note": "Colouring 2 adds a stray white-speckled cell and extra pale speckle in the plain blue sky at the top."},
+{"item": "e352a", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A2", "note": "Colouring 1 has a blocky notch of dots sticking into the black band at mid left, breaking the smooth gradient edge."},
+{"item": "e611b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A2", "note": "Colouring 2 turns the woman's and girl's faces flatter yellow, further from the original's pale peach skin."},
+{"item": "e953b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "A3", "note": "They differ only by a tiny speck under the bottom yellow bar; no visible difference otherwise."},
+{"item": "e076a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D1", "note": "Colouring 1's moon has slightly less yellow at its lower left, so the halo reads a little patchier."},
+{"item": "e991a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "D2", "note": "Colouring 2 sprinkles purple specks over the dark figure in the black band at the right."}
+]

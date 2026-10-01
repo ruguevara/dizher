@@ -1,0 +1,12 @@
+[
+{"item": "e911a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e326b", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "C1", "note": "1 has an isolated patch of white specks in the plain blue sky at the top."},
+{"item": "e759b", "verdict": "=", "confidence": "low", "problem": "colour", "where": "C2", "note": "Only a few cells beside the hill swap light green for cyan; both read acceptably."},
+{"item": "e814b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B3", "note": "2 has a small greenish-yellow patch below the tail where the sky is orange."},
+{"item": "e725a", "verdict": "2", "confidence": "low", "problem": "noise", "where": "A2", "note": "1 sprinkles magenta specks into the dark top of the cypress."},
+{"item": "e404a", "verdict": "2", "confidence": "low", "problem": "noise", "where": "D2", "note": "1 breaks the white waterfall glow with a cyan cell and a lilac speck."},
+{"item": "e983a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "2 puts an orange-red cell into the pale grass behind the fence."},
+{"item": "e640b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D2", "note": "1 has pale grey-cyan cells on the edge of the dark rock at right."},
+{"item": "e083a", "verdict": "=", "confidence": "low", "problem": "none", "where": "D3", "note": "Barely any visible difference, around the mummy's hand at most."},
+{"item": "e461b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B3", "note": "1 has a grey-lilac block in the orange leg reflection at the bottom."}
+]

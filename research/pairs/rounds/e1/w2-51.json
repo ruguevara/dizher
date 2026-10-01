@@ -1,0 +1,12 @@
+[
+{"item": "e198a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 2 puts white cells in the dark brown reflection where 1 keeps olive tones closer to the original."},
+{"item": "e863b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 1 has a whitish cell on the girl's red hand where the original is red."},
+{"item": "e908a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 1 renders the bright car headlights as dull olive dither instead of bright light."},
+{"item": "e223b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e597b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 2 turns the orange arm and glove into olive green."},
+{"item": "e334b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 has a garish magenta strip on the left edge where the original is dark blue sky through the tree."},
+{"item": "e795a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 1 has a pinkish cell in the yellow-white swirl that does not belong."},
+{"item": "e739a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 2 adds a magenta cell in the blue swirl."},
+{"item": "e591a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C1", "note": "Differences on the face are too small to prefer either."},
+{"item": "e862b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 2 has a grey-green cell in the orange leg reflection."}
+]

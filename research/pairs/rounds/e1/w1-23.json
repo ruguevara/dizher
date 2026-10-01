@@ -1,0 +1,12 @@
+[
+{"item": "e146a", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A3", "note": "Colouring 1 has a rectangular block of dots sticking out into the black on the left edge, a blocky step the smooth gradient does not have."},
+{"item": "e257b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D3", "note": "Colouring 1 has a stray magenta cell in the blue village area on the lower right."},
+{"item": "e614a", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A1", "note": "Colouring 1 pushes a block of dots into the black at the top left, making a blocky notch in the gradient edge."},
+{"item": "e991b", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "C2", "note": "Colouring 1 has purple specks in the dark jacket area to the right of the officer's collar."},
+{"item": "e849b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C1", "note": "Colouring 2 puts purple cells on Anubis's ears where the original is dark blue."},
+{"item": "e706b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e492a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 puts red dots in the middle tree trunk, which reads as a red speck instead of dark bark."},
+{"item": "e102a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 2 ends the green of the green-to-magenta bar early and gives a wider olive block in the middle."},
+{"item": "e589b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 has garish red and orange cells in the top-left corner of the stone pillar."},
+{"item": "e406b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 loses the cyan between the red stripes, showing red on white instead of red and cyan."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "e573b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 turns the green mound right of the trunk into olive dots and light grey-green, so it reads less like the original's green hill."},
+{"item": "e404b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 1 darkens the bright glow by the falling water to black with white dots, where the original is luminous white-cyan."},
+{"item": "e217b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 1 has duller olive cells in the top canopy, where the original is bright yellow-orange."},
+{"item": "e075b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "A1", "note": "Colouring 1 flattens the hieroglyph panel to plain yellow, losing its orange stone tone and the bird glyph."},
+{"item": "e603b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e961b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 2 pushes saturated red cells into the dark shadow by the hip, where the original is dark."},
+{"item": "e580b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 1 has a larger garish pink block on the pale path, which should be soft yellowish grey."},
+{"item": "e863a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "They differ only in a couple of specks by the girl's sleeve, which are not noticeable."},
+{"item": "e436b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 1 leaves the green water at bottom left as uniform olive dots, while 2 brings back some green-cyan reflection, though blockily."},
+{"item": "e629b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference."}
+]

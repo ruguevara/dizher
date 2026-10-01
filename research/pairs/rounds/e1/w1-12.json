@@ -1,0 +1,12 @@
+[
+{"item": "e310b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Only a tiny patch near the bottom of the leg differs; I can't see a meaningful difference."},
+{"item": "e996a", "verdict": "2", "confidence": "low", "problem": "detail", "where": "C3", "note": "Colouring 1 turns the middle car's white headlights into scattered cyan specks, though 2 adds some grey dots to the dark road."},
+{"item": "e082a", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B3", "note": "Colouring 1 runs the yellow shirt over the belt and loses the buckle that 2 keeps in red-brown."},
+{"item": "e352a", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A2", "note": "Colouring 1 has a cell-shaped bump of dots sticking into the black at the left edge of the gradient."},
+{"item": "e146b", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A3", "note": "Colouring 2 has a blocky bump of dots sticking into the black at the left edge of the gradient."},
+{"item": "e264b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I can't see any difference between the two."},
+{"item": "e864b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 1 renders the brown creature's head as white-grey speckle, while 2 gives it red and olive that read as brown."},
+{"item": "e611b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 puts a pale, washed-out block of cells on the woman's warm face."},
+{"item": "e492a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 puts red specks on the dark tree trunk, which should be grey like the other trunks."},
+{"item": "e849a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C1", "note": "Colouring 1 makes Anubis's dark navy ears purple-magenta."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "e326a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C1", "note": "Colouring 2 puts a pale white dither patch into the plain blue upper sky where the original has none."},
+{"item": "e948a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 has a stray magenta cell at the top edge in dark blue sky."},
+{"item": "e920b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 1 fills the dark cypress with garish magenta dither instead of the dark blue it reads as."},
+{"item": "e975b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 1 loses the pinkish lights at the left tree edge, showing cyan instead."},
+{"item": "e548a", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B3", "note": "Colouring 1 loses the belt buckle into flat red."},
+{"item": "e902b", "verdict": "2", "confidence": "low", "problem": "seams", "where": "D2", "note": "Colouring 1 breaks the right yellow band into blocky pale and orange cells."},
+{"item": "e044a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e629a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 1 cuts the purplish tree crown short with blue at its top."},
+{"item": "e857b", "verdict": "2", "confidence": "low", "problem": "seams", "where": "C3", "note": "Colouring 1 renders the stump top as blocky white cells rather than streaked wood."},
+{"item": "e009b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B1", "note": "Only a slight change in the white glow at the top; both read the same."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "e589a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 puts red cells into the golden stone of the top-left corner."},
+{"item": "e241b", "verdict": "1", "confidence": "low", "problem": "seams", "where": "D3", "note": "Colouring 2 has a bright green block at the right edge that stands out from the olive-on-black neighbours."},
+{"item": "e406a", "verdict": "1", "confidence": "low", "problem": "detail", "where": "C2", "note": "Colouring 2 loses some of the cyan stripes between the red bars, turning them white."},
+{"item": "e073b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 1 has a grey-lilac cell in the orange reflection of the knee."},
+{"item": "e369a", "verdict": "2", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 1 paints magenta patches on Anubis's ear and head where the original is dark blue."},
+{"item": "e253b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 extends the magenta strip up the left edge where the original sky is blue."},
+{"item": "e421a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see a difference between the two."},
+{"item": "e751a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A2", "note": "Colouring 1 turns the reddish-brown forearm at the left edge into olive and black specks."},
+{"item": "e076a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D1", "note": "Colouring 1 drains part of the moon's yellow ring to white and lilac."},
+{"item": "e849a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 has magenta specks on Anubis's ears where the original is dark blue."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "e434b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B1", "note": "Only a few tree-edge cells switch between magenta and blue dots; neither reads worse."},
+{"item": "e783b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 2 turns part of the orange face into a grey-white strip."},
+{"item": "e689b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 1 puts an orange-red cell in the pale sunlit fence area, where it should be yellow."},
+{"item": "e636b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B2", "note": "Colouring 1 merges the tail's light band into dark red and loses the stripe."},
+{"item": "e934b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 2 renders the sword's cyan glow as a grey white-black dither and drains its tint."},
+{"item": "e631a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 puts a garish bright-red block over the trunk top amid the orange foliage."},
+{"item": "e096b", "verdict": "=", "confidence": "low", "problem": "noise", "where": "C1", "note": "Only the red sky's dither and vignette differ slightly; both read the same."},
+{"item": "e548a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I cannot see any difference."},
+{"item": "e550a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I cannot see any difference."},
+{"item": "e431b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "A1", "note": "Colouring 2 scatters red specks over the torch flame and neck where 1 stays a cleaner yellow-orange."}
+]

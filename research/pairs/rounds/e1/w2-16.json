@@ -1,0 +1,12 @@
+[
+{"item": "e894b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "The two look the same to the eye; at most a slightly different purple patch on the boy's arm."},
+{"item": "e232a", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B3", "note": "Colouring 1 loses the yellow belt buckle into flat red."},
+{"item": "e895b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A1", "note": "Only the torch flame core and a few dots by the A differ, neither reads clearly better."},
+{"item": "e597b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 2 turns the white strap highlight on the arm into greenish yellow."},
+{"item": "e193a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 1 puts green specks under the headlights where the reflections are white-yellow."},
+{"item": "e819a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C3", "note": "Only a few grey reflection dots on the road differ, barely visible."},
+{"item": "e196a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 drains the turquoise of the swirl to white-blue."},
+{"item": "e776b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 2 tints the top stars green and cyan instead of yellow."},
+{"item": "e857a", "verdict": "1", "confidence": "low", "problem": "detail", "where": "C3", "note": "Colouring 2 loses part of the red wooden stump into the yellow background."},
+{"item": "e043a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference."}
+]

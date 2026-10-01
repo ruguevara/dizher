@@ -1,0 +1,12 @@
+[
+{"item": "e075a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A1", "note": "Only a few cells left of the torch differ in orange vs yellow; neither reads clearly worse."},
+{"item": "e528a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 1 puts magenta stripes on the blue houses at the bottom where the original is blue."},
+{"item": "e404a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "D2", "note": "Colouring 2 renders the bright light by the sword as grey-white with black specks instead of a clean pale glow."},
+{"item": "e695a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C1", "note": "Differences in the olive/grey cells near the leaves are too small to prefer either."},
+{"item": "e783a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 drains the man's face to grey/yellow where the original is orange skin."},
+{"item": "e631b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 2 puts a garish bright red cell at the top of the dark trunk amid orange leaves."},
+{"item": "e229b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 adds purple-blue cells in the pale cyan sky at the top centre."},
+{"item": "e059a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference by eye."},
+{"item": "e246a", "verdict": "2", "confidence": "low", "problem": "seams", "where": "A2", "note": "Colouring 1 has blockier red/orange cells around the torch handle and hat brim."},
+{"item": "e591b", "verdict": "2", "confidence": "medium", "problem": "detail", "where": "C1", "note": "Colouring 1 washes the moustached man's face into a pale checker, losing the eye and moustache."}
+]

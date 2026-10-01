@@ -116,7 +116,7 @@ def deal(items: list, rng) -> list:
     while True:
         batches = [[] for _ in range(n)]
         for it in rng.permutation(items):
-            free = [b for b in batches if len(b) < PER_JUDGE and all(x[:3] != it[:3] for x in b)]
+            free = [b for b in batches if len(b) < PER_JUDGE and all(x[:-1] != it[:-1] for x in b)]
             if not free:
                 break
             min(free, key=len).append(str(it))

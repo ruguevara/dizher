@@ -1,0 +1,12 @@
+[
+{"item": "e908b", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "B3", "note": "Colouring 2 breaks the bright car headlights into dull yellow dots, losing their glow."},
+{"item": "e083b", "verdict": "=", "confidence": "low", "problem": "none", "where": "D3", "note": "Only a few dots differ around the mummy's hand; neither reads worse."},
+{"item": "e175a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference at viewing size."},
+{"item": "e031b", "verdict": "=", "confidence": "low", "problem": "colour", "where": "A3", "note": "Both put stray magenta and cyan into the dark bottom-left corner, just arranged differently."},
+{"item": "e263a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C2", "note": "Only a few specks differ at the top of the right trunk."},
+{"item": "e627b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 2 puts a magenta speck on the small top-left star, a colour the original does not have."},
+{"item": "e844b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 2 turns a green patch by the water into olive dots, further from the original's green."},
+{"item": "e044b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 2 makes a cell of the orange stonework olive-yellow."},
+{"item": "e714a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Only a couple of yellow specks on the stripe edge above the title differ."},
+{"item": "e400a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 1 adds magenta specks to the blue village buildings."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "e067b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 2 puts a whitish grey cell into the orange lower edge of the sunset glow."},
+{"item": "e229b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 has lavender/purple cells in the light cyan sky at the top centre."},
+{"item": "e435b", "verdict": "=", "confidence": "low", "problem": "none", "where": "C2", "note": "Only the dither in the sunset bands differs; neither reads clearly worse."},
+{"item": "e883b", "verdict": "=", "confidence": "low", "problem": "none", "where": "D3", "note": "Only a few cyan versus white dots in the bottom-right hills differ, which is hard to tell apart."},
+{"item": "e714b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A3", "note": "Only tiny dot differences near the girl's hand at bottom left, which can't be told apart."},
+{"item": "e779a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "The tail stripe's olive cells differ slightly; neither matches the orange-brown well."},
+{"item": "e568b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 1 leaves the left edge foliage black/olive where the original is dark green and teal."},
+{"item": "e548b", "verdict": "1", "confidence": "low", "problem": "detail", "where": "A3", "note": "Colouring 2 turns the belt buckle area red and loses its lighter buckle detail."},
+{"item": "e175b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "The whole picture is re-dithered with a different texture, but colours and detail read about the same."},
+{"item": "e804a", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "D3", "note": "Colouring 2 adds a stray magenta cell in the blue village area at bottom right."}
+]

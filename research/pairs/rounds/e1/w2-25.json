@@ -1,0 +1,12 @@
+[
+{"item": "e804a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "D3", "note": "2 adds an isolated magenta cell in the blue town area that reads as a speck."},
+{"item": "e759b", "verdict": "=", "confidence": "low", "problem": "none", "where": "C2", "note": "The few cyan/green cell swaps near the statue's arm look equally plausible."},
+{"item": "e238b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "A1", "note": "2 breaks the smooth cyan-green glow with a grey cell and a dark green cell."},
+{"item": "e002b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e460b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e998b", "verdict": "=", "confidence": "low", "problem": "none", "where": "D3", "note": "Small cyan/blue cell differences in the lower-right water, neither clearly better."},
+{"item": "e725a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A2", "note": "1 extends magenta cells up the dark blue cypress where the original has no purple."},
+{"item": "e050b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "2 turns the bright yellow-green glow behind her head into a muddy olive block."},
+{"item": "e934b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "2 drains the cyan-white light around the sword to plain grey dither."},
+{"item": "e783b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "2 paints part of the orange face as grey."}
+]

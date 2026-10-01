@@ -1,0 +1,12 @@
+[
+{"item": "e400b", "verdict": "=", "confidence": "low", "problem": "colour", "where": "C3", "note": "Both put magenta into the village roofs where the original is orange-brown on blue; neither reads better."},
+{"item": "e083b", "verdict": "=", "confidence": "low", "problem": "none", "where": "D3", "note": "Only a tiny change around the mummy's hand, no visible preference."},
+{"item": "e096a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e498a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 2 has a magenta cell at the top edge where the sky is dark blue."},
+{"item": "e712a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C3", "note": "Colouring 2 sprinkles grey specks on the dark road below the cars."},
+{"item": "e948b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e568a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 2 puts cyan cells into the dark green foliage at top left."},
+{"item": "e857b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "C3", "note": "Colouring 1 turns the top of the stump into blocky white cells instead of red wood with highlights."},
+{"item": "e814b", "verdict": "1", "confidence": "low", "problem": "seams", "where": "B3", "note": "Colouring 2 has an olive cell breaking the smooth orange gradient left of the raccoon's leg."},
+{"item": "e591a", "verdict": "=", "confidence": "low", "problem": "detail", "where": "C1", "note": "The two differ only slightly in the shading of the moustached man's face; neither is clearly better."}
+]

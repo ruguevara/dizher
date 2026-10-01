@@ -1,0 +1,12 @@
+[
+{"item": "e934a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "D2", "note": "Colouring 2 breaks the white glow by the waterfall into pale cyan and green cells."},
+{"item": "e431a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 1 has less yellow in the torch flame's bright core and reads redder."},
+{"item": "e735b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 adds an extra magenta cell to the blue swirl."},
+{"item": "e326b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C1", "note": "Colouring 1 puts a stray white dotted blob in the plain blue sky and cuts off the pink cloud's left end."},
+{"item": "e603b", "verdict": "1", "confidence": "low", "problem": "seams", "where": "B2", "note": "Colouring 2 leaves dark blue cell holes in the light swirl near the small star."},
+{"item": "e096a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e454a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e573a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 2 turns part of the green bush olive yellow."},
+{"item": "e550b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "D2", "note": "Colouring 2 puts white specks on the dark rocks at the right."},
+{"item": "e800b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 spreads magenta cells over the blue jacket's shoulder."}
+]

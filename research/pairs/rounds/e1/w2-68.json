@@ -1,0 +1,12 @@
+[
+{"item": "e883a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e814b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Could not find a visible difference."},
+{"item": "e591b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "C1", "note": "Colouring 1 washes the man's face cells to flat yellow, losing the eye detail."},
+{"item": "e268b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 puts a lavender cell into the cyan sky that clashes with its neighbours."},
+{"item": "e636a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Could not find a visible difference."},
+{"item": "e488a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 has a greenish-yellow cell in the orange foliage."},
+{"item": "e117a", "verdict": "2", "confidence": "low", "problem": "noise", "where": "A3", "note": "Colouring 1 has dark specks in the red area near the girl's hand."},
+{"item": "e075b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 turns the orange hieroglyph panel flat yellow-green and loses the bird glyph."},
+{"item": "e557a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 1 has pink and cyan cells in the yellow cloud band where the original is yellow-orange."},
+{"item": "e894a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 1 makes the pale V-sign fingers garish orange."}
+]

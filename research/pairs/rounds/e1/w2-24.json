@@ -1,0 +1,12 @@
+[
+{"item": "e640b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e002b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e895a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e408a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e783a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 turns part of the face under the hat brim to grey dots instead of orange skin."},
+{"item": "e037a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "B3", "note": "Both put a grey slab on the path; colouring 2 adds a bigger pink cell and greenish specks there."},
+{"item": "e436a", "verdict": "2", "confidence": "low", "problem": "noise", "where": "A3", "note": "Colouring 1 scatters odd cyan and green cells through the olive water at the lower left."},
+{"item": "e998b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D3", "note": "Colouring 1 loses some of the pale cyan water at the bottom, going black."},
+{"item": "e099b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 1 puts purple specks on the right figure's dark jacket where colouring 2 keeps dark blue."},
+{"item": "e237b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 turns more of the boy's blue sleeve purple."}
+]

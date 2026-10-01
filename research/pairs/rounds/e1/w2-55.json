@@ -1,0 +1,12 @@
+[
+{"item": "e175a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No difference I can see reliably."},
+{"item": "e193a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C3", "note": "Colouring 2 puts grey specks in the street-light reflections where the original glows green-yellow."},
+{"item": "e814a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e601b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e739b", "verdict": "=", "confidence": "low", "problem": "none", "where": "D2", "note": "One cell in the swirl is dark blue in 1 and pale in 2; both are plausible."},
+{"item": "e031b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A3", "note": "The magenta and cyan cells at the bottom left differ only slightly."},
+{"item": "e557a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 1 breaks the yellow cloud band with cyan and pinkish cells that are not in the original."},
+{"item": "e712b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "C3", "note": "Colouring 1 has a streak of grey specks under the headlights where the original has yellow reflections."},
+{"item": "e050b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 turns the bright glow above the head into dark olive dither."},
+{"item": "e044b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."}
+]

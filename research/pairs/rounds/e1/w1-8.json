@@ -1,0 +1,12 @@
+[
+{"item": "e797b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 1 turns the lower part of the left yellow band white, where the original is yellow."},
+{"item": "e537a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 2 fills the dark cypress with garish magenta speckles."},
+{"item": "e076b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D1", "note": "Colouring 1 makes the moon's right rim white/blue rather than yellow."},
+{"item": "e005a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 puts a magenta strip down the left edge, where the original is dark blue sky through the tree."},
+{"item": "e194a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e751a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A3", "note": "Only slight red fill differences on the left arm; neither is clearly worse."},
+{"item": "e155b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "D2", "note": "Colouring 2 renders the pale glow by the waterfall as a grey black-and-white dither instead of pale cyan."},
+{"item": "e146b", "verdict": "1", "confidence": "high", "problem": "seams", "where": "A3", "note": "Colouring 2 has a blocky bulge of dither cells sticking into the black on the left edge of the gradient."},
+{"item": "e864a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C3", "note": "Colouring 1 puts garish red cells on the olive-brown crocodile head and more purple at the bottom."},
+{"item": "e706a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "A3", "note": "Colouring 2 has an isolated blue patch in the dark bottom-left."}
+]

@@ -1,0 +1,11 @@
+[
+ {"item": "e117b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference; at most a few red specks near the lower left."},
+ {"item": "e009a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Cannot tell the two apart."},
+ {"item": "e193b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C3", "note": "Colouring 2 turns the white headlights and the street lights round them green and cyan."},
+ {"item": "e550b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Cannot tell the two apart."},
+ {"item": "e954b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "C3", "note": "In colouring 1 the pale path patch breaks into speckled yellow and greenish-white cells, where 2 has one clean light block."},
+ {"item": "e084b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 1 puts purple cells in the village roofs, where the original is blue."},
+ {"item": "e408a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Cannot tell the two apart."},
+ {"item": "e083b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 1 puts grey-white dots on the tan mummy's chest, which breaks up its yellow body."},
+ {"item": "e055b", "verdict": "1", "confidence": "high", "problem": "colour", "where": "B2", "note": "Colouring 2 turns much of the boy's blue jacket arm and sleeve purple."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "e631a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 puts a solid garish red cell at the top of the right trunk."},
+{"item": "e246b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A1", "note": "Only tiny differences around the torch flame; both read the same."},
+{"item": "e281a", "verdict": "=", "confidence": "low", "problem": "none", "where": "D1", "note": "Differences in the moon are barely visible; both fine."},
+{"item": "e795a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 1 has a pinkish off-colour cell inside the yellow cloud band."},
+{"item": "e980a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A1", "note": "Only a lavender versus cyan swap in the busy sky cells; neither is clearly better."},
+{"item": "e689b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 1 has an orange cell behind the fence where the field is pale yellow."},
+{"item": "e431b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A2", "note": "Small reshuffle of red and orange near the torch; indistinguishable at a glance."},
+{"item": "e037a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "B3", "note": "Colouring 2 breaks the pale path into a bigger pink block and yellow-white cells."},
+{"item": "e929a", "verdict": "2", "confidence": "low", "problem": "noise", "where": "A2", "note": "Colouring 1 adds a stray cyan cell at the small star left of the cypress."},
+{"item": "e404a", "verdict": "=", "confidence": "low", "problem": "none", "where": "D2", "note": "Only a slight tint change in the waterfall glow; both equally fine."}
+]

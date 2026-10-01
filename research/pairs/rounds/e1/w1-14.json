@@ -1,0 +1,12 @@
+[
+{"item": "e264b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see a difference between the two."},
+{"item": "e638b", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "C1", "note": "Colouring 1 adds patches of white speckles in the plain blue sky at the top and above the pink cloud."},
+{"item": "e706a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see a difference between the two."},
+{"item": "e896a", "verdict": "2", "confidence": "low", "problem": "seams", "where": "A3", "note": "Colouring 1's dither edge jumps left in a cell-shaped step at the bottom, breaking the smooth gradient edge."},
+{"item": "e406b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 turns the cyan stripes between the red ones into white, so the cyan-red pattern is lost."},
+{"item": "e073a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 2 puts a pale grey-lavender cell in the warm reflection of the leg, where the original is dark orange."},
+{"item": "e991a", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "D2", "note": "Colouring 2 scatters magenta and white specks over the dark figure on the right."},
+{"item": "e241a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D3", "note": "Colouring 2 renders the green water at the right edge as dim yellow dither on black and loses its green."},
+{"item": "e864a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 2 renders the brown-orange creature's head and its reflection as colourless white on black."},
+{"item": "e953a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 1 leaves a stray cyan speck below the yellow bar in the black-and-white checker row."}
+]

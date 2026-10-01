@@ -1,0 +1,12 @@
+[
+{"item": "e988b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C3", "note": "Colouring 2 puts blue specks on the white chest strap."},
+{"item": "e255b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 1 shows less of the girl's red sleeve at the lower left."},
+{"item": "e406a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 2 turns the cyan bars between the red stripes white."},
+{"item": "e310a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Only tiny differences in a few orange-yellow cells; neither is worse."},
+{"item": "e797b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 1 turns part of the left yellow band white-grey."},
+{"item": "e146a", "verdict": "2", "confidence": "high", "problem": "seams", "where": "A3", "note": "Colouring 1 has a square block of dots sticking out of the gradient's edge into the black."},
+{"item": "e076a", "verdict": "=", "confidence": "low", "problem": "none", "where": "D1", "note": "Only a slight shift in the sun's red ring; neither is worse."},
+{"item": "e073a", "verdict": "x", "confidence": "low", "problem": "colour", "where": "B3", "note": "One cell in the orange reflection is pinkish in 1 and grey-blue in 2; both are wrong."},
+{"item": "e745a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "I cannot see a difference that matters."},
+{"item": "e751b", "verdict": "1", "confidence": "low", "problem": "detail", "where": "A2", "note": "Colouring 2 loses the reddish arm at the left edge to black and yellow specks."}
+]

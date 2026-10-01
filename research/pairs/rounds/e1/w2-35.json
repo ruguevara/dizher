@@ -1,0 +1,12 @@
+[
+{"item": "e975b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A2", "note": "Colouring 1 puts cyan where the original has a pinkish patch between the tree branches at the left edge."},
+{"item": "e911a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see any difference between the two."},
+{"item": "e627b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 2 adds a stray magenta cell in the blue sky at the top left."},
+{"item": "e737a", "verdict": "=", "confidence": "low", "problem": "seams", "where": "B1", "note": "The boy's face is a blocky yellow and white checker in both, with only slightly different cells."},
+{"item": "e759a", "verdict": "=", "confidence": "low", "problem": "colour", "where": "C2", "note": "The cyan and pale green cells on the green hill differ a little, and neither is clearly closer to the original."},
+{"item": "e246b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A2", "note": "Colouring 1 makes the torch handle yellower, where the original is brown-orange."},
+{"item": "e106a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see any difference between the two."},
+{"item": "e875a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D1", "note": "Colouring 1 washes the moon's yellow rings out to pale grey-white and has odd orange cells on its left edge."},
+{"item": "e428a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 puts dark blue cells in the light hills and a magenta cell by the church, which the original does not have."},
+{"item": "e603a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 has dark blue cells in the middle of the light blue swirl, breaking it up."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "e804b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e591b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "C2", "note": "Colouring 1 loses a little of the moustache/face structure on the man at right centre."},
+{"item": "e435a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C2", "note": "Colouring 2 adds stray cyan specks in the dark buildings below the sunset."},
+{"item": "e217a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B1", "note": "Differences in the canopy cells are too small to prefer either."},
+{"item": "e998a", "verdict": "=", "confidence": "low", "problem": "none", "where": "D3", "note": "Only a couple of light cyan cells in the lower right water differ, neither clearly better."},
+{"item": "e929a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A2", "note": "One star halo cell left of the cypress is cyan in 1 and grey-white in 2; both miss the star's yellow."},
+{"item": "e431a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A1", "note": "Torch flame cells differ slightly in yellow/red balance, both read as fire."},
+{"item": "e238a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A2", "note": "One cell at the left is green in 1 and teal in 2; both fit the greenish-teal original."},
+{"item": "e334a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 extends magenta down the left edge where the original is bluish sky through the tree."},
+{"item": "e272a", "verdict": "2", "confidence": "low", "problem": "detail", "where": "C2", "note": "Colouring 1 drops the small bluish cloud patch inside the pink sunset."}
+]

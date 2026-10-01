@@ -1,0 +1,12 @@
+[
+{"item": "e044b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two colourings."},
+{"item": "e528b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 2 puts garish magenta cells into the blue houses at the bottom middle where the original is blue."},
+{"item": "e232a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 1 has red patches on the khaki shirt above the belt where the original is yellowish."},
+{"item": "e454a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two colourings."},
+{"item": "e759a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C2", "note": "Only a cell or two in the teal hill differ (cyan against pale green), neither clearly closer."},
+{"item": "e862a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A3", "note": "Only small cell differences near the knee reflection, neither clearly better."},
+{"item": "e272b", "verdict": "1", "confidence": "low", "problem": "detail", "where": "C2", "note": "Colouring 2 loses the small violet-blue cloud patch inside the pink sky, filling it with uniform magenta."},
+{"item": "e002a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two colourings."},
+{"item": "e568b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 1 renders the green foliage at the top left as black and olive dither, losing the green the original has."},
+{"item": "e601a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Only a few yellow cells along the banner edge differ, hardly noticeable."}
+]
