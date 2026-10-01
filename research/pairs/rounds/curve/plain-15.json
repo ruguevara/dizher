@@ -1,0 +1,12 @@
+[
+{"item": "p36b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 puts cyan cells on the blue jacket and turns the girl's hair bright yellow."},
+{"item": "p62b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A2", "note": "Colouring 1 has a grey dotted strip and flat dark-red blocks on the left edge of the sky."},
+{"item": "p63b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "B2", "note": "Colouring 1 renders the boy's face as a blocky yellow-white checkerboard of cells, losing his features."},
+{"item": "p11b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 loses the light-blue bottle top and the grey parts of the gun, all white or red."},
+{"item": "p13a", "verdict": "1", "confidence": "high", "problem": "seams", "where": "B2", "note": "Colouring 2 turns the boy's face into a blocky checkerboard of yellow and white cells."},
+{"item": "p00a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 2 loses some of the dragon head's teal and adds stray white and magenta cells."},
+{"item": "p19a", "verdict": "1", "confidence": "high", "problem": "seams", "where": "B2", "note": "Colouring 2 drowns the face in heavy magenta and blocky yellow and grey cells, losing the glasses and eyes."},
+{"item": "p59a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "p32b", "verdict": "=", "confidence": "high", "problem": "none", "where": "", "note": "The two look identical."},
+{"item": "p47b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 loses the light-blue bottle top and has blocky dark-red cells in the left sky."}
+]

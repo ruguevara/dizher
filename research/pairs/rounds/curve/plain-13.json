@@ -1,0 +1,12 @@
+[
+{"item": "p27a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 flattens the face into magenta and yellow, losing the original's blue patches, the green in the hair and the red rim of the left glasses lens."},
+{"item": "p20b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 1 loses the green grass beside the path and puts a stray red speck near the top of the trunk."},
+{"item": "p60a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A3", "note": "Colouring 2 puts olive-brown cells into the orange glow under the sun and lilac cells into the cyan band, and they clash with the smooth gradient."},
+{"item": "p52b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C1", "note": "Colouring 1 paints the green-blue dragon's neck and head flat yellow, so it loses the original's main colour contrast."},
+{"item": "p11b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 1 loses the light-blue top of the bottle at the top of the picture and renders it white."},
+{"item": "p12a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 2 drops the green grass strip to the right of the path."},
+{"item": "p35a", "verdict": "=", "confidence": "high", "problem": "none", "where": "", "note": "I could not see any difference between the two."},
+{"item": "p21a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 puts magenta cells on the blue jacket's shoulder and breaks the right-hand man's face into blocky yellow checkered cells."},
+{"item": "p53b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A1", "note": "Colouring 1 shows blocky dark-red cell steps in the red sky and olive patches in the orange lower half, and its bottle top is white instead of light blue."},
+{"item": "p45b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 1 turns the light path into a flat grey block with blocky yellow and white cells, a drained, stone-like patch."}
+]

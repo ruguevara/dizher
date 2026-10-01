@@ -1,0 +1,12 @@
+[
+{"item": "p18a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 2 turns the green bushes and cyan water on the right into olive-yellow and grey cells."},
+{"item": "p35b", "verdict": "=", "confidence": "high", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "p27b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B2", "note": "Colouring 1 loses the red frame of the left glasses lens and the blue patches of the forehead, though 2 adds some green in the hair."},
+{"item": "p00b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 1 has less of the dragon's teal and the blue-green tones in the middle, so it reads more as flat yellow and purple."},
+{"item": "p39b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 puts grey-white and red cells in the top-left corner of the orange wall."},
+{"item": "p06a", "verdict": "1", "confidence": "high", "problem": "seams", "where": "A2", "note": "Colouring 2 has blocky purple and orange cell edges, a lilac band, and olive and green specks around the sun."},
+{"item": "p55b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 draws the right lens as blocky grey and white cells, losing its cyan and the red frame."},
+{"item": "p26b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Differences are tiny and neither is clearly better."},
+{"item": "p29a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 puts grey cells at the top-left edge of the orange wall."},
+{"item": "p60b", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "A2", "note": "Colouring 1 has more olive specks under the sun and lilac cells in the cyan band."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "p38a", "verdict": "2", "confidence": "low", "problem": "seams", "where": "D2", "note": "Colouring 1 drops a saturated blue block into the right edge of the pink cloud that clashes with its neighbours."},
+{"item": "p25a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 turns the light-blue bottle white and adds green-yellow cell strips along the bottom-left edge."},
+{"item": "p52a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C1", "note": "Colouring 2 drains the green-teal dragon neck to yellow, so the dragon no longer reads as green."},
+{"item": "p12b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 1 loses the green grass strip right of the path, leaving it yellow-dotted."},
+{"item": "p24b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D1", "note": "Colouring 1 has a duller purple cloud on the right and drab khaki blocks in the sun glow."},
+{"item": "p39a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 puts grey-white cells into the orange sandstone wall at the top left."},
+{"item": "p53b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 makes the blue bottle white, has blockier dark-red sky patches and green strips at the bottom left."},
+{"item": "p01a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C1", "note": "They differ only by a few cells at the dragon's jaw (cyan against white-lilac), neither clearly better."},
+{"item": "p31b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 1 has a less vivid pink cloud top and dimmer headlights."},
+{"item": "p58a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 2 turns the orange-brown paint at the bottom left into red and white and adds a harsh red block in the hair."}
+]

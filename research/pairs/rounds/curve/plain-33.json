@@ -1,0 +1,11 @@
+[
+{"item": "p02a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "The two colourings look the same to the eye."},
+{"item": "p09a", "verdict": "1", "confidence": "high", "problem": "seams", "where": "C1", "note": "In 2 the magenta clouds break into a blocky patchwork of purple, pink and red cells, and grey-yellow blocks sit by the sun."},
+{"item": "p33a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "In 2 the right lens turns into drained grey blocks, and the red glasses frame is lost."},
+{"item": "p42b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "1 loses the dragon's green body and the red mouth, and paints the left warrior magenta where the original is blue."},
+{"item": "p48b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "The two colourings look the same to the eye."},
+{"item": "p60a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A2", "note": "2 has olive-brown cells in the orange glow under the sun and a stray lilac block in the cyan band, both clashing with the smooth gradient."},
+{"item": "p63b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "B1", "note": "In 1 the boy's face is a yellow-white checkerboard of cells, and his jacket gets purple blocks."},
+{"item": "p01b", "verdict": "=", "confidence": "low", "problem": "none", "where": "C1", "note": "Only a few cells around the dragon's head differ, and neither version is clearly better."},
+{"item": "p18a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "2 turns the green foliage on the right into olive-yellow, and it has a pinkish clashing block near the arm."}
+]

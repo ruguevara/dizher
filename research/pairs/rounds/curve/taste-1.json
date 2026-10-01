@@ -1,0 +1,12 @@
+[
+{"item": "p00b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "B2", "note": "Colouring 2 scatters stray cyan and green cells over the figures and the lower middle, which looks patchy."},
+{"item": "p46b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 1 renders the bright waterfall glow and green bank on the right as greyish, olive cells."},
+{"item": "p37a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A1", "note": "Colouring 2 has a blockier purple cloud, a lavender band at the left and an orange block stepping into the yellow band."},
+{"item": "p20a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A3", "note": "Colouring 2 loses the green grass cells by the path and adds dark specks in the canopy."},
+{"item": "p47b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 loses the blue of the bottle and greys the raccoon's head with olive blotches."},
+{"item": "p03a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 2 drains the picture's greens and its yellow-green glow into olive yellow."},
+{"item": "p57b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 1 makes the green-cyan dragon olive yellow and adds magenta patches the original lacks."},
+{"item": "p56a", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "C1", "note": "Colouring 2 turns the man's face into blocky yellow checks and loses his features."},
+{"item": "p25b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 loses the blue bottle, greys the raccoon's head and leaves an olive strip down the orange lower left."},
+{"item": "p23b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 2 paints the pale path as a large dithered pink patch and adds garish flat-green grass bands."}
+]

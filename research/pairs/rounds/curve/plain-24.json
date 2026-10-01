@@ -1,0 +1,12 @@
+[
+{"item": "p54a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I could not see any difference between the two."},
+{"item": "p19b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "B2", "note": "Colouring 1 breaks the face into flat cyan, white and yellow blocks and a solid magenta half, losing the glasses and the painterly mix of colours."},
+{"item": "p06a", "verdict": "1", "confidence": "high", "problem": "seams", "where": "A2", "note": "Colouring 2 has stray yellow, olive and green cells around the sun and pale lavender blocks in the cyan band, which clash with the smooth gradient."},
+{"item": "p24b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 has greyish olive blocks around the sun's glow, and the clouds on the right are paler and less magenta."},
+{"item": "p12b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "C3", "note": "Colouring 1 drops the green grass strip by the fence, which the original has."},
+{"item": "p03b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 1 turns the green foliage and water into drab olive, grey and black, losing the picture's green."},
+{"item": "p30b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A3", "note": "Colouring 1 has hard bright cyan blocks in the hair and shoulder, and the glasses are weaker."},
+{"item": "p05b", "verdict": "2", "confidence": "high", "problem": "detail", "where": "D2", "note": "Colouring 1 loses the mummies' green eyes and turns Anubis' gold collar red and grey."},
+{"item": "p17b", "verdict": "2", "confidence": "high", "problem": "detail", "where": "D2", "note": "Colouring 1 loses the mummies' green eyes and turns Anubis' gold collar red and grey."},
+{"item": "p33a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 2 puts flat grey cells over the right lens and breaks the red rim of the glasses."}
+]

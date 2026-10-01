@@ -1,0 +1,12 @@
+[
+{"item": "p23b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 1 turns the pale path into a grey block with white and pink patches that do not read as the leaf-strewn path."},
+{"item": "p31a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 2 washes the hot pink clouds into pale pinkish-white cells."},
+{"item": "p41a", "verdict": "=", "confidence": "high", "problem": "none", "where": "", "note": "Practically identical; only one headlight cell differs, white against yellow."},
+{"item": "p01a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 2 turns part of the cyan-green dragon jaw grey-white with a lilac cell."},
+{"item": "p02a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "B1", "note": "Colouring 2 scatters more yellow specks across the orange canopy and leaves, so it looks slightly noisier."},
+{"item": "p28b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B1", "note": "Colouring 1 breaks up the V-sign fingers with red specks above them."},
+{"item": "p50b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 1 has a dull olive block in the yellow-orange hair at the top."},
+{"item": "p16b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "D1", "note": "Colouring 1 paints green and white cells into the golden letter S of the title."},
+{"item": "p35b", "verdict": "=", "confidence": "high", "problem": "none", "where": "", "note": "I see no difference."},
+{"item": "p06b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "A2", "note": "Colouring 1 has blocky cell steps in the smooth gradients: olive cells by the sun, a stepped purple patch top left and lilac cells in the cyan band."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "p58a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A3", "note": "2 turns the orange-brown lower left into red dithered with white, reading pink."},
+{"item": "p24a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D1", "note": "2 drains the bright magenta band on the right to dull purple and greys the sun with khaki cells."},
+{"item": "p18a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "2 loses the green water on the right, turning it to olive yellow and grey."},
+{"item": "p19a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C2", "note": "2 drains the right half of the face to grey and khaki and makes the orange lower left pinkish red."},
+{"item": "p06a", "verdict": "1", "confidence": "high", "problem": "seams", "where": "A2", "note": "2 has stray olive and green cells around the sun, pinkish blocks in the cyan band and a blocky step in the purple."},
+{"item": "p45a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B3", "note": "1 paints the pale path as a pink red-and-white dithered blob."},
+{"item": "p31b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "1 turns part of the red-orange cloud into pinkish red-white dither and dims the headlights to grey-yellow."},
+{"item": "p25b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "1 loses the blue of the bottle at the top and has an olive strip along the left edge."},
+{"item": "p42b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "1 replaces the green of the dragon's body with yellow and has clashing magenta patches, and its dragon mouth is less red."},
+{"item": "p15a", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "D2", "note": "2 loses the mummies' glowing green eyes and adds red cells that clash in the Anubis area."}
+]

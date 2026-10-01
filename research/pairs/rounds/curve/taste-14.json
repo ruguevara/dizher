@@ -1,0 +1,12 @@
+[
+{"item": "p46a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 2 turns the green bank and cyan glow by the waterfall into olive-yellow and grey-white, losing the original's hues there."},
+{"item": "p60b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A3", "note": "Colouring 1 has stray olive cells around the sun and lavender cells in the cyan band that clash with the smooth gradient."},
+{"item": "p26b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not find a visible difference between the two."},
+{"item": "p15a", "verdict": "1", "confidence": "high", "problem": "detail", "where": "B1", "note": "Colouring 2 loses the mummies' green eyes and puts blocky red cells around the hat and torch that clash with the yellow."},
+{"item": "p43b", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "B3", "note": "Colouring 2 spreads more pink cells over the leaf-covered path and adds flat green blocks on the right bank that stand out from their neighbours."},
+{"item": "p36b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 2 puts cyan streaks on the boy's blue sleeve that do not match the jacket."},
+{"item": "p30a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 1 turns part of the yellow-white hair green and drains the cyan on the left shoulder to grey."},
+{"item": "p47a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 loses the cyan of the bottle at the top (it goes white) and puts olive cells on the tail."},
+{"item": "p53a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 loses the cyan of the bottle at the top and has olive cells on the tail and the left edge."},
+{"item": "p09b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "C1", "note": "Colouring 1 breaks the magenta clouds into blocky pink, grey and purple cells, and puts grey cells next to the sun."}
+]

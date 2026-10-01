@@ -1,0 +1,12 @@
+[
+{"item": "p57a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 2 loses the dragon's green and cyan; it turns olive yellow and the middle gets odd purple patches."},
+{"item": "p26b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "B2", "note": "Colouring 1 has a few more dark red blotches on the woman's back, where the skin is smooth."},
+{"item": "p36b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 2 gives the girl on the left garish yellow hair and face, and puts cyan cells on the boy's arm that clash with the blue."},
+{"item": "p11b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 makes the blue glow at the top of the bottle plain white."},
+{"item": "p03a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 2 drains the green foliage to olive yellow and puts grey blocks in the sky."},
+{"item": "p53a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 loses the cyan at the top of the bottle and has more olive cells clashing along the left and bottom edges."},
+{"item": "p30a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 2 loses the blue in the middle of the face for grey and yellow blocks, though its left shoulder is closer to the cyan."},
+{"item": "p20b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 1 loses the green grass patches by the path and adds a stray red speck in the canopy."},
+{"item": "p07b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 1 drains the green foliage to olive yellow and puts grey blocks in the sky."},
+{"item": "p24b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C1", "note": "Colouring 1 has dull grey-olive blocks around the sun and less of the bright magenta in the clouds."}
+]

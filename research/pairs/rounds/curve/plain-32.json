@@ -1,0 +1,12 @@
+[
+{"item": "p41b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D3", "note": "Colouring 1 turns the near car's bright white headlights into dull yellow blobs."},
+{"item": "p12a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 2 loses the green grass patch by the right-hand fence and leaves it olive."},
+{"item": "p32b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I can't see a difference between them."},
+{"item": "p13b", "verdict": "2", "confidence": "high", "problem": "detail", "where": "B2", "note": "In colouring 1 the boy's face is a blocky red and yellow checkerboard of cells with no features."},
+{"item": "p01a", "verdict": "=", "confidence": "low", "problem": "detail", "where": "C1", "note": "The only differences are small cell changes around the dragon's head, and neither version is clearly better."},
+{"item": "p15a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 adds garish red blotches around the hat and Anubis, and the mummies' green eyes are gone."},
+{"item": "p08b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 paints Anubis's gold collar white and red, and one pair of green eyes is gone."},
+{"item": "p22a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "They differ only in a few cells on the explorer's arm, and neither is clearly better."},
+{"item": "p49a", "verdict": "2", "confidence": "low", "problem": "noise", "where": "C3", "note": "Colouring 1 puts magenta specks on the creature's dark body, where the original has none."},
+{"item": "p26a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B2", "note": "In colouring 2 the figure's skin has harsher red patches, and the sky has more dark blue cells."}
+]

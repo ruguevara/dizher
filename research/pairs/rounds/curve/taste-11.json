@@ -1,0 +1,12 @@
+[
+{"item": "p42a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 puts magenta/purple cells around the left warrior and dragon body where the original is green and blue, and loses the green at the left."},
+{"item": "p60a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A3", "note": "Colouring 2 has muddy olive cells below the sun and mauve blocks breaking the cyan band, clashing with the smooth gradient."},
+{"item": "p48a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "p07b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 1 turns the greens into olive and the sky into a blocky patchwork of pale grey-green and pastel cells."},
+{"item": "p03b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 1 drains the foliage to olive and breaks the sky into a pastel cell patchwork; 2 keeps clean greens and cyans."},
+{"item": "p38a", "verdict": "=", "confidence": "low", "problem": "none", "where": "D1", "note": "Only the right tip of the pink cloud differs (blue-speckled pink against purple cells), neither clearly better."},
+{"item": "p00a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 2 loses the dragon head's teal and the green touches, putting purple where the original is green-blue."},
+{"item": "p11a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 makes the light-blue bottle top white."},
+{"item": "p59b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "p09a", "verdict": "1", "confidence": "high", "problem": "seams", "where": "C1", "note": "Colouring 2 turns the smooth magenta cloud into a blocky patchwork of pale pink, purple and red cells with olive-grey blocks by the sun."}
+]

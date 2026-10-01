@@ -1,0 +1,12 @@
+[
+{"item": "p59b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "B2", "note": "Colouring 1 breaks the smooth orange shading of the woman's arm and chest into dark red patches."},
+{"item": "p56b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "C1", "note": "Colouring 1 turns the moustached man's face into a blocky yellow-white checkerboard that loses his eyes and moustache."},
+{"item": "p00a", "verdict": "=", "confidence": "low", "problem": "colour", "where": "A2", "note": "Each has wrong-hue cells (cyan in 1, magenta in 2) on the warriors' shorts and the water, and neither is clearly better."},
+{"item": "p24b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "C1", "note": "Colouring 1 breaks the pink cloud into blocky purple, pink and red cells, and it has grey blocks in the sun glow."},
+{"item": "p46a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 2 loses the green of the trees on the right and turns them dull yellow on black."},
+{"item": "p47b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 loses the cyan of the bottle at the top and breaks the raccoon's orange head and arm into white and red cells."},
+{"item": "p17b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 makes Anubis's gold collar grey-white and red, and it loses the green glowing eyes in the dark."},
+{"item": "p36a", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "B2", "note": "Colouring 1 scatters cyan specks over the boy's blue jacket sleeve."},
+{"item": "p48b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I can see no difference between the two."},
+{"item": "p18a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 2 loses the greens of the foliage on the right and bottom left and turns them yellow on black."}
+]

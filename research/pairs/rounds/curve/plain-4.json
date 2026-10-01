@@ -1,0 +1,12 @@
+[
+{"item": "p06b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "A2", "note": "Colouring 1 has blocky olive and green cells around the sun, a stepped orange block on the horizon and a lilac strip in the pale sky band."},
+{"item": "p14b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "p63a", "verdict": "1", "confidence": "high", "problem": "seams", "where": "B2", "note": "Colouring 2 turns the boy's face into a checkerboard of pale yellow and white cells and puts magenta blocks on his arm."},
+{"item": "p37b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A2", "note": "Colouring 1 has a lilac strip with a hard step across the pale sky band, a wide stepped orange block at the horizon and a blocky notch in the purple cloud; colouring 2 has only two small lilac blocks."},
+{"item": "p48b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "p09a", "verdict": "1", "confidence": "high", "problem": "seams", "where": "C1", "note": "Colouring 2 breaks the pink sunset clouds into a patchwork of magenta, pink, red and lilac cells and puts grey-olive blocks in the yellow glow."},
+{"item": "p34a", "verdict": "=", "confidence": "low", "problem": "detail", "where": "C1", "note": "Only small cell changes on the dragon's head, neither clearly better."},
+{"item": "p62b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A2", "note": "Colouring 1 has a grey stripe of cells down the left edge and blocky flat red cells in the dark-red sky beside it."},
+{"item": "p61b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 paints the raccoon's arm and body in grey and olive cells where the fur is orange."},
+{"item": "p29b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 has grey and white cells in the top-left corner where the stone wall is orange."}
+]

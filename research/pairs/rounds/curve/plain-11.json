@@ -1,0 +1,12 @@
+[
+{"item": "p49a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 puts magenta specks into the dark brown creature body."},
+{"item": "p06a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 2 has olive cells around the sun, a magenta block in the blue band and blocky seams in the yellow glow."},
+{"item": "p56a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "C1", "note": "Colouring 2 turns the man's face on the right into blocky yellow cells and loses its features."},
+{"item": "p62a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 2 has a grey column of cells on the left edge of the red sky."},
+{"item": "p35a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "p04a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A3", "note": "Colouring 2 has olive cells under the sun in the orange glow."},
+{"item": "p02b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Only tiny changes near the path; both equally good."},
+{"item": "p13b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "B2", "note": "Colouring 1 makes the boy's face a blocky yellow checkerboard with no features."},
+{"item": "p15b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 has red blotches around the hat and Anubis's headdress where gold and dark blue belong, and drops the mummies' green eyes."},
+{"item": "p34b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "C1", "note": "Colouring 1 darkens the dragon's jaw and adds a magenta speck where the teeth should be."}
+]

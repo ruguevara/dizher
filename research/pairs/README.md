@@ -360,4 +360,36 @@ cells or more and every null pair called same, the only layout that has both.
 
 Step 2 takes layout e as the judges' view.
 
+### 9. Session E step 2: how often a judge prefers the painting (2026-10-01)
+
+`curve.py`. Pairs with the painting's side known better, through layout e: frac, Select pairs against Select pairs
+with a share of the painted segments painted (0.1, 0.25, 0.5 random segments, and the whole painting; 36 pairs);
+seg, the painting against itself with one segment given back (step 1's 18 segments of 3 cells or more); C, the
+painting against the cells' next best pair by the energy (6); null, re-dithers (4). Each pair to 6 fresh judges, 3
+in each order (39 judges, the prompt `curve.PROMPT`); frac and null also to 4 judges with a paragraph on the user's
+taste (16 judges). Size is the mean dE through the project's eye on the changed cells.
+
+| pairs | for the painting | against | even | pairs won by majority |
+|---|---|---|---|---|
+| frac, 10-500 cells | 193 | 19 | 4 | 33 of 36 |
+| C | 30 | 0 | 6 | 5 of 6 |
+| seg, under 10 dE | 4 | 1 | 19 | 0 of 4 (all even) |
+| seg, 10-20 dE | 16 | 8 | 6 | 2 of 5, lost 1 |
+| seg, 20 dE and more | 40 | 4 | 10 | 7 of 9, lost none |
+| null | 7 | 2 | 15 | none decided |
+
+- **With the user's eye and separate files the judges see the change and side with the painting**: nine votes in ten
+  on the fractions at every size from 10 dE, 30 to 0 against the energy's next best pair. Sides are even (colouring
+  1 156 votes, 2 168).
+- A lone segment needs about 20 dE through the eye to be decided (7 of 9, none lost); below 10 the judges say even
+  rather than guess. Several segments together are decided from 10 dE.
+- Null pairs: no pair decided by the majority of 6, but 9 single votes of 24 pick a side (7 of them the painting's
+  origin; on rocket-rackoon "a flat red sky with hard edges"). A label needs a majority of several judges, not one.
+- Against the painting by majority: RC1/21 (6 of 6: "magenta specks in the dark trunk"), jojo at 0.5 (6 of 6: cyan
+  cells on the jacket, yellow hair) while jojo at 0.1, 0.25 and 1 won 6 of 6, autumn at 0.5 (5 of 6: a pink patch on
+  the path, green blocks). Half a painting may be worse than none or all; or the judges miss the user's taste. Only
+  the user can say.
+- The taste paragraph makes them worse: 119 to 21 on the same fractions (0.85 against 0.91); the whole autumn painting
+  flips to 1 against 3. The plain prompt stays.
+
 Summary and next steps: `HANDOFF.md`.

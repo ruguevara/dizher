@@ -1,0 +1,12 @@
+[
+  {"item": "p07a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 2 turns the green foliage to olive yellow and the sky into patchy grey and pale cells."},
+  {"item": "p08a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 2 paints Anubis's gold collar white and red, and the mummies' green eyes are gone."},
+  {"item": "p05b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 paints the gold collar white and red and drops the green eyes. Colouring 2 has a few stray cyan specks on the hat brim."},
+  {"item": "p58b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 1 dithers red with white into pink at the bottom left, where the picture is orange-brown."},
+  {"item": "p52a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C1", "note": "Colouring 2 drains the dragon's green-teal neck into plain yellow, losing a main hue."},
+  {"item": "p42a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 2 loses the green under the dragon and the clear red of its mouth, so it reads as all yellow."},
+  {"item": "p48b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I can't see a difference between them."},
+  {"item": "p15b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 paints the gold collar white and red and drops the mummies' green eyes."},
+  {"item": "p30b", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "A2", "note": "Colouring 2 turns the cyan left shoulder grey-white and scatters noisy cells of many colours over the forehead and hair."},
+  {"item": "p57b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 1 loses the dragon's green-teal and the water's blue gradation, so most of the picture turns yellow."}
+]

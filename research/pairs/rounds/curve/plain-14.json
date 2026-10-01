@@ -1,0 +1,12 @@
+[
+{"item": "p05b", "verdict": "2", "confidence": "medium", "problem": "detail", "where": "C2", "note": "Colouring 1 loses the mummies' green eyes and turns Anubis's orange collar into white and red."},
+{"item": "p40b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 1 has yellow and grey cells in the dark green foliage at the top left."},
+{"item": "p54a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I could not see a difference between them."},
+{"item": "p51b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "They differ only in a few cells on the left warrior's legs, with neither clearly better."},
+{"item": "p16b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "D1", "note": "Colouring 1 puts garish green and white blotches into the golden letter S of the title."},
+{"item": "p41b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D3", "note": "Colouring 2 turns the warm yellowish headlights of the right-hand car pure white."},
+{"item": "p26a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "B2", "note": "Colouring 2 puts more red streaks and coarser texture on the woman's smooth orange body."},
+{"item": "p12a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 2 loses the green grass strip by the fence and turns it yellow."},
+{"item": "p35b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I could not see a difference between them."},
+{"item": "p42a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 loses the dragon's green body and puts magenta patches on the warriors where the original is blue and green."}
+]
