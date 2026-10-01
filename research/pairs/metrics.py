@@ -317,12 +317,12 @@ def all_metrics(X, T, mask) -> dict:
     }
 
 
-# the full judge v3 (fit.py, 2026-10-01): LPIPS through the converter's eye and the lightness seam step, both picked by
-# the data once the first optimum's counterexamples joined the labels; LPIPS held at the heaviest weight that costs no
-# agreement. Fitted on the painted segments, the user's votes and the counterexamples, all visible through the eye
+# the full judge v4 (fit.py, 2026-10-01): LPIPS through the converter's eye, the term the data hold to once the optima's
+# counterexamples joined the labels, and the colour seam step (v3's optimum was noisy in colour from cell to cell), at
+# the weight that shares most of the user's verdicts on that optimum (11 of 14) within 0.02 of the best agreement
 JUDGE = {
-    'lpips_eye': 16.41,
-    'seam_L_1': 1.459,
+    'lpips_eye': 18.06,
+    'seam_ab_1': 0.6224,
 }
 
 
