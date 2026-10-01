@@ -250,6 +250,20 @@ optimum shows other colours, the painting against itself with that segment from 
   (the user's decision). The full judge is the target for tuning the converter offline.
 - Round 3, the full judge v3's optimum: colourful and detailed, closer to the painting (25% of painted cells get the
   painted colours, 10-15% for the fast judge's), but to Claude's eye with colour noise: saturated blocks and specks
-  from cell to cell. Its seam term sees lightness only.
+  from cell to cell. Its seam term sees lightness only. The user: better than Select pairs in 5 of 9 pictures, even in
+  3, worse in 1 (sunset); worse than the painting in 8, even in 1 (`rounds/opt3/verdicts.json`).
+- **Full judge v4** = 18.06 `lpips_eye` + 0.62 `seam_ab_1` (B 0.71, C 0.80, cal 0.79, O 0.63), the colour seam's weight
+  chosen to share most of the user's verdicts on round 3 (11 of 14). Round 4, its optimum: the user found it worse
+  than Select pairs in 8 of 9 pictures (RC1 even) and worse than the painting in all 9 (`rounds/opt4/verdicts.json`);
+  the judge had rated it above both on all 9.
+
+**Conclusion: optimising the colouring directly against a judge does not work.** A free search over every cell and
+every pair (30-65% of the cells moved) leaves the colourings the judge was fitted on and finds where it is blind, in
+another place each round: black and white cells, flat grey and yellow, colour noise, a patchwork of cells. A judge that
+agrees with the user on about three ordinary pairs in four is no target in a space that large: on its own optimum the
+last one was wrong on all 9 pictures. Adding each round's optima as counterexamples does not converge: round 4, its
+judge fitted to the user's round 3 verdicts, came out worse than round 3. The judges stay useful for comparing
+colourings the converter itself makes; any optimisation against them has to stay in a small space (the converter's
+few settings, or a few cells near the energy's choice) and be checked by the user on pictures it was not tuned on.
 
 Summary and next steps: `HANDOFF.md`.
