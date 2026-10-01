@@ -1,0 +1,4 @@
+{
+ "about": "the user's verdict on data/optimum/r1 (fast judge v2's optimum), 2026-10-01: worse than the painting in 8 of 9 pictures, slightly better in one (not named)",
+ "judge": {"seam_excess": 0.9727, "ms_dssim_eye": 8.019}
+}
