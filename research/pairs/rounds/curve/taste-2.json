@@ -1,0 +1,12 @@
+[
+{"item": "p21b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 paints the boy's blue sleeve in magenta cells and leaves the Hitler face as a yellow-white checker of blocks."},
+{"item": "p52a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C1", "note": "Colouring 2 drains the dragon's green-teal head into yellow, losing one of the picture's main hues."},
+{"item": "p17b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 turns Anubis's golden collar grey-white and drops the green glowing eyes."},
+{"item": "p63a", "verdict": "1", "confidence": "high", "problem": "seams", "where": "B2", "note": "Colouring 2 breaks the boy's and Hitler's faces into a blocky yellow-white checker and puts magenta cells on the blue sleeve."},
+{"item": "p06a", "verdict": "1", "confidence": "high", "problem": "seams", "where": "A2", "note": "Colouring 2 adds blocky lilac and olive cells around the sun and a stepped purple blob where the sky is smooth."},
+{"item": "p37b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A1", "note": "Colouring 1 has a lilac band on the left of the sky and a blockier purple patch and orange step than 2."},
+{"item": "p44b", "verdict": "=", "confidence": "low", "problem": "none", "where": "D1", "note": "Only a thin purple strip in the top right differs; both are about equally good."},
+{"item": "p26a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I see no clear difference between the two."},
+{"item": "p56b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "C1", "note": "Colouring 1 turns Hitler's face into a blocky yellow-white checker that hides his features."},
+{"item": "p05a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 2 makes Anubis's golden collar grey-white and loses the green eyes, though 1 has cyan specks on the hat brim."}
+]

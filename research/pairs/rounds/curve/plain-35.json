@@ -1,0 +1,11 @@
+[
+{"item": "p44a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "The two colourings look the same to me."},
+{"item": "p26a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Practically the same; at most tiny differences in the red shading on the figure's back."},
+{"item": "p18a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 2 loses the greens of the right-hand foliage to olive and grey and adds a greyish-pink patch on the figure's back."},
+{"item": "p24a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D1", "note": "Colouring 2 drains the pink clouds to purple with red streaks and puts blocky grey-yellow cells around the sun."},
+{"item": "p33b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "C2", "note": "Colouring 1 covers the right lens with flat grey blocks, losing the red glasses rim and the face colour."},
+{"item": "p23a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "B3", "note": "Colouring 2 turns the path into blocky grey with pale yellow cells and a pink cell, and loses the green grass at the edges; colouring 1's path is too pink but smooth."},
+{"item": "p07b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 1 drains the greens to olive and breaks the sky into patchy grey and pastel blocks."},
+{"item": "p42b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 loses the dragon's green and puts stray magenta patches on the warriors."},
+{"item": "p45a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "B3", "note": "Colouring 2's path is drained grey with blocky pale-yellow cells and a pink cell; colouring 1's pink path reads smoother though too pink."}
+]

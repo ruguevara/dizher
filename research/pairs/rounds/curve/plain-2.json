@@ -1,0 +1,12 @@
+[
+{"item": "p54b", "verdict": "=", "confidence": "high", "problem": "none", "where": "", "note": "No visible difference between the two colourings."},
+{"item": "p35a", "verdict": "=", "confidence": "high", "problem": "none", "where": "", "note": "No visible difference between the two colourings."},
+{"item": "p14b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No difference I can see anywhere in the picture."},
+{"item": "p44b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D1", "note": "Colouring 1 cuts the faint purple band off at the top right, so that part of the sky turns flat blue."},
+{"item": "p34a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C1", "note": "Colouring 2 breaks the dragon's head into more scattered cyan, green and purple specks."},
+{"item": "p23b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "B3", "note": "Colouring 1 paints the path as a grey block with a pink box and pale yellow cells, a blocky patch that has none of the original's soft light."},
+{"item": "p17a", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "D2", "note": "Colouring 2 loses the mummies' glowing green eyes and the gun's cyan tip, and adds red and purple specks to the Anubis collar."},
+{"item": "p30a", "verdict": "2", "confidence": "low", "problem": "noise", "where": "B1", "note": "Colouring 1 turns the forehead into a noisy patchwork of clashing blue, purple, cyan and green cells and drains the left shoulder to grey."},
+{"item": "p31a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 2 washes the hot pink cloud out to paler pink cells and dims the car headlights."},
+{"item": "p46a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 2 makes the glow by the sword greyer and turns the green foliage at the right khaki."}
+]

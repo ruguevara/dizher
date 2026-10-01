@@ -1,0 +1,12 @@
+[
+{"item": "p23a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "B3", "note": "Colouring 2 turns the pale path into a blocky grey patch with a clashing pink cell and loose yellow cells, and adds dark green specks to the canopy."},
+{"item": "p15b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 paints the hat and torch area in garish dark red blocks and loses the mummies' green eyes."},
+{"item": "p27a", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "C1", "note": "Colouring 1 has bright green cells in the blond hair and a blue cell by the eye that clash with their neighbours."},
+{"item": "p21a", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "C1", "note": "Colouring 2 turns the man's face into a blocky yellow-white checker with lost features, and the jacket shoulder into a purple patch."},
+{"item": "p11b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 1 loses the light blue of the bottle at the top, which comes out white."},
+{"item": "p48a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "The two look the same apart from tiny differences in the dithering of the sky."},
+{"item": "p19b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 2 drains the big cyan shoulders to grey and breaks the face into a noisy mosaic, though its face hues are closer."},
+{"item": "p44a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "The two look the same apart from a few dark cells in the blue band at the top right."},
+{"item": "p56a", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "C1", "note": "Colouring 2 turns the man's face into a blocky yellow-white checker with lost features."},
+{"item": "p57a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 2 drains the green-cyan dragon to yellow, losing a main hue, and adds clashing purple patches."}
+]

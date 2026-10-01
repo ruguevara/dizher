@@ -1,0 +1,12 @@
+[
+{"item": "p10a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "A2", "note": "Colouring 2 has a flat darker-red block in the left sky that reads as a cell patch rather than the smooth gradient."},
+{"item": "p38a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "They differ only in a few red/purple/blue cells along the cloud edge, neither clearly closer to the original."},
+{"item": "p57a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 2 turns the green dragon to yellow and scatters magenta blocks over the figures, losing the original's colours."},
+{"item": "p48a", "verdict": "2", "confidence": "low", "problem": "seams", "where": "D1", "note": "Colouring 1 has a broad flat bright red sky with an abrupt dark edge instead of the gradual darkening toward the top."},
+{"item": "p43a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 2 loses the green grass by the fence to yellow and adds a red speck in the foliage."},
+{"item": "p15a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 2 loses the mummies' green eyes and smears red cells around the hat and Anubis."},
+{"item": "p21a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 puts a magenta patch on the blue jacket shoulder and blocky yellow cells on the right man's face."},
+{"item": "p19a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "B2", "note": "Colouring 2 drains the blue/cyan face to magenta and grey-yellow blocks, losing the painting's colour scheme."},
+{"item": "p53b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 turns the light-blue bottle at the top white and adds olive cells along the bottom-left edge."},
+{"item": "p26b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I cannot see a difference between the two."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "p03a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A3", "note": "The green water and foliage at the sides turn olive yellow in colouring 2, and the top-left sky is patchier."},
+{"item": "p40a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A1", "note": "The dark green foliage at the top left goes olive yellow in colouring 2."},
+{"item": "p15a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 2 turns the hat brim dark red, loses the mummies' glowing green eyes, and adds purple specks."},
+{"item": "p61a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C2", "note": "In colouring 2 the orange sleeve near the arm turns olive grey."},
+{"item": "p60b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A3", "note": "Colouring 1 has olive cells breaking the orange sun glow and a stray lilac block in the light blue band."},
+{"item": "p05b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 turns the hat brim dark red and loses the green eyes in the dark."},
+{"item": "p16a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "D1", "note": "Colouring 2 puts garish green and white cells on the gold S of the title."},
+{"item": "p18b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 1 loses the green on the right side and dulls the bright waterfall."},
+{"item": "p43b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 2 spreads a garish pink patch over the path and puts hard saturated green blocks on the grass."},
+{"item": "p13a", "verdict": "1", "confidence": "high", "problem": "detail", "where": "B2", "note": "In colouring 2 the boy's face becomes a blocky yellow and orange checker with its features lost."}
+]

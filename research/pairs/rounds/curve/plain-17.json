@@ -1,0 +1,12 @@
+[
+{"item": "p01b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C1", "note": "The dragon's head in 2 has more grey-white and a dark blue cell where the original is teal."},
+{"item": "p46b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "1 loses the bright cyan-white light shaft and the green on the right, leaving sparse black and white."},
+{"item": "p30b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "1's forehead and right cheek are drained to grey and olive, losing the multicoloured paint, though its left shoulder cyan is better."},
+{"item": "p37b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "B2", "note": "1 has a wide rectangular orange step at the horizon and a lilac-white band block on the left edge of the cyan."},
+{"item": "p34a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C1", "note": "Only a few cells in the dragon's head differ, and neither is clearly better."},
+{"item": "p04b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "A3", "note": "1 has olive-green specks in the orange glow under the sun, breaking the smooth gradient."},
+{"item": "p00b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C1", "note": "1 loses most of the dragon's teal and the greens, leaving the picture flatter yellow."},
+{"item": "p43a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B3", "note": "1 has a larger pink patch on the path and garish bright green blocks for the grass."},
+{"item": "p48b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see any difference."},
+{"item": "p58a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "2's hair loses the blue, purple and yellow mix for cyan and black, and its bottom-left corner turns red-white instead of orange."}
+]

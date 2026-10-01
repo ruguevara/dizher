@@ -1,0 +1,12 @@
+[
+{"item": "p63a", "verdict": "1", "confidence": "high", "problem": "seams", "where": "B2", "note": "Colouring 2 breaks the boy's and Hitler's faces into blocky pale-yellow checker cells and paints a purple patch on the blue arm."},
+{"item": "p51b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see a meaningful difference between the two."},
+{"item": "p43b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 2 spreads a bigger pink patch over the pale path and adds garish bright-green cells in the grass at right."},
+{"item": "p04b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A3", "note": "Colouring 1 has olive-brown cells along the lower edge of the orange sun glow, which break the smooth gradient."},
+{"item": "p58b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 1 loses the multicoloured paint in the hair and the orange at bottom left, so it reads flatter than the original."},
+{"item": "p45a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 1 turns the pale path a clearly pink hue that is not in the original."},
+{"item": "p46b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 1 renders the bright light glow at right as noisy black-and-white instead of pale cyan-white."},
+{"item": "p56b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "C1", "note": "Colouring 1 breaks Hitler's face into blocky pale-yellow cells and colours the V-sign hand orange."},
+{"item": "p30a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 drains the multicoloured hair and forehead to yellow and black and has flat cyan blocks on the left shoulder."},
+{"item": "p16a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "D1", "note": "Colouring 2 puts green and grey cells into the gold letter S of the title."}
+]

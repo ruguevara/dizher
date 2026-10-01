@@ -1,0 +1,12 @@
+[
+{"item": "p17b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 1 loses the mummies' green eyes and turns Anubis's gold collar white and red."},
+{"item": "p06b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "A2", "note": "Colouring 1 has olive and purple blocks around the sun and in the sky bands that clash with the smooth gradient."},
+{"item": "p04a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A3", "note": "Colouring 2 has olive cells along the lower edge of the sun's glow."},
+{"item": "p03b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A3", "note": "Colouring 1 turns the green water and foliage olive and grey with pale blocky cells."},
+{"item": "p40a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 2 makes the dark green foliage at top left olive."},
+{"item": "p05a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 2 loses the green eyes and the gold collar, though 1 has some cyan specks on the hat."},
+{"item": "p10a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A2", "note": "Hardly any difference, at most a slightly speckled left edge in colouring 2."},
+{"item": "p28a", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "B1", "note": "Colouring 2 blurs the V-sign fingers into an orange blob."},
+{"item": "p58a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 2 turns the brown-orange bottom-left area red and white and loses colour in the hair."},
+{"item": "p29a", "verdict": "2", "confidence": "low", "problem": "detail", "where": "A1", "note": "Colouring 1 fills the top-left wall with red cells and loses the bird hieroglyph."}
+]

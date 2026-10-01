@@ -1,0 +1,12 @@
+[
+{"item": "p62a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A2", "note": "Colouring 2 has a grey dotted strip of cells down the left edge of the red sky that clashes with its neighbours."},
+{"item": "p25a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 2 loses the cyan of the bottle at the top and adds olive cells at the bottom left, which the original does not have."},
+{"item": "p41a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D3", "note": "Colouring 2 turns the car's headlights into speckled yellow-olive blobs, so they no longer read as bright lights."},
+{"item": "p10a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "A2", "note": "Colouring 2 renders the dark red sky on the left as blocky patches of solid red instead of a smooth dither."},
+{"item": "p53a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 2 turns the cyan bottle at the top white and puts olive cells along the bottom left edge."},
+{"item": "p37a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 2 replaces the cyan band on the left with a pale lilac band and adds blocky steps in the purple and orange bands."},
+{"item": "p28b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B1", "note": "In colouring 1 the V-sign fingers at the top are less clearly drawn against the red."},
+{"item": "p50b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 paints the yellow hair at the top as a flat drab olive block."},
+{"item": "p27a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 floods the left side of the face with flat magenta, losing the blue patches and the red frame of the left lens."},
+{"item": "p02b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 1 paints more of the leaf-covered path in garish pink where colouring 2 keeps it orange."}
+]

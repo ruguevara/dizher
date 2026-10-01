@@ -1,0 +1,11 @@
+[
+{"item": "p44a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "D1", "note": "Colouring 2 has a darker blue cell patch in the smooth blue band at the right."},
+{"item": "p61b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 turns the orange arm/leg into drab olive-green cells."},
+{"item": "p40b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 makes the dark green foliage at the left edge yellow-on-black with stray cyan, losing the green."},
+{"item": "p45b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "C3", "note": "Colouring 1 renders the light path as a patchwork of grey, pink and yellow cells instead of one warm light area."},
+{"item": "p63b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "B2", "note": "Colouring 1 breaks the boy's face into a yellow/white checkerboard of cells and puts a purple block on the jacket."},
+{"item": "p50a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 turns part of the golden hair at the top into drab olive cells."},
+{"item": "p37b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A1", "note": "Colouring 1 has a stepped purple band and a hard-edged orange block by the sun where the sky is smooth."},
+{"item": "p59a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "B2", "note": "Colouring 2 puts blotchy red patches over the smooth orange body."},
+{"item": "p48a", "verdict": "2", "confidence": "low", "problem": "seams", "where": "A2", "note": "Colouring 1 has a flat red sky with hard edges where the original grades smoothly from dark red."}
+]

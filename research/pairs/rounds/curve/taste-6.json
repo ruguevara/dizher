@@ -1,0 +1,12 @@
+[
+{"item": "p37a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A2", "note": "Colouring 2 turns the light cyan band on the left into a lavender block band and widens the orange dithered block into the pale yellow band, giving stepped seams."},
+{"item": "p09b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "C1", "note": "Colouring 1 breaks the pink cloud into a patchwork of magenta, red and pale pink cells and puts grey-olive blocks in the sun glow."},
+{"item": "p05a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 2 turns Anubis's gold collar white and red and loses the mummies' green eyes."},
+{"item": "p19a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "B2", "note": "Colouring 2 turns the face into a blocky patchwork of magenta-black and yellow-grey cells with flat cyan rectangles, losing the glasses and the blue tones."},
+{"item": "p36a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 scatters cyan specks over the boy's blue sleeve, where the jacket should read as a solid blue."},
+{"item": "p18b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 1 loses the green foliage on the right to olive and puts grey cells on the arm."},
+{"item": "p11a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 turns the light blue bottle at the top white."},
+{"item": "p02a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see a clear difference between them."},
+{"item": "p03b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "A1", "note": "Colouring 1 drains the green-yellow glow, greens and cyan water to olive and grey cells, losing the picture's main hues."},
+{"item": "p21b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "C2", "note": "Colouring 1 renders the moustached man's face as a yellow-white checkerboard of cells."}
+]

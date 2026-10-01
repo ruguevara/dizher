@@ -1,0 +1,12 @@
+[
+{"item": "p24a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D1", "note": "The pink cloud on the right turns into blocky purple and red cells instead of the original's hot magenta, and the headlights are dimmer."},
+{"item": "p44b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D1", "note": "The purple band at the top right stops short in colouring 1, while the original carries it across."},
+{"item": "p62a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A2", "note": "A column of grey and white speckled cells on the left edge of the red sky in colouring 2 does not belong in the picture."},
+{"item": "p57b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 1 turns the green dragon yellow and grey and puts magenta and purple patches on the figures."},
+{"item": "p02a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see a meaningful difference between them."},
+{"item": "p08a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "In colouring 2 Anubis's gold collar breaks into white and red cells, and the mummies' green eyes are lost."},
+{"item": "p46a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 2 renders the cyan light shaft and the green on the right as grey, white and yellow cells."},
+{"item": "p32a", "verdict": "=", "confidence": "low", "problem": "none", "where": "D1", "note": "The two differ only in a tiny purple step at the top right."},
+{"item": "p55b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 breaks the right eye into grey and white checker cells and loses the red glasses frame."},
+{"item": "p18b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 1 loses the cyan light shaft and the green water on the right, leaving grey and yellow cells."}
+]

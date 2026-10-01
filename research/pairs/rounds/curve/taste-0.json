@@ -1,0 +1,12 @@
+[
+{"item": "p60b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A3", "note": "Colouring 1 has olive-green cells in the orange sun glow and a lilac/cyan clash patch in the sky band."},
+{"item": "p53b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 loses the light-blue bottle at the top (white) and has more olive cells along the left edge and stumps."},
+{"item": "p47a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 renders the light-blue bottle at the top as white, losing its hue."},
+{"item": "p44a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D1", "note": "Colouring 2 drops the purple band at the top right into plain dark blue."},
+{"item": "p31b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 has more red-white pinkish dither in the sunset cloud, weaker than 2's clean red and magenta."},
+{"item": "p38b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "D2", "note": "Colouring 2 scatters blue specks into the magenta cloud at the right end."},
+{"item": "p63a", "verdict": "1", "confidence": "high", "problem": "seams", "where": "B2", "note": "Colouring 2 breaks the boy's face into a blocky yellow/orange checkerboard and puts a purple patch on the jacket."},
+{"item": "p43a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 has a larger pink patch on the path and blocky saturated green rectangles in the grass."},
+{"item": "p52b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 1 turns the green dragon head and neck yellow, losing a main hue (2 is blockier there but keeps it)."},
+{"item": "p58a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A3", "note": "Colouring 2 renders the orange-brown lower left as red dithered with white into pink, and adds red cells on the jacket."}
+]

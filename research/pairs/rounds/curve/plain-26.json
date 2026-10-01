@@ -1,0 +1,12 @@
+[
+ {"item": "p20a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C2", "note": "Colouring 2 adds a stray red speck on the trunk top and a dark cell in the canopy at top right."},
+ {"item": "p55a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "C2", "note": "Colouring 2 turns the right eye and temple into blocky grey checker cells that break the glasses rim."},
+ {"item": "p38b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "D2", "note": "Colouring 2 puts a blue patch into the pink cloud near the building edge."},
+ {"item": "p39a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 makes grey and white cells in the gold hieroglyph wall at top left."},
+ {"item": "p11a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 loses the light blue of the bottle at the top, making it white."},
+ {"item": "p28b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B1", "note": "Colouring 1 shortens the V-sign fingers and leaves red specks around their tips."},
+ {"item": "p31b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 washes the red and pink cloud bands to pale pink dither and dulls the headlights."},
+ {"item": "p47b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 loses the cyan bottle, greys the raccoon face and has blockier dark-red sky cells at left."},
+ {"item": "p51a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "A2", "note": "Colouring 2 adds red cells in the left warrior's torso."},
+ {"item": "p40b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 1 puts grey-white and yellow cells into the dark green foliage at top left."}
+]

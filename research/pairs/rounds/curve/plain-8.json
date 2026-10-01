@@ -1,0 +1,12 @@
+[
+{"item": "p27a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 1 scatters blue and green blocks over the purple face and yellow hair that do not read as the original's colours."},
+{"item": "p14b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "p34b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 1 breaks the dragon's cyan-green head with a flat green block and blue/purple specks."},
+{"item": "p33a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 2 puts drained grey blocks around the right eye and breaks the red glasses rim."},
+{"item": "p28a", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "B1", "note": "Colouring 2 loses part of the V-sign fingers into the red background."},
+{"item": "p08a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 2 turns Anubis's gold collar into white, grey and red cells and loses a pair of green eyes."},
+{"item": "p38b", "verdict": "=", "confidence": "low", "problem": "colour", "where": "D1", "note": "Only the right cloud edge differs, magenta versus a blue-magenta blend, neither clearly worse."},
+{"item": "p42a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 replaces the green dragon body and cyan warrior with purple and magenta patches the original lacks."},
+{"item": "p43b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 2 spreads garish pink cells on the leaf path and hard green blocks in the grass."},
+{"item": "p61b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 leaves the raccoon's arm olive and grey where the original is orange fur."}
+]
