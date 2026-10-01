@@ -4,8 +4,9 @@
 
 Two kinds of sheet. The user's (sheet): on top the tuned picture's crop, colouring 1's and colouring 2's, each at
 2-6x nearest; below, the two whole screens at 2x with the judged cells outlined. The judges' (judge_sheet): only the
-three whole pictures, the tuned one, colouring 1 and colouring 2, at 2x as the eye sees them (the converter's eye,
-1 Spectrum pixel), no crops, no outlines: a judge cannot squint, and a zoomed crop of raw dots shows what nobody sees.
+three whole pictures, the tuned one, colouring 1 and colouring 2, as the eye sees them (the converter's eye,
+1 Spectrum pixel), then enlarged 4x, no crops, no outlines: a judge cannot squint, and a zoomed crop of raw dots
+shows what nobody sees.
 main makes judges' sheets, per pair two, one with the sides swapped, under shuffled names. Null pairs (the painting
 against itself from another halftone origin) come along, one in eight, so a judge that sees a difference in any two
 renders shows."""
@@ -65,8 +66,8 @@ def seen(img, k=2):
 
 
 def judge_sheet(T, X1, X2):
-    """The tuned picture, colouring 1 and colouring 2, whole, side by side, through the eye."""
-    pics = [seen(img) for img in (T, X1, X2)]
+    """The tuned picture, colouring 1 and colouring 2, whole, side by side: through the eye, then 4x."""
+    pics = [up(seen(img, 1), 4) for img in (T, X1, X2)]
     gap = np.full((pics[0].shape[0], GAP, 3), 90, np.uint8)
     return np.concatenate([pics[0], gap, pics[1], gap, pics[2]], 1)
 
