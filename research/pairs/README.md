@@ -392,4 +392,31 @@ taste (16 judges). Size is the mean dE through the project's eye on the changed 
 - The taste paragraph makes them worse: 119 to 21 on the same fractions (0.85 against 0.91); the whole autumn painting
   flips to 1 against 3. The plain prompt stays.
 
+The user, blind, on 12 of these pairs (`curve.py user`: raw 3x as the app shows them, + the painting better, - worse,
+= both fine, x both bad; `rounds/curve/user-verdicts.json`): nine the judges disputed (against the painting or split,
+plain or taste prompt), three they agreed on.
+
+| pair | the user | judges, plain (6) | taste (4) |
+|---|---|---|---|
+| autumn whole painting | + | 6 + | 1 +, 3 - |
+| autumn 0.1 | + | 5 +, 1 - | 2 +, 2 - |
+| jojo/10 | + | 6 + | |
+| sunset whole painting | + | 6 + | 4 + |
+| RC1/21 | = | 6 - | |
+| diver-sunset/14 | = | 2 +, 2 -, 2 = | |
+| golden-axe/13 | = | 1 +, 2 -, 3 = | |
+| anubis/10 against C | x | 6 + | |
+| jojo 0.5 | x | 6 - | 4 - |
+| autumn 0.5 | x | 1 +, 5 - | 4 - |
+| andy 0.5 | x | 5 +, 1 - | 2 +, 2 - |
+| diver-sunset 0.1 | x | 2 +, 2 -, 2 = | 3 -, 1 = |
+
+- Where the user prefers a side, the plain judges' majority agrees, 4 of 4; the taste prompt lost two of them.
+- Where the judges went against the painting, the user did not prefer it either: both fine (RC1/21: "magenta specks"
+  is a variant the user accepts) or both bad. No decisive disagreement in 12.
+- **There is more than one good colouring**: three lone segments are "both fine". And half a painting is often worse
+  than a whole one: 4 of 5 partial paintings (and anubis's painting against the next best pair) are "both bad", while
+  the judges still gave them confident verdicts (jojo 0.5 6 of 6). A two-way choice cannot say "both bad"; the judges'
+  verdict there is noise for the energy and must not become a label.
+
 Summary and next steps: `HANDOFF.md`.

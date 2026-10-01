@@ -47,15 +47,21 @@ def frac_job(job):
     return name, out
 
 
-def make(seed=0):
-    rng = np.random.default_rng(seed)
-    names = sorted(p.stem for p in DATA.glob('*.npz'))
-    pairs = []   # (id, meta, T, better, worse, cells)
+def frac_picks(rng, names) -> dict:
+    """{picture: [(f, painted segments)]}, drawn first from make's rng, so a later call with the same seed repeats it."""
     picks = {}
     for name in names:
         touched = [m['segment'] for m in json.loads((DATA / f'{name}.json').read_text())]
         picks[name] = [(f, sorted(rng.choice(touched, max(1, round(f * len(touched))), replace=False).tolist()))
                        for f in FRACS]
+    return picks
+
+
+def make(seed=0):
+    rng = np.random.default_rng(seed)
+    names = sorted(p.stem for p in DATA.glob('*.npz'))
+    pairs = []   # (id, meta, T, better, worse, cells)
+    picks = frac_picks(rng, names)
     with Pool(len(names)) as pool:
         renders = dict(pool.map(frac_job, list(picks.items())))
     for name in names:
@@ -84,7 +90,9 @@ def make(seed=0):
     ROUND.mkdir(parents=True, exist_ok=True)
     names = [f'p{i:02d}' for i in rng.permutation(len(pairs))]
     sheets, meta = {}, {}
+    (OUT / 'raw').mkdir(exist_ok=True)
     for (pid, m, T, X, Y, cells), name in zip(pairs, names):
+        np.savez_compressed(OUT / 'raw' / f'{name}.npz', T=T, X=X, Y=Y)   # X the painting's side
         t, x, y = (seen2(img, *EYE) for img in (T, X, Y))
         cv2.imwrite(str(OUT / f'{name}-0.png'), cv2.cvtColor(t, cv2.COLOR_RGB2BGR))
         for order, (a, b) in ((1, (x, y)), (2, (y, x))):   # order 1: the better side is colouring 1
@@ -187,5 +195,52 @@ def score():
                   + (f'   located {sum(loc)}/{len(loc)}' if loc else ''))
 
 
+def raw(name: str, seed=0):
+    """(T, X the painting's side, Y) raw of pair NAME: kept by make, or rebuilt for a round made before it kept them
+    (the partial paintings re-rendered from the same picks)."""
+    f = OUT / 'raw' / f'{name}.npz'
+    if f.exists():
+        z = np.load(f)
+        return z['T'], z['X'], z['Y']
+    k = json.loads((ROUND / 'key.json').read_text())[name]
+    pic, rest = k['id'].split('/', 1)
+    z = np.load(DATA / f'{pic}.npz')
+    if k['kind'] == 'frac' and k['f'] < 1:
+        picks = frac_picks(np.random.default_rng(seed), sorted(p.stem for p in DATA.glob('*.npz')))[pic]
+        (_, _, X), = frac_job((pic, [p for p in picks if p[0] == k['f']]))[1]
+        out = z['target'], X, z['H']
+    else:
+        s = rest.split('/')[0]
+        out = {'frac': lambda: (z['target'], z['A'], z['H']), 'seg': lambda: (z['target'], z['A'], z[f'B{s}']),
+               'C': lambda: (z['target'], z['A'], z[f'C{s}'])}[k['kind']]()
+    judged = cv2.cvtColor(cv2.imread(str(OUT / f'{name}a-1.png')), cv2.COLOR_BGR2RGB)
+    assert np.abs(seen2(out[1], *EYE).astype(int) - judged.astype(int)).max() <= 1, f'{name}: not what was judged'
+    (OUT / 'raw').mkdir(exist_ok=True)
+    np.savez_compressed(OUT / 'raw' / f'{name}.npz', T=out[0], X=out[1], Y=out[2])
+    return out
+
+
+USER = ['p49', 'p36', 'p43', 'p38', 'p41', 'p01', 'p23', 'p30', 'p45', 'p13', 'p16', 'p06']
+
+
+def user(seed=7):
+    """Blind sheets for the user of the pairs the judges disputed (USER, the last three agreed), raw 3x as the app
+    shows them: the picture, 1, 2; key in rounds/curve/user-key.json."""
+    from views import GAP, up
+    rng = np.random.default_rng(seed)
+    out = OUT / 'user'
+    out.mkdir(exist_ok=True)
+    key = {}
+    for i, name in enumerate(rng.permutation(USER)):
+        T, X, Y = raw(str(name))
+        side = int(rng.integers(1, 3))
+        gap = np.full((576, GAP, 3), 90, np.uint8)
+        pics = [up(T, 3), gap, *((up(X, 3), gap, up(Y, 3)) if side == 1 else (up(Y, 3), gap, up(X, 3)))]
+        cv2.imwrite(str(out / f'u{i + 1:02d}.png'), cv2.cvtColor(np.concatenate(pics, 1), cv2.COLOR_RGB2BGR))
+        key[f'u{i + 1:02d}'] = dict(pair=str(name), painting=side)
+    (ROUND / 'user-key.json').write_text(json.dumps(key, indent=1))
+    print(f'{len(key)} sheets in {out}')
+
+
 if __name__ == '__main__':
-    {'make': make, 'prompts': lambda: prompts(sys.argv[2]), 'score': score}[sys.argv[1]]()
+    {'make': make, 'prompts': lambda: prompts(sys.argv[2]), 'score': score, 'user': user}[sys.argv[1]]()
