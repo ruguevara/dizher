@@ -2,6 +2,11 @@
 
     python research/pairs/tune.py dbs [N]     can the search skip DBS? N one-setting changes from the base (20), each
                                               picture converted with DBS and without, the three judges' ranks compared
+    python research/pairs/tune.py sweep       each setting alone over its slider (STEPS values), and the base at
+                                              ORIGINS halftone origins for the judges' noise; renders and scores in
+                                              data/tune/sweep/
+    python research/pairs/tune.py report      per setting and value: on how many pictures all three judges put it
+                                              better than the base by more than the noise
 
 The base is the Exact mixture preset (new projects' Metric and Select pairs values) over each project's own Tune,
 Target, Halftoner, Eye and Optimise; no cell is painted. Held out of all tuning: three painted pictures and the two
@@ -33,6 +38,8 @@ KNOBS = {   # (node, param): the slider's range
     ('select', 'luma_noise'): (0.0, 0.5), ('select', 'chroma_noise'): (0.0, 0.5),
     ('eye', 'luma_scale'): (0.3, 1.9), ('eye', 'chroma_scale'): (0.3, 1.9)}
 
+STEPS, ORIGINS = 6, ((0, 0), (131, 57), (263, 311), (389, 173))   # origins: offsets from the project's own
+
 
 def setting(change: dict) -> dict:
     """The base with {(node, param): value} changed, as Project.convert's node params."""
@@ -61,6 +68,54 @@ def dbs_job(job):
     return name, rows
 
 
+def sweep_job(name):
+    p, rows, renders = Project(name), [], {}
+    T, h = p.target(), p.graph['halftoner'].params
+    runs = [({}, o) for o in ORIGINS] + [({k: round(float(v), 3)}, ORIGINS[0]) for k in KNOBS
+                                         for v in np.linspace(*KNOBS[k], STEPS)]
+    for i, (change, (dx, dy)) in enumerate(runs):
+        X = p.convert(**setting(change), halftoner=dict(noise_x=(h.noise_x + dx) % 512, noise_y=(h.noise_y + dy) % 512))
+        renders[f'r{i}'] = np.round(X * 255).astype(np.uint8)
+        rows.append(dict(run=f'r{i}', change={f'{n}.{k}': v for (n, k), v in change.items()}, origin=[dx, dy],
+                         **judged(X, T)))
+    out = DATA / 'tune' / 'sweep'
+    out.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(out / f'{name}.npz', target=np.round(T * 255).astype(np.uint8), **renders)
+    (out / f'{name}.json').write_text(json.dumps(rows, indent=1))
+    return name
+
+
+def sweep():
+    with Pool(len(TRAIN)) as pool:
+        for name in pool.imap_unordered(sweep_job, TRAIN):
+            print(name, 'done', flush=True)
+    report()
+
+
+def report():
+    """A value wins on a picture when every judge scores it below the base's mean by more than twice the spread of
+    the base over the origins (lower is better); loses when every judge scores it above by as much."""
+    runs = {name: json.loads((DATA / 'tune' / 'sweep' / f'{name}.json').read_text()) for name in TRAIN}
+    table = {}
+    for name, rows in runs.items():
+        base = [r for r in rows if not r['change']]
+        mean = {j: np.mean([r[j] for r in base]) for j in JUDGES}
+        noise = {j: 2 * np.std([r[j] for r in base], ddof=1) for j in JUDGES}
+        for r in rows:
+            if r['change']:
+                (k, v), = r['change'].items()
+                d = {j: (r[j] - mean[j]) / noise[j] for j in JUDGES}   # in noise units, < 0 better
+                cell = table.setdefault((k, v), dict(win=0, lose=0, d=[]))
+                cell['win'] += all(x < -1 for x in d.values())
+                cell['lose'] += all(x > 1 for x in d.values())
+                cell['d'].append(d)
+    print(f'per value: pictures where all three judges agree it is better / worse than the base (of {len(TRAIN)}), '
+          'and each judge\'s median shift in noise units (< 0 better)')
+    for (k, v), c in table.items():
+        med = ' '.join(f'{j} {np.median([d[j] for d in c["d"]]):+5.1f}' for j in JUDGES)
+        print(f'  {k:20} {v:6.3f}   better {c["win"]}  worse {c["lose"]}   {med}')
+
+
 def dbs(n=20, seed=0):
     rng = np.random.default_rng(seed)
     knobs = list(KNOBS)
@@ -81,4 +136,4 @@ def dbs(n=20, seed=0):
 
 
 if __name__ == '__main__':
-    {'dbs': lambda: dbs(*map(int, sys.argv[2:]))}[sys.argv[1]]()
+    {'dbs': lambda: dbs(*map(int, sys.argv[2:])), 'sweep': sweep, 'report': report}[sys.argv[1]]()
