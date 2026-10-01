@@ -1,0 +1,50 @@
+{
+ "u01": {
+  "pair": "p41",
+  "painting": 1
+ },
+ "u02": {
+  "pair": "p23",
+  "painting": 2
+ },
+ "u03": {
+  "pair": "p16",
+  "painting": 1
+ },
+ "u04": {
+  "pair": "p49",
+  "painting": 2
+ },
+ "u05": {
+  "pair": "p36",
+  "painting": 1
+ },
+ "u06": {
+  "pair": "p38",
+  "painting": 1
+ },
+ "u07": {
+  "pair": "p45",
+  "painting": 2
+ },
+ "u08": {
+  "pair": "p30",
+  "painting": 1
+ },
+ "u09": {
+  "pair": "p43",
+  "painting": 1
+ },
+ "u10": {
+  "pair": "p01",
+  "painting": 1
+ },
+ "u11": {
+  "pair": "p13",
+  "painting": 2
+ },
+ "u12": {
+  "pair": "p06",
+  "painting": 1
+ }
+}

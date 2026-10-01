@@ -1,0 +1,65 @@
+{
+ "about": "the user's blind verdicts on data/curve/user/ (raw 3x), 2026-10-01: for the painting's side + better, - worse, = both fine, x both bad",
+ "verdicts": {
+  "u01": {
+   "pair": "p41",
+   "id": "diver-sunset/14",
+   "user": "="
+  },
+  "u02": {
+   "pair": "p23",
+   "id": "autumn/f1.0",
+   "user": "+"
+  },
+  "u03": {
+   "pair": "p16",
+   "id": "anubis/10/C",
+   "user": "x"
+  },
+  "u04": {
+   "pair": "p49",
+   "id": "RC1/21",
+   "user": "="
+  },
+  "u05": {
+   "pair": "p36",
+   "id": "jojo/f0.5",
+   "user": "x"
+  },
+  "u06": {
+   "pair": "p38",
+   "id": "diver-sunset/f0.1",
+   "user": "x"
+  },
+  "u07": {
+   "pair": "p45",
+   "id": "autumn/f0.1",
+   "user": "+"
+  },
+  "u08": {
+   "pair": "p30",
+   "id": "andy/f0.5",
+   "user": "x"
+  },
+  "u09": {
+   "pair": "p43",
+   "id": "autumn/f0.5",
+   "user": "x"
+  },
+  "u10": {
+   "pair": "p01",
+   "id": "golden-axe/13",
+   "user": "="
+  },
+  "u11": {
+   "pair": "p13",
+   "id": "jojo/10",
+   "user": "+"
+  },
+  "u12": {
+   "pair": "p06",
+   "id": "sunset/f1.0",
+   "user": "+"
+  }
+ }
+}
