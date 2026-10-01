@@ -43,7 +43,7 @@ over its cells grown by two cells (`common.window`).
     python research/pairs/flat.py           # ~7 min: flat counterexamples, data/flat/
     python research/pairs/fit.py            # the judge: selection, anchor, whole pictures (section 4)
     python research/pairs/eyes.py           # ~10 min: every metric through 4 eye models; --deep: LPIPS/DISTS grid
-    python research/pairs/optimum.py N [--full --mps]   # a judge's optimum, round N (~25 min fast, ~1.5 h full on the GPU)
+    python research/pairs/optimum.py N [--full --mps]   # round N: a judge's optimum (~25 min fast, ~1.5 h full)
     python research/pairs/optimum.py N --pairs          # ~7 min: round N's optima as counterexamples for fit.py
     python research/pairs/views.py OUT [N]  # blind images of N pairs for judging by eye, with key.json
 
@@ -215,8 +215,8 @@ energy offline.
   1 px), where a re-dither of the same colouring moves 2.0. 15 of the 229 are within twice that; the 4 under it no
   metric gets right. A B or C pair within twice the dither's change is no label and `fit.py` leaves it out (15 B,
   9 C); the user's votes all count, a decisive vote being itself a difference seen.
-- The judges' sheets are whole pictures through the eye (`views.judge_sheet`): the tuned picture and the two sides at
-  2x, no crops, no outlined cells. The user's sheets keep the crops.
+- The judges' sheets are whole pictures through the eye (`views.judge_sheet`): the tuned picture and the two sides
+  through the eye, then 4x, no crops, no outlined cells. The user's sheets keep the crops.
 - F is not a clean label. By eye (RC1/2, andy/25): the flat segment is clearly worse where it turns the yellow fur
   grey, which S-CIELAB calls closer, and about as good where it makes andy's hair plain black and cyan. F near 0.5
   is no verdict; the judge's optimum (session B) and the user's votes on F pairs decide.
