@@ -1,0 +1,11 @@
+[
+{"item": "q24", "where": ["B3", "C3"], "confidence": "medium", "note": "2 has magenta dots in the black mass below the grey rock, around the B/C border near the top of row 3."},
+{"item": "q22", "where": ["D3"], "confidence": "high", "note": "Blob at lower right: yellow in 1, white in 2."},
+{"item": "q06", "where": [], "confidence": "medium", "note": "No difference seen."},
+{"item": "q25", "where": ["D3"], "confidence": "low", "note": "Bottom-right corner may be more olive in 2; otherwise looks identical."},
+{"item": "q12", "where": ["C2"], "confidence": "medium", "note": "Small patch beside the figure's head: light grey-orange in 2, red/black in 1."},
+{"item": "q13", "where": [], "confidence": "medium", "note": "No difference seen."},
+{"item": "q15", "where": ["B1", "C1"], "confidence": "medium", "note": "Tips of the rabbit ears: orange in 1, red background in 2."},
+{"item": "q21", "where": [], "confidence": "low", "note": "No difference seen."},
+{"item": "q18", "where": [], "confidence": "medium", "note": "No difference seen."}
+]

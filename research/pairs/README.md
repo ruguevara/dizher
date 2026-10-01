@@ -317,4 +317,47 @@ nothing painted; tuning on RC1, anubis, autumn, diver-sunset, jojo, rocket-racko
 below what the user or the agents can see, and on golden-axe against the user. By the plan, new energy terms (step 4)
 were to follow only a gain here; there is none.
 
+### 8. Session E step 1: what a Claude judge sees (2026-10-01)
+
+`acuity.py`. A detection test, no preference: the painting against itself with one painted segment given back to
+Select pairs (B), 6 segments in each size bin, and 4 null pairs (another halftone origin); the judge names the square
+of a 4x3 grid where the two differ, or "same". The same 28 pairs in three layouts, each to 3 fresh judges.
+
+First, does a sheet shrink on the way in? Rows of 6-digit codes at 4-30 px on white images 1000-3100 px wide, one
+fresh agent each: 8 px reads whole at every width, 6 px 6/6 at 1000 and 4-5/6 from 1600 on, no digit misread. The
+3088 px sheet shrinks little if at all.
+
+| segment cells | a: the judges' sheet (one image, through the eye, 4x) | c: three files, through the eye, 4x | r: three files, raw 4x | e: three files, the user's eye |
+|---|---|---|---|---|
+| 1-2 | 0/6 | 0/6 | 0/6 | 0/6 |
+| 3-6 | 1/6 | 5/6 | 6/6 | 6/6 |
+| 7-15 | 2/6 | 5/6 | 5/6 | 4/6 |
+| 16+ | 4/6 | 4/6 | 6/6 | 6/6 |
+| null pairs called same | 4/4 | 3/4 | 1/4 | 4/4 |
+
+Chance is 0.1-0.4 by bin.
+
+- **The judges' sheet hides most changes from the judge.** On it a judge found 7 of 18 segments of 3 cells or more,
+  nearly all at low confidence. The same pictures as separate files found 14 (blurred) and 17 (raw). The text test
+  rules out shrinking, so the cause is the layout: three pictures side by side in one image. Rounds pilot1, cal1,
+  aopt and c1 were judged on that sheet. c1's "no pair decided" says the judges did not see the change, not that it
+  was invisible.
+- Raw, the judge finds nearly every change of 3 cells or more but calls 3 of 4 dither-only pairs different. It
+  compares pixels, dither included. Blurred separate files keep the nulls (3 of 4) and find 14 of 18.
+- 1-2 cells: no layout. Two of the six give a render identical to the painting's (jojo/2, diver-sunset/15: B equals A
+  pixel for pixel), so they are no change at all; `build.py` keeps such B pairs (fit.py drops them as within the
+  dither noise).
+- n is 6 a bin and one judge a pair: the layout effect (7 against 14-17 of 18) is clear, the bins are not.
+
+The eye was the other fault. The converter's eye (sigma 1 px on everything) blurred at 1x and enlarged after does
+two wrong things: a sigma of 1 on lightness averages a cell's dots into its mean, and with them the clash between
+cells of different dot texture, which the user sees and dislikes; and enlarging after the blur turns every pixel
+into a sharp block. `views.seen2` enlarges first (square pixels, as the screen shows them) and blurs after, in
+linear light, the converter's opponent channels each with its own Gaussian, as S-CIELAB does. On 3x3 grids of every
+picture (`data/acuity/grid/`, lightness and colour sigma 0.5, 0.75, 1) the user picked **lightness 0.75, colour
+1.0**; colour below lightness gives false fringes. Layout e is that eye on three files: 16 of 18 segments of 3
+cells or more and every null pair called same, the only layout that has both.
+
+Step 2 takes layout e as the judges' view.
+
 Summary and next steps: `HANDOFF.md`.

@@ -1,0 +1,11 @@
+[
+{"item": "q05", "where": [], "confidence": "low", "note": "No cell colour difference seen."},
+{"item": "q16", "where": [], "confidence": "low", "note": "No clear cell colour difference seen in this busy picture."},
+{"item": "q20", "where": ["A3"], "confidence": "high", "note": "Conversion 2 has a few dull brownish cells in the orange glow below the sun."},
+{"item": "q11", "where": ["C3", "D3"], "confidence": "high", "note": "Conversion 2 has green grass cells right of the right-hand trunk where 1 is olive/yellow."},
+{"item": "q07", "where": [], "confidence": "medium", "note": "No difference seen."},
+{"item": "q01", "where": [], "confidence": "low", "note": "Dither noise differs throughout, but I found no distinct block of changed cell colours."},
+{"item": "q03", "where": [], "confidence": "medium", "note": "No difference seen."},
+{"item": "q04", "where": ["C2", "C1"], "confidence": "high", "note": "In conversion 2 the right glasses lens and rim turn grey instead of red/colourful cells."},
+{"item": "q27", "where": [], "confidence": "medium", "note": "No difference seen."}
+]
