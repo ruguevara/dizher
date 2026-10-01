@@ -1,0 +1,12 @@
+[
+{"file": "c035.png", "verdict": "2", "confidence": "low", "problem": "colour", "note": "Colouring 1 turns the left warrior's and the hero's skin more yellow-grey with white patches, where the original is warm orange."},
+{"file": "c014.png", "verdict": "2", "confidence": "low", "problem": "colour", "note": "Colouring 1 has slightly less of the original's orange in the bottom-left strokes; otherwise nearly the same."},
+{"file": "c002.png", "verdict": "=", "confidence": "medium", "problem": "none", "note": "Practically identical; both have the same blocky white cells along the flaming hand."},
+{"file": "c000.png", "verdict": "2", "confidence": "low", "problem": "colour", "note": "Colouring 1 shows less warm red/orange on the figures' skin and more yellow wash."},
+{"file": "c034.png", "verdict": "=", "confidence": "medium", "problem": "none", "note": "No visible difference between the two."},
+{"file": "c039.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "Same blocky face patches in both; no clear difference."},
+{"file": "c022.png", "verdict": "=", "confidence": "medium", "problem": "none", "note": "Both render the statue with the same grain and detail."},
+{"file": "c006.png", "verdict": "2", "confidence": "low", "problem": "colour", "note": "Colouring 1's skin tones on the lower figures read more yellow-grey than the original's orange."},
+{"file": "c038.png", "verdict": "2", "confidence": "low", "problem": "colour", "note": "Colouring 1 loses some of the warm skin red on the left warrior, leaving more white/yellow patches."},
+{"file": "c031.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "Indistinguishable; both have the same blocky patches in the face and the sides."}
+]

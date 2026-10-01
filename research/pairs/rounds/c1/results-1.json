@@ -1,0 +1,12 @@
+[
+{"file": "c028.png", "verdict": "2", "confidence": "medium", "problem": "noise", "note": "Colouring 1 has heavier black dot clusters in the hair and a more visible dot texture in the background."},
+{"file": "c018.png", "verdict": "2", "confidence": "low", "problem": "noise", "note": "Colouring 1 shows a coarser dot pattern in the background and hair."},
+{"file": "c004.png", "verdict": "2", "confidence": "low", "problem": "noise", "note": "Colouring 1 has more garish green speckle over the dark background and more white blocks in the flames."},
+{"file": "c019.png", "verdict": "1", "confidence": "low", "problem": "seams", "note": "Colouring 2 cuts the dark red foreground into a larger hard black patch instead of fading."},
+{"file": "c011.png", "verdict": "2", "confidence": "low", "problem": "noise", "note": "Colouring 1 has more green speckle in the background around the head."},
+{"file": "c029.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "Both have the same blocky patches on the face; the differences are small and go both ways."},
+{"file": "c013.png", "verdict": "1", "confidence": "low", "problem": "seams", "note": "Colouring 2 has a larger abrupt black area in the dark red foreground."},
+{"file": "c032.png", "verdict": "1", "confidence": "low", "problem": "seams", "note": "Colouring 2 lets the red foreground drop into a bigger black hole with a harder edge."},
+{"file": "c020.png", "verdict": "2", "confidence": "low", "problem": "noise", "note": "Colouring 1 is grainier, with denser dark dot clusters in the hair and background."},
+{"file": "c008.png", "verdict": "1", "confidence": "low", "problem": "seams", "note": "Colouring 2 has a larger black cut-out in the dark red foreground, less gradual than the original."}
+]

@@ -1,0 +1,282 @@
+{
+ "c000": {
+  "id": "golden-axe/o2",
+  "image": "golden-axe",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c001": {
+  "id": "david/o3",
+  "image": "david",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c002": {
+  "id": "burning-hand/o1",
+  "image": "burning-hand",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c003": {
+  "id": "burning-hand/o0",
+  "image": "burning-hand",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c004": {
+  "id": "burning-hand/o2",
+  "image": "burning-hand",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c005": {
+  "id": "andy/o2",
+  "image": "andy",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c006": {
+  "id": "golden-axe/o0",
+  "image": "golden-axe",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c007": {
+  "id": "andy/o3",
+  "image": "andy",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c008": {
+  "id": "sunset/o1",
+  "image": "sunset",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c009": {
+  "id": "golden-axe/o0",
+  "image": "golden-axe",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c010": {
+  "id": "david/o2",
+  "image": "david",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c011": {
+  "id": "burning-hand/o3",
+  "image": "burning-hand",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c012": {
+  "id": "sunset/o0",
+  "image": "sunset",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c013": {
+  "id": "sunset/o0",
+  "image": "sunset",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c014": {
+  "id": "andy/o2",
+  "image": "andy",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c015": {
+  "id": "andy/o0",
+  "image": "andy",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c016": {
+  "id": "sunset/o1",
+  "image": "sunset",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c017": {
+  "id": "golden-axe/o2",
+  "image": "golden-axe",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c018": {
+  "id": "david/o3",
+  "image": "david",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c019": {
+  "id": "sunset/o2",
+  "image": "sunset",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c020": {
+  "id": "david/o1",
+  "image": "david",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c021": {
+  "id": "golden-axe/o1",
+  "image": "golden-axe",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c022": {
+  "id": "david/o2",
+  "image": "david",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c023": {
+  "id": "burning-hand/o1",
+  "image": "burning-hand",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c024": {
+  "id": "burning-hand/o2",
+  "image": "burning-hand",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c025": {
+  "id": "sunset/o3",
+  "image": "sunset",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c026": {
+  "id": "david/o1",
+  "image": "david",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c027": {
+  "id": "burning-hand/o3",
+  "image": "burning-hand",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c028": {
+  "id": "david/o0",
+  "image": "david",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c029": {
+  "id": "andy/o1",
+  "image": "andy",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c030": {
+  "id": "david/o0",
+  "image": "david",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c031": {
+  "id": "andy/o0",
+  "image": "andy",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c032": {
+  "id": "sunset/o3",
+  "image": "sunset",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c033": {
+  "id": "andy/o1",
+  "image": "andy",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c034": {
+  "id": "burning-hand/o0",
+  "image": "burning-hand",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c035": {
+  "id": "golden-axe/o1",
+  "image": "golden-axe",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c036": {
+  "id": "sunset/o2",
+  "image": "sunset",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c037": {
+  "id": "golden-axe/o3",
+  "image": "golden-axe",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 2
+ },
+ "c038": {
+  "id": "golden-axe/o3",
+  "image": "golden-axe",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ },
+ "c039": {
+  "id": "andy/o3",
+  "image": "andy",
+  "knob": "eye.chroma_scale",
+  "value": 1.1,
+  "x": 1
+ }
+}
