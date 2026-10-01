@@ -57,12 +57,22 @@ class Project:
     def render(self, labels: np.ndarray, **graph_params) -> np.ndarray:
         """(H, W, 3) sRGB 0..1: the label map painted as a whole field and rendered as the project exports it.
         graph_params: {node id: {param: value}} changed for this render only (a null pair's halftone origin)."""
-        graph = self.graph
-        for nid, params in graph_params.items():
-            graph = graph.with_params(nid, replace(graph[nid].params, **params))
+        graph = self.changed(**graph_params)
         cells = tuple((r, c, int(p), int(i)) for (r, c), (p, i) in zip(np.ndindex(*self.shape),
                                                                       self.pairs[labels].reshape(-1, 2)))
         graph = graph.with_params('overpaint', replace(graph['overpaint'].params, overrides=cells))
+        return evaluate(graph, 'optimise', self.memo).dithered_result.astype(np.float32)
+
+    def changed(self, **graph_params):
+        """The project's graph with these node params changed: {node id: {param: value}}."""
+        graph = self.graph
+        for nid, params in graph_params.items():
+            graph = graph.with_params(nid, replace(graph[nid].params, **params))
+        return graph
+
+    def convert(self, **graph_params) -> np.ndarray:
+        """(H, W, 3) sRGB 0..1: Select pairs' colouring, no cell painted, at these node params, rendered as exported."""
+        graph = self.changed(**graph_params, overpaint=dict(overrides=()))
         return evaluate(graph, 'optimise', self.memo).dithered_result.astype(np.float32)
 
     def target(self) -> np.ndarray:
