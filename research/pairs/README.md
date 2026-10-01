@@ -466,4 +466,19 @@ both bad. A label is the answer of more than half the 6 votes.
 
 Labels and key: `rounds/e1/` (key out of git until the user's check, step 4); renders `data/dp/raw/`.
 
+The user, blind, on 30 labelled pairs and 5 repeats, the judges' own images side by side (`dp.py user`, `dp.py vote`,
+`rounds/e1/user-verdicts.json`):
+
+| judges' label | user: alternative better | base better | = both fine | x both bad |
+|---|---|---|---|---|
+| alternative better (7) | 1 | 0 | 4 | 2 |
+| base better (13) | 0 | 3 | 5 | 5 |
+| = (10) | 1 | 0 | 5 | 4 |
+
+- **The user decides 4 of 30, and agrees with the judges on all 4** (Wilson lower bound 51%, the gate's 65% not
+  reached for want of decisions). The rest: both fine 14, both bad 11. Repeats 4 of 5 the same.
+- Where Select pairs hesitates, its neighbours are equivalent to the user, or both bad: fitting the energy's weights
+  to these labels (step 5) would choose among equals. A third of the places the DP is unsure of are bad whichever
+  way it goes: the fault is outside the choice between neighbouring pairs. Session E stops after step 4.
+
 Summary and next steps: `HANDOFF.md`.
