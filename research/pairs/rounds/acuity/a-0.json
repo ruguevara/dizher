@@ -1,0 +1,12 @@
+[
+{"item": "q19.png", "where": [], "confidence": "low", "note": "No clear colour difference seen between 1 and 2."},
+{"item": "q17.png", "where": [], "confidence": "low", "note": "Bands and sun glow look the same apart from dither."},
+{"item": "q14.png", "where": ["C2", "D2"], "confidence": "low", "note": "Area right of the dragon's jaw looks red in 1, darker blue/purple in 2."},
+{"item": "q08.png", "where": ["A1"], "confidence": "medium", "note": "Top-left corner is grey/white in 2, orange/red in 1."},
+{"item": "q02.png", "where": [], "confidence": "low", "note": "No clear difference seen."},
+{"item": "q23.png", "where": ["B1"], "confidence": "low", "note": "Top of the head has a larger yellow block in 2."},
+{"item": "q00.png", "where": [], "confidence": "low", "note": "No clear difference seen."},
+{"item": "q10.png", "where": ["B2", "C2"], "confidence": "medium", "note": "The boy's face is blotchy yellow/orange in 2, white/grey in 1."},
+{"item": "q26.png", "where": [], "confidence": "low", "note": "No clear difference seen."},
+{"item": "q09.png", "where": ["D3"], "confidence": "low", "note": "Green patch at the right edge by the fence extends further in 2."}
+]

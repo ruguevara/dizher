@@ -1,0 +1,11 @@
+[
+{"item": "q24", "where": ["C3", "B3"], "confidence": "medium", "note": "2 has purple dots in the black area under the bird and a wider red patch to its right."},
+{"item": "q22", "where": ["D3"], "confidence": "high", "note": "Bottom-right lights are yellow in 1 and white in 2."},
+{"item": "q06", "where": [], "confidence": "medium", "note": "No difference seen."},
+{"item": "q25", "where": [], "confidence": "low", "note": "No clear difference found in the foliage."},
+{"item": "q12", "where": ["C2"], "confidence": "high", "note": "Centre-right of the figure: orange cells in 1 become olive/grey in 2."},
+{"item": "q13", "where": [], "confidence": "low", "note": "No clear difference found."},
+{"item": "q15", "where": ["B1", "C1"], "confidence": "high", "note": "The rabbit ears at top centre are full yellow in 1 and shorter, red-topped in 2."},
+{"item": "q21", "where": ["A2", "B2"], "confidence": "low", "note": "Left figure's torso cells differ slightly in red/white/yellow."},
+{"item": "q18", "where": ["A1"], "confidence": "medium", "note": "Top-left blue foliage is brighter blue in 1 and darker in 2."}
+]

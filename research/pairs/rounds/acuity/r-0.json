@@ -1,0 +1,12 @@
+[
+{"item": "q19", "where": ["A1", "A2"], "confidence": "medium", "note": "On the left, conversion 2 has a block of solid dark red cells where 1 has black and red dither."},
+{"item": "q17", "where": ["D1"], "confidence": "low", "note": "The dark blue band at top right looks like it spans more solid dark blue cells in 2."},
+{"item": "q14", "where": ["C1", "C2"], "confidence": "medium", "note": "Beside the dragon's neck, cyan cells in 1 become blue, white and magenta cells and cyan dots in 2."},
+{"item": "q08", "where": ["A1"], "confidence": "high", "note": "In the top-left corner, conversion 2 has grey, white and green cells where 1 is red and yellow."},
+{"item": "q02", "where": ["A2"], "confidence": "high", "note": "Conversion 2 has a few green cells in the torch-hand area at the left."},
+{"item": "q23", "where": ["B1"], "confidence": "medium", "note": "At the top of the head, conversion 2 has dark yellow blocks and a green cell where 1 is bright yellow and white."},
+{"item": "q00", "where": ["D1"], "confidence": "high", "note": "The letter S of ANUBIS is dark yellow in 2 and bright yellow in 1."},
+{"item": "q10", "where": ["B1", "B2"], "confidence": "high", "note": "The boy's face is white and black in 1, blocky dark yellow, red and yellow cells in 2."},
+{"item": "q26", "where": ["A1", "A2"], "confidence": "medium", "note": "Along the left edge, conversion 2 has yellow dots on black where 1 has green, cyan and yellow foliage cells."},
+{"item": "q09", "where": [], "confidence": "medium", "note": "No difference seen."}
+]

@@ -1,0 +1,11 @@
+[
+{"item": "q24", "where": ["B3", "C3"], "confidence": "low", "note": "Lower middle dark rubble: in 1 grey dither and a solid red/yellow patch near x=600, in 2 more white/red specks and magenta dots."},
+{"item": "q22", "where": ["D3"], "confidence": "high", "note": "Right car headlights are yellow in 1, white in 2."},
+{"item": "q06", "where": [], "confidence": "medium", "note": "No difference seen."},
+{"item": "q25", "where": [], "confidence": "low", "note": "No clear difference seen in the dense dither."},
+{"item": "q12", "where": ["C2"], "confidence": "medium", "note": "Arm/gun area right of the raccoon's face: white blobs in 1 turn grey in 2, some yellow/red cells differ."},
+{"item": "q13", "where": ["C1"], "confidence": "low", "note": "Around the woman's head: 1 has yellow cells and different dark/red cells by the face."},
+{"item": "q15", "where": ["B1", "C1"], "confidence": "high", "note": "The V-sign fingers are yellow in 1, mostly red/black with white dots in 2."},
+{"item": "q21", "where": ["B3"], "confidence": "medium", "note": "Small patch by the left warrior's belt: blue/cyan in 1, magenta/yellow in 2."},
+{"item": "q18", "where": ["A1"], "confidence": "medium", "note": "Top-left tree sky gaps: more blue cells in 2."}
+]
