@@ -1,0 +1,12 @@
+[
+{"item": "e629a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 spreads magenta higher into the dark tree branches, where the original is dark."},
+{"item": "e460a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e929b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A2", "note": "Colouring 2 has a stray cyan cell beside the small star left of the cypress."},
+{"item": "e737b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B1", "note": "Both have the same blocky checkered face; the small differences in Jojo's face do not favour either."},
+{"item": "e067a", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "B3", "note": "Colouring 1 has a grey speck cell in the orange-red sky at the lower edge of the sunset."},
+{"item": "e039a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e557b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 2 puts cyan and pink cells into the yellow-cream cloud band, which is garish against the original."},
+{"item": "e006b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e356a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 turns the dark green foliage at top left yellow, while 1 keeps it green."},
+{"item": "e839a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."}
+]

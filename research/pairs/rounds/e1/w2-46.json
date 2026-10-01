@@ -1,0 +1,12 @@
+[
+{"item": "e237a", "verdict": "=", "confidence": "low", "problem": "colour", "where": "B2", "note": "Both put a similar purple patch on the boy's blue sleeve; I could not see a clear difference."},
+{"item": "e672a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 2 turns part of the yellow band at left into grey-white cells, so the yellow is lost."},
+{"item": "e804a", "verdict": "=", "confidence": "low", "problem": "colour", "where": "D3", "note": "Only small specks differ in the bottom-right village; neither one reads clearly better."},
+{"item": "e800a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 puts a larger purple block on the boy's blue shoulder and sleeve."},
+{"item": "e739b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 has a stray purple cell in the blue sky right of the swirl."},
+{"item": "e791a", "verdict": "=", "confidence": "low", "problem": "noise", "where": "", "note": "The dither texture differs slightly, but colours and cells look the same."},
+{"item": "e281b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 adds a purple cell at the top edge of the dark blue sky."},
+{"item": "e902a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 2 turns part of the right yellow cloud band into a grey-white block with orange specks."},
+{"item": "e819b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 1 shows the yellow headlight reflections on the road as grey-white specks."},
+{"item": "e975a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A2", "note": "Colouring 2 shows the pinkish twigs at left as cyan dots."}
+]

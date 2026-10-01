@@ -1,0 +1,12 @@
+[
+{"item": "e461a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Only a cell or two in the reflection differ, a lavender cell against a purple one; neither reads clearly better."},
+{"item": "e948a", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "A1", "note": "Colouring 2 puts a stray magenta cell in the dark blue sky at the top edge."},
+{"item": "e435b", "verdict": "=", "confidence": "high", "problem": "none", "where": "", "note": "Only the dither dots move, the colours are the same."},
+{"item": "e006b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D1", "note": "Colouring 1 has a darker, patchier top-right corner where the original sky is an even teal-cyan."},
+{"item": "e175a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 turns the yellow-green glow behind the head into greyish khaki blocks."},
+{"item": "e908a", "verdict": "2", "confidence": "medium", "problem": "detail", "where": "B3", "note": "Colouring 1 makes the bright headlights a ringed yellow dither, so they lose their white glow."},
+{"item": "e454b", "verdict": "=", "confidence": "high", "problem": "none", "where": "", "note": "The two look the same."},
+{"item": "e086a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B1", "note": "The treetop against the sky has blue dots in one and magenta in the other; both are plausible."},
+{"item": "e557a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 1 puts a pink cell and a cyan-grey cell into the yellow cloud band on the right."},
+{"item": "e911b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A2", "note": "One small cell left of the hip is cyan against greyish white; it is hardly visible."}
+]

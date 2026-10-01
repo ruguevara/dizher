@@ -1,0 +1,12 @@
+[
+{"item": "e193a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C3", "note": "Colouring 2 puts grey-white specks on the dark road below the headlights instead of the greenish glow."},
+{"item": "e488b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e725a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A2", "note": "Only a tiny change at the cypress tip, neither reads better."},
+{"item": "e714a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Only a few yellow versus white dots on the stripe edge above the title."},
+{"item": "e825a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 has a magenta cell and stray cyan in the blue hills where the original is blue."},
+{"item": "e975a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A2", "note": "Colouring 2 makes the pinkish sky patch through the left tree cyan."},
+{"item": "e791b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "B2", "note": "Colouring 2 adds coarse black strokes and specks across the blue sky."},
+{"item": "e948b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e238b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A2", "note": "Only one cell at the left foliage edge differs, cyan versus green, both plausible."},
+{"item": "e376b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 2 turns the top of the tan mummy head grey-white."}
+]

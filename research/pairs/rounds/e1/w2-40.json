@@ -1,0 +1,12 @@
+[
+{"item": "e192b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 puts a pale green cell in the yellow band left of the village where the original is yellow."},
+{"item": "e479b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 turns the yellow-green glow behind the woman into dull olive blocks."},
+{"item": "e580b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 1 has a larger garish pink patch on the pale path."},
+{"item": "e883a", "verdict": "=", "confidence": "low", "problem": "none", "where": "D3", "note": "Only a tiny cyan versus white speck in the village differs; neither reads better."},
+{"item": "e839b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e376b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 1 puts grey-white cells on the mummy's tan torso."},
+{"item": "e268a", "verdict": "2", "confidence": "low", "problem": "noise", "where": "A1", "note": "Colouring 1 has a lilac speck cell in the pale blue sky glow."},
+{"item": "e196b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 drains the turquoise swirl to grey-lavender and enlarges the magenta cell."},
+{"item": "e031a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "A3", "note": "Colouring 2 spreads more magenta and cyan specks into the dark bottom-left corner."},
+{"item": "e436a", "verdict": "2", "confidence": "low", "problem": "noise", "where": "A3", "note": "Colouring 1 scatters grey and cyan blocks into the green water at bottom left."}
+]

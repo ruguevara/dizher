@@ -1,0 +1,12 @@
+[
+{"item": "e795a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e779b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e096a", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "A2", "note": "Colouring 1 speckles the smooth red sky with dark dots where the original is clean red-orange."},
+{"item": "e961a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Only a tiny magenta streak near the arm differs; no real preference."},
+{"item": "e223a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e086b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Only slight dither changes in the magenta tree edge; no preference."},
+{"item": "e954a", "verdict": "x", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Both paint the leafy path as a flat grey-white block; 1 adds a bright white slab, 2 a patchy yellow-green one."},
+{"item": "e557b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 2 puts cyan and pink cells into the yellow cloud band, clashing with the original's yellow and orange."},
+{"item": "e067a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 1 has a grey-white cell in the orange sunset glow under the tree."},
+{"item": "e627a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 has a stray magenta cell beside the top-left star."}
+]

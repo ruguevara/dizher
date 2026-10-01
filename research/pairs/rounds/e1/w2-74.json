@@ -1,0 +1,11 @@
+[
+{"item": "e408b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two colourings."},
+{"item": "e573a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C2", "note": "In 2 the green hills right of the head turn to olive-yellow dots on black instead of green."},
+{"item": "e739b", "verdict": "=", "confidence": "low", "problem": "none", "where": "C2", "note": "Only a cell or two in the swirl differ and neither reads worse."},
+{"item": "e290b", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "D3", "note": "2 scatters magenta and cyan cells over the blue village at bottom right."},
+{"item": "e672b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A2", "note": "1 breaks the yellow band at left into grey-white cells."},
+{"item": "e075b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "A1", "note": "1 flattens the hieroglyph panel to plain yellow, losing its orange warmth and the bird."},
+{"item": "e002b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two colourings."},
+{"item": "e548a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two colourings."},
+{"item": "e326a", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "C1", "note": "2 puts light speckled patches into the smooth deep blue sky."}
+]

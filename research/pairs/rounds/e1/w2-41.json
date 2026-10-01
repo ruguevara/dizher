@@ -1,0 +1,12 @@
+[
+{"item": "e672b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 1 turns part of the yellow band at left into white cells, draining its yellow."},
+{"item": "e404b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 2 breaks the white glow by the waterfall with a cyan cell and greyish cells."},
+{"item": "e895a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 1 puts yellow dots on the dark blue wall under the letters, where grey reads closer."},
+{"item": "e636b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 puts a green-yellow cell on the orange-brown tail."},
+{"item": "e237b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A3", "note": "Colouring 2 puts magenta cells on the boy's blue sleeve."},
+{"item": "e956b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B3", "note": "Colouring 1 loses part of the cream edge line above the title."},
+{"item": "e193b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C3", "note": "Colouring 2 turns the white headlights and dark road into green and cyan specks."},
+{"item": "e479b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 renders the bright yellow-green glow as dark olive dots."},
+{"item": "e535a", "verdict": "2", "confidence": "low", "problem": "detail", "where": "C2", "note": "Colouring 1 loses the light patch of the glove, making it green-yellow."},
+{"item": "e498b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."}
+]

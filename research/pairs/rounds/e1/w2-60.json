@@ -1,0 +1,12 @@
+[
+{"item": "e488a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e267a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 leaves part of Anubis's headdress grey where the original has gold stripes."},
+{"item": "e800a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 has a larger purple patch on the blue jacket."},
+{"item": "e086b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B1", "note": "Differences in the dotted purple branches are too small to matter."},
+{"item": "e478a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C1", "note": "Colouring 2 adds a stray cyan cell at the edge of a star."},
+{"item": "e196b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 loses the turquoise in the swirl and has a larger magenta block, which is not in the original."},
+{"item": "e175b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e232a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e998b", "verdict": "=", "confidence": "low", "problem": "none", "where": "D3", "note": "Only a small change in the cyan water cells at the bottom right; both read the same."},
+{"item": "e217b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "A different dither with the same colours; neither is worse."}
+]

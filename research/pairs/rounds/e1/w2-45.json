@@ -1,0 +1,12 @@
+[
+{"item": "e800b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 spreads purple further over the boy's blue shoulder and collar."},
+{"item": "e281b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 has an extra magenta cell in the dark blue sky at the top edge."},
+{"item": "e051a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 1 puts cyan cells on the dark legs at the bottom left, a colour not in the original."},
+{"item": "e819b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "C3", "note": "Colouring 1 adds grey specks on the dark road below the headlights."},
+{"item": "e479a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 turns part of the bright yellow glow into a dull olive dithered patch."},
+{"item": "e839b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e920a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 2 speckles the dark blue cypress with garish magenta."},
+{"item": "e272a", "verdict": "2", "confidence": "low", "problem": "detail", "where": "C2", "note": "Colouring 1 loses the small bluish gap in the pink cloud."},
+{"item": "e376b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 2 makes the top of the mummy's head grey instead of tan-yellow."},
+{"item": "e672a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 2 replaces part of the yellow sky band on the left with grey-white cells."}
+]

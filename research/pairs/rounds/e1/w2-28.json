@@ -1,0 +1,12 @@
+[
+{"item": "e783b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 2 turns more of the face near the nose grey instead of orange skin."},
+{"item": "e844a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "C2", "note": "Colouring 2 puts a lone saturated green block in the pale hill area that clashes with its neighbours."},
+{"item": "e839a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e895b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A1", "note": "Only small shifts in the torch flame and the stones near it, neither clearly worse."},
+{"item": "e006a", "verdict": "=", "confidence": "low", "problem": "colour", "where": "D1", "note": "Top-right corner cell is cyan in one and pale green in the other; both pass for the teal sky."},
+{"item": "e498a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 puts a magenta cell in the blue sky at the top edge."},
+{"item": "e267b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Different dither across the whole picture, but colours and detail come out about the same."},
+{"item": "e198b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 2 turns part of the dark reflection into white specks where 1 keeps olive."},
+{"item": "e705a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 runs magenta up the left edge into the dark blue tree area."},
+{"item": "e192a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 2 makes the start of the yellow band pale grey-green instead of yellow."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "e895a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e629b", "verdict": "=", "confidence": "high", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e246a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B1", "note": "Only a tiny cell change near the hat brim, neither reads better."},
+{"item": "e192a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 2 turns a cell of the yellow band into pale green-white."},
+{"item": "e779b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 2 puts a greenish cell into the orange background under the tail."},
+{"item": "e043b", "verdict": "=", "confidence": "high", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e580a", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "B3", "note": "Colouring 2 has a stronger pink block and green specks in the path patch."},
+{"item": "e875b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D1", "note": "Colouring 1 makes the moon's ring a duller olive yellow instead of bright yellow."},
+{"item": "e597b", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "C2", "note": "Colouring 2 loses the white cuff and orange on the arm, turning it olive."},
+{"item": "e461b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 1 puts a grey-lilac cell into the orange reflection of the body."}
+]

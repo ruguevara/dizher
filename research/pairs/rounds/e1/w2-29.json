@@ -1,0 +1,12 @@
+[
+{"item": "e881a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C3", "note": "Colouring 2 sprinkles cyan specks over the dark road near the cars."},
+{"item": "e735a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "B2", "note": "Colouring 2 breaks the swirl centre into cyan and dark blue blocks that clash with the white swirl."},
+{"item": "e263a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e705b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 1 turns the blue sky behind the tree at the left edge magenta."},
+{"item": "e246b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A1", "note": "Only the torch flame highlight shifts slightly; both read the same."},
+{"item": "e435a", "verdict": "2", "confidence": "low", "problem": "noise", "where": "C2", "note": "Colouring 1 has a noisier orange-red sunset band with a dark red blotch and extra specks."},
+{"item": "e983a", "verdict": "2", "confidence": "low", "problem": "detail", "where": "D2", "note": "Colouring 1 muddles the fence on the right into grey and yellow dots, losing the rails."},
+{"item": "e712b", "verdict": "1", "confidence": "low", "problem": "detail", "where": "B3", "note": "Colouring 2 drops the light reflections on the road below the cars."},
+{"item": "e601a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Only a few yellow pixels on the black band differ."},
+{"item": "e863b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "A3", "note": "Colouring 2 scatters stray red specks into the black below the girl's sleeve."}
+]

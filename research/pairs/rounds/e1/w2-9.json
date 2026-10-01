@@ -1,0 +1,12 @@
+[
+{"item": "e862b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 2 puts a grey-khaki cell into the orange reflection of the leg at the bottom left."},
+{"item": "e192b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 has a pale green cell where the yellow band starts by the cypress."},
+{"item": "e031b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A3", "note": "Both differ only in a few stray magenta and cyan cells at the bottom left, equally off."},
+{"item": "e281b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 adds a stray magenta cell to the blue sky at the top."},
+{"item": "e435b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "The sunset glow differs only in a few dither cells and neither reads better."},
+{"item": "e779a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "I can see no meaningful difference around the tail."},
+{"item": "e712a", "verdict": "2", "confidence": "low", "problem": "detail", "where": "C3", "note": "Colouring 1 loses the headlight reflections on the road under the cars."},
+{"item": "e498b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "The yellow band by the hill differs only slightly and neither is clearly better."},
+{"item": "e548b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I can see no difference."},
+{"item": "e051b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 2 puts a stray cyan cell on the dark legs beside the J of JOJO."}
+]

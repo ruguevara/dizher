@@ -1,0 +1,12 @@
+[
+{"item": "e737b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "I cannot tell them apart; both have the same blocky cells on the boy's face."},
+{"item": "e006a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I see no difference."},
+{"item": "e573a", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "C2", "note": "Colouring 1 puts a solid dark-green block on the distant hill that stands out from the olive neighbouring cells."},
+{"item": "e994b", "verdict": "=", "confidence": "low", "problem": "none", "where": "C2", "note": "The only differences are a few specks around the right man's arm; neither is worse."},
+{"item": "e776a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "In colouring 1 the small stars at the top edge go cyan or green where the original's are yellow-white."},
+{"item": "e050b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 turns the light yellow-green glow behind the figure into a large muddy olive patch."},
+{"item": "e009b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 1 makes the pale blue glow at the top white and loses its blue tint."},
+{"item": "e051a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 1 puts a cyan cell on the dark legs at lower left, a hue that is not in the original."},
+{"item": "e196a", "verdict": "2", "confidence": "medium", "problem": "detail", "where": "B2", "note": "Colouring 1 fills the swirl's centre with white and magenta, which loses its cyan bands and dark blue core."},
+{"item": "e983b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 1 puts an orange-red cell into the yellow-green lawn behind the fence."}
+]

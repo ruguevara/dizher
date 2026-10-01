@@ -1,0 +1,12 @@
+[
+{"item": "e863b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A3", "note": "Only a few red/black specks near the girl's arm differ; I cannot tell them apart."},
+{"item": "e136b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "The grey cells in the distant avenue look the same; no visible difference."},
+{"item": "e376a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "In 2 the mummy's body turns to grey/white cells where the original is tan, which breaks the figure."},
+{"item": "e198b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Only tiny white/black specks in the bottom reflection differ."},
+{"item": "e223b", "verdict": "=", "confidence": "low", "problem": "none", "where": "D3", "note": "A few specks in the village bottom right differ; no visible difference."},
+{"item": "e009a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B1", "note": "The sky cells at the top look the same."},
+{"item": "e478a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C1", "note": "No visible difference around the stars."},
+{"item": "e232b", "verdict": "1", "confidence": "low", "problem": "detail", "where": "B3", "note": "In 2 the yellowish belt and waist area goes dark red and loses the belt line."},
+{"item": "e689a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D2", "note": "In 2 a cell behind the fence is orange-red where the original is a light yellowish meadow."},
+{"item": "e800b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "In 2 more magenta cells spread over the boy's blue jacket chest, a wrong hue that clashes with the blue."}
+]

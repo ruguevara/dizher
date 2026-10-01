@@ -1,0 +1,12 @@
+[
+{"item": "e994b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e875a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D1", "note": "Colouring 1's moon ring is paler and whiter, losing the original's strong yellow."},
+{"item": "e920b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 1 speckles the dark cypress with garish magenta where the original is dark blue-green."},
+{"item": "e980a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A1", "note": "Only a faint shift in the cyan glow cells, neither reads worse."},
+{"item": "e705a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 2 turns the blue sky at the left edge magenta further up than the original."},
+{"item": "e550b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 1 puts white specks on the right rock where the original is dark with greenish light."},
+{"item": "e636a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Only a tiny cell difference near the tail tip, neither worse."},
+{"item": "e099a", "verdict": "=", "confidence": "low", "problem": "none", "where": "D2", "note": "Small speck colour changes around the right-hand man, neither clearly worse."},
+{"item": "e825a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 has a stray magenta block and cyan specks in the plain blue hills."},
+{"item": "e548b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."}
+]

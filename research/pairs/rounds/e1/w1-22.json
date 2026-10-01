@@ -1,0 +1,12 @@
+[
+{"item": "e492b", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "B2", "note": "Colouring 2 puts red specks inside the dark tree trunk in the middle distance."},
+{"item": "e534b", "verdict": "2", "confidence": "low", "problem": "noise", "where": "C2", "note": "Colouring 1 has more white specks scattered across the magenta part of the gradient bar."},
+{"item": "e337b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e620a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C2", "note": "Colouring 2 has a stray red speck in the foliage above the right trunk."},
+{"item": "e264a", "verdict": "=", "confidence": "low", "problem": "none", "where": "D2", "note": "Any difference near the fence is too small to call."},
+{"item": "e352b", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A2", "note": "Colouring 2 has a blocky bump of dots sticking into the black edge of the smooth gradient."},
+{"item": "e102b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 cuts the green gradient bar short and turns it olive too early."},
+{"item": "e864b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 1 renders the warm brown creature head as cold black and white."},
+{"item": "e988b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C2", "note": "Colouring 2 has magenta specks and more ragged dark dither on the blue jacket."},
+{"item": "e023b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."}
+]

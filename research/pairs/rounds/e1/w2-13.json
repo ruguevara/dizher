@@ -1,0 +1,12 @@
+[
+{"item": "e039b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e006a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e479b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 renders the yellow glow beside the figure as drab olive dither instead of yellow."},
+{"item": "e192b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 puts a pale green cell into the yellow band where it should stay yellow."},
+{"item": "e096b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e779a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e863a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A3", "note": "Colouring 2 turns the girl's red sleeve and hand into a whitish blob."},
+{"item": "e198b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 2 lights the dark brown water reflection with white specks instead of olive."},
+{"item": "e059b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Differences near the belt are too small to prefer either."},
+{"item": "e735b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 2 widens the magenta block into the light-blue swirl."}
+]

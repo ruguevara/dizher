@@ -1,0 +1,12 @@
+[
+{"item": "e006b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e479a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 puts a dark grainy olive cell into the bright yellow-green glow by the shoulder."},
+{"item": "e735a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 has more magenta in the light-blue swirl centre where 2 uses cyan."},
+{"item": "e983b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 1 has an orange-red cell in the light grass behind the fence."},
+{"item": "e776a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 turns two top stars greenish and cyan instead of yellow-white."},
+{"item": "e084b", "verdict": "=", "confidence": "low", "problem": "detail", "where": "C3", "note": "Only a tiny change in the village houses, hard to prefer either."},
+{"item": "e099a", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "D2", "note": "Colouring 2 scatters purple and white specks over the dark uniform at right."},
+{"item": "e631b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 2 has a garish red block at the top of the right trunk."},
+{"item": "e488b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 1 has a dull olive cell in the bright orange foliage."},
+{"item": "e929b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 1 paints the top of the dark cypress magenta."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "e934a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "D2", "note": "Colouring 2 breaks the white waterfall glow into blocky pale cyan cells."},
+{"item": "e857b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 1 has a flat white block on the stump top instead of the reddish wood."},
+{"item": "e550a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e819a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C3", "note": "Colouring 2 adds stray white specks on the dark road below the headlights."},
+{"item": "e862a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 1 puts a greyish cell and redder tones into the orange leg reflection."},
+{"item": "e059a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Differences too small to see."},
+{"item": "e573b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 renders the green mound as olive yellow dither instead of green."},
+{"item": "e956a", "verdict": "=", "confidence": "low", "problem": "none", "where": "C3", "note": "Only a tiny speck differs at the bottom edge."},
+{"item": "e290a", "verdict": "=", "confidence": "low", "problem": "none", "where": "D3", "note": "Magenta specks in the village shift place but neither is clearly better."},
+{"item": "e037b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "B3", "note": "Colouring 1 has a larger pink block and a patchy yellow cell in the pale path."}
+]

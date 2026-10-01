@@ -1,0 +1,12 @@
+[
+{"item": "e638a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C1", "note": "Colouring 2 adds pale white-blue dither patches into the plain blue sky where the original has no such light clouds."},
+{"item": "e589a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 1 puts garish red cells in the top-left corner of the stone wall that reads yellow-orange in the original."},
+{"item": "e253b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 1 turns a patch of blue sky at the left edge into magenta."},
+{"item": "e264a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e620b", "verdict": "=", "confidence": "low", "problem": "none", "where": "C1", "note": "Only a tiny change at the top of the right trunk; neither reads better."},
+{"item": "e421b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 2 loses most of the orange of the small planet at the top, leaving it red."},
+{"item": "e337a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e255a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "A3", "note": "Colouring 2 has stray blue-white specks on the girl's red hand at the lower left."},
+{"item": "e534b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Differences are a few specks too small to judge."},
+{"item": "e988a", "verdict": "2", "confidence": "medium", "problem": "detail", "where": "B2", "note": "Colouring 1 darkens the middle of the boy's blue jacket with black dither and loses the buttons."}
+]

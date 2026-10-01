@@ -1,0 +1,12 @@
+[
+{"item": "e356a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 turns the green foliage at the top left into yellow dots."},
+{"item": "e929b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A2", "note": "They differ only in a cell or two near the small star left of the cypress top, and neither reads clearly better."},
+{"item": "e956a", "verdict": "=", "confidence": "high", "problem": "none", "where": "", "note": "I see no visible difference."},
+{"item": "e911b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A2", "note": "They differ only in a couple of grey/white cells in the water at left, and neither is clearly worse."},
+{"item": "e428b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 2 puts a magenta cell in the light-blue village/church area and a dark cell in the light hill band."},
+{"item": "e920b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 1 fills the dark cypress with garish magenta dots where the original is dark blue-green with a few brown flecks."},
+{"item": "e326a", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "C1", "note": "Colouring 2 adds a stray white-dotted patch in the plain blue sky at the top."},
+{"item": "e488a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 adds a yellow-green cell into the orange canopy."},
+{"item": "e290b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "D3", "note": "Colouring 2 makes the village at bottom right noisier with extra magenta and cyan specks."},
+{"item": "e705a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 2 paints the dark tree at the left edge magenta where the original shows blue sky through the branches."}
+]

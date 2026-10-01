@@ -1,0 +1,12 @@
+[
+{"item": "e568a", "verdict": "=", "confidence": "low", "problem": "none", "where": "A1", "note": "I could not see a clear difference between the two."},
+{"item": "e067b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 2 puts a grey-white speck in the orange glow at the bottom of the sunset."},
+{"item": "e198a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 1 has a pale green-white patch in the brown reflection."},
+{"item": "e454b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see a difference."},
+{"item": "e894b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 2 turns more of the blue jacket sleeve purple."},
+{"item": "e478b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 1 puts more cyan cells around the yellow star."},
+{"item": "e376a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "D2", "note": "Colouring 2 breaks the yellow mummy's body with grey-white cells."},
+{"item": "e814a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "The only difference is a tiny shift in a yellow-orange cell near the stump."},
+{"item": "e106b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "I could not see a difference."},
+{"item": "e099a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 2 scatters purple and white specks over the dark figure on the right."}
+]

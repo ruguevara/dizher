@@ -1,0 +1,12 @@
+[
+{"item": "e804b", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I see no visible difference between the two."},
+{"item": "e894a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "The only difference is a slight shift in the purple patch on the jacket shoulder, and neither reads better."},
+{"item": "e814a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I see no visible difference between the two."},
+{"item": "e528a", "verdict": "2", "confidence": "high", "problem": "colour", "where": "B3", "note": "Colouring 1 puts magenta strokes and a cyan cell into the blue houses at the bottom centre, where the original has no magenta."},
+{"item": "e498a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I see no visible difference between the two."},
+{"item": "e334a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A1", "note": "In colouring 2 the magenta strip at the left edge runs down into the area where the sky shows blue through the tree."},
+{"item": "e954b", "verdict": "x", "confidence": "low", "problem": "seams", "where": "B3", "note": "The pale path patch is blocky in both: colouring 1 has a yellow cell and greenish specks, colouring 2 a stark white bar."},
+{"item": "e819a", "verdict": "=", "confidence": "low", "problem": "noise", "where": "C3", "note": "The only difference is a few dots in the headlight reflections on the road (yellow in 1, white and cyan in 2), and neither is clearly worse."},
+{"item": "e776b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 tints the yellow stars at the top edge greenish and adds a cyan cell next to one of them."},
+{"item": "e640a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "I see no visible difference between the two."}
+]

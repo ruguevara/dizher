@@ -1,0 +1,12 @@
+[
+{"item": "e263b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e956a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Only a speck or two under the title differ; indistinguishable."},
+{"item": "e961a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Small purple/black change near the hero's hip, neither clearly worse."},
+{"item": "e217a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "C1", "note": "Colouring 2 breaks the bright orange canopy into dull brown-orange blocks that clash cell to cell."},
+{"item": "e981b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "A3", "note": "Colouring 2 scatters red specks over black around the girl's sleeve."},
+{"item": "e084a", "verdict": "1", "confidence": "low", "problem": "detail", "where": "C3", "note": "Colouring 2 turns a pale blue roof in the village into black with white specks."},
+{"item": "e894a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B2", "note": "Purple patch on the jacket shifts slightly; no real difference."},
+{"item": "e759b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 has grey-green cells where the original sky is turquoise."},
+{"item": "e695a", "verdict": "2", "confidence": "low", "problem": "detail", "where": "C1", "note": "Colouring 1 flattens the streaming hair into a pale khaki block."},
+{"item": "e934b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 2 turns the bright cyan-white glow into grey white-on-black dither."}
+]

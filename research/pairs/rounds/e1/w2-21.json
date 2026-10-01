@@ -1,0 +1,12 @@
+[
+{"item": "e920a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 2 sprinkles garish magenta specks over the dark cypress, which reads cleaner as dark blue/black in 1."},
+{"item": "e193b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 2 turns the headlight glow by the cars into green specks instead of white light."},
+{"item": "e009b", "verdict": "=", "confidence": "low", "problem": "none", "where": "B1", "note": "Only a tiny change in the bright sky at the top; neither reads worse."},
+{"item": "e983a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 2 puts an odd orange cell into the grey-yellow fence on the right."},
+{"item": "e640b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e981b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A3", "note": "Only a few dots differ near the girl's hand at lower left; neither is clearly worse."},
+{"item": "e631a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 has a garish bright red cell where the dark trunk meets the orange foliage."},
+{"item": "e378b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 2 spreads drab olive/dark cells into the orange canopy at the top."},
+{"item": "e051b", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "B3", "note": "Colouring 2 adds stray cyan specks in the dark area left of the JOJO lettering."},
+{"item": "e597a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 makes the orange arm/knee a flat drab olive, losing the orange and white highlight."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "e461a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Only a cell or two differ at the bottom centre; neither reads worse."},
+{"item": "e601a", "verdict": "=", "confidence": "low", "problem": "none", "where": "B3", "note": "Differences are a few specks on the yellow bar edge, invisible at the whole-picture level."},
+{"item": "e961b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 1 has a longer purple streak in the shadow under the arm, garish against the brown trousers."},
+{"item": "e011b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 1 puts green specks under the yellow headlights where the original is yellowish reflection."},
+{"item": "e881b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 1 sprinkles cyan dots on the dark blue road where colouring 2 keeps it dark blue."},
+{"item": "e640a", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference."},
+{"item": "e378b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C1", "note": "Colouring 2 extends a dark green clump into the orange foliage at the top."},
+{"item": "e819b", "verdict": "=", "confidence": "low", "problem": "none", "where": "C3", "note": "Only a few road-reflection dots differ near the bottom centre."},
+{"item": "e400b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 2 has a larger magenta patch in the village where the original is dark blue with orange windows."},
+{"item": "e084a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C3", "note": "Colouring 1 has a larger magenta patch in the village where the original is dark blue with orange windows."}
+]

@@ -1,0 +1,12 @@
+[
+{"item": "e929a", "verdict": "2", "confidence": "low", "problem": "detail", "where": "A2", "note": "Colouring 1 loses the small light star left of the cypress top, leaving a dark blue cell."},
+{"item": "e603a", "verdict": "=", "confidence": "medium", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e356b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A1", "note": "Colouring 1 turns the dark green foliage at top left into olive yellow."},
+{"item": "e954a", "verdict": "x", "confidence": "low", "problem": "colour", "where": "B3", "note": "Both paint the pale path as a flat grey block; 1 adds a stark white slab, 2 yellow and greenish specks."},
+{"item": "e281a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 has a stray magenta cell in the dark blue sky at the top."},
+{"item": "e998a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D3", "note": "Colouring 1 shows grey-white dither where the water reflection reads as light cyan."},
+{"item": "e580b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 1 has a larger pink cell and green specks on the orange path."},
+{"item": "e981a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "A3", "note": "Colouring 1 has a grey-white cell on the girl's red coat at lower left."},
+{"item": "e086b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "Differences in the magenta tree edge are too small to matter."},
+{"item": "e651a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "C2", "note": "Colouring 1 turns orange foliage above the right trunk into olive green cells."}
+]

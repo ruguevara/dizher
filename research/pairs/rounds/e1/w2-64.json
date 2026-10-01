@@ -1,0 +1,12 @@
+[
+{"item": "e535b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e238b", "verdict": "=", "confidence": "low", "problem": "none", "where": "A1", "note": "Only a couple of cells in the teal sky differ, neither clearly worse."},
+{"item": "e714b", "verdict": "=", "confidence": "low", "problem": "none", "where": "", "note": "No visible difference between the two."},
+{"item": "e712a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C3", "note": "Colouring 2 adds grey specks on the dark road under the headlights."},
+{"item": "e268b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A1", "note": "Colouring 2 puts a lavender cell into the cyan sky glow."},
+{"item": "e902a", "verdict": "2", "confidence": "low", "problem": "colour", "where": "D2", "note": "Colouring 1 turns part of the cream-yellow cloud band cyan and white."},
+{"item": "e725b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 2 spreads magenta specks up the dark cypress top."},
+{"item": "e084b", "verdict": "=", "confidence": "low", "problem": "none", "where": "C3", "note": "A few village cells differ (black-white vs blue-magenta), neither clearly closer."},
+{"item": "e479a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 2 makes the bright yellow glow behind the figure a duller khaki dither."},
+{"item": "e601b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B3", "note": "Colouring 1 loses part of the gold edge line above the title band."}
+]
