@@ -6,6 +6,9 @@
                                            data/dp/sheets/, key rounds/e1/key.json, a prompt file per judge
                                            data/dp/prompts/wW-I.txt, results rounds/e1/wW-I.json
     python research/pairs/dp.py score      per pair the judges' votes and the label by majority
+    python research/pairs/dp.py user       step 4: blind sheets for the user in data/dp/user/, key rounds/e1/user-key.json
+    python research/pairs/dp.py vote       step 4: the user votes in the browser (keys left 1, right 2, Space =, x; Backspace back),
+                                           each answer saved at once to rounds/e1/user-verdicts.json
 
 The base is the Exact mixture preset (tune.setting({})), no cell painted. Per segment (common.segments) the
 alternatives: next, its cells on their next best pair by the energy's own term, showing other colours than the base
@@ -206,5 +209,114 @@ def score():
               + '   labels ' + ' '.join(f'{x}{lab[x]:2}' for x in ('+', '-', '=', 'x', 'split')))
 
 
+def labels() -> dict:
+    """{pair name: label}: +, -, = or split, by more than half the votes."""
+    votes = {}
+    for f in sorted(ROUND.glob('w*-*.json')):
+        for r in json.loads(f.read_text()):
+            name, o, v = r['item'][:-1], r['item'][-1], r['verdict']
+            votes.setdefault(name, []).append(v if v in '=x' else '+' if v == ('1' if o == 'a' else '2') else '-')
+    out = {}
+    for name, vs in votes.items():
+        top, m = Counter(vs).most_common(1)[0]
+        out[name] = top if m > len(vs) / 2 else 'split'
+    return out
+
+
+def user(n=30, repeats=5, seed=4):
+    """The judges' own images of n labelled pairs (sides and =, no nulls or splits), round robin over the pictures, side
+    by side in one file (the picture, 1, 2); repeats of them again in the other order. Names shuffled, so a and b do not
+    give the side away; key rounds/e1/user-key.json (the alternative's side as 'x')."""
+    from views import GAP
+    rng = np.random.default_rng(seed)
+    key, lab = json.loads((ROUND / 'key.json').read_text()), labels()
+    by = {}
+    for name in rng.permutation(sorted(lab)):
+        if lab[name] != 'split' and key[name]['alt'] != 'null':
+            by.setdefault(key[name]['image'], []).append(str(name))
+    pairs = [v[i] for i in range(max(map(len, by.values()))) for v in by.values() if i < len(v)][:n]
+    items = [(p, str(rng.choice(['a', 'b']))) for p in pairs]
+    items += [(p, 'b' if o == 'a' else 'a') for p, o in items[:repeats]]
+    out = OUT / 'user'
+    out.mkdir(exist_ok=True)
+    read = lambda f: cv2.imread(str(OUT / 'sheets' / f))
+    user_key = {}
+    for i, j in enumerate(rng.permutation(len(items))):
+        p, o = items[j]
+        imgs = [read(f'{p}-0.png'), read(f'{p}{o}-1.png'), read(f'{p}{o}-2.png')]
+        gap = np.full((imgs[0].shape[0], GAP, 3), 90, np.uint8)
+        cv2.imwrite(str(out / f'u{i + 1:02d}.png'), np.concatenate([imgs[0], gap, imgs[1], gap, imgs[2]], 1))
+        user_key[f'u{i + 1:02d}'] = dict(pair=p, id=key[p]['id'], x=1 if o == 'a' else 2, judges=lab[p],
+                                         repeat=bool(j >= n))
+    (ROUND / 'user-key.json').write_text(json.dumps(user_key, indent=1))
+    print(f'{len(user_key)} sheets in {out}: ' + str(Counter(lab[p] for p, _ in items[:n])))
+
+
+PAGE = """<!doctype html><meta charset="utf-8"><title>dizher e1</title>
+<style>body{margin:0;background:#222;color:#ddd;font:15px system-ui}#bar{padding:8px 12px}
+img{display:block;margin:0 auto}b{color:#fff}</style>
+<div id="bar"></div><img id="img">
+<script>
+const S = %s, V = %s; let i = S.findIndex(s => !(s in V)); if (i < 0) i = S.length;
+const img = document.getElementById('img'), bar = document.getElementById('bar');
+function show() {
+  const done = Object.keys(V).length;
+  if (i >= S.length) { bar.innerHTML = `<b>All ${done} of ${S.length} done.</b> Backspace to go back.`; img.hidden = true; return; }
+  img.hidden = false; img.src = '/img/' + S[i] + '.png';
+  bar.innerHTML = `<b>${S[i]}</b> (${i + 1} of ${S.length}, ${done} answered${S[i] in V ? ', yours: ' + V[S[i]] : ''})` +
+    ` &nbsp; left the picture, middle 1, right 2 &nbsp; keys: <b>&larr;</b> 1 &nbsp; <b>&rarr;</b> 2 &nbsp; <b>Space</b> both fine &nbsp; <b>x</b> both bad &nbsp; Backspace back`;
+}
+function fit() {   // the whole sheet as large as the window holds, up or down
+  const k = Math.min(innerWidth / img.naturalWidth, (innerHeight - bar.offsetHeight) / img.naturalHeight);
+  img.style.width = img.naturalWidth * k + 'px';
+}
+img.onload = fit; addEventListener('resize', fit);
+addEventListener('keydown', async e => {
+  if (e.key === 'Backspace') { i = Math.max(0, i - 1); return show(); }
+  const v = {ArrowLeft: '1', ArrowRight: '2', ' ': '=', x: 'x'}[e.key];
+  if (!v || i >= S.length) return;
+  e.preventDefault();
+  V[S[i]] = v;
+  await fetch('/vote', {method: 'POST', body: JSON.stringify({sheet: S[i], verdict: v})});
+  i++; show();
+});
+show();
+</script>"""
+
+
+def vote(port=8765):
+    """The user's sheets one at a time in the browser; each key press saved to rounds/e1/user-verdicts.json."""
+    import webbrowser
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    sheets = sorted(json.loads((ROUND / 'user-key.json').read_text()))
+    path = ROUND / 'user-verdicts.json'
+    votes = json.loads(path.read_text()) if path.exists() else {}
+
+    class Handler(BaseHTTPRequestHandler):
+        def send(self, body: bytes, kind: str):
+            self.send_response(200)
+            self.send_header('Content-Type', kind)
+            self.end_headers()
+            self.wfile.write(body)
+
+        def do_GET(self):
+            if self.path.startswith('/img/'):
+                return self.send((OUT / 'user' / Path(self.path).name).read_bytes(), 'image/png')
+            self.send((PAGE % (json.dumps(sheets), json.dumps(votes))).encode(), 'text/html')
+
+        def do_POST(self):
+            v = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            votes[v['sheet']] = v['verdict']
+            path.write_text(json.dumps(dict(sorted(votes.items())), indent=1))
+            self.send(b'ok', 'text/plain')
+
+        def log_message(self, *args):
+            pass
+
+    print(f'http://localhost:{port}  (Ctrl+C to stop; answers in {path})')
+    webbrowser.open(f'http://localhost:{port}')
+    HTTPServer(('localhost', port), Handler).serve_forever()
+
+
 if __name__ == '__main__':
-    {'make': make, 'survey': survey, 'wave': lambda: wave(int(sys.argv[2])), 'score': score}[sys.argv[1]]()
+    {'make': make, 'survey': survey, 'wave': lambda: wave(int(sys.argv[2])), 'score': score, 'user': user, 'vote': vote}[sys.argv[1]]()
