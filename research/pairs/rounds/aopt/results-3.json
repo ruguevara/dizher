@@ -1,0 +1,12 @@
+[
+{"file": "a068.png", "verdict": "2", "confidence": "medium", "problem": "colour", "note": "Colouring 1 drains the figures' warm flesh to flat yellow and loses the reds."},
+{"file": "a005.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "The two are practically identical."},
+{"file": "a006.png", "verdict": "1", "confidence": "medium", "problem": "seams", "note": "Colouring 2 puts greyish-yellow block patches and cyan specks into the smooth yellow glow."},
+{"file": "a052.png", "verdict": "1", "confidence": "high", "problem": "seams", "note": "Colouring 2 loses the cyan beam and has olive and white blocky patches across the yellow area."},
+{"file": "a031.png", "verdict": "1", "confidence": "medium", "problem": "seams", "note": "Colouring 2 breaks the face into blue, magenta and cyan blocks that are not in the original."},
+{"file": "a001.png", "verdict": "1", "confidence": "high", "problem": "seams", "note": "Colouring 2 turns the smooth gradient into blocky steps with yellow-green patches and black blocks."},
+{"file": "a079.png", "verdict": "1", "confidence": "medium", "problem": "seams", "note": "Colouring 2 has pinkish-white blocks in the purple band and a grey bar across the white horizon."},
+{"file": "a064.png", "verdict": "2", "confidence": "low", "problem": "colour", "note": "Colouring 1 makes the face harsh magenta and red with green patches, where the original is lavender."},
+{"file": "a020.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "The two are almost identical."},
+{"file": "a047.png", "verdict": "1", "confidence": "medium", "problem": "seams", "note": "Colouring 2 puts greyish-yellow block patches and cyan specks into the smooth yellow glow."}
+]

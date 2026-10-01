@@ -1,0 +1,12 @@
+[
+{"file": "a025.png", "verdict": "1", "confidence": "medium", "problem": "seams", "note": "Colouring 2 has pale white/pink blocky patches over the left figure and the dragon's head."},
+{"file": "a048.png", "verdict": "2", "confidence": "medium", "problem": "colour", "note": "Colouring 1 makes the face flat magenta and grey/yellow blocks, losing the original's blue-violet shading."},
+{"file": "a011.png", "verdict": "=", "confidence": "low", "problem": "none", "note": "The two are nearly identical."},
+{"file": "a058.png", "verdict": "1", "confidence": "medium", "problem": "colour", "note": "Colouring 2 paints Anubis's collar and the shirt straps garish red, with magenta/blue specks."},
+{"file": "a038.png", "verdict": "1", "confidence": "low", "problem": "colour", "note": "Colouring 2 turns Anubis and the straps red with stray magenta/blue specks; both are messy."},
+{"file": "a050.png", "verdict": "2", "confidence": "low", "problem": "colour", "note": "Colouring 1 turns the dark teal foliage olive-yellow; both are blocky in the sky."},
+{"file": "a036.png", "verdict": "1", "confidence": "high", "problem": "seams", "note": "Colouring 2 has pale lavender blocks across the dark blue uniform and a yellow block on the boy's face."},
+{"file": "a053.png", "verdict": "1", "confidence": "medium", "problem": "seams", "note": "Colouring 2 has white/pink blocks along the fence and path and a grey block on the trunk."},
+{"file": "a004.png", "verdict": "1", "confidence": "medium", "problem": "seams", "note": "Colouring 2 has pale blocky patches over the left figure and loses the dragon's green-cyan."},
+{"file": "a062.png", "verdict": "1", "confidence": "medium", "problem": "seams", "note": "Colouring 2 has grey blocky patches in the pink sky and cyan specks in the tree."}
+]

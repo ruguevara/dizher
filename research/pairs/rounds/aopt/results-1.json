@@ -1,0 +1,12 @@
+[
+{"file": "a073.png", "verdict": "1", "confidence": "high", "problem": "seams", "note": "Colouring 2 scatters pale grey-white solid blocks over the dark trees and road."},
+{"file": "a051.png", "verdict": "1", "confidence": "low", "problem": "colour", "note": "Colouring 2 has garish blue, cyan and purple patches on the left figures and jacket."},
+{"file": "a074.png", "verdict": "1", "confidence": "low", "problem": "colour", "note": "Colouring 2 puts blotchy magenta and blue patches over the figures and loses the teal dragon."},
+{"file": "a027.png", "verdict": "1", "confidence": "high", "problem": "seams", "note": "Colouring 2 has pale pink and grey rectangular blocks breaking the smooth bands."},
+{"file": "a022.png", "verdict": "1", "confidence": "high", "problem": "colour", "note": "Colouring 2 has blocky blue, cyan and purple patches and yellow-washed faces."},
+{"file": "a078.png", "verdict": "1", "confidence": "medium", "problem": "seams", "note": "Colouring 2 is broken by many pale greyish-green blocks that wash out the scene."},
+{"file": "a029.png", "verdict": "1", "confidence": "high", "problem": "seams", "note": "Colouring 2 has white and grey solid blocks along the fence and path."},
+{"file": "a063.png", "verdict": "1", "confidence": "medium", "problem": "noise", "note": "Colouring 2 has noisy red and blue specks and patches across the lower half."},
+{"file": "a002.png", "verdict": "1", "confidence": "high", "problem": "seams", "note": "Colouring 2 has stray white and lilac blocks over the dark background."},
+{"file": "a015.png", "verdict": "1", "confidence": "high", "problem": "seams", "note": "Colouring 2 has stray white and lilac blocks over the dark background."}
+]

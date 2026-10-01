@@ -266,4 +266,32 @@ judge fitted to the user's round 3 verdicts, came out worse than round 3. The ju
 colourings the converter itself makes; any optimisation against them has to stay in a small space (the converter's
 few settings, or a few cells near the energy's choice) and be checked by the user on pictures it was not tuned on.
 
+### 6. Claude judges on the optima (2026-10-01)
+
+Could Claude judges, looking at whole pictures through the eye, have caught what the full judges missed? `agents.py`
+put the full judges' round 3 and round 4 optima against Select pairs and against the painting on all 9 pictures, 36
+pairs with the user's verdicts (`rounds/opt3`, `opt4`), and 4 null pairs, each pair as two sheets with the sides
+swapped (`views.judge_sheet`), to 8 fresh subagents of 10 sheets, by eye only, the prompt in `agents.PROMPT`. Key and
+verdicts: `rounds/aopt/`; `python research/pairs/agents.py score`.
+
+| pairs | the user | agents agree | other | split |
+|---|---|---|---|---|
+| optimum against the painting, r3 and r4 | worse 17, even 1 | 17 | 1 | 0 |
+| r4 optimum against Select pairs | worse 8, even 1 | 6 | 1 (rocket-rackoon) | 2 (andy, RC1) |
+| r3 optimum against Select pairs | better 5, even 3, worse 1 | 4 | 3 | 2 |
+| null pairs | | 4 of 4 even | | |
+
+- Where judge v4 rated its optimum above Select pairs on all 9 pictures and the user found it worse on 8, the agents
+  found it worse on 6, split on 2, and called it better once.
+- Decisive verdicts (both orders agree) match the user in 27 of 32 (0.84, as in the pilot). Four of the five misses
+  are harsher on the optimum than the user (even or better called worse); one approves what the user rejected.
+  High-confidence sheets were wrong once.
+- Close pictures stay hard: on r3 against Select pairs, 4 of 9.
+- Caveat: the prompt was written after session B, and its faults (drained to grey, specks) partly name that session's
+  failures.
+
+So the agents work as a veto beside the numeric judges: a change counts as a candidate when the three judges agree it
+is better and the agents, both orders, do not call it worse; the user's blind verdict on held-out pictures still
+decides. They cost ~40 s per 10 sheets, enough for finalists, not for a sweep.
+
 Summary and next steps: `HANDOFF.md`.

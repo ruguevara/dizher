@@ -1,0 +1,12 @@
+[
+{"file": "a026.png", "verdict": "2", "confidence": "medium", "problem": "noise", "note": "Colouring 1 has stray magenta, blue and cyan cell patches over the figures."},
+{"file": "a030.png", "verdict": "2", "confidence": "high", "problem": "seams", "note": "Colouring 1 is littered with bright white/lilac blocks in the dark background."},
+{"file": "a072.png", "verdict": "2", "confidence": "high", "problem": "seams", "note": "Colouring 1 has blocky pale/grey bars in the sky bands and a black hole in the red ground."},
+{"file": "a066.png", "verdict": "2", "confidence": "medium", "problem": "seams", "note": "Colouring 1 scatters grey-white blocks across the dark trees and street."},
+{"file": "a043.png", "verdict": "2", "confidence": "medium", "problem": "seams", "note": "Colouring 1 puts white/grey blocks on the path and fence that read as holes."},
+{"file": "a069.png", "verdict": "2", "confidence": "medium", "problem": "noise", "note": "Colouring 1 breaks the figure with red/blue/magenta specks and noisy cells."},
+{"file": "a049.png", "verdict": "2", "confidence": "medium", "problem": "colour", "note": "Colouring 1 has garish magenta/blue blocks in the middle of the figures."},
+{"file": "a035.png", "verdict": "2", "confidence": "high", "problem": "seams", "note": "Colouring 1 is littered with white blocks in the dark background."},
+{"file": "a018.png", "verdict": "2", "confidence": "medium", "problem": "seams", "note": "Colouring 1 has a pale checkerboard of cells across sky and background."},
+{"file": "a037.png", "verdict": "1", "confidence": "low", "problem": "seams", "note": "Colouring 2 turns the central faces into a blocky white/yellow checker."}
+]
