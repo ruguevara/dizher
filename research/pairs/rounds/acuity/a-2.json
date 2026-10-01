@@ -1,0 +1,11 @@
+[
+  {"item": "q24.png", "where": ["B2", "B3"], "confidence": "medium", "note": "2 has a purple blob in the dark rock area below the figure's arm that 1 shows as black/grey."},
+  {"item": "q22.png", "where": [], "confidence": "low", "note": "No cell colour difference seen between 1 and 2."},
+  {"item": "q06.png", "where": [], "confidence": "low", "note": "No cell colour difference seen between 1 and 2."},
+  {"item": "q25.png", "where": [], "confidence": "low", "note": "Possible small green-cell shift near the right fence, but not clear enough to call."},
+  {"item": "q12.png", "where": [], "confidence": "low", "note": "No cell colour difference seen between 1 and 2."},
+  {"item": "q13.png", "where": [], "confidence": "low", "note": "Both show the same purple cells in the rock area; no difference seen."},
+  {"item": "q15.png", "where": [], "confidence": "low", "note": "No cell colour difference seen between 1 and 2."},
+  {"item": "q21.png", "where": [], "confidence": "low", "note": "No cell colour difference seen between 1 and 2."},
+  {"item": "q18.png", "where": [], "confidence": "low", "note": "No cell colour difference seen between 1 and 2."}
+]

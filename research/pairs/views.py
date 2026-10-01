@@ -19,6 +19,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import DATA, window   # noqa: E402
+from dizher.converter.energy import LRGB2OPP   # noqa: E402
 from dizher.converter.eye import eye_blur   # noqa: E402
 from metrics import encode, linear   # noqa: E402
 
@@ -63,6 +64,20 @@ def seen(img, k=2):
     """uint8: the whole picture at k x as the eye sees it, the converter's eye (a Gaussian of 1 Spectrum pixel)."""
     blurred = eye_blur(linear(up(img, k) / 255).astype(np.float32), 1.4 * k, 2.0)
     return (encode(blurred) * 255).round().astype(np.uint8)
+
+
+def seen2(img, luma: float, chroma: float, k=4):
+    """uint8 sRGB -> uint8 at k x: through an eye that blurs lightness by a Gaussian of sigma luma Spectrum pixels and
+    colour by chroma, as S-CIELAB does: linear light, a linear opponent space (the converter's), each channel its own
+    kernel, then back. Square pixels first (nearest k x, as the screen shows them), the blur at that resolution:
+    blurred at 1x and enlarged after, every pixel would come out a sharp-edged block the eye never sees.
+    A sigma of 1 on lightness averages a cell's dots into its mean and with them the clash between cells of different
+    dot texture, which the user sees; colour acuity is lower."""
+    o = linear(up(img, k) / 255).astype(np.float32) @ LRGB2OPP.T
+    for ch, s in ((0, luma), (1, chroma), (2, chroma)):
+        if s > 0:
+            o[..., ch] = eye_blur(np.ascontiguousarray(o[..., ch]), s * k * np.sqrt(2), 2.0)
+    return (encode(np.clip(o @ np.linalg.inv(LRGB2OPP).T, 0, 1)) * 255).round().astype(np.uint8)
 
 
 def judge_sheet(T, X1, X2):

@@ -1,0 +1,11 @@
+[
+{"item": "q05.png", "where": [], "confidence": "low", "note": "No cell colour difference visible between 1 and 2."},
+{"item": "q16.png", "where": [], "confidence": "low", "note": "No clear difference; blocky areas look alike in both."},
+{"item": "q20.png", "where": ["A3", "A2"], "confidence": "high", "note": "Orange glow below the sun: 1 has solid orange cells, 2 has some dull olive/dark cells at the lower edge."},
+{"item": "q11.png", "where": [], "confidence": "low", "note": "No clear difference seen."},
+{"item": "q07.png", "where": [], "confidence": "low", "note": "No clear difference seen."},
+{"item": "q01.png", "where": [], "confidence": "low", "note": "No clear difference seen."},
+{"item": "q03.png", "where": [], "confidence": "low", "note": "No clear difference seen."},
+{"item": "q04.png", "where": ["C1", "C2"], "confidence": "medium", "note": "Near the right lens of the glasses 2 has grey cells where 1 has white/yellow."},
+{"item": "q27.png", "where": [], "confidence": "low", "note": "No clear difference seen."}
+]

@@ -1,0 +1,12 @@
+[
+  {"item": "q19", "where": [], "confidence": "low", "note": "No difference seen between the two conversions."},
+  {"item": "q17", "where": [], "confidence": "medium", "note": "No difference seen; dither looks identical."},
+  {"item": "q14", "where": ["C1", "C2"], "confidence": "medium", "note": "Cells around the cyan/grey area above the right man's head change colour (cyan vs grey, a lavender patch in 2)."},
+  {"item": "q08", "where": ["A1"], "confidence": "high", "note": "Top-left corner has grey/white cells in 2 where 1 is red/orange."},
+  {"item": "q02", "where": ["A2"], "confidence": "low", "note": "Arm area left of the man's face looks brighter yellow in 2, redder in 1."},
+  {"item": "q23", "where": ["B1"], "confidence": "high", "note": "Top of the hair has a dark olive-yellow block in 2 instead of bright yellow/orange."},
+  {"item": "q00", "where": ["D1"], "confidence": "low", "note": "Lower part of the S in ANUBIS looks more orange in 1, more yellow in 2."},
+  {"item": "q10", "where": ["B1", "B2"], "confidence": "high", "note": "Centre boy's face is white in 1, blocky yellow/red cells in 2."},
+  {"item": "q26", "where": ["A1"], "confidence": "high", "note": "Left edge foliage is green/cyan in 1, olive-yellow and grey in 2."},
+  {"item": "q09", "where": [], "confidence": "medium", "note": "No difference seen."}
+]

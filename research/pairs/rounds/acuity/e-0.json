@@ -1,0 +1,12 @@
+[
+  {"item": "q19", "where": ["A2"], "confidence": "low", "note": "Left red sky looks darker, with denser dark-red dither, in 2."},
+  {"item": "q17", "where": [], "confidence": "medium", "note": "No difference seen."},
+  {"item": "q14", "where": ["C1", "C2"], "confidence": "medium", "note": "Cyan patch right of centre is bright cyan in 1, darker white/blue/magenta in 2."},
+  {"item": "q08", "where": ["A1"], "confidence": "high", "note": "Top-left corner cells are red/orange in 1, grey/white in 2."},
+  {"item": "q02", "where": ["A2"], "confidence": "low", "note": "Arm area left of centre has more solid orange/yellow in 2."},
+  {"item": "q23", "where": ["B1"], "confidence": "medium", "note": "Top of hair is red/yellow in 1, a solid olive-yellow block in 2."},
+  {"item": "q00", "where": [], "confidence": "low", "note": "No difference seen."},
+  {"item": "q10", "where": ["B1", "B2"], "confidence": "high", "note": "Central boy's face is white in 1, blocky yellow/orange in 2."},
+  {"item": "q26", "where": ["A1", "A2"], "confidence": "high", "note": "Left-edge foliage is green dots in 1, yellow dots in 2."},
+  {"item": "q09", "where": [], "confidence": "medium", "note": "No difference seen."}
+]

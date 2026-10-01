@@ -1,0 +1,11 @@
+[
+  {"item": "q05", "where": [], "confidence": "medium", "note": "No colour difference seen between 1 and 2."},
+  {"item": "q16", "where": ["B2", "B1"], "confidence": "low", "note": "Yellow/green area left of the red band looks lighter, more yellow-white, in 2."},
+  {"item": "q20", "where": ["A3"], "confidence": "high", "note": "Strip of bright and dark red solid cells below the white blob at left in 2, dithered red-yellow in 1."},
+  {"item": "q11", "where": ["C3", "D3"], "confidence": "high", "note": "Green cells extend left along the bottom of the right building in 2, black-yellow in 1."},
+  {"item": "q07", "where": [], "confidence": "medium", "note": "No colour difference seen between 1 and 2."},
+  {"item": "q01", "where": ["D2"], "confidence": "low", "note": "Dither differs overall; the white-on-red helmet cells at right look red-yellow in 2."},
+  {"item": "q03", "where": [], "confidence": "medium", "note": "No colour difference seen between 1 and 2."},
+  {"item": "q04", "where": ["C2", "C1"], "confidence": "high", "note": "Cells around the right eye and glasses turn grey and dull yellow in 2 instead of white, cyan and yellow."},
+  {"item": "q27", "where": [], "confidence": "medium", "note": "No colour difference seen between 1 and 2."}
+]
