@@ -1,9 +1,9 @@
 """Dizher's conversion stages as mokit ops, one graph node per stage in PIPELINE order.
 
 A node's mokit key covers its params and everything upstream, so an edit reruns only the stages after it:
-the structure weight reruns Optimise, a painted cell from Overpaint, coherence from Select pairs, the halftoner,
-the eye model or the metric from Prepare (the ~1 s candidate and selection-energy setup). Converter results are
-shallow copies sharing the upstream arrays, which no stage mutates.
+the structure and dithering weights rerun Optimise, a painted cell from Overpaint, coherence from Select pairs, the
+halftoner, the eye model or the metric from Prepare (the ~1 s candidate and selection-energy setup). Converter results
+are shallow copies sharing the upstream arrays, which no stage mutates.
 """
 from dataclasses import dataclass, replace
 from typing import Annotated
@@ -12,7 +12,7 @@ import cv2
 import numpy as np
 from skimage import img_as_float
 
-from mokit.graph import Graph, Node, Op, meta
+from mokit.graph import Graph, Like, Node, Op, meta
 from mokit.types import Image
 
 from .converter import eye as eye_model
@@ -158,14 +158,14 @@ def detail(picture: np.ndarray,
     return tone.detail(picture, texture, sharpen, radius)
 
 
-NEWEST_PRESET = METHODS[NEWEST].preset   # new projects' Metric, Select pairs and Eye values
+NEWEST_PRESET = METHODS[NEWEST].preset   # new projects' Metric, Select pairs, Optimise and Eye values
 
 
 def metric(method: Annotated[str, meta(choices=tuple(METHODS), legacy=LEGACY,
                                        help="how a pair is scored on a cell: Exact mixture, its mixture and a cost "
                                             "for dots of clashing hues; Halftoned, one halftone of it (0.2.4). "
-                                            "Picking one sets the Metric, Select pairs and Eye values it was tuned "
-                                            "with")] = NEWEST,
+                                            "Picking one sets the Metric, Select pairs, Optimise and Eye values it "
+                                            "was tuned with")] = NEWEST,
            chroma: Annotated[float, meta(min=0.0, max=4.0, help="weight of chroma error; luma error weighs 1")]
                = NEWEST_PRESET['chroma'],
            flare: Annotated[float, meta(min=0.0, max=1.0, help="stray light on the screen, in units of white: 0 weighs "
@@ -174,14 +174,15 @@ def metric(method: Annotated[str, meta(choices=tuple(METHODS), legacy=LEGACY,
            ) -> Metric:
     """The selection method, the balance of chroma against luma error in the eye-model energy, and how much more
     an error counts in the shadows. One chroma weight: scaling both would only duplicate coherence (the seam cost
-    has no weight), shift the edge threshold and the DBS structure term."""
+    has no weight) and shift the edge threshold. The optimiser has weights of its own (optimise)."""
     return Metric(chroma, flare, method)
 
 
 def apply_preset(graph: Graph, method: str) -> Graph:
-    """The graph with the selection method and the Metric, Select pairs and Eye values it was tuned with."""
+    """The graph with the selection method and the Metric, Select pairs, Optimise and Eye values it was tuned
+    with."""
     preset = dict(METHODS[method].preset, method=method)
-    for nid in ('metric', 'select', 'eye'):
+    for nid in ('metric', 'select', 'optimise', 'eye'):
         params = graph[nid].params
         graph = graph.with_params(nid, replace(params, **{k: v for k, v in preset.items() if hasattr(params, k)}))
     return graph
@@ -237,7 +238,7 @@ def select_pairs(prepared: Converter,
                                                      "pair instead of a patchwork of two; small accents may go. 0 off")]
                      = 0.0,
                  progress=None) -> Converter:
-    """One (paper, ink) pair per cell; the noise weights also reach the DBS optimiser."""
+    """One (paper, ink) pair per cell."""
     c = prepared.copy(coherence=coherence, edge=edge, luma_noise=luma_noise, chroma_noise=chroma_noise,
                       surface=surface)
     with reporting(progress):
@@ -322,12 +323,23 @@ def halftone(selection: Converter, progress=None) -> Converter:
 def optimise(halftone: Converter,
              enabled: Annotated[bool, meta(help="Direct binary search from the halftone")] = True,
              structure: Annotated[float, meta(min=0.0, max=0.5, help="weight of the SSIM term")] = 0.06,
+             chroma: Annotated[float, meta(min=0.0, max=4.0, legacy=Like('metric', 'chroma'),
+                                           help="weight of chroma error in the dots; luma error weighs 1. "
+                                                "Metric's chroma weighs the pairs")] = NEWEST_PRESET['chroma'],
+             luma_noise: Annotated[float, meta(min=0.0, max=0.5, legacy=Like('select', 'luma_noise'),
+                                               help="cost of dot contrast in lightness")] = NEWEST_PRESET['luma_noise'],
+             chroma_noise: Annotated[float, meta(min=0.0, max=0.5, legacy=Like('select', 'chroma_noise'),
+                                                 help="cost of dots of clashing hues, blue on yellow most, black or "
+                                                      "white dots none")] = NEWEST_PRESET['chroma_noise'],
              progress=None) -> Converter:
     """Every pixel toggled or swapped with a neighbour while the eye-model error drops (halftoning/dbs.py),
-    from the halftone as the start. Off passes the halftone through."""
+    from the halftone as the start. Its error weights are its own, so the dots can be tuned without moving the
+    pairs; a preset sets them as Metric's and Select pairs', a project saved before they were apart takes those.
+    Off passes the halftone through."""
     if not enabled:
         return halftone
-    c = halftone.copy(structure=structure)
+    c = halftone.copy(structure=structure, luma_noise=luma_noise, chroma_noise=chroma_noise)
+    c.energy.update(Chroma=chroma)
     with reporting(progress):
         c.optimise()
     return c

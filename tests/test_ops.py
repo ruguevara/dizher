@@ -12,14 +12,15 @@ from dizher import ops
 from dizher.converter.dither import Ordered
 
 IMAGE = Path(__file__).parent / 'images' / 'goldhill.png'
+COLOUR = Path(__file__).parent / 'images' / 'sunset.png'   # goldhill is grey: no chroma error to weigh
 
 
-def pipeline(**optimise):
-    """Ordered halftone, the optimiser off: fast."""
+def pipeline(image=IMAGE, **optimise):
+    """Ordered halftone, the optimiser off unless asked: fast."""
     graph = ops.make_graph()
-    graph = graph.with_params('source', replace(graph['source'].params, path=IMAGE))
+    graph = graph.with_params('source', replace(graph['source'].params, path=image))
     graph = graph.with_params('halftoner', replace(graph['halftoner'].params, halftoner=Ordered.label))
-    return graph.with_params('optimise', replace(graph['optimise'].params, enabled=False, **optimise))
+    return graph.with_params('optimise', replace(graph['optimise'].params, **{'enabled': False, **optimise}))
 
 
 def test_pipeline_converts_and_reuses_upstream():
@@ -43,6 +44,37 @@ def test_pipeline_matches_single_converter():
     result = evaluate(graph, 'optimise', memo)
     direct = evaluate(graph, 'prepare', memo).copy()
     np.testing.assert_array_equal(direct.dither(Ordered('Void dispersed dots')), result.dithered_result)
+
+
+def test_optimise_weights_move_the_dots_not_the_pairs():
+    """Optimise's chroma and noise weights are its own: at the preset's values DBS gives the one-shot Converter's
+    result, where they were one setting; changed, they move the dots, keep the pairs and leave upstream alone."""
+    memo = Memo()
+    graph = pipeline(COLOUR, enabled=True)
+    result = evaluate(graph, 'optimise', memo)
+    direct = evaluate(graph, 'prepare', memo).copy()
+    np.testing.assert_array_equal(direct.dither(Ordered('Void dispersed dots'), optimise=True), result.dithered_result)
+    changed = evaluate(pipeline(COLOUR, enabled=True, chroma=0.5, chroma_noise=0.3), 'optimise', memo)
+    assert changed.best_attr_indexes is result.best_attr_indexes
+    assert (changed.dithered_bitmap != result.dithered_bitmap).any()
+    assert evaluate(graph, 'halftone', memo).energy.weights['Chroma'] == ops.NEWEST_PRESET['chroma']
+
+
+def test_optimise_weights_of_older_projects():
+    """A project saved before Optimise had weights of its own opens with Metric's and Select pairs', so it renders
+    as it did; a saved one keeps its own."""
+    import json
+    from mokit import project
+    graph = ops.make_graph()
+    graph = graph.with_params('metric', replace(graph['metric'].params, chroma=1.5))
+    graph = graph.with_params('select', replace(graph['select'].params, luma_noise=0.1, chroma_noise=0.3))
+    data = json.loads(project.dumps(graph, {}))
+    for k in ('chroma', 'luma_noise', 'chroma_noise'):
+        del data['nodes']['optimise']['params'][k]
+    loaded, _, diagnostics = project.loads(json.dumps(data))
+    o = loaded['optimise'].params
+    assert (o.chroma, o.luma_noise, o.chroma_noise) == (1.5, 0.1, 0.3) and not diagnostics
+    assert project.loads(project.dumps(graph, {}))[0] == graph
 
 
 def settle(host):
@@ -310,8 +342,8 @@ def test_project_round_trip_and_restore():
 
 def test_selection_methods():
     """New documents score pairs by the newest method with the values it was tuned with; a project saved before the
-    choice existed opens as Halftoned, develop's scoring; picking a method brings its Metric, Select pairs and Eye
-    values."""
+    choice existed opens as Halftoned, develop's scoring; picking a method brings its Metric, Select pairs, Optimise
+    and Eye values."""
     import json
     from mokit import project
     from dizher.converter.energy import METHODS, NEWEST, LEGACY
@@ -326,8 +358,8 @@ def test_selection_methods():
         picked = ops.apply_preset(loaded, method)
         assert picked['metric'].params.method == method
         for k, v in scoring.preset.items():
-            node = next(n for n in ('metric', 'select', 'eye') if hasattr(picked[n].params, k))
-            assert getattr(picked[node].params, k) == v, (method, k)
+            nodes = [n for n in ('metric', 'select', 'optimise', 'eye') if hasattr(picked[n].params, k)]
+            assert nodes and all(getattr(picked[n].params, k) == v for n in nodes), (method, k)
 
 
 def test_undo_redo():

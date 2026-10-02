@@ -111,10 +111,12 @@ The GUI block that owns each control is in brackets.
    ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
    │ Stage 3: OPTIMISE                  [Optimise: enabled]  off passes the halftone through        │
    │                                                                                                │
-   │  loss(bitmap) = Σ_ch || h_ch ∗ (result − target) ||²    same kernels and noise weights         │
+   │  loss(bitmap) = Σ_ch || h_ch ∗ (result − target) ||²    same kernels, weights of its own       │
    │               + Σ_ch noise_ch · || result − target ||²                                         │
    │               + structure · Σ_p c_p (1 − SSIM_p(result, target))   luma only, 7x7 windows,     │
    │                                                                     c_p = local contrast       │
+   │     chroma, noise_ch  [Optimise: chroma, luma noise, chroma noise] in place of Metric's and    │
+   │               Select pairs'; a method's preset sets both alike                                 │
    │     structure  [Optimise: structure]                                                           │
    │                                                                                                │
    │  solver (DBS): from the halftone, every pixel tries a toggle and a swap with each of 8         │
@@ -237,7 +239,9 @@ whichever lowers the eye-model error most, until no move helps. A swap moves a d
 changing the local tone; with flips alone the search stalls at about twice the error. The error
 change of a move is computed exactly from a running error image, so a pass costs a few
 convolutions. Pixels farther apart than the kernel do not interact, so a whole lattice of pixels
-moves at once. DBS uses the same per-channel blur and noise terms as colour selection.
+moves at once. DBS uses the same per-channel blur as colour selection, and weights of its own
+(chroma, luma and chroma noise) that a selection method's preset sets with the selection's:
+apart, they tune the dots without moving the pairs.
 
 Plain DBS reproduces tone but blurs faint edges and texture. Following structure-aware
 halftoning (Pang et al. 2008), the energy also includes a structural similarity (SSIM) term
