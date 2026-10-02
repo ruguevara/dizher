@@ -481,4 +481,37 @@ The user, blind, on 30 labelled pairs and 5 repeats, the judges' own images side
   to these labels (step 5) would choose among equals. A third of the places the DP is unsure of are bad whichever
   way it goes: the fault is outside the choice between neighbouring pairs. Session E stops after step 4.
 
+### 11. After session E: bolder changes to pair selection (2026-10-02)
+
+The user's "both bad" in step 4 are all on autumn, jojo and vangog, and show two faults no setting reaches: a
+patchwork inside one surface (jojo's faces cell by cell flat pale yellow/white against red/yellow dither, vangog's
+sky with stray cyan, magenta, green cells) and a wrong colour family where its mixture is nearest (a magenta
+cypress). Every cell picks its own nearest mixture, so the cells of a smooth surface fall on both sides of the border
+between two families.
+
+- `smooth.py`: Select pairs on an edge-preserving smoothed picture (bilateral in CIELAB, 1-2 cells, 20-40 dE), DBS
+  still toward the original. The patchwork stays (the border between families only moves) or the faces go grey.
+  Not shown to the user.
+- `surface.py`: pairs per surface (`common.segments`): the pair that covers the surface's cells at least own cost,
+  every other pair priced out, then the usual DP. Hard (every cell bound) fixes the patchwork and loses the colours
+  of surfaces that mix several (the raccoon black/white, RC1's greens). A soft cost of leaving only blends base and
+  hard. Bound only the cells within 20 dE of their surface's mean colour, the rest free: the user's second round.
+
+The user, blind, whole pictures raw 3x, the variant against the base (`rounds/surface/r1`, `r2`):
+
+| picture | hard, 32 surfaces | hard, 64 | within 20 dE, 32 | within 20 dE, 64 |
+|---|---|---|---|---|
+| jojo | + | + | + | + |
+| vangog | + | + | + | + |
+| diver-sunset | + | - | - | + |
+| RC1 | - | - | + | - |
+| anubis | - | - | - | - |
+| rocket-rackoon | - | - | - | - |
+| autumn | x | x | x | x |
+
+- **The first change of the research the user prefers consistently, on the pictures it was made for**: jojo and
+  vangog better in all four. And consistently worse on anubis and rocket-rackoon: dense illustrations whose small
+  accents (the torch's red glow, highlights on Anubis and the raccoon) a surface's pair erases. diver-sunset and RC1
+  flip. 3 better, 3 worse, 1 both bad for each: a style that suits some pictures, not a new default.
+
 Summary and next steps: `HANDOFF.md`.

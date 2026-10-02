@@ -7,8 +7,9 @@
                                            data/dp/prompts/wW-I.txt, results rounds/e1/wW-I.json
     python research/pairs/dp.py score      per pair the judges' votes and the label by majority
     python research/pairs/dp.py user       step 4: blind sheets for the user in data/dp/user/, key rounds/e1/user-key.json
-    python research/pairs/dp.py vote       step 4: the user votes in the browser (keys left 1, right 2, Space =, x; Backspace back),
-                                           each answer saved at once to rounds/e1/user-verdicts.json
+    python research/pairs/dp.py vote [ROUND SHEETS]   the user votes in the browser (keys left 1, right 2, Space =,
+                                           x; Backspace back) on SHEETS (data/dp/user/) listed in ROUND/user-key.json
+                                           (rounds/e1/), each answer saved at once to ROUND/user-verdicts.json
 
 The base is the Exact mixture preset (tune.setting({})), no cell painted. Per segment (common.segments) the
 alternatives: next, its cells on their next best pair by the energy's own term, showing other colours than the base
@@ -284,12 +285,13 @@ show();
 </script>"""
 
 
-def vote(port=8765):
-    """The user's sheets one at a time in the browser; each key press saved to rounds/e1/user-verdicts.json."""
+def vote(round_dir=ROUND, sheets_dir=OUT / 'user', port=8765):
+    """The user's sheets one at a time in the browser; each key press saved to ROUND/user-verdicts.json."""
     import webbrowser
     from http.server import BaseHTTPRequestHandler, HTTPServer
-    sheets = sorted(json.loads((ROUND / 'user-key.json').read_text()))
-    path = ROUND / 'user-verdicts.json'
+    round_dir, sheets_dir = HERE / round_dir, HERE / sheets_dir   # relative to this folder
+    sheets = sorted(json.loads((round_dir / 'user-key.json').read_text()))
+    path = round_dir / 'user-verdicts.json'
     votes = json.loads(path.read_text()) if path.exists() else {}
 
     class Handler(BaseHTTPRequestHandler):
@@ -301,7 +303,7 @@ def vote(port=8765):
 
         def do_GET(self):
             if self.path.startswith('/img/'):
-                return self.send((OUT / 'user' / Path(self.path).name).read_bytes(), 'image/png')
+                return self.send((sheets_dir / Path(self.path).name).read_bytes(), 'image/png')
             self.send((PAGE % (json.dumps(sheets), json.dumps(votes))).encode(), 'text/html')
 
         def do_POST(self):
@@ -319,4 +321,4 @@ def vote(port=8765):
 
 
 if __name__ == '__main__':
-    {'make': make, 'survey': survey, 'wave': lambda: wave(int(sys.argv[2])), 'score': score, 'user': user, 'vote': vote}[sys.argv[1]]()
+    {'make': make, 'survey': survey, 'wave': lambda: wave(int(sys.argv[2])), 'score': score, 'user': user, 'vote': lambda: vote(*sys.argv[2:4])}[sys.argv[1]]()
