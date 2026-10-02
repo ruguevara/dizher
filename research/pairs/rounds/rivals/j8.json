@@ -1,0 +1,12 @@
+[
+{"item": "r20b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "B2", "note": "Colouring 1 cuts the sky into a hard flat red/yellow band with blocky orange cells around the raccoon instead of a gradient."},
+{"item": "r08a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A2", "note": "Colouring 2 turns the smooth red-to-yellow sky into a hard horizontal seam with flat posterised blocks."},
+{"item": "r09a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 2 floods the dark tree and buildings with garish green dither."},
+{"item": "r15a", "verdict": "2", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 1 floods the dark tree and buildings with garish green dither."},
+{"item": "r22a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A2", "note": "Colouring 2 posterises the sky into flat red and yellow areas with staircase cell seams and loses the tail stripes in black."},
+{"item": "r00a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 2 drains the orange foliage to a flat olive yellow (its black trunks are better than 1's red ones)."},
+{"item": "r01b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 turns the sunset glow into a flat grey-white block and the blue buildings into black."},
+{"item": "r16b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 1 drains the orange foliage to grey with patchy yellow and pink cells."},
+{"item": "r06b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 1 turns the red-orange sky into pale pink and loses the moon."},
+{"item": "r07a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 makes the trunks bright red with green and blue specks and scatters pale cells through the foliage."}
+]

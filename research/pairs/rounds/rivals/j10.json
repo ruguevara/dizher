@@ -1,0 +1,11 @@
+[
+{"item": "r13b", "verdict": "2", "confidence": "low", "problem": "seams", "where": "B1", "note": "Colouring 1 breaks the orange canopy and the leaf-covered ground into blocky flat-yellow cell patches."},
+{"item": "r16a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 2 drains the orange autumn scene to grey and black-and-white, leaving stray yellow and pink blocks."},
+{"item": "r19a", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "C2", "note": "Colouring 2 scatters pale specks over the canopy and puts green and blue clashing cells in the trunks."},
+{"item": "r04b", "verdict": "x", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 drains the red to pink and the blue jacket to black, and colouring 2 turns the faces into flat clashing blocks with blue-speckled bands."},
+{"item": "r10a", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "B3", "note": "Colouring 2 breaks the JOJO letters, speckles the black bands with blue and adds more yellow blocks on the faces."},
+{"item": "r03a", "verdict": "2", "confidence": "low", "problem": "seams", "where": "C1", "note": "Colouring 1 has large bright-red blocky patches in the sky and a hard orange halo hugging the raccoon."},
+{"item": "r21b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 drains the saturated red background to pink and the blue jacket to black."},
+{"item": "r00b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 turns the orange canopy into flat mustard yellow with sparse red specks."},
+{"item": "r09a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 2 floods the dark tree, street and buildings with garish green dither."}
+]

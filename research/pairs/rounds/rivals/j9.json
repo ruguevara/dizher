@@ -1,0 +1,11 @@
+[
+{"item": "r05a", "verdict": "2", "confidence": "high", "problem": "colour", "where": "A3", "note": "Colouring 1 fills the dark trees and street with garish green and blue dither instead of near-black."},
+{"item": "r00a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "C1", "note": "Colouring 2 turns the orange foliage a flat olive-mustard, though colouring 1 has garish red trunks."},
+{"item": "r21a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 drains the poster's red background to pink and the blue jacket to black."},
+{"item": "r15a", "verdict": "2", "confidence": "high", "problem": "colour", "where": "A3", "note": "Colouring 1 fills the dark silhouettes and street with garish green and blue dither instead of near-black."},
+{"item": "r23a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 2 drains the red sky to pale pink and loses the red-to-yellow gradient."},
+{"item": "r06b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 1 drains the red-orange sky to pale pink and black."},
+{"item": "r12a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "C2", "note": "Colouring 2 drains most of the autumn foliage to grey with a patchwork of yellow and pink cells."},
+{"item": "r11b", "verdict": "2", "confidence": "medium", "problem": "detail", "where": "B2", "note": "Colouring 1 blows the faces out to white blocks, drops the raised hand and breaks the title lettering."},
+{"item": "r09b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "A3", "note": "Colouring 1 fills the dark tree and street with garish green and blue dither instead of near-black."}
+]

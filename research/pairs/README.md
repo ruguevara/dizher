@@ -63,6 +63,7 @@ over its cells grown by two cells (`common.window`).
     python research/pairs/dp.py make|wave N|score|user       # steps 3-4: where Select pairs is unsure (section 10)
     python research/pairs/dp.py vote [ROUND SHEETS]          # the user's blind vote in the browser
     python research/pairs/surface.py make|user R V...        # pairs per surface (section 11)
+    python research/pairs/rivals.py make|judges|best|user|tally   # the competitor baseline (section 12)
 
 ## Results
 
@@ -530,5 +531,59 @@ The user, blind, whole pictures raw 3x, the variant against the base (`rounds/su
   vangog better in all four. And consistently worse on anubis and rocket-rackoon: dense illustrations whose small
   accents (the torch's red glow, highlights on Anubis and the raccoon) a surface's pair erases. diver-sunset and RC1
   flip. 3 better, 3 worse, 1 both bad for each: a style that suits some pictures, not a new default.
+
+### 12. The competitor baseline (2026-10-02)
+
+The coach's "done" for the research: the conversion visibly better than the known converters on three reference
+pictures, the user blind. Four pictures, the user's pick: jojo, rocket-rackoon, autumn, diver-sunset. Every tool gets
+the picture Select pairs aims at (the project's Tune, 256x192, `data/rivals/in/`), so crop and tone are the same for
+all (`rivals.py`):
+
+- **img2spec** (`../img2spec_video` 5.6, the macOS build, its CLI with a workspace per setting): the ZX Spectrum
+  device at its defaults (popular colour); Floyd-Steinberg, Bayer 8x8, mono DBS (modulate, keeps hue).
+- **Image to ZX Spec** 2.3.0 (KodeMunkie; the plan's "image2zx"), without its window as its WorkProcessor converts
+  one picture (`Izx.java`), its defaults (full palette, favour half bright, luminance distance); Atkinson (its
+  default), Floyd-Steinberg, Bayer 4x4.
+- **ZX-Paintbrush** 2.6.1 (Claus Jahn), by the user under Wine: import at the defaults, saved as SCR.
+
+Every output is read back into our palette (205/255) and checked: two colours a cell, one brightness; all pass.
+
+Each scripted tool's best setting per picture by Claude judges (the protocol of sections 9-10: pairs, three files
+through the user's eye, 6 votes a pair; 24 pairs, 15 judges, 144 votes, 5 "x"); a setting's votes for less those
+against over its two pairs, the most wins (no ties):
+
+| picture | img2spec | Image to ZX Spec |
+|---|---|---|
+| jojo | Bayer 8x8 (+10) | Atkinson (+12) |
+| rocket-rackoon | Floyd-Steinberg (+10) | Floyd-Steinberg (+10) |
+| autumn | Floyd-Steinberg (+12) | Atkinson (+12) |
+| diver-sunset | Bayer 8x8 (+12) | Bayer 4x4 (+8) |
+
+img2spec's mono DBS is last on every picture: it drains the colour to grey and pink.
+
+The user, blind, raw 3x as the app shows them (`rounds/rivals`): each of ours against each tool's best, 24 sheets, and
+5 repeats with the sides swapped (4 of 5 the same; diver-sunset surface dE 20 against Image to ZX Spec x, then +).
++ ours better, x both bad, the first answer:
+
+| picture | ours | img2spec | Image to ZX Spec | ZX-Paintbrush |
+|---|---|---|---|---|
+| jojo | Exact mixture | x | + | x |
+| jojo | surface dE 20 | + | + | + |
+| rocket-rackoon | Exact mixture | + | + | + |
+| rocket-rackoon | surface dE 20 | + | x | + |
+| autumn | Exact mixture | x | + | + |
+| autumn | surface dE 20 | x | x | + |
+| diver-sunset | Exact mixture | + | x | + |
+| diver-sunset | surface dE 20 | x | x | + |
+
+- **Ours is never worse**: 15 of 24 better, 9 both bad, none to the rival and none both fine. ZX-Paintbrush at its
+  defaults loses 7 of 8.
+- **The coach's criterion holds on two pictures, not three**: jojo with surface dE 20 and rocket-rackoon with Exact
+  mixture beat all three tools, each with its own style of section 11 (a pair per surface on faces, free cells on a
+  dense illustration); neither setting alone wins both.
+- autumn and diver-sunset are both bad against the dithered tools at their best (Floyd-Steinberg, Atkinson, Bayer):
+  ours is not worse there, but not good either. autumn has been both bad in every round; why is not in the votes.
+- Nowhere do we lose, so the round names no fault of ours the rivals avoid (patchwork, accents, colour, seams); the
+  seam terms parked on that condition stay parked.
 
 Findings: `FINDINGS.md`; next steps: `PLAN.md`; the log: `LOG.md`.

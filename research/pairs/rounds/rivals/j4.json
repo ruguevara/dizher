@@ -1,0 +1,12 @@
+[
+{"item": "r12b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 1 drains most of the golden canopy and the leaf-covered road to grey, leaving patchy yellow islands and stray pink cells."},
+{"item": "r22b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A2", "note": "Colouring 1 turns the smooth red-to-yellow sky into flat bands with hard staircase cell edges and makes the striped tail a black blob."},
+{"item": "r09b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 1 fills the dark tree silhouette and the street with garish green dots, so the picture no longer reads as dusk."},
+{"item": "r07a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 paints the tree trunks bright red, scatters green and blue cells on the middle trunk, and leaves pale square specks in the canopy."},
+{"item": "r04a", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B1", "note": "Colouring 1 keeps the red and blue, but the faces turn into flat blocky patches with clashing cells. Colouring 2 keeps the faces but drains the red to pink."},
+{"item": "r06a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 2 drains the red-orange sky to a pale pink dither, blacks out the top, and loses the warm raccoon colours."},
+{"item": "r18b", "verdict": "2", "confidence": "low", "problem": "seams", "where": "B1", "note": "Colouring 1 has yellow blotches across the faces and cyan patches on the jacket. Colouring 2 differs mainly by blue specks in the black bands."},
+{"item": "r02b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B1", "note": "Colouring 1 turns the boy's face and hand into a blank white blob, loses the V sign and mangles the title, though its red is cleaner."},
+{"item": "r05b", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A3", "note": "Colouring 2 covers the dark tree silhouette and foreground with garish green dots."},
+{"item": "r11a", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "B1", "note": "Colouring 2 dulls the red to a darker shade, blanks the boy's face to white and mangles the title lettering."}
+]

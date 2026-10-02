@@ -1,0 +1,11 @@
+[
+{"item": "r17b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B2", "note": "Colouring 1 drains the sunset to grey and white and pales the pink clouds, losing the picture's main colours, though colouring 2's green noise in the trees and road is garish too."},
+{"item": "r02b", "verdict": "2", "confidence": "medium", "problem": "detail", "where": "B1", "note": "Colouring 1 blows the faces and the V-sign hand out to flat white blocks and mangles the JOJO lettering."},
+{"item": "r19a", "verdict": "1", "confidence": "high", "problem": "noise", "where": "C2", "note": "Colouring 2 scatters pale yellow cells over the foliage and puts green and blue specks in the trunks."},
+{"item": "r22b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "B2", "note": "Colouring 1 posterises the orange sky into flat red and olive bands with staircase cell edges and flattens the raccoon to a black silhouette."},
+{"item": "r13a", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "B1", "note": "Colouring 2 breaks the foliage and ground into blotchy yellow and orange patches with a coarse dither."},
+{"item": "r10b", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "D2", "note": "Colouring 1 sprinkles blue and red specks into the black bands around the figures."},
+{"item": "r18b", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "A2", "note": "Colouring 2 fills the black bands with blue specks and makes the right face checkered."},
+{"item": "r16b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 1 drains the orange foliage to grey, with patchy olive and pink cells."},
+{"item": "r12a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 2 drains the orange foliage to grey, with patchy olive and pink cells."}
+]
