@@ -90,6 +90,8 @@ The GUI block that owns each control is in brackets.
    │     dot_ch    paper-ink contrast: luma, and for chroma the hue difference alone (CIELAB)       │
    │     V         CIELUV distance of papers + inks, fixed by the palette                           │
    │     coherence, edge  [Select pairs: coherence, edge]                                           │
+   │  surface dE  [Select pairs]: the cells within it of their surface's mean colour (k-means of    │
+   │  cells by colour and place, ~24 cells) may take only the pair cheapest over them; 0 off        │
    │                                                                                                │
    │  solver: rows then columns re-solved exactly by dynamic programming, until no label changes    │
    └──────────────────────────────────────────┬─────────────────────────────────────────────────────┘
@@ -191,6 +193,13 @@ CIELUV distance of the papers plus that of the inks), scaled down where the orig
 has an edge across that seam. Labels are optimised by line-wise dynamic programming: each row,
 then each column, is re-solved exactly given the rest, until nothing changes. The palette can be
 restricted to bright colours only, non-bright only, grayscale, black and white, or any custom set.
+
+Each block still picks its own nearest mixture, so the blocks of a smooth surface whose colour lies between two
+pairs (a face between red/yellow and yellow/white) fall on both sides of that border: a patchwork no coherence
+weight undoes. [Select pairs: surface dE], off by default, binds the blocks within that many dE of their surface's
+mean colour to the one pair cheapest over all of them; the surfaces are k-means of the blocks by mean colour and
+position, about 24 blocks each. In a blind test on seven pictures 20 dE made faces and skies clean (jojo, a van
+Gogh) and lost the small accents of dense illustrations, so it is a choice per picture.
 
 #### Selection methods
 

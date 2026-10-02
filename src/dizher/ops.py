@@ -228,9 +228,15 @@ def select_pairs(prepared: Converter,
                  chroma_noise: Annotated[float, meta(min=0.0, max=0.5, help="cost of dots of clashing hues, "
                                                      "blue on yellow most, black or white dots none")]
                      = NEWEST_PRESET['chroma_noise'],
+                 surface: Annotated[float, meta(min=0.0, max=40.0, label="surface dE",
+                                                help="cells within this many dE of their surface's mean colour take "
+                                                     "one pair, the surface's cheapest: a face or a sky in one clean "
+                                                     "pair instead of a patchwork of two; small accents may go. 0 off")]
+                     = 0.0,
                  progress=None) -> Converter:
     """One (paper, ink) pair per cell; the noise weights also reach the DBS optimiser."""
-    c = prepared.copy(coherence=coherence, edge=edge, luma_noise=luma_noise, chroma_noise=chroma_noise)
+    c = prepared.copy(coherence=coherence, edge=edge, luma_noise=luma_noise, chroma_noise=chroma_noise,
+                      surface=surface)
     with reporting(progress):
         c.set_labels(c.energy.apply())
     return c

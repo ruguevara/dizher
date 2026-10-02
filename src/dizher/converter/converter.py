@@ -34,6 +34,7 @@ class Converter:
             ditherer: Ditherer = None,   # halftones the pair candidates and, after selection, the result
             flare: float = 0.1,
             method: str = NEWEST,       # how a pair is scored on a block, see energy.METHODS
+            surface: float = 0.0,
     ):
         self.mode = mode
         self.size = mode.size
@@ -47,6 +48,7 @@ class Converter:
         self.chroma_noise = chroma_noise
         self.edge = edge            # step of the original across a seam that counts as a real edge, see energy.py
         self.coherence = coherence  # cost of a pair change between neighbours where the original is smooth, see energy.py
+        self.surface = surface      # dE: cells this near their surface's colour take one pair, 0 off, see energy.surface_binding
         self.structure = structure  # weight of the contrast-weighted SSIM term in the DBS optimiser, see halftoning/dbs.py
         self.ditherer = ditherer or Stohastic()
         if method not in METHODS:

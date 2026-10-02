@@ -61,6 +61,7 @@ OFFSETS = [(0, 1), (1, 0), (1, 1), (1, -1)]      # unordered neighbour pairs, bl
 # per block in linear light) read as edges on every row and lost its coherence, real outlines step by 0.2 and more.
 EDGE_SIGMA = 0.1
 SEAM_COST = 0.1     # energy of one seam between totally different pairs at coherence 1; a block's own cost is ~0.2
+SURFACE_CELLS = 24  # cells per surface, about: 32 surfaces on the Spectrum's 768 cells
 
 LIGHTNESS_REF = 0.18   # mid grey's luminance: its error keeps weight 1
 
@@ -151,6 +152,35 @@ METHODS = {'Exact mixture': ExactMixture(), 'Halftoned': Halftoned()}
 NEWEST = 'Exact mixture'    # new projects
 LEGACY = 'Halftoned'        # projects saved before there was a choice
 
+def surfaces(image_rgb: np.ndarray, cell) -> tuple:
+    """(R, C) each cell's surface and (R, C, 3) its mean CIELAB: k-means of the cells' mean colour and position, so a
+    surface is a patch of one colour, about SURFACE_CELLS cells. Seeded, so a rerun gives the same surfaces."""
+    h, w = cell
+    R, C = image_rgb.shape[0] // h, image_rgb.shape[1] // w
+    lab = cv2.cvtColor(image_rgb.astype(np.float32), cv2.COLOR_RGB2Lab).reshape(R, h, C, w, 3).mean(axis=(1, 3))
+    r, c = np.indices((R, C))
+    feats = np.concatenate([lab, 2.0 * np.stack([r, c], -1) * 100 / C], -1).reshape(-1, 5).astype(np.float32)
+    cv2.setRNGSeed(1)
+    _, km, _ = cv2.kmeans(feats, max(1, R * C // SURFACE_CELLS), None,
+                          (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 50, 0.1), 5, cv2.KMEANS_PP_CENTERS)
+    return km.reshape(R, C), lab
+
+
+def surface_binding(D: np.ndarray, image_rgb: np.ndarray, cell, near: float) -> np.ndarray:
+    """(P, R, C) extra cost that binds the cells within near dE of their surface's mean colour to the one pair whose
+    own cost over them is least: a face or a sky in one pair, where each cell's own nearest mixture would make a
+    patchwork of two families. Cells further off (accents, a surface of several colours) stay free."""
+    seg, lab = surfaces(image_rgb, cell)
+    best = np.full(seg.shape, -1)
+    for s in np.unique(seg):
+        cells = seg == s
+        cells &= np.linalg.norm(lab - lab[cells].mean(axis=0), axis=-1) < near
+        if cells.any():
+            best[cells] = D[:, cells].sum(axis=1).argmin()
+    off = (best >= 0) & (np.arange(len(D))[:, None, None] != best)
+    return np.where(off, 100 * np.abs(D).max(), 0).astype(D.dtype)
+
+
 class SelectionEnergy:
     def __init__(self, converter, weights) -> None:
         self.converter = converter
@@ -204,8 +234,10 @@ class SelectionEnergy:
 
     def apply(self) -> np.ndarray:
         """The (R, C) pair labels of least energy."""
-        w = self.weights
+        w, c = self.weights, self.converter
         D = self.unary()
+        if c.surface > 0:
+            D = D + surface_binding(D, c.image_rgb, c.cell, c.surface)
         S = {off: sum(w[g] * self.S[g][off] for g in GROUPS) for off in OFFSETS}
         Lh, Lv = self.seam_smoothness()
         V = self.converter.pair_dissimilarity
