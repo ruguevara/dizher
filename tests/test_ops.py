@@ -59,6 +59,8 @@ def test_dot_weights_move_the_dots_not_the_pairs():
     changed = changed.with_params('halftone', replace(changed['halftone'].params, chroma=0.5))
     halftone = lambda g: evaluate(g, 'halftone', memo).dithered_bitmap
     assert (halftone(changed) != halftone(graph)).any()
+    projected = lambda g: evaluate(g, 'halftone', memo).projected_target()   # the Projected view's
+    assert not np.array_equal(projected(changed), projected(graph))
     moved = evaluate(changed, 'optimise', memo)
     assert moved.best_attr_indexes is result.best_attr_indexes
     assert (moved.dithered_bitmap != result.dithered_bitmap).any()
