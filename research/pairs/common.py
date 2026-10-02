@@ -15,7 +15,8 @@ from dizher import ops
 ROOT = Path(__file__).resolve().parents[2]
 IMAGES = ROOT / 'tests' / 'images'
 DATA = Path(__file__).resolve().parent / 'data'   # renders and pairs, rebuilt by build.py; not in git
-SHARED = (('metric', 'chroma'), ('select', 'luma_noise'), ('select', 'chroma_noise'))   # Optimise's own since PLAN step 2
+SHARED = {('metric', 'chroma'): 'halftone', ('select', 'luma_noise'): 'optimise',   # the dots' own since PLAN step 2
+          ('select', 'chroma_noise'): 'optimise'}
 
 
 def painted_projects() -> list:
@@ -71,11 +72,12 @@ class Project:
 
     def changed(self, **graph_params):
         """The project's graph with these node params changed: {node id: {param: value}}. A Metric chroma or Select
-        pairs noise weight moves Optimise's too, unless that is given: one setting, as in every round before step 2."""
+        pairs noise weight moves the dots' (Halftone's, Optimise's) too, unless that is given: one setting, as in every
+        round before step 2."""
         graph_params = {nid: dict(params) for nid, params in graph_params.items()}
-        for nid, k in SHARED:
+        for (nid, k), dots in SHARED.items():
             if k in graph_params.get(nid, {}):
-                graph_params.setdefault('optimise', {}).setdefault(k, graph_params[nid][k])
+                graph_params.setdefault(dots, {}).setdefault(k, graph_params[nid][k])
         graph = self.graph
         for nid, params in graph_params.items():
             graph = graph.with_params(nid, replace(graph[nid].params, **params))

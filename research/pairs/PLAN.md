@@ -20,7 +20,7 @@ image2zx, img2spec) на трёх эталонных картинках, всл�
 
 Ветка `feature/gallant-wright-6dtgj6` от `develop` 41927ed. Сессии A, B, C, E, шаги 1 и 2 закрыты (`LOG.md`). В
 приложении: Select pairs: surface dE — одна пара на поверхность, по умолчанию выключена (PR #14). Слита сюда, не в
-`develop`: `feature/dbs-weights` — у Optimise свои веса (шаг 2).
+`develop`: `feature/dbs-weights` — у точек свои веса: chroma у Halftone, шум у Optimise (шаг 2).
 
 Против конкурентов (шаг 1, README 12; `rivals.py`, `rounds/rivals`): не хуже нигде; критерий — на двух картинках из
 трёх нужных: jojo со surface dE 20, rocket-rackoon с Exact mixture, каждая своим стилем. autumn и diver-sunset —
@@ -36,15 +36,17 @@ image2zx, img2spec) на трёх эталонных картинках, всл�
   его читают и подбор (подгонка кандидатов, энергия выбора), и дизеринг (цель Halftone и DBS — проекция на пару,
   ошибка DBS). luma_noise и chroma_noise из Select pairs тоже идут в DBS. Ещё общие — flare и модель глаза; только
   у DBS — structure.
-- Optimise получает свои chroma, luma_noise, chroma_noise; DBS и его цель читают только их, Metric и Select pairs
-  остаются подбору. Flare и глаз остаются общими: это модель зрителя, а не вкус. Halftone без DBS — по весу Metric,
-  как сейчас.
-- Ворота: рендер по умолчанию тот же. Новые проекты получают значения пресета (`apply_preset` ставит и Optimise);
+- У точек свои веса: chroma у Halftone (цель полутона и, через неё, вес ошибки DBS), luma_noise и chroma_noise у
+  Optimise; Metric и Select pairs остаются подбору. Flare и глаз остаются общими: это модель зрителя, а не вкус.
+  Сначала chroma был у Optimise, а Halftone без DBS оставался на весе Metric; но он меняет 0.4–4% пикселей полутона
+  (больше всего на autumn и diver-sunset), а места без DBS — в приоритетах 3–4, поэтому chroma перенесён в Halftone:
+  один вес на точки, а не два.
+- Ворота: рендер по умолчанию тот же. Новые проекты получают значения пресета (`apply_preset` ставит и Halftone, и Optimise);
   проекты, сохранённые до шага, — значения своих Metric и Select pairs (`legacy` в mokit — константа, а тут нужно
   значение соседнего узла). Тест на оба случая; pytest и `tests/test_ui.py` зелёные.
 - Ветка от `develop`, слита сюда (автор, 2026-10-02): галерее нужны крутилки. PR в `develop` — когда автор решит.
 - Сделано: прошлый проект берёт их через `meta(legacy=Like(node, field))` в mokit. В исследовании
-  `common.Project.changed` двигает вес Optimise вместе с весом Metric или Select pairs, если его не задали: все
+  `common.Project.changed` двигает веса точек вместе с весами Metric и Select pairs, если их не задали: все
   прошлые раунды воспроизводятся (rocket-rackoon при базе `tune` и со сдвигом chroma и шума, diver-sunset со своими
   — рендер до и после слияния совпадает побайтно).
 
