@@ -1,0 +1,72 @@
+{
+ "u01": {
+  "id": "anubis",
+  "variant": "64 surfaces, 1 pair",
+  "x": 1
+ },
+ "u02": {
+  "id": "anubis",
+  "variant": "32 surfaces, 1 pair",
+  "x": 2
+ },
+ "u03": {
+  "id": "RC1",
+  "variant": "32 surfaces, 1 pair",
+  "x": 2
+ },
+ "u04": {
+  "id": "autumn",
+  "variant": "64 surfaces, 1 pair",
+  "x": 1
+ },
+ "u05": {
+  "id": "autumn",
+  "variant": "32 surfaces, 1 pair",
+  "x": 2
+ },
+ "u06": {
+  "id": "diver-sunset",
+  "variant": "64 surfaces, 1 pair",
+  "x": 2
+ },
+ "u07": {
+  "id": "vangog",
+  "variant": "64 surfaces, 1 pair",
+  "x": 2
+ },
+ "u08": {
+  "id": "rocket-rackoon",
+  "variant": "32 surfaces, 1 pair",
+  "x": 1
+ },
+ "u09": {
+  "id": "rocket-rackoon",
+  "variant": "64 surfaces, 1 pair",
+  "x": 1
+ },
+ "u10": {
+  "id": "diver-sunset",
+  "variant": "32 surfaces, 1 pair",
+  "x": 2
+ },
+ "u11": {
+  "id": "jojo",
+  "variant": "64 surfaces, 1 pair",
+  "x": 1
+ },
+ "u12": {
+  "id": "vangog",
+  "variant": "32 surfaces, 1 pair",
+  "x": 2
+ },
+ "u13": {
+  "id": "jojo",
+  "variant": "32 surfaces, 1 pair",
+  "x": 1
+ },
+ "u14": {
+  "id": "RC1",
+  "variant": "64 surfaces, 1 pair",
+  "x": 1
+ }
+}
