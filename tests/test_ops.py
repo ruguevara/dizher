@@ -46,22 +46,27 @@ def test_pipeline_matches_single_converter():
     np.testing.assert_array_equal(direct.dither(Ordered('Void dispersed dots')), result.dithered_result)
 
 
-def test_optimise_weights_move_the_dots_not_the_pairs():
-    """Optimise's chroma and noise weights are its own: at the preset's values DBS gives the one-shot Converter's
-    result, where they were one setting; changed, they move the dots, keep the pairs and leave upstream alone."""
+def test_dot_weights_move_the_dots_not_the_pairs():
+    """The dots' weights (Halftone's chroma, Optimise's noise) are their own: at the preset's values DBS gives the
+    one-shot Converter's result, where they were one setting; changed, they move the dots, the halftone's alone too,
+    keep the pairs and leave upstream alone."""
     memo = Memo()
     graph = pipeline(COLOUR, enabled=True)
     result = evaluate(graph, 'optimise', memo)
     direct = evaluate(graph, 'prepare', memo).copy()
     np.testing.assert_array_equal(direct.dither(Ordered('Void dispersed dots'), optimise=True), result.dithered_result)
-    changed = evaluate(pipeline(COLOUR, enabled=True, chroma=0.5, chroma_noise=0.3), 'optimise', memo)
-    assert changed.best_attr_indexes is result.best_attr_indexes
-    assert (changed.dithered_bitmap != result.dithered_bitmap).any()
-    assert evaluate(graph, 'halftone', memo).energy.weights['Chroma'] == ops.NEWEST_PRESET['chroma']
+    changed = pipeline(COLOUR, enabled=True, chroma_noise=0.3)
+    changed = changed.with_params('halftone', replace(changed['halftone'].params, chroma=0.5))
+    halftone = lambda g: evaluate(g, 'halftone', memo).dithered_bitmap
+    assert (halftone(changed) != halftone(graph)).any()
+    moved = evaluate(changed, 'optimise', memo)
+    assert moved.best_attr_indexes is result.best_attr_indexes
+    assert (moved.dithered_bitmap != result.dithered_bitmap).any()
+    assert evaluate(graph, 'overpaint', memo).energy.weights['Chroma'] == ops.NEWEST_PRESET['chroma']
 
 
-def test_optimise_weights_of_older_projects():
-    """A project saved before Optimise had weights of its own opens with Metric's and Select pairs', so it renders
+def test_dot_weights_of_older_projects():
+    """A project saved before the dots had weights of their own opens with Metric's and Select pairs', so it renders
     as it did; a saved one keeps its own."""
     import json
     from mokit import project
@@ -69,11 +74,12 @@ def test_optimise_weights_of_older_projects():
     graph = graph.with_params('metric', replace(graph['metric'].params, chroma=1.5))
     graph = graph.with_params('select', replace(graph['select'].params, luma_noise=0.1, chroma_noise=0.3))
     data = json.loads(project.dumps(graph, {}))
-    for k in ('chroma', 'luma_noise', 'chroma_noise'):
+    data['nodes']['halftone']['params'] = None   # as saved when Halftone had no params
+    for k in ('luma_noise', 'chroma_noise'):
         del data['nodes']['optimise']['params'][k]
     loaded, _, diagnostics = project.loads(json.dumps(data))
     o = loaded['optimise'].params
-    assert (o.chroma, o.luma_noise, o.chroma_noise) == (1.5, 0.1, 0.3) and not diagnostics
+    assert (loaded['halftone'].params.chroma, o.luma_noise, o.chroma_noise) == (1.5, 0.1, 0.3) and not diagnostics
     assert project.loads(project.dumps(graph, {}))[0] == graph
 
 
@@ -342,8 +348,8 @@ def test_project_round_trip_and_restore():
 
 def test_selection_methods():
     """New documents score pairs by the newest method with the values it was tuned with; a project saved before the
-    choice existed opens as Halftoned, develop's scoring; picking a method brings its Metric, Select pairs, Optimise
-    and Eye values."""
+    choice existed opens as Halftoned, develop's scoring; picking a method brings its Metric, Select pairs,
+    Halftone, Optimise and Eye values."""
     import json
     from mokit import project
     from dizher.converter.energy import METHODS, NEWEST, LEGACY
@@ -358,7 +364,7 @@ def test_selection_methods():
         picked = ops.apply_preset(loaded, method)
         assert picked['metric'].params.method == method
         for k, v in scoring.preset.items():
-            nodes = [n for n in ('metric', 'select', 'optimise', 'eye') if hasattr(picked[n].params, k)]
+            nodes = [n for n in ('metric', 'select', 'halftone', 'optimise', 'eye') if hasattr(picked[n].params, k)]
             assert nodes and all(getattr(picked[n].params, k) == v for n in nodes), (method, k)
 
 

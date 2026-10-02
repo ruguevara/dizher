@@ -105,18 +105,20 @@ The GUI block that owns each control is in brackets.
    │  [Halftoner: halftoner] ordered (matrix; void-and-cluster dispersed dots by default, a fair    │
    │  stand-in for the DBS result), error diffusion (kernel), stochastic (blue noise); the tile     │
    │  is rolled by [Halftoner: noise x, y]                                                          │
+   │  [Halftone: chroma] the dots' chroma weight, DBS's too, in place of Metric's: it places the    │
+   │  target on the pair's mixtures; a method's preset sets both alike                              │
    └──────────────────────────────────────────┬─────────────────────────────────────────────────────┘
                                               │ bitmap
                                               ▼
    ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
    │ Stage 3: OPTIMISE                  [Optimise: enabled]  off passes the halftone through        │
    │                                                                                                │
-   │  loss(bitmap) = Σ_ch || h_ch ∗ (result − target) ||²    same kernels, weights of its own       │
+   │  loss(bitmap) = Σ_ch || h_ch ∗ (result − target) ||²    same kernels, the dots' weights        │
    │               + Σ_ch noise_ch · || result − target ||²                                         │
    │               + structure · Σ_p c_p (1 − SSIM_p(result, target))   luma only, 7x7 windows,     │
    │                                                                     c_p = local contrast       │
-   │     chroma, noise_ch  [Optimise: chroma, luma noise, chroma noise] in place of Metric's and    │
-   │               Select pairs'; a method's preset sets both alike                                 │
+   │     noise_ch  [Optimise: luma noise, chroma noise] in place of Select pairs', and Halftone's   │
+   │               chroma; a method's preset sets both alike                                        │
    │     structure  [Optimise: structure]                                                           │
    │                                                                                                │
    │  solver (DBS): from the halftone, every pixel tries a toggle and a swap with each of 8         │
@@ -239,9 +241,10 @@ whichever lowers the eye-model error most, until no move helps. A swap moves a d
 changing the local tone; with flips alone the search stalls at about twice the error. The error
 change of a move is computed exactly from a running error image, so a pass costs a few
 convolutions. Pixels farther apart than the kernel do not interact, so a whole lattice of pixels
-moves at once. DBS uses the same per-channel blur as colour selection, and weights of its own
-(chroma, luma and chroma noise) that a selection method's preset sets with the selection's:
-apart, they tune the dots without moving the pairs.
+moves at once. DBS uses the same per-channel blur as colour selection, and weights of the dots'
+own: the Halftone stage's chroma, which also places the halftoner's target, and its own luma and
+chroma noise. A selection method's preset sets them with the selection's; apart, they tune the
+dots without moving the pairs.
 
 Plain DBS reproduces tone but blurs faint edges and texture. Following structure-aware
 halftoning (Pang et al. 2008), the energy also includes a structural similarity (SSIM) term
