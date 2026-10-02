@@ -58,6 +58,26 @@ def settle(host):
         host.job.future.exception()
 
 
+def test_surface_binding():
+    """Surface dE: the cells near their surface's mean colour share one pair, the cheapest over them by the pairs' own
+    costs; the rest stay free; 0, the default, selects as before."""
+    from dizher.converter.energy import surfaces
+    memo, graph = Memo(), pipeline()
+    free = evaluate(graph, 'select', memo)
+    off = evaluate(graph.with_params('select', replace(graph['select'].params, surface=0.0)), 'select', memo)
+    np.testing.assert_array_equal(off.best_attr_indexes, free.best_attr_indexes)
+    bound = evaluate(graph.with_params('select', replace(graph['select'].params, surface=20.0)), 'select', memo)
+    labels, D = bound.best_attr_indexes, free.energy.unary()
+    seg, lab = surfaces(free.image_rgb, free.cell)
+    n = 0
+    for s in np.unique(seg):
+        cells = (seg == s) & (np.linalg.norm(lab - lab[seg == s].mean(axis=0), axis=-1) < 20.0)
+        if cells.any():
+            assert set(labels[cells]) == {D[:, cells].sum(axis=1).argmin()}
+            n += cells.sum()
+    assert 0 < n < labels.size and (labels != free.best_attr_indexes).any()
+
+
 def test_overpaint():
     """Painted cells take their colours, in either order, and only they change; -1 keeps the selection's colour; a
     pair the Spectrum cannot show becomes the nearest it can, the painted colour kept; a cell off the screen is
