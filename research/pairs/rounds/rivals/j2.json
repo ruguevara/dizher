@@ -1,0 +1,12 @@
+[
+{"item": "r17a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A2", "note": "The dark tree silhouette and road turn into garish green dotted masses and the top sky goes cyan."},
+{"item": "r08b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "B2", "note": "The red-to-yellow sky gradient is a hard flat band split across the middle and the raccoon loses its tail and body detail."},
+{"item": "r01a", "verdict": "2", "confidence": "low", "problem": "noise", "where": "B2", "note": "The sun area breaks into blocky white and yellow cells and the dark road and buildings carry more green and blue specks."},
+{"item": "r12b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "C1", "note": "The orange foliage is drained to grey with a patchwork of yellow and pink cells."},
+{"item": "r14a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "C1", "note": "The magenta and orange sunset is drained to grey and pale pink."},
+{"item": "r13a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "B2", "note": "The canopy and ground break into blocky flat-yellow cells against the orange dither instead of an even orange."},
+{"item": "r05a", "verdict": "2", "confidence": "high", "problem": "colour", "where": "A2", "note": "The dark trees and road turn into garish green dotted masses and the top sky goes cyan."},
+{"item": "r02a", "verdict": "1", "confidence": "low", "problem": "detail", "where": "B1", "note": "The peace-sign hand and faces are lost to flat white blocks and the title letters erode, though its red background is cleaner."},
+{"item": "r11a", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "B1", "note": "The peace-sign hand and faces are lost to flat white blocks and the title letters erode, though its red background is cleaner."},
+{"item": "r23a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "The red-orange sky is washed out to a pale pink and the raccoon goes grey."}
+]

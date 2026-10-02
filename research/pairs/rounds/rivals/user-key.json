@@ -1,0 +1,234 @@
+{
+ "u01": {
+  "id": "autumn",
+  "tool": "paintbrush",
+  "setting": "default",
+  "ours": "Exact mixture",
+  "x": 2,
+  "repeat": false
+ },
+ "u02": {
+  "id": "jojo",
+  "tool": "paintbrush",
+  "setting": "default",
+  "ours": "Exact mixture",
+  "x": 2,
+  "repeat": true
+ },
+ "u03": {
+  "id": "jojo",
+  "tool": "izx",
+  "setting": "atkinson",
+  "ours": "Exact mixture",
+  "x": 1,
+  "repeat": true
+ },
+ "u04": {
+  "id": "rocket-rackoon",
+  "tool": "izx",
+  "setting": "fs",
+  "ours": "Exact mixture",
+  "x": 1,
+  "repeat": false
+ },
+ "u05": {
+  "id": "rocket-rackoon",
+  "tool": "img2spec",
+  "setting": "fs",
+  "ours": "surface dE 20",
+  "x": 1,
+  "repeat": false
+ },
+ "u06": {
+  "id": "diver-sunset",
+  "tool": "paintbrush",
+  "setting": "default",
+  "ours": "Exact mixture",
+  "x": 2,
+  "repeat": false
+ },
+ "u07": {
+  "id": "jojo",
+  "tool": "paintbrush",
+  "setting": "default",
+  "ours": "surface dE 20",
+  "x": 1,
+  "repeat": false
+ },
+ "u08": {
+  "id": "jojo",
+  "tool": "paintbrush",
+  "setting": "default",
+  "ours": "Exact mixture",
+  "x": 1,
+  "repeat": false
+ },
+ "u09": {
+  "id": "autumn",
+  "tool": "izx",
+  "setting": "atkinson",
+  "ours": "Exact mixture",
+  "x": 2,
+  "repeat": false
+ },
+ "u10": {
+  "id": "diver-sunset",
+  "tool": "izx",
+  "setting": "bayer4",
+  "ours": "Exact mixture",
+  "x": 2,
+  "repeat": true
+ },
+ "u11": {
+  "id": "rocket-rackoon",
+  "tool": "paintbrush",
+  "setting": "default",
+  "ours": "Exact mixture",
+  "x": 2,
+  "repeat": false
+ },
+ "u12": {
+  "id": "jojo",
+  "tool": "izx",
+  "setting": "atkinson",
+  "ours": "Exact mixture",
+  "x": 2,
+  "repeat": false
+ },
+ "u13": {
+  "id": "rocket-rackoon",
+  "tool": "izx",
+  "setting": "fs",
+  "ours": "surface dE 20",
+  "x": 2,
+  "repeat": false
+ },
+ "u14": {
+  "id": "diver-sunset",
+  "tool": "izx",
+  "setting": "bayer4",
+  "ours": "Exact mixture",
+  "x": 1,
+  "repeat": false
+ },
+ "u15": {
+  "id": "diver-sunset",
+  "tool": "paintbrush",
+  "setting": "default",
+  "ours": "surface dE 20",
+  "x": 1,
+  "repeat": false
+ },
+ "u16": {
+  "id": "autumn",
+  "tool": "img2spec",
+  "setting": "fs",
+  "ours": "surface dE 20",
+  "x": 2,
+  "repeat": false
+ },
+ "u17": {
+  "id": "rocket-rackoon",
+  "tool": "paintbrush",
+  "setting": "default",
+  "ours": "surface dE 20",
+  "x": 2,
+  "repeat": false
+ },
+ "u18": {
+  "id": "autumn",
+  "tool": "img2spec",
+  "setting": "fs",
+  "ours": "Exact mixture",
+  "x": 2,
+  "repeat": false
+ },
+ "u19": {
+  "id": "diver-sunset",
+  "tool": "img2spec",
+  "setting": "bayer8",
+  "ours": "Exact mixture",
+  "x": 2,
+  "repeat": false
+ },
+ "u20": {
+  "id": "rocket-rackoon",
+  "tool": "paintbrush",
+  "setting": "default",
+  "ours": "Exact mixture",
+  "x": 1,
+  "repeat": true
+ },
+ "u21": {
+  "id": "jojo",
+  "tool": "izx",
+  "setting": "atkinson",
+  "ours": "surface dE 20",
+  "x": 1,
+  "repeat": false
+ },
+ "u22": {
+  "id": "jojo",
+  "tool": "img2spec",
+  "setting": "bayer8",
+  "ours": "surface dE 20",
+  "x": 2,
+  "repeat": false
+ },
+ "u23": {
+  "id": "diver-sunset",
+  "tool": "izx",
+  "setting": "bayer4",
+  "ours": "surface dE 20",
+  "x": 1,
+  "repeat": true
+ },
+ "u24": {
+  "id": "autumn",
+  "tool": "paintbrush",
+  "setting": "default",
+  "ours": "surface dE 20",
+  "x": 2,
+  "repeat": false
+ },
+ "u25": {
+  "id": "diver-sunset",
+  "tool": "izx",
+  "setting": "bayer4",
+  "ours": "surface dE 20",
+  "x": 2,
+  "repeat": false
+ },
+ "u26": {
+  "id": "autumn",
+  "tool": "izx",
+  "setting": "atkinson",
+  "ours": "surface dE 20",
+  "x": 2,
+  "repeat": false
+ },
+ "u27": {
+  "id": "jojo",
+  "tool": "img2spec",
+  "setting": "bayer8",
+  "ours": "Exact mixture",
+  "x": 2,
+  "repeat": false
+ },
+ "u28": {
+  "id": "rocket-rackoon",
+  "tool": "img2spec",
+  "setting": "fs",
+  "ours": "Exact mixture",
+  "x": 1,
+  "repeat": false
+ },
+ "u29": {
+  "id": "diver-sunset",
+  "tool": "img2spec",
+  "setting": "bayer8",
+  "ours": "surface dE 20",
+  "x": 2,
+  "repeat": false
+ }
+}

@@ -1,0 +1,11 @@
+[
+{"item": "r04b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 drains the red background to pink dither and turns the blue jacket and figures black and white, despite its finer faces."},
+{"item": "r15a", "verdict": "2", "confidence": "high", "problem": "colour", "where": "A3", "note": "Colouring 1 fills the dark tree, buildings and road with garish green dots where the original is near-black."},
+{"item": "r08b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A2", "note": "Colouring 1 jumps hard from flat red to flat yellow across the middle instead of the orange gradient, and the raccoon becomes blobs."},
+{"item": "r23a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A1", "note": "Colouring 2 washes the saturated red sky to pink with white dither and greys out the raccoon."},
+{"item": "r02b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "B2", "note": "Colouring 1 blows the faces and raised hand into featureless white blocks and eats part of the title."},
+{"item": "r10a", "verdict": "1", "confidence": "low", "problem": "noise", "where": "A2", "note": "Colouring 2 sprinkles blue and red specks over the black bands, and the left girl's face and the title lose some legibility."},
+{"item": "r05b", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A3", "note": "Colouring 2 fills the dark tree, buildings and road with garish green dots where the original is near-black."},
+{"item": "r20b", "verdict": "2", "confidence": "low", "problem": "seams", "where": "A2", "note": "Colouring 1 jumps hard from flat red to flat yellow across the middle; colouring 2 has a few bright-red block patches in the sky but keeps the gradient."},
+{"item": "r14b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 1 drains the sunset to grey, pale pink and lavender, losing the magenta, yellow and blues."}
+]

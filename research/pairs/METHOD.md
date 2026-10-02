@@ -54,13 +54,16 @@
 | `curve.py` | кривая порога, раздача `deal`, промпт `PROMPT`, листы автору (шаг 2) |
 | `dp.py` | альтернативы, где DP колеблется, волны судей, счёт, листы автору, страница голосования `vote` (шаги 3–4) |
 | `smooth.py`, `surface.py` | подбор по сглаженной цели; пара на поверхность (после E) |
+| `rivals.py`, `Izx.java` | база конкурентов: img2spec, Image to ZX Spec (без окна), ZX-Paintbrush (SCR автора); лучшая настройка по судьям, листы автору, счёт (шаг 1 плана) |
 | `vote.html` | старая страница голосования (Artifact с db, раунд cal1); заменена `dp.py vote` |
 
 Данные в git — `rounds/`: `pilot1`, `cal1`, `opt1`, `opt3`, `opt4`, `aopt`, `c1`, `acuity`, `curve`, `e1`,
-`surface/r1`, `surface/r2` (ключи, вердикты судей и автора). Рендеры `data/` в git не входят и пересобираются:
+`surface/r1`, `surface/r2`, `rivals` (ключи, вердикты судей и автора). Рендеры `data/` в git не входят и пересобираются:
 `build.py` ~15 мин на 9 процессах, `variants.py` ~3 мин, `flat.py` ~7 мин, `score.py` ~1 мин, `optimum.py N` ~25 мин
 (полный на GPU ~1.5 ч), `dp.py make` ~10 мин без других задач на машине (~900 рендеров по ~6 с на 12
-процессах), `surface.py make` — минуты. Зависимости: `pip install -e . pytest`, для
+процессах), `surface.py make` — минуты, `rivals.py make` ~30 с (после `surface.py make`; конкуренты: сборка
+`../img2spec_video/build-macos`, jar Image to ZX Spec и ZX-Paintbrush в своём префиксе Wine — в `data/rivals/bin/`,
+SCR автора — `rounds/rivals/paintbrush/`). Зависимости: `pip install -e . pytest`, для
 LPIPS/DISTS ещё `torch torchvision piq`.
 
 ## Очистка

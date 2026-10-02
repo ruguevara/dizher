@@ -1,0 +1,12 @@
+[
+{"item": "r02a", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "B1", "note": "Colouring 1 breaks the flat red background into blocky dark-red cell patches around the figures and puts bright yellow squares on the faces."},
+{"item": "r16a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 2 drains the orange foliage to a grey patchwork with yellow and pink cells."},
+{"item": "r21b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 washes the red background to dithered pink and loses the blue jacket to black and white."},
+{"item": "r18a", "verdict": "2", "confidence": "low", "problem": "noise", "where": "A2", "note": "Colouring 1 scatters blue and red specks over the black bands."},
+{"item": "r10b", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "A2", "note": "Colouring 1 has blue and red speckle in the black bands, garbled JOJO lettering and bright yellow squares on the faces."},
+{"item": "r15b", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 2 floods the dark silhouettes with garish green dots and blue blocks."},
+{"item": "r14b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 1 drains the sunset to grey and pale pink, losing its magenta and yellow."},
+{"item": "r17a", "verdict": "x", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 floods the dark silhouettes with garish green, while colouring 2 drains the sunset to grey and pale pink."},
+{"item": "r03b", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "C1", "note": "Colouring 2 puts large bright-red cell blocks in the smooth sky gradient."},
+{"item": "r13a", "verdict": "1", "confidence": "low", "problem": "seams", "where": "B1", "note": "Colouring 2 breaks the foliage into blotchy bright-yellow cell patches and makes the ground blockier."}
+]

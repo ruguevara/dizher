@@ -1,0 +1,11 @@
+[
+{"item": "r21a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "2 drains the red background to dusty pink and turns the blue jacket black, so the poster loses its colours."},
+{"item": "r14a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "C2", "note": "2 drains the magenta and orange sunset to grey and pale pink blocks."},
+{"item": "r03a", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "C1", "note": "1 has bright red cell blotches in the smooth sky and a flatter, blacker tail."},
+{"item": "r22a", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A2", "note": "2 posterizes the glow into flat staircase bands, losing the orange to muddy olive yellow, though 1 has pale blocky patches of its own."},
+{"item": "r00a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "C1", "note": "2 drains the orange foliage to olive yellow with sparse red specks."},
+{"item": "r17b", "verdict": "x", "confidence": "medium", "problem": "colour", "where": "C2", "note": "1 drains the sunset to grey and pink blocks, while 2 floods the dark tree and road with garish green dither."},
+{"item": "r01b", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B3", "note": "2 spreads more garish green dither over the dark road and breaks the sun into grey and white cell blocks."},
+{"item": "r04a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B2", "note": "2 drains the red background to dusty pink and turns the blue jacket black."},
+{"item": "r20b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "A2", "note": "1 posterizes the sky into flat red over flat yellow with a hard cell seam across the middle and almost no orange."}
+]
