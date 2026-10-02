@@ -18,9 +18,11 @@ This README is the detailed record: methods, tables, numbers, by section. The re
 ## Ground rules
 
 - A colouring is a label map, one (paper, ink) pair per cell. It is judged only as the project renders it: through
-  the project's own pipeline, with its Tune, Target, Halftoner, the Metric and Select weights DBS reads, and
-  Optimise, painted as a whole field (`common.Project.render`). A painting means something only under the settings it
-  was made with.
+  the project's own pipeline, with its Tune, Target, Halftoner, Metric, Select pairs, Halftone and Optimise, painted
+  as a whole field (`common.Project.render`). A painting means something only under the settings it was made with.
+  The dots' weights (Halftone's chroma, Optimise's noise) were the selection's until PLAN step 2; a Metric or Select
+  pairs weight changed in a script moves them too, unless they are given (`common.Project.changed`), so every round
+  before renders as it did.
 - Cells are compared by the colours they show in that render (`common.shown`): paper/ink order and a colour a cell
   does not show do not count.
 - There is no single right colouring. The data are comparisons, and a metric is judged by how often it prefers what
