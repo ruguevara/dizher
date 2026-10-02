@@ -4,6 +4,17 @@ The aim is a measure of a colouring that agrees with the user's eye, found befor
 last attempts tuned the energy on proxy counts (painted cells matched, magenta cells) and the user rejected results
 that improved them. Plan and reasoning: the session's plan (methodology for finding the pair-selection metric).
 
+This README is the detailed record: methods, tables, numbers, by section. The research subproject's other documents
+(Russian):
+
+| document | what |
+|---|---|
+| `LOG.md` | the log: each session, its question, what was done, the result, the section here |
+| `FINDINGS.md` | what is established, by theme, and the dead ends not to repeat |
+| `IDEAS.md` | ideas: next, open, parked, closed |
+| `PLAN.md` | the aim, the state, the next steps with their gates |
+| `METHOD.md` | rules agreed with the user, the user's rounds, the Claude judges' protocol, files, data, cleanup |
+
 ## Ground rules
 
 - A colouring is a label map, one (paper, ink) pair per cell. It is judged only as the project renders it: through
@@ -46,6 +57,12 @@ over its cells grown by two cells (`common.window`).
     python research/pairs/optimum.py N [--full --mps]   # round N: a judge's optimum (~25 min fast, ~1.5 h full)
     python research/pairs/optimum.py N --pairs          # ~7 min: round N's optima as counterexamples for fit.py
     python research/pairs/views.py OUT [N]  # blind images of N pairs for judging by eye, with key.json
+    python research/pairs/tune.py sweep|report|fine ...      # session C: the converter's settings (section 7)
+    python research/pairs/acuity.py make|prompts L|score     # session E step 1: what a Claude judge sees (section 8)
+    python research/pairs/curve.py make|prompts V|score|user # step 2: the threshold curve (section 9)
+    python research/pairs/dp.py make|wave N|score|user       # steps 3-4: where Select pairs is unsure (section 10)
+    python research/pairs/dp.py vote [ROUND SHEETS]          # the user's blind vote in the browser
+    python research/pairs/surface.py make|user R V...        # pairs per surface (section 11)
 
 ## Results
 
@@ -514,4 +531,4 @@ The user, blind, whole pictures raw 3x, the variant against the base (`rounds/su
   accents (the torch's red glow, highlights on Anubis and the raccoon) a surface's pair erases. diver-sunset and RC1
   flip. 3 better, 3 worse, 1 both bad for each: a style that suits some pictures, not a new default.
 
-Summary and next steps: `HANDOFF.md`.
+Findings: `FINDINGS.md`; next steps: `PLAN.md`; the log: `LOG.md`.
