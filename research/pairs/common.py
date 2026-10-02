@@ -1,6 +1,5 @@
 """A colouring is a label map, one pair per cell; it is judged only as the project renders it: through the project's
-own pipeline (its Tune, Target, Halftoner, Metric and Select weights that DBS reads, Optimise), painted as a whole
-field. Cells are compared by the colours they show in that render, so paper/ink order and a colour a cell does not
+own pipeline (its Tune, Target, Halftoner, Metric, Select pairs and Optimise), painted as a whole field. Cells are compared by the colours they show in that render, so paper/ink order and a colour a cell does not
 show do not count."""
 from dataclasses import replace
 from pathlib import Path
@@ -16,6 +15,7 @@ from dizher import ops
 ROOT = Path(__file__).resolve().parents[2]
 IMAGES = ROOT / 'tests' / 'images'
 DATA = Path(__file__).resolve().parent / 'data'   # renders and pairs, rebuilt by build.py; not in git
+SHARED = (('metric', 'chroma'), ('select', 'luma_noise'), ('select', 'chroma_noise'))   # Optimise's own since PLAN step 2
 
 
 def painted_projects() -> list:
@@ -70,7 +70,12 @@ class Project:
         return evaluate(graph, 'optimise', self.memo).dithered_result.astype(np.float32)
 
     def changed(self, **graph_params):
-        """The project's graph with these node params changed: {node id: {param: value}}."""
+        """The project's graph with these node params changed: {node id: {param: value}}. A Metric chroma or Select
+        pairs noise weight moves Optimise's too, unless that is given: one setting, as in every round before step 2."""
+        graph_params = {nid: dict(params) for nid, params in graph_params.items()}
+        for nid, k in SHARED:
+            if k in graph_params.get(nid, {}):
+                graph_params.setdefault('optimise', {}).setdefault(k, graph_params[nid][k])
         graph = self.graph
         for nid, params in graph_params.items():
             graph = graph.with_params(nid, replace(graph[nid].params, **params))
