@@ -101,3 +101,5 @@ Optimise теперь свои chroma, luma noise, chroma noise; пресет м
 Затем chroma перенесён из Optimise в Halftone: полутон без DBS (приоритеты 3–4) оставался на весе Metric, а вес
 меняет 0.4–4% его пикселей (jojo, rocket-rackoon, autumn, diver-sunset; больше всего на двух последних). Один вес на
 точки: цель полутона и ошибка DBS. Рендеры снова совпадают с `develop`.
+Вид Projected берётся теперь с Halftone, по его chroma (был с Overpaint, по весу Metric). Автор: меньше chroma у
+Halftone иногда выравнивает блочность — кандидат для швов (`IDEAS.md`).
