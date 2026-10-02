@@ -1,0 +1,12 @@
+[
+{"item": "r09b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "A2", "note": "Colouring 1 floods the dark tree and street with bright green dots, so the dusk scene turns garish green."},
+{"item": "r00b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C1", "note": "Colouring 1 turns the orange foliage into a lime-yellow that does not read as autumn orange."},
+{"item": "r18a", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "A2", "note": "Colouring 1 sprinkles blue dots over the black bands and flattens the jacket into solid blue."},
+{"item": "r19a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "B1", "note": "Colouring 2 scatters pale blocky cells over the foliage and green/blue specks in the trunks."},
+{"item": "r08b", "verdict": "2", "confidence": "high", "problem": "seams", "where": "A2", "note": "Colouring 1 cuts the red-to-yellow glow into a hard posterized band and loses the raccoon's form."},
+{"item": "r22b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 1 posterizes the glow into staircase red bands and drab olive yellow."},
+{"item": "r03a", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "C1", "note": "Colouring 1 has bright red blocky patches in the upper sky that break the gradient."},
+{"item": "r07b", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "C2", "note": "Colouring 2 scatters pale cell blocks in the foliage and green/blue specks in the trunks."},
+{"item": "r10b", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "A2", "note": "Colouring 1 sprinkles blue and red dots over the black bands."},
+{"item": "r21a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A1", "note": "Colouring 2 drains the red poster to pink dither and loses the blue jacket entirely."}
+]

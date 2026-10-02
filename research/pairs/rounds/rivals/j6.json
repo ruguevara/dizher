@@ -1,0 +1,12 @@
+[
+{"item": "r00b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "Colouring 1 turns the orange foliage into flat olive-yellow with red speckle, losing the autumn orange (though 2's trunks go red with blue specks)."},
+{"item": "r07a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "C2", "note": "Colouring 1 paints the dark trunks red with green and blue specks and scatters pale blocky cells through the foliage."},
+{"item": "r19b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "C2", "note": "Colouring 1 has pale blocky cells across the orange foliage and green/blue specks on the trunks."},
+{"item": "r15b", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A3", "note": "Colouring 2 fills the dark tree and street with bright green dither that is not in the original."},
+{"item": "r17a", "verdict": "x", "confidence": "medium", "problem": "colour", "where": "B2", "note": "Colouring 1 floods the darks with green dither, colouring 2 drains the sunset to grey and pink; both are wrong."},
+{"item": "r04a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 drains the iconic red background to pink and the blue jacket to black, though its faces are cleaner."},
+{"item": "r16a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 2 drains the orange to grey with a patchwork of olive-yellow and pink cells."},
+{"item": "r05a", "verdict": "2", "confidence": "high", "problem": "colour", "where": "A3", "note": "Colouring 1 fills the dark tree and street with bright green dither that is not in the original."},
+{"item": "r03b", "verdict": "1", "confidence": "low", "problem": "seams", "where": "C1", "note": "Colouring 2 has large bright-red blocks clashing with the dim red dither of the smooth sky."},
+{"item": "r20a", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "A2", "note": "Colouring 2 posterizes the red-to-yellow sky into flat bands with a hard seam and blurs the raccoon's stripes and face."}
+]

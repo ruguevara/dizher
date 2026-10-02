@@ -1,0 +1,12 @@
+[
+  {"item": "r06a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 2 turns the red-orange sky into pink and black and drains the raccoon to grey and white."},
+  {"item": "r19b", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "C2", "note": "Colouring 1 scatters pale cell specks across the canopy and puts green and blue cells in the tree trunks."},
+  {"item": "r23b", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B1", "note": "Colouring 1 turns the red sky pink with a black top and loses the orange of the raccoon."},
+  {"item": "r18a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 1 fills the black diagonal bands with blue dither and flattens the faces into grey blocks."},
+  {"item": "r01b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "B3", "note": "Colouring 2 floods the dark road around the headlights with a garish green dither."},
+  {"item": "r11a", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "B1", "note": "Colouring 2 bleaches the faces into white blobs, drops the V sign and breaks up the title letters."},
+  {"item": "r12b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 1 drains the autumn foliage to grey with stray yellow and pink cell patches."},
+  {"item": "r08a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A2", "note": "Colouring 2 flattens the sky gradient into flat red and yellow with a hard edge across the picture."},
+  {"item": "r14b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 1 drains the sunset to grey and dull pink and loses the city lights' colour."},
+  {"item": "r03b", "verdict": "2", "confidence": "low", "problem": "seams", "where": "A3", "note": "Colouring 1 has more patchy pale-yellow and white cells across the raccoon and lower half, though 2 has bright red blocks in the sky."}
+]

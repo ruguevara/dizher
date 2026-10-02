@@ -1,0 +1,12 @@
+[
+{"item": "r22a", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "B2", "note": "Colouring 1 is covered in orange-red speckle with pale yellow blocky cells scattered over the raccoon and the lower half, so the figure dissolves."},
+{"item": "r02a", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "B1", "note": "Colouring 1 has a staircase of bright and dark red cells around the figures, blue specks in the black bands, and pale yellow squares checkering the faces."},
+{"item": "r12a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 2 drains the autumn foliage to grey and white, with random yellow and pink cells patched in."},
+{"item": "r11b", "verdict": "2", "confidence": "low", "problem": "detail", "where": "C3", "note": "Colouring 1 loses the V-sign hand and the faces and breaks the title into 'RADBIT', though 2 has bright/dark red seams around the figures."},
+{"item": "r23b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 1 turns the red-orange sky into a washed-out pink and loses the moon."},
+{"item": "r09a", "verdict": "1", "confidence": "medium", "problem": "colour", "where": "A2", "note": "Colouring 2 floods the dark trees and street with garish green dot dither where the original is dark blue."},
+{"item": "r06b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 1 turns the red-orange sky into a washed-out pink and loses the moon."},
+{"item": "r21b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "A1", "note": "Colouring 1 turns the bright red poster background into a dull pink dither and drops the blue jacket to black."},
+{"item": "r08a", "verdict": "1", "confidence": "medium", "problem": "detail", "where": "B2", "note": "Colouring 2 posterises the sky into a hard red/yellow split and loses the moon and the raccoon's face and tail detail."},
+{"item": "r13b", "verdict": "2", "confidence": "low", "problem": "seams", "where": "C1", "note": "Colouring 1 patches the orange canopy with flat yellow cells and the path with blocky yellow and white cells, so it looks less even than 2."}
+]

@@ -1,0 +1,12 @@
+[
+  {"item": "r19b", "verdict": "2", "confidence": "medium", "problem": "noise", "where": "C2", "note": "Colouring 1 puts green and blue cells in the dark trunks and scatters pale blocky cells through the orange canopy."},
+  {"item": "r01a", "verdict": "2", "confidence": "medium", "problem": "colour", "where": "B3", "note": "Colouring 1 fills the dark street with garish green dither and makes the sunset glow a blocky grey patchwork."},
+  {"item": "r18b", "verdict": "1", "confidence": "low", "problem": "colour", "where": "A2", "note": "Colouring 2 fills the black stripes with blue speckle and checkers the man's face with yellow and white cells."},
+  {"item": "r06a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 2 turns the red-orange sky pale pink and drains the raccoon to black and white."},
+  {"item": "r07b", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "C2", "note": "Colouring 2 puts green and blue cells in the trunks and pale blocky cells across the canopy."},
+  {"item": "r11b", "verdict": "2", "confidence": "high", "problem": "detail", "where": "B2", "note": "Colouring 1 blows the faces out to flat white blocks, loses the raised hand and breaks the title lettering."},
+  {"item": "r14a", "verdict": "1", "confidence": "high", "problem": "colour", "where": "C1", "note": "Colouring 2 drains the sunset to grey and pale pink and turns the coloured lights white."},
+  {"item": "r20a", "verdict": "1", "confidence": "medium", "problem": "seams", "where": "A2", "note": "Colouring 2 replaces the orange sky gradient with a hard, blocky red-to-yellow step."},
+  {"item": "r17b", "verdict": "x", "confidence": "medium", "problem": "colour", "where": "A3", "note": "Colouring 1 drains the sunset to grey and pink; colouring 2 floods the dark trees and street with garish green and blue."},
+  {"item": "r23b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "B1", "note": "Colouring 1 turns the red sky pale pink and drains the raccoon to black and white."}
+]

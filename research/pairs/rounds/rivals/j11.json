@@ -1,0 +1,11 @@
+[
+{"item": "r01a", "verdict": "1", "confidence": "low", "problem": "detail", "where": "D2", "note": "2 sinks the buildings on the right and much of the road into black, losing the street, though 1 has a blocky white sun and greener road."},
+{"item": "r13b", "verdict": "2", "confidence": "medium", "problem": "seams", "where": "B1", "note": "1 breaks the orange canopy and the leaf-covered path into flat yellow and white cell patches."},
+{"item": "r05b", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A3", "note": "2 paints the dark tree and road in garish green and bright blue that the original does not have."},
+{"item": "r15b", "verdict": "1", "confidence": "high", "problem": "colour", "where": "A3", "note": "2 floods the dark tree and road with garish green dots."},
+{"item": "r04b", "verdict": "2", "confidence": "low", "problem": "colour", "where": "B1", "note": "1 drains the red poster to pink and loses the blue jacket, though 2 renders faces as blocky flat cells."},
+{"item": "r16b", "verdict": "2", "confidence": "high", "problem": "colour", "where": "B1", "note": "1 drains the orange autumn to grey with yellow-green and pink cell patches."},
+{"item": "r07b", "verdict": "1", "confidence": "low", "problem": "noise", "where": "C2", "note": "2 puts green and blue cells in the red trunks and scatters pale square specks over the canopy."},
+{"item": "r10a", "verdict": "1", "confidence": "medium", "problem": "noise", "where": "B3", "note": "2 adds blue specks in the black bands, more yellow checker cells on the faces and breaks the JOJO letters."},
+{"item": "r20a", "verdict": "2", "confidence": "low", "problem": "seams", "where": "C1", "note": "1 has bright-red blocky patches in the sky and a dotted orange halo around the figure."}
+]

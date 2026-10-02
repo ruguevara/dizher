@@ -1,0 +1,146 @@
+{
+ "r00": {
+  "image": "autumn",
+  "tool": "img2spec",
+  "a": "fs",
+  "b": "bayer8"
+ },
+ "r01": {
+  "image": "diver-sunset",
+  "tool": "izx",
+  "a": "atkinson",
+  "b": "bayer4"
+ },
+ "r02": {
+  "image": "jojo",
+  "tool": "izx",
+  "a": "fs",
+  "b": "bayer4"
+ },
+ "r03": {
+  "image": "rocket-rackoon",
+  "tool": "izx",
+  "a": "atkinson",
+  "b": "fs"
+ },
+ "r04": {
+  "image": "jojo",
+  "tool": "img2spec",
+  "a": "fs",
+  "b": "dbs"
+ },
+ "r05": {
+  "image": "diver-sunset",
+  "tool": "img2spec",
+  "a": "fs",
+  "b": "bayer8"
+ },
+ "r06": {
+  "image": "rocket-rackoon",
+  "tool": "img2spec",
+  "a": "fs",
+  "b": "dbs"
+ },
+ "r07": {
+  "image": "autumn",
+  "tool": "izx",
+  "a": "fs",
+  "b": "bayer4"
+ },
+ "r08": {
+  "image": "rocket-rackoon",
+  "tool": "izx",
+  "a": "fs",
+  "b": "bayer4"
+ },
+ "r09": {
+  "image": "diver-sunset",
+  "tool": "izx",
+  "a": "atkinson",
+  "b": "fs"
+ },
+ "r10": {
+  "image": "jojo",
+  "tool": "izx",
+  "a": "atkinson",
+  "b": "fs"
+ },
+ "r11": {
+  "image": "jojo",
+  "tool": "izx",
+  "a": "atkinson",
+  "b": "bayer4"
+ },
+ "r12": {
+  "image": "autumn",
+  "tool": "img2spec",
+  "a": "bayer8",
+  "b": "dbs"
+ },
+ "r13": {
+  "image": "autumn",
+  "tool": "izx",
+  "a": "atkinson",
+  "b": "bayer4"
+ },
+ "r14": {
+  "image": "diver-sunset",
+  "tool": "img2spec",
+  "a": "bayer8",
+  "b": "dbs"
+ },
+ "r15": {
+  "image": "diver-sunset",
+  "tool": "izx",
+  "a": "fs",
+  "b": "bayer4"
+ },
+ "r16": {
+  "image": "autumn",
+  "tool": "img2spec",
+  "a": "fs",
+  "b": "dbs"
+ },
+ "r17": {
+  "image": "diver-sunset",
+  "tool": "img2spec",
+  "a": "fs",
+  "b": "dbs"
+ },
+ "r18": {
+  "image": "jojo",
+  "tool": "img2spec",
+  "a": "fs",
+  "b": "bayer8"
+ },
+ "r19": {
+  "image": "autumn",
+  "tool": "izx",
+  "a": "atkinson",
+  "b": "fs"
+ },
+ "r20": {
+  "image": "rocket-rackoon",
+  "tool": "izx",
+  "a": "atkinson",
+  "b": "bayer4"
+ },
+ "r21": {
+  "image": "jojo",
+  "tool": "img2spec",
+  "a": "bayer8",
+  "b": "dbs"
+ },
+ "r22": {
+  "image": "rocket-rackoon",
+  "tool": "img2spec",
+  "a": "fs",
+  "b": "bayer8"
+ },
+ "r23": {
+  "image": "rocket-rackoon",
+  "tool": "img2spec",
+  "a": "bayer8",
+  "b": "dbs"
+ }
+}
