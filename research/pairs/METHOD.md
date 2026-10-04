@@ -1,79 +1,89 @@
-# Методика и инструменты: подбор пар
+# Method and tools: pair selection
 
-## Правила, принятые с автором
+## Rules agreed with the user
 
-- Раскраска — это карта пар (label map). Судится только после рендера полным конвейером своего проекта: Tune,
-  Target, Halftoner, Metric, Select pairs, Halftone, Optimise, всё поле как overpaint (`common.Project.render`). Вне
-  своих настроек закраска смысла не имеет. Веса точек (chroma у Halftone, шум у Optimise) до шага 2 были весами
-  подбора; вес Metric или Select pairs, заданный в скрипте, двигает и их, если их не задали (`common.Project.changed`).
-- Клетки сравниваются по видимым цветам (`common.shown`): порядок ink/paper и невидимый цвет не считаются.
-- Одной правильной раскраски нет. Данные — сравнения, метрика оценивается долей совпадений с выбором автора.
-- Условия просмотра автора: приложение 2x–3x, 21" 2560×1440, ~65 см, иногда прищур — ~26 пикселей Спектрума на
-  градус (`metrics.PPD`).
-- Раскраски сравниваются через глаз, а не по сырым пикселям (`FINDINGS.md`, «Как смотреть и мерить»).
-- Отложенные картинки — andy, sunset, golden-axe, david, burning-hand: в подборе не участвуют, только в итоговой
-  проверке автором.
+- A colouring is a label map. We judge it only after a render through the full pipeline of its project: Tune,
+  Target, Halftoner, Metric, Select pairs, Halftone, Optimise, the whole field as an overpaint
+  (`common.Project.render`). Outside its own settings a painting has no meaning. Until step 2 the dots' weights
+  (chroma on Halftone, noise on Optimise) were the selection's weights. If a script sets a Metric or Select pairs
+  weight and does not set the dots' weights, they move with it (`common.Project.changed`).
+- We compare cells by the colours they show (`common.shown`). The ink/paper order and a colour that does not show do
+  not count.
+- There is no single correct colouring. The data are comparisons. The score of a metric is how frequently it agrees
+  with the user's choice.
+- The user's viewing conditions: the app at 2x–3x, a 21" 2560×1440 screen, ~65 cm, sometimes with a squint. This is
+  ~26 Spectrum pixels per degree (`metrics.PPD`).
+- We compare colourings through the eye, not as raw pixels (`FINDINGS.md`, "How to look and measure").
+- The held-out pictures are andy, sunset, golden-axe, david, burning-hand. They are not used to tune, only for the
+  user's final check.
 
-## Раунд автора
+## The user's round
 
-- Целые картинки, вслепую: исходник слева, две раскраски, стороны случайны, имена листов перемешаны; raw 3x, как в
-  приложении (`surface.py user`), или ровно листы судей (`dp.py user`). 5 повторов с переставленными сторонами —
-  проверка самосогласия.
-- Голосование: `python research/pairs/dp.py vote ROUND SHEETS` открывает страницу в браузере: ← первая, → вторая,
-  пробел — обе хороши, x — обе плохи, Backspace — назад; каждый ответ сразу в `ROUND/user-verdicts.json`.
-- Ключ раунда держать вне git, пока автор не проголосовал; закоммитить после.
+- Whole pictures, blind: the source on the left, two colourings, random sides, shuffled sheet names. Raw at 3x as in
+  the app (`surface.py user`), or exactly the judges' sheets (`dp.py user`). 5 repeats with the sides swapped check
+  that the user agrees with the user's own answers.
+- The vote: `python research/pairs/dp.py vote ROUND SHEETS` opens a page in the browser. Keys: ← the first, → the
+  second, space both fine, x both bad, Backspace back. Each answer goes at once to `ROUND/user-verdicts.json`.
+- Keep the key of a round out of git until the user votes. Commit it after.
 
-## Протокол Claude-судей
+## The Claude judge protocol
 
-- Каждый судья — свежий субагент, ≤10 пунктов, два порядка одной пары никогда у одного судьи (`curve.deal`).
-- Пункт — три отдельных файла (исходник, раскраска 1, раскраска 2) через глаз автора (`views.seen2(img, *acuity.EYE)`:
-  x4 квадратными пикселями, затем размытие светлоты σ 0.75 и цвета σ 1.0 пикселя Спектрума в линейном свете), без
-  обводки и кропов.
-- Только глазами: «не пиши и не запускай код, не создавай файлов, кроме результата» (в пилоте судьи писали скрипты
-  в общую папку и затирали друг друга).
-- Промпт простой (`curve.PROMPT`), ответы `1`, `2`, `=` (обе хороши), `x` (обе плохи) (`dp.PROMPT`). 6 голосов на
-  пару, 3 на порядок; метка — ответ больше половины голосов; «x» и расколы — не метки.
-- Промпты пишутся в файлы, судье одна строка «прочитай файл и выполни». Одновременно не больше 20 субагентов; больше
-  ~30 судей — Workflow, если автор разрешил («use a workflow»).
+- Each judge is a fresh subagent with ≤10 items. One judge never gets the two orders of one pair (`curve.deal`).
+- An item is three separate files (the source, colouring 1, colouring 2) through the user's eye
+  (`views.seen2(img, *acuity.EYE)`: x4 with square pixels, then a blur of lightness σ 0.75 and of colour σ 1.0
+  Spectrum pixel in linear light). No outlines and no crops.
+- By eye only: "do not write or run code, do not make files other than the result". In the pilot the judges wrote
+  scripts into one shared folder and overwrote the scripts of other judges.
+- A simple prompt (`curve.PROMPT`). The answers are `1`, `2`, `=` (both fine), `x` (both bad) (`dp.PROMPT`). 6 votes
+  per pair, 3 per order. A label is the answer of more than half the votes. "x" and splits are not labels.
+- Write the prompts to files. The judge gets one line: "read the file and do it". Not more than 20 subagents at one
+  time. For more than ~30 judges use a Workflow, if the user permits it ("use a workflow").
 
-## Файлы
+## Files
 
-Код в `research/pairs/` (pytest его не собирает); команды — `README.md`, «Run».
+The code is in `research/pairs/` (pytest does not collect it). The commands are in `README.md`, "Run".
 
-| файл | что делает |
+| file | what it does |
 |---|---|
-| `common.py` | проект (и отдельная картинка без проекта — граф нового проекта), рендер label map конвейером проекта (`Project.render`, `convert`, `energy`, с правкой параметров узлов), `shown`, сегменты, окна |
-| `build.py` | 229 локальных пар из 9 закрашенных проектов: A против B; контроли C и N |
-| `variants.py`, `flat.py` | пары против coherence ×3 и 0; контрпример F — сегмент на одной паре |
-| `metrics.py`, `score.py` | ~45 метрик, глаз конвертера `project_eye`, числовые судьи `JUDGE`/`JUDGE_FAST`; таблица метрик по парам |
-| `fit.py`, `eyes.py` | судья (логистическая регрессия на разностях, бутстреп, якорь); метрики через разные глаза |
-| `optimum.py` | оптимум судьи поклеточным перебором (сессия B) |
-| `views.py`, `round.py`, `judge.py` | слепые листы автору и судьям (старые раскладки), `seen2` — глаз судей; разбор вердиктов |
-| `agents.py` | Claude-судьи на целых картинках (сессия B): листы, промпты, `write_round`, `tally` |
-| `tune.py` | крутилки конвертера: свип, тонко, листы раунда c1 (сессия C) |
-| `acuity.py` | что видит судья: раскладки листов, сетки глаза (сессия E, шаг 1) |
-| `curve.py` | кривая порога, раздача `deal`, промпт `PROMPT`, листы автору (шаг 2) |
-| `dp.py` | альтернативы, где DP колеблется, волны судей, счёт, листы автору, страница голосования `vote` (шаги 3–4) |
-| `smooth.py`, `surface.py` | подбор по сглаженной цели; пара на поверхность (после E) |
-| `rivals.py`, `Izx.java` | база конкурентов: img2spec, Image to ZX Spec (без окна), ZX-Paintbrush (SCR автора); лучшая настройка по судьям, листы автору, счёт (шаг 1 плана) |
-| `vote.html` | старая страница голосования (Artifact с db, раунд cal1); заменена `dp.py vote` |
+| `common.py` | the project (and a single picture without a project: the graph of a new project), a render of a label map through the project's pipeline (`Project.render`, `convert`, `energy`, with changes to node parameters), `shown`, segments, windows |
+| `build.py` | 229 local pairs from 9 painted projects: A against B; the controls C and N |
+| `variants.py`, `flat.py` | pairs against coherence ×3 and 0; the counterexample F: a segment on one pair |
+| `metrics.py`, `score.py` | ~45 metrics, the converter's eye `project_eye`, the numeric judges `JUDGE`/`JUDGE_FAST`; a table of the metrics by pair |
+| `fit.py`, `eyes.py` | the judge (a logistic regression on differences, bootstrap, anchor); the metrics through different eyes |
+| `optimum.py` | the judge's optimum by a search cell by cell (session B) |
+| `views.py`, `round.py`, `judge.py` | blind sheets for the user and the judges (old layouts), `seen2` (the judges' eye); the analysis of verdicts |
+| `agents.py` | Claude judges on whole pictures (session B): sheets, prompts, `write_round`, `tally` |
+| `tune.py` | the converter's knobs: sweep, fine, the sheets of round c1 (session C) |
+| `acuity.py` | what a judge sees: sheet layouts, eye grids (session E, step 1) |
+| `curve.py` | the threshold curve, the deal `deal`, the prompt `PROMPT`, sheets for the user (step 2) |
+| `dp.py` | alternatives where the DP is unsure, waves of judges, the count, sheets for the user, the vote page `vote` (steps 3–4) |
+| `smooth.py`, `surface.py` | the selection on a smoothed target; a pair per surface (after E) |
+| `rivals.py`, `Izx.java` | the competitor baseline: img2spec, Image to ZX Spec (without its window), ZX-Paintbrush (the user's SCR); the best setting by the judges, sheets for the user, the count (plan step 1) |
+| `gallery.py` | a gallery per picture: a 4×4 grid of renders on a plane through the best point in 13 knobs (10 without DBS); the user's discards and picks go to `rounds/gallery/NAME.json`; `report`, what they say (plan step 3) |
+| `vote.html` | the old vote page (an Artifact with a db, round cal1); `dp.py vote` replaces it |
 
-Данные в git — `rounds/`: `pilot1`, `cal1`, `opt1`, `opt3`, `opt4`, `aopt`, `c1`, `acuity`, `curve`, `e1`,
-`surface/r1`, `surface/r2`, `rivals` (ключи, вердикты судей и автора). Рендеры `data/` в git не входят и пересобираются:
-`build.py` ~15 мин на 9 процессах, `variants.py` ~3 мин, `flat.py` ~7 мин, `score.py` ~1 мин, `optimum.py N` ~25 мин
-(полный на GPU ~1.5 ч), `dp.py make` ~10 мин без других задач на машине (~900 рендеров по ~6 с на 12
-процессах), `surface.py make` — минуты, `rivals.py make` ~30 с (после `surface.py make`; конкуренты: сборка
-`../img2spec_video/build-macos`, jar Image to ZX Spec и ZX-Paintbrush в своём префиксе Wine — в `data/rivals/bin/`,
-SCR автора — `rounds/rivals/paintbrush/`). Зависимости: `pip install -e . pytest`, для
-LPIPS/DISTS ещё `torch torchvision piq`.
+The data in git are in `rounds/`: `pilot1`, `cal1`, `opt1`, `opt3`, `opt4`, `aopt`, `c1`, `acuity`, `curve`, `e1`,
+`surface/r1`, `surface/r2`, `rivals`, `gallery` (the keys, the verdicts of the judges and of the user). The renders in
+`data/` are not in git; the scripts make them again:
 
-## Очистка
+- `build.py` ~15 min on 9 processes;
+- `variants.py` ~3 min, `flat.py` ~7 min, `score.py` ~1 min;
+- `optimum.py N` ~25 min (the full judge on the GPU ~1.5 h);
+- `dp.py make` ~10 min with no other tasks on the machine (~900 renders, ~6 s each, on 12 processes);
+- `surface.py make` some minutes;
+- `rivals.py make` ~30 s, after `surface.py make`. The competitors: the build `../img2spec_video/build-macos`; the
+  Image to ZX Spec jar and ZX-Paintbrush in its own Wine prefix, both in `data/rivals/bin/`; the user's SCR files in
+  `rounds/rivals/paintbrush/`.
 
-- `tests/images/pairs/*.png` (59 МБ) уже в истории `develop` (#13); удалять поздно, ужимать — отдельным PR, если
-  мешает.
-- `data/` в `.gitignore`, пересобирается.
-- Artifact-страница раунда cal1 (https://claude.ai/artifact/LMWE3KnHYA6ZcPGNMbhh9z) больше не нужна; голоса уже в
-  `rounds/cal1/votes.json`.
-- `tests/images/jojo/reference.scr` удалён автором; `tests/pair_bench.py` пропускает jojo (`pair_bench.py freeze
-  NAME` пересоздаст эталон). Закраска полная (768 клеток) у andy, autumn, diver-sunset, jojo, rocket-rackoon, sunset;
-  частичная у RC1 (543), anubis (366), golden-axe (323); burning-hand и david не закрашены.
+Dependencies: `pip install -e . pytest`; for LPIPS/DISTS also `torch torchvision piq`.
+
+## Cleanup
+
+- `tests/images/pairs/*.png` (59 MB) are already in the history of `develop` (#13). It is too late to delete them. If
+  they cause a problem, shrink them in a separate PR.
+- `data/` is in `.gitignore`; the scripts make it again.
+- The Artifact page of round cal1 (https://claude.ai/artifact/LMWE3KnHYA6ZcPGNMbhh9z) is not necessary now. Its votes
+  are in `rounds/cal1/votes.json`.
+- The user deleted `tests/images/jojo/reference.scr`. `tests/pair_bench.py` skips jojo (`pair_bench.py freeze NAME`
+  makes the reference again). The painting is full (768 cells) on andy, autumn, diver-sunset, jojo, rocket-rackoon,
+  sunset; partial on RC1 (543), anubis (366), golden-axe (323). burning-hand and david have no painting.

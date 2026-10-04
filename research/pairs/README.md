@@ -4,8 +4,7 @@ The aim is a measure of a colouring that agrees with the user's eye, found befor
 last attempts tuned the energy on proxy counts (painted cells matched, magenta cells) and the user rejected results
 that improved them. Plan and reasoning: the session's plan (methodology for finding the pair-selection metric).
 
-This README is the detailed record: methods, tables, numbers, by section. The research subproject's other documents
-(Russian):
+This README is the detailed record: methods, tables, numbers, by section. The research subproject's other documents:
 
 | document | what |
 |---|---|
@@ -66,6 +65,7 @@ over its cells grown by two cells (`common.window`).
     python research/pairs/dp.py vote [ROUND SHEETS]          # the user's blind vote in the browser
     python research/pairs/surface.py make|user R V...        # pairs per surface (section 11)
     python research/pairs/rivals.py make|judges|best|user|tally   # the competitor baseline (section 12)
+    python research/pairs/gallery.py NAME [--no-dbs] | best NAME | report   # PLAN step 3: the gallery (section 13)
 
 ## Results
 
@@ -587,5 +587,42 @@ The user, blind, raw 3x as the app shows them (`rounds/rivals`): each of ours ag
   ours is not worse there, but not good either. autumn has been both bad in every round; why is not in the votes.
 - Nowhere do we lose, so the round names no fault of ours the rivals avoid (patchwork, accents, colour, seams); the
   seam terms parked on that condition stay parked.
+
+### 13. The gallery (2026-10-04)
+
+PLAN step 3 (`gallery.py`): per picture, rounds of 16 renders through the project's pipeline, here all without DBS (10
+knobs, each over its slider scaled to 0..1), on a plane through the current best along two random directions. The user
+discards the bad ones, the rest laid out again larger, and picks the best; a discard is worse than every render still
+left, the pick better than all left with it (`gallery.comparisons`). autumn's 11 rounds are picks only (the page then
+had no discards). Galleries: autumn 11 picks, rocket-rackoon 8, diver-sunset 7, anubis 3, david 1 (2 rounds, a held-out
+picture, left out).
+
+`gallery.py report`: per picture a linear preference over the knobs fitted to its comparisons (logistic, L2), 5-95% over
+rounds resampled; each knob's change of the eye-blurred render per full slider range, a linear map over the picture's
+75-165 renders that explains 45-49% of their change (a cell turning to another pair is a jump, not a slope). Start ->
+last pick; - and + where the preference's 5-95% excludes 0:
+
+| knob | autumn | rocket-rackoon | diver-sunset | anubis |
+|---|---|---|---|---|
+| Select chroma noise | 0.020 -> 0.017 - | 0.050 -> 0.040 - | 0.050 -> 0.000 | 0.050 -> 0.033 |
+| Select luma noise | 0 -> 0.004 - | 0 -> 0 - | 0 -> 0.149 + | 0 -> 0.046 |
+| Select coherence | 6.0 -> 5.7 - | 2.0 -> 1.9 | 2.0 -> 4.5 | 2.0 -> 5.6 + |
+| Select edge | 0.10 -> 0.12 | 0.10 -> 0.11 | 0.10 -> 0.06 | 0.10 -> 0.22 + |
+| Metric chroma | 2.0 -> 0.84 - | 1.0 -> 1.04 | 3.27 -> 4.0 | 1.0 -> 0.96 |
+| Halftone chroma | 2.0 -> 1.77 | 1.0 -> 0.78 | 3.27 -> 3.61 - | 1.0 -> 1.02 |
+| Eye luma blur | 1.4 -> 0.90 - | 1.4 -> 1.42 | 1.4 -> 1.78 | 1.4 -> 1.42 |
+| Metric flare, surface dE, Eye chroma blur | small, mixed | | | |
+
+- **Chroma noise down on all four**: the one knob that moved the same way everywhere; a candidate for a lower default.
+- **Luma noise by the picture**: up on the smooth sky of diver-sunset, down to its floor on the dense rocket-rackoon
+  and on autumn: a candidate per surface (`IDEAS.md`).
+- **Coherence**: from 2 to ~5 on anubis and diver-sunset, autumn stayed near 6, rocket-rackoon indifferent.
+- **The preferences differ by picture**: the cosines of their directions -0.27 to 0.39, but anubis and diver-sunset 0.65.
+- **No two knobs alike**: every knob changes the render, ~10-50 dE rms per full range; the mean cosine of two knobs'
+  effects is at most 0.48 (Select luma noise against Eye luma blur: one charges the dots' contrast, the other hides
+  the dots; chroma noise against chroma blur -0.81 on anubis, weak elsewhere).
+- Thin: each round spans 2 of 10 directions and ~10 rounds a picture, so the fitted preference sometimes points against
+  the picks (diver-sunset's Eye luma blur, Halftone chroma); the picks count more than the fit. The user's earlier note
+  that less Halftone chroma evens blockiness: down on rocket-rackoon and autumn, up on diver-sunset, not shown.
 
 Findings: `FINDINGS.md`; next steps: `PLAN.md`; the log: `LOG.md`.
