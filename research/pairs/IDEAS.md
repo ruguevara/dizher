@@ -1,60 +1,65 @@
-# Идеи: подбор пар
+# Ideas: pair selection
 
-Статусы: **next** — в `PLAN.md`; **open** — можно брать; **parked** — отложено, с условием; **closed** —
-проверено, итог в `LOG.md` и `FINDINGS.md`. Цена — время автора и порядок работы.
+The status: **next** — in `PLAN.md`; **open** — ready to take; **parked** — on hold, with a condition; **closed** —
+tested, the result is in `LOG.md` and `FINDINGS.md`. The cost is the user's time and the order of work.
 
 ## next
 
-- **Меньше настроек, но осмысленных** (автор, 2026-10-02). Настроек стало слишком много, удачную комбинацию на
-  картинку трудно найти. Путь — через временно большее число крутилок:
-  - свои веса у дизеринга: chroma и веса шума были общие у подбора и точек; теперь chroma у Halftone, шум у
-    Optimise (`PLAN.md`, шаг 2);
-  - режим подбора на картинку: галерея рендеров, человек выбирает, спуск идёт за ним. Начать с простой плоскости
-    через лучшую точку; Sequential Gallery (Koyama и др. 2020) или Sequential Line Search (SIGGRAPH 2017: один
-    ползунок по прямой, которую выбирает байесовская оптимизация) — если простое не сходится. Claude-судьи — как
-    предфильтр, если раунды дороги (`PLAN.md`, шаг 3);
-  - по логу галереи — несколько крутилок по приоритетам цели (швы, цвет и тон, форма, текстура), каждая двигает
-    согласованно несколько нынешних весов (`PLAN.md`, шаг 4).
-  Не то же, что сессия C: там искали общий пресет (он у оптимума), здесь — настройки на картинку.
-- **Швы на гладком: autumn и diver-sunset.** «Обе плохи» против дизерных конкурентов (README 12). Автор: autumn —
-  клэшинг на земле, выскакивают серые блоки; diver-sunset — клэшинг в небе, блочность. Третья картинка критерия коуча
-  — одна из них. Сначала галерея: вытянут ли их настройки; автор (2026-10-02): меньше chroma у Halftone (больше
-  светлоты в точках) иногда выравнивает блочность. Нет — кандидаты: члены шва из parked. (`PLAN.md`, после галереи)
-- **Адаптивная привязка к поверхности.** Привязывать поверхность, только где база делает лоскут (клетки почти одного
-  цвета берут пары двух и более семейств); где цвета клеток действительно разные — свободно. Если jojo и vangog
-  лучше, а anubis и rocket-rackoon не хуже — это умолчание. Против конкурентов (README 12) jojo выигрывает у всех
-  только с привязкой, rocket-rackoon — только без неё: адаптивная могла бы взять обе. ~5 мин автора. Брать, если
-  surface dE из галереи делится по картинкам так же. (`PLAN.md`, после галереи)
+- **Fewer settings, but each with a meaning** (the user, 2026-10-02). There are too many settings now, and it is hard
+  to find a good combination for a picture. The path goes through more knobs for a time:
+  - the dithering gets its own weights. Chroma and the noise weights were shared by the selection and the dots; now
+    chroma is on Halftone and the noise is on Optimise (`PLAN.md`, step 2);
+  - a mode to tune each picture: a gallery of renders, a person picks, the descent follows. Start with a simple plane
+    through the best point. If the simple method does not converge, use Sequential Gallery (Koyama et al. 2020) or
+    Sequential Line Search (SIGGRAPH 2017: one slider along a line that Bayesian optimisation selects). If the rounds
+    are expensive, Claude judges can be a prefilter (`PLAN.md`, step 3);
+  - from the gallery log: a few knobs by the priorities of the aim (seams, colour and tone, form, texture). Each knob
+    moves several current weights together (`PLAN.md`, step 4).
+
+  This is not the same as session C. Session C looked for a general preset (it is at the optimum); here we look for
+  settings for each picture.
+- **Seams on smooth areas: autumn and diver-sunset.** "Both bad" against the dithering competitors (README 12). The
+  user: autumn has clash on the ground, and grey blocks jump out; diver-sunset has clash in the sky, and blockiness.
+  The third picture of the coach's criterion is one of the two. First the gallery: can settings fix them? The user
+  (2026-10-02): less chroma on Halftone (more lightness in the dots) sometimes makes the blockiness more even. If not,
+  the candidates are the seam terms from parked. (`PLAN.md`, after the gallery)
+- **Adaptive surface binding.** Bind a surface only where the base makes a patchwork: cells of almost one colour take
+  pairs of two or more families. Where the cell colours are really different, keep the cells free. If jojo and vangog
+  are better and anubis and rocket-rackoon are not worse, this is the default. Against the competitors (README 12)
+  jojo wins against all only with binding, rocket-rackoon only without it; adaptive binding can possibly win both.
+  ~5 min of the user's time. Take it if surface dE from the gallery splits by picture in the same way. (`PLAN.md`,
+  after the gallery)
 
 ## open
 
-- **Метрика семейства цвета.** Пара допустима для клетки, если её цвета в семействе цвета цели: семейство важнее
-  насыщенности, насыщенность важнее светлоты, серые свободны. Против пурпурного кипариса и за «красный, а не
-  розовый» (`FINDINGS.md`, вкус). Член unary в `energy.py` + раунд автора.
-- **Априорные пары от художников (zxart.ee, бывшая сессия D).** Тест восстановления (размыть экран художника,
-  прогнать подбор, сравнить пары, особенно k/m против k/b в тенях) и статистика соседних пар как `V`. API:
-  `https://zxart.ee/api/export:zxPicture/start:0/limit:N/order:votes,desc`, скачивать в gitignored папку.
-  Единственный источник вкуса кроме автора, автор не нужен; самая большая работа.
-- **Размер поверхности.** 32 и 64 поверхности переворачивают diver-sunset и RC1; можно подбирать число по картинке
-  (по разбросу цвета) или дать автору. Мелкая.
-- **Claude-судьи как предфильтр** лёгких случаев перед автором (уверенные вердикты большинства; «обе плохи» они не
-  выражают). Инструмент, а не способ подбора.
+- **A colour family metric.** A pair is permitted for a cell if its colours are in the family of the target colour.
+  The family is more important than the saturation, the saturation is more important than the lightness, and greys
+  are free. Against the magenta cypress and for "red, not pink" (`FINDINGS.md`, taste). A unary term in `energy.py`
+  and a round with the user.
+- **Prior pairs from artists (zxart.ee, the old session D).** A recovery test: blur an artist's screen, run the
+  selection, compare the pairs (especially k/m against k/b in shadows). Also the statistics of neighbouring pairs as
+  `V`. API: `https://zxart.ee/api/export:zxPicture/start:0/limit:N/order:votes,desc`; download to a gitignored folder.
+  This is the only source of taste other than the user, and it needs no time of the user. It is the largest work.
+- **The surface size.** 32 and 64 surfaces flip diver-sunset and RC1. We can select the number for each picture (from
+  the colour spread) or give it to the user. Small.
+- **Claude judges as a prefilter** of easy cases before the user (confident majority verdicts; they do not express
+  "both bad"). A tool, not a method of selection.
 
 ## parked
 
-- **Новые разложимые члены энергии** (из сессии C, шаг 4): шаг цвета на шве (судьи держатся за `seam_ab_1`; у DP уже
-  есть парные члены `S`), `V` с учётом яркого/тусклого варианта (смена k/b↔K/B стоит 0.06 при медиане 0.52). Брать,
-  если база конкурентов покажет проигрыш на швах (README 12: проигрышей нет, но «обе плохи» на autumn и
-  diver-sunset автор объясняет швами — см. next).
-- **Более дешёвые числовые судьи** (LPIPS на AlexNet, VGG conv2_2 через глаз). Нужны, только если снова понадобится
-  числовой судья; как цель оптимизации — нет.
+- **New decomposable energy terms** (from session C, step 4): the colour step at a seam (the judges hold on to
+  `seam_ab_1`; the DP already has the pair terms `S`); a `V` that knows the bright and dim variants (a change k/b↔K/B
+  costs 0.06 against a median of 0.52). Take them if the competitor baseline shows a loss at the seams. README 12
+  shows no losses, but the user explains "both bad" on autumn and diver-sunset by the seams (see next).
+- **Cheaper numeric judges** (LPIPS on AlexNet, VGG conv2_2 through the eye). Necessary only if we need a numeric
+  judge again; not as a target for optimisation.
 
 ## closed
 
-- Свободная оптимизация раскраски по судье (сессия B).
-- Крутилки пресета по одной и совместный поиск (CMA-ES/TPE) — сессия C.
-- Подгонка весов энергии по меткам Claude-судей там, где DP колеблется (сессия E, шаг 5 не начат: метки там автору
-  равноценны).
-- Подбор по сглаженной цели (`smooth.py`).
-- База сравнения с конкурентами (шаг 1): не хуже нигде, критерий коуча на 2 из 4 картинок (README 12).
-- Одна пара на поверхность — в приложении как опция surface dE (PR #14); по умолчанию — см. адаптивную привязку.
+- A free optimisation of the colouring against a judge (session B).
+- Preset knobs one at a time, and a joint search (CMA-ES/TPE): session C.
+- A fit of the energy weights to the Claude judges' labels where the DP is unsure (session E; step 5 did not start:
+  there the labels are equal for the user).
+- The selection on a smoothed target (`smooth.py`).
+- The competitor baseline (step 1): not worse anywhere, the coach's criterion on 2 of 4 pictures (README 12).
+- One pair per surface: in the app as the surface dE option (PR #14). For the default, see adaptive binding.

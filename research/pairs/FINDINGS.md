@@ -1,91 +1,98 @@
-# Выводы: подбор пар
+# Findings: pair selection
 
-Что установлено; в скобках — раздел `README.md` с доказательством. Внизу — тупики, которые не повторять.
-Как пришли — `LOG.md`.
+What we know. The section of `README.md` with the evidence is in parentheses. The dead ends not to repeat are at the
+bottom. How we found it: `LOG.md`.
 
-## Вкус автора
+## The user's taste
 
-- **Ровность важнее колориметрии.** Метрики точности цвета против исходника выбирают закраску автора в 31–36%,
-  ступеньки на швах клеток (`seam_excess`) — в 65% на всех правках и в 84% на трудных; в спорах «ровность против
-  точности» автор за ровность 10 к 5. (1, 3)
-- **Чистый цвет нужного семейства важнее точной смеси**: красный, а не розовый дизер красного с белым. Признака под
-  это нет; треть правок автора метрики не объясняют. (1, 4)
-- **Правильной раскраски нет.** На близких альтернативах автор чаще говорит «обе хороши» (14 из 30) или «обе плохи»
-  (11 из 30), чем выбирает сторону (4 из 30). (9, 10)
-- Половина закраски бывает хуже, чем вся или никакая: 4 из 5 частичных закрасок — «обе плохи». (9)
-- «Обе плохи» у автора сосредоточены на autumn, jojo и vangog: **лоскут внутри поверхности** (лица клетка через
-  клетку бледно-жёлтые/белые против красно-жёлтого дизера; небо с одиночными голубыми, пурпурными, зелёными
-  клетками) и **неверное семейство** там, где его смесь численно ближе (пурпурный кипарис). (10, 11)
-- **Привязка пары к поверхности — стиль на картинку, не умолчание**: автор её предпочитает на лицах и небе (jojo,
-  vangog — во всех 4 вариантах) и отвергает на плотных иллюстрациях, где пара поверхности съедает мелкие акценты
-  (свет факела, блики: anubis, rocket-rackoon — во всех 4). (11)
+- **Smoothness is more important than colorimetry.** Metrics of colour accuracy against the source select the user's
+  painting in 31–36%. The steps at the cell seams (`seam_excess`) select it in 65% on all edits, and in 84% on the
+  hard ones. Where smoothness and accuracy disagree, the user selects smoothness 10 to 5. (1, 3)
+- **A clean colour of the correct family is more important than an accurate mixture**: red, not a pink dither of red
+  and white. No feature measures this. The metrics do not explain one third of the user's edits. (1, 4)
+- **There is no correct colouring.** On close alternatives the user says "both fine" (14 of 30) or "both bad" (11 of
+  30) more frequently than the user selects a side (4 of 30). (9, 10)
+- Half a painting can be worse than all of it or none: 4 of 5 partial paintings are "both bad". (9)
+- The user's "both bad" verdicts are on autumn, jojo and vangog. They show **a patchwork inside a surface** and **the
+  wrong family** where its mixture is numerically nearer (the magenta cypress). Patchwork examples: faces with pale
+  yellow/white cells among red-yellow dither, cell by cell; a sky with single cyan, magenta and green cells. (10, 11)
+- **A pair bound to a surface is a style for each picture, not a default.** The user prefers it on faces and skies
+  (jojo, vangog: in all 4 variants). The user rejects it on dense illustrations, where the surface's pair erases small
+  accents (torch light, highlights: anubis, rocket-rackoon, in all 4). (11)
 
-## Как смотреть и мерить
+## How to look and measure
 
-- Сравнивать раскраски через глаз (~1 пиксель Спектрума), не по сырым пикселям: сырые LPIPS/DISTS и S-CIELAB при 26
-  пикс./градус меряют зерно дизера (передизеринг 5.8 ΔE сырыми против 2.0 через глаз при правке ~25). (правила, 4)
-- Глаз с σ 1 на всё стирает клэшинг между клетками, который автор видит. Глаз по выбору автора: x4 квадратными
-  пикселями, затем размытие светлоты σ 0.75 и цвета σ 1.0 пикселя Спектрума в линейном свете, по каналам
-  оппонентного пространства конвертера (`views.seen2`). (8)
-- Метрикам, которые размывают сами (швы 2 px, средние клеток), глаз впереди не нужен, он им чуть вредит. (4)
-- Через глаз правка ниже ~10 ΔE не видна ни судьям, ни автору; одиночный сегмент решается от ~20 ΔE,
-  многоклеточная правка — от 10. (9, 10)
+- Compare colourings through the eye (~1 Spectrum pixel), not as raw pixels. Raw LPIPS/DISTS and S-CIELAB at 26
+  pixels per degree measure the dither grain. A re-dither is 5.8 ΔE raw against 2.0 through the eye, and an edit is
+  ~25. (ground rules, 4)
+- An eye with σ 1 on all channels erases the clash between cells, which the user sees. The eye that the user selected:
+  x4 with square pixels, then a blur of lightness σ 0.75 and of colour σ 1.0 Spectrum pixel in linear light, on the
+  channels of the converter's opponent space (`views.seen2`). (8)
+- Metrics that blur on their own (2 px seams, cell means) do not need an eye in front. An eye makes them slightly
+  worse. (4)
+- Through the eye, the judges and the user do not see an edit below ~10 ΔE. A single segment is decided from ~20 ΔE,
+  an edit of many cells from 10. (9, 10)
 
-## Числовые судьи
+## Numeric judges
 
-- Лучший одиночный признак — `seam_excess` (первым выбирается в 27 из 30 бутстрепов). Ему нужен противовес точности
-  на крупном масштабе: LPIPS через глаз (судьи v2–v4), у быстрого — MS-SSIM светлоты через глаз. (4)
-- Судьи годятся сравнивать то, что делает сам конвертер, но не как цель оптимизации: каждый раунд находит новую
-  слепую зону, контрпримеры не сходятся (v4 ставил свой оптимум выше на всех 9 картинках, автор — хуже на 8). (5)
-- Данные «закраска лучше алгоритма» односторонние: без ограничения знака регрессия учит «дальше от исходника —
-  лучше»; веса ошибок ≥ 0. (4)
+- The best single feature is `seam_excess` (selected first in 27 of 30 bootstraps). It needs a counterweight for
+  accuracy at a coarse scale: LPIPS through the eye (judges v2–v4), or MS-SSIM of lightness through the eye for the
+  fast judge. (4)
+- The judges can compare the results of the converter itself, but they are not a target for optimisation. Each round
+  finds a new blind spot, and the counterexamples do not converge. v4 put its optimum higher on all 9 pictures; the
+  user put it lower on 8. (5)
+- The data "the painting is better than the algorithm" are one-sided. Without a sign constraint the regression learns
+  "further from the source is better". Thus the error weights are ≥ 0. (4)
 
-## Claude-судьи
+## Claude judges
 
-- Раскладка решает: на одном листе из трёх картинок правку видят в 7 из 18, на трёх отдельных файлах через глаз
-  автора — в 16 из 18. (8)
-- Метка — только большинство из 6 голосов (по 3 на порядок): на нулевых парах отдельные голоса берут сторону (9 из
-  24), большинство — никогда. Метки большинства устойчивы к порядку (72 из 78). (9, 10)
-- Простой промпт лучше промпта с описанием вкуса автора (0.91 против 0.85). Ответ «обе плохи» судьи почти не дают (6
-  голосов из 996), у автора он частый. (9, 10)
-- Где автор выбирает сторону, судьи с ним согласны (4 из 4 в шаге 2, 4 из 4 в шаге 4). На близких парах автор
-  обычно не выбирает, а судьи выбирают: там их метки — шум для энергии. (9, 10)
+- The layout decides. On one sheet of three pictures the judges see an edit in 7 of 18. On three separate files
+  through the user's eye they see it in 16 of 18. (8)
+- A label is only a majority of 6 votes (3 for each order). On null pairs, single votes take a side (9 of 24); the
+  majority never does. Majority labels are stable against the order (72 of 78). (9, 10)
+- A simple prompt is better than a prompt that describes the user's taste (0.91 against 0.85). The judges almost never
+  answer "both bad" (6 votes of 996); the user frequently does. (9, 10)
+- Where the user selects a side, the judges agree with the user (4 of 4 in step 2, 4 of 4 in step 4). On close pairs
+  the user usually does not select a side, but the judges do. There their labels are noise for the energy. (9, 10)
 
-## Конвертер (Select pairs)
+## The converter (Select pairs)
 
-- Крутилки пресета Exact mixture — у оптимума для глаза автора. (7)
-- Где DP колеблется между соседними парами, выбор автору не важен или обе плохи. (10)
-- **Лоскут структурный**: каждая клетка берёт свою ближайшую смесь, и клетки гладкой поверхности падают по обе
-  стороны границы двух семейств. Coherence (локальная цена смены пары) его не снимает (×2 без разницы), сглаживание
-  цели только двигает границу; снимает привязка пары к поверхности. (10, 11)
-- Привязка ломается там, где поверхность — смесь нескольких цветов: пара поверхности становится серым компромиссом
-  (енот чёрно-белый, зелень RC1). Привязка только близких по цвету клеток (20 ΔE) это смягчает, но акценты всё равно
-  теряются. (11)
-- Ненастроенные картинки (новый проект без Tune) почти не дают видимых альтернатив (медиана 3–6 ΔE). (10)
+- The knobs of the Exact mixture preset are at the optimum for the user's eye. (7)
+- Where the DP is unsure between neighbouring pairs, the choice is not important to the user, or both are bad. (10)
+- **The patchwork is structural.** Each cell takes its nearest mixture, and the cells of a smooth surface fall on the
+  two sides of the border between two families. Coherence (a local cost for a change of pair) does not remove it (×2
+  makes no difference). A smoothed target only moves the border. A pair bound to the surface removes it. (10, 11)
+- The binding fails where a surface is a mixture of several colours: the surface's pair becomes a grey compromise
+  (the black and white raccoon, the greens of RC1). If only the cells near in colour (20 ΔE) are bound, the problem
+  is smaller, but the accents are still lost. (11)
+- Untuned pictures (a new project without Tune) give almost no visible alternatives (median 3–6 ΔE). (10)
 
-## Против конкурентов
+## Against the competitors
 
-- **Не хуже нигде**: img2spec и Image to ZX Spec с лучшей настройкой по Claude-судьям, ZX-Paintbrush по умолчанию;
-  из 24 листов автора наш лучше 15, обе плохи 9, конкурент лучше 0. (12)
-- **Критерий коуча — на двух картинках из четырёх**: jojo со surface dE 20 и rocket-rackoon с Exact mixture лучше
-  всех трёх, каждая своим стилем из раздела 11; одна настройка обе не берёт. autumn и diver-sunset — «обе плохи»
-  против дизерных конкурентов (Флойд–Стейнберг, Аткинсон, Bayer); по словам автора — швы на гладком: серые блоки на
-  земле autumn, клэшинг и блочность в небе diver-sunset. (12)
-- У img2spec моно DBS последний на всех картинках (цвет уходит в серый и розовый); его сильные настройки — Bayer 8×8
-  и Флойд–Стейнберг. (12)
+- **Not worse anywhere**: img2spec and Image to ZX Spec at their best settings by the Claude judges, ZX-Paintbrush at
+  its defaults. Of the user's 24 sheets: ours better 15, both bad 9, the competitor better 0. (12)
+- **The coach's criterion holds on two pictures of four.** jojo with surface dE 20 and rocket-rackoon with Exact
+  mixture are better than all three tools, each with its own style from section 11. One setting does not win both.
+  autumn and diver-sunset are "both bad" against the dithering competitors (Floyd–Steinberg, Atkinson, Bayer). The
+  user names the cause, seams on smooth areas: grey blocks on the ground in autumn, clash and blockiness in the sky of
+  diver-sunset. (12)
+- The mono DBS of img2spec is last on all pictures (the colour goes to grey and pink). Its strong settings are Bayer
+  8×8 and Floyd–Steinberg. (12)
 
-## Автор как источник меток
+## The user as a source of labels
 
-- Надёжен: подтвердил закраску 18 к 1, повторы 4 из 5 дважды. Его время — главный ресурс: раунд 5–15 минут, целые
-  картинки raw 3x (как в приложении) или листы судей; клавиши ←/→/пробел/x (`dp.py vote`). (3, 10, 11)
+- Reliable: the user confirmed the painting 18 to 1, and the repeats agreed 4 of 5 two times. The user's time is the
+  main resource. A round takes 5–15 minutes: whole pictures raw at 3x (as in the app) or the judges' sheets; the keys
+  ←/→/space/x (`dp.py vote`). (3, 10, 11)
 
-## Тупики (не повторять)
+## Dead ends (do not repeat)
 
-- Свободная оптимизация раскраски по числовому судье. (5)
-- Подбор отдельных крутилок пресета по числовым судьям; совместный поиск по ним. (7)
-- Подгонка весов энергии по меткам там, где DP колеблется. (10)
-- Отбор пар по полному запасу энергии: он берёт одно-клеточные правки (запас растёт с числом клеток). (10)
-- Судьи на листе из трёх картинок в одном файле; глаз σ 1 на всё. (8)
-- Частичные закраски как метки. (9)
-- Подбор по сглаженной цели. Мягкая цена выхода из пары поверхности (только смешивает базу и жёсткую привязку).
-  Две пары на поверхность (возвращают лоскут). (11)
+- A free optimisation of the colouring against a numeric judge. (5)
+- Single preset knobs tuned against numeric judges; a joint search on them. (7)
+- A fit of the energy weights to labels where the DP is unsure. (10)
+- A selection of pairs by the total energy margin: it takes single-cell edits (the margin grows with the number of
+  cells). (10)
+- Judges on a sheet of three pictures in one file; an eye with σ 1 on all channels. (8)
+- Partial paintings as labels. (9)
+- The selection on a smoothed target. A soft cost to leave the surface's pair: it only blends the base and the hard
+  binding. Two pairs per surface: they bring the patchwork back. (11)
