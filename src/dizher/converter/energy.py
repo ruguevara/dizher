@@ -223,9 +223,9 @@ class SelectionEnergy:
                 K = block_kernel_matrix(cpp, dr, dc, c.cell)
                 rs, cs = _ranges(dr, dc, R, C)
                 ns = slice(rs.start + dr, rs.stop + dr), slice(cs.start + dc, cs.stop + dc)
-                self.S[g][(dr, dc)] = 2 * sum(
-                    np.einsum('rcpy,rcqy->rcpq', np.einsum('rcpx,xy->rcpy', a[rs, cs], K), a[ns])
-                    for a in A)
+                # (R', C', P, P) every pair of a block against every pair of its neighbour: batched matmuls, BLAS;
+                # einsum's own loop took ~10x longer and most of a conversion without DBS
+                self.S[g][(dr, dc)] = 2 * sum((a[rs, cs] @ K) @ a[ns].swapaxes(-1, -2) for a in A)
 
     def unary(self) -> np.ndarray:
         w, c = self.weights, self.converter
