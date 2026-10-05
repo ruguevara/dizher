@@ -204,13 +204,14 @@ Gogh) and lost the small accents of dense illustrations, so it is a choice per p
 #### Selection methods
 
 How a pair is scored on a block is a choice, [Metric: method]; the rest (the solver, coherence,
-Overpaint, halftoning and DBS) is shared. Picking a method also sets the Metric and Select pairs
-values it was tuned with, as one undo step.
+Overpaint, halftoning and DBS) is shared. Picking a method also sets the Metric, Select pairs and
+Eye model values it was tuned with, as one undo step. No chroma noise and the blurs are the author's
+picks over galleries of renders, a gallery per test picture.
 
 | Method | A pair is scored on | Tuned values |
 |---|---|---|
-| Exact mixture (new projects) | its exact mixture, plus a cost for dots of clashing hues | chroma 2, coherence 6, chroma noise 0.02 |
-| Halftoned (0.2.4) | one halftone of its mixture, by the chosen halftoner | chroma 1, coherence 2, chroma noise 0.05 |
+| Exact mixture (new projects) | its exact mixture, plus a cost for dots of clashing hues (chroma noise) | chroma 2, coherence 6, chroma noise 0, luma blur 0.9 px |
+| Halftoned (0.2.4) | one halftone of its mixture, by the chosen halftoner | chroma 1, coherence 2, chroma noise 0, chroma blur 1.6 px |
 
 A project saved before there was a choice opens as Halftoned, so it converts as it did. Methods
 live in `src/dizher/converter/energy.py` (`METHODS`); a new one is a class with a `candidates`

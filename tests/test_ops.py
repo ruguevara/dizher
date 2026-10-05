@@ -310,7 +310,8 @@ def test_project_round_trip_and_restore():
 
 def test_selection_methods():
     """New documents score pairs by the newest method with the values it was tuned with; a project saved before the
-    choice existed opens as Halftoned, develop's scoring; picking a method brings its Metric and Select pairs values."""
+    choice existed opens as Halftoned, develop's scoring; picking a method brings its Metric, Select pairs and Eye
+    values."""
     import json
     from mokit import project
     from dizher.converter.energy import METHODS, NEWEST, LEGACY
@@ -325,7 +326,7 @@ def test_selection_methods():
         picked = ops.apply_preset(loaded, method)
         assert picked['metric'].params.method == method
         for k, v in scoring.preset.items():
-            node = 'metric' if hasattr(picked['metric'].params, k) else 'select'
+            node = next(n for n in ('metric', 'select', 'eye') if hasattr(picked[n].params, k))
             assert getattr(picked[node].params, k) == v, (method, k)
 
 
