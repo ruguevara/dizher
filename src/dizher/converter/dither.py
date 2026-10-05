@@ -1,5 +1,6 @@
 import numpy as np
 
+from .energy import lightness, luminance_of
 from ..halftoning.error_distribution import ed_dither_duo, ed_dither_levels
 from ..halftoning.ordered import ordered_dither
 from ..halftoning.noise import noise_dither
@@ -12,6 +13,21 @@ def duo_levels(luma, paper, ink):
         denominator = (span * span).sum(-1)
         return np.divide(numerator, denominator, out=np.zeros_like(numerator), where=denominator != 0).clip(0, 1)
     return np.divide(luma - paper, span, out=np.zeros_like(luma), where=span != 0).clip(0, 1)
+
+def dither_levels(levels, paper_y, ink_y, dithering, flare):
+    """Ink fractions in 0..1 pushed away from the lightness halfway between paper and ink (luminances paper_y, ink_y),
+    so only the middle `dithering` of the lightness range between them stays a mix, the rest solid paper or ink: 1 keeps
+    them, 0 thresholds each pixel to the colour nearer in lightness. Lightness as the metric weighs it (energy.py),
+    as in linear light a mid grey would threshold to black."""
+    if dithering >= 1:
+        return levels
+    lp, li = lightness(paper_y, flare), lightness(ink_y, flare)
+    span = li - lp
+    flat = np.abs(span) < 1e-6   # one luminance: no lightness axis, the fraction itself stretched
+    u = np.where(flat, levels, (lightness(paper_y + levels * (ink_y - paper_y), flare) - lp) / np.where(flat, 1, span))
+    u = (u > 0.5).astype(np.float32) if dithering <= 0 else np.clip(0.5 + (u - 0.5) / dithering, 0, 1)
+    t = (luminance_of(lp + u * span, flare) - paper_y) / np.where(flat, 1, ink_y - paper_y)
+    return np.where(flat, u, t).clip(0, 1).astype(np.float32)
 
 class Ditherer:
     """Halftones scalar luminance or weighted opponent colour to a paper (0) / ink (1) bitmap.

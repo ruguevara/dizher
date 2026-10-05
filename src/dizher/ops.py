@@ -316,11 +316,15 @@ def halftone(selection: Converter,
                                            help="weight of chroma error in the dots, the optimiser's too; luma "
                                                 "error weighs 1. Metric's chroma weighs the pairs")]
                  = NEWEST_PRESET['chroma'],
+             dithering: Annotated[float, meta(min=0.0, max=1.0, help="share of the lightness range between a cell's "
+                                              "paper and ink that is mixed with dots, the rest solid: 0 thresholds each "
+                                              "pixel to the nearer colour, 1 dithers every tone")] = 1.0,
              progress=None) -> Converter:
     """Each pixel quantised to its cell's paper or ink by the Halftoner: the start of the optimiser, or the result
     when it is off. The chroma weight is the dots' own, so they can be tuned without moving the pairs: it places each
-    pixel's target on its pair's mixtures here and weighs the optimiser's error."""
-    c = selection.copy()
+    pixel's target on its pair's mixtures here and weighs the optimiser's error. Dithering also sets the tones the
+    optimiser aims at."""
+    c = selection.copy(dithering=dithering)
     c.energy.update(Chroma=chroma)
     with reporting(progress):
         c.halftone()

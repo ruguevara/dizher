@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 from dizher.converter.converter import Converter
-from dizher.converter.energy import SEAM_COST, dot_contrast
+from dizher.converter.energy import SEAM_COST, dot_contrast, lightness
 from dizher.converter.dither import ErrorDiffusion, Ordered, Stohastic, duo_levels
 from dizher.halftoning.dbs import _Structure, CONTRAST_GAIN
 from dizher.halftoning.error_distribution import ed_dither_duo, stucki_duo
@@ -177,6 +177,30 @@ def test_halftone_target_is_reachable():
     np.testing.assert_allclose(duo_levels(target, paper, ink), duo_levels(raw, paper, ink), atol=1e-6)   # same mixture
 
 
+def test_dither_zero_thresholds_by_lightness():
+    """Dithering 1 keeps the projected mix; 0 makes every halftoner, and DBS, paint each pixel the colour nearer in
+    lightness; in between the ends of a ramp go solid and only its middle is mixed."""
+    mode = Mode('ramp', (8, 64), (8, 8), ZXPalette().with_subset('Mono'))
+    image = np.repeat(np.linspace(0, 1, 64, dtype=np.float32)[None, :, None], 8, 0).repeat(3, -1)
+    converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, mode)
+    converter.set_image(image)
+    converter.dither(Stohastic())
+    paper, ink = converter.opponent(converter.best_paper ** converter.gamma), converter.opponent(converter.best_ink ** converter.gamma)
+    np.testing.assert_allclose(converter.halftone_target(paper, ink),
+                               paper + duo_levels(converter.opponent(converter.image_lrgb), paper, ink)[..., None] * (ink - paper))
+    y = lambda rgb: lightness((rgb ** converter.gamma).mean(-1), converter.flare)   # greys: luminance is any channel
+    nearer_ink = np.abs(y(image) - y(converter.best_ink)) < np.abs(y(image) - y(converter.best_paper))
+    for ditherer, optimise in ((Stohastic(), False), (Ordered(), False), (ErrorDiffusion(), False), (Ordered(), True)):
+        c = converter.copy(dithering=0.0)
+        c.dither(ditherer, optimise=optimise)
+        np.testing.assert_array_equal(c.dithered_bitmap > 0, nearer_ink, err_msg=f'{ditherer.label} {optimise}')
+    c = converter.copy(dithering=0.5)
+    c.dither(Ordered())
+    ink_share = (c.dithered_bitmap > 0).mean(0)
+    assert ink_share[:8].max() == 0 and ink_share[-8:].min() == 1 and ((ink_share > 0) & (ink_share < 1)).any()
+    assert (np.diff(c.target_levels(paper, ink)[0]) >= 0).all()
+
+
 def test_colour_diffusion_preserves_scalar_projection():
     image = np.full((8, 8), 0.375, dtype=np.float32)
     paper, ink = np.zeros_like(image), np.ones_like(image)
@@ -274,6 +298,7 @@ if __name__ == '__main__':
     test_bright_dots_cost_no_more_than_dim()
     test_dbs_lowers_complete_colour_objective()
     test_halftone_target_is_reachable()
+    test_dither_zero_thresholds_by_lightness()
     test_colour_diffusion_preserves_scalar_projection()
     test_candidates_follow_the_halftoner()
     test_ordered_matrices_cover_tone()

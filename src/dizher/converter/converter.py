@@ -10,7 +10,7 @@ from mokit.paths import os_path   # also this module's name for it: the UI and t
 
 from .palette import Palette
 from .colors import convert_color, lrgb2luminance, gray2rgb
-from .dither import Ditherer, Stohastic, duo_levels
+from .dither import Ditherer, Stohastic, duo_levels, dither_levels
 from ..halftoning.dbs import dbs_duo
 from .eye import LUMA_ALPHA, LUMA_SCALE, CHROMA_ALPHA, CHROMA_SCALE, eye_kernel
 from .energy import SelectionEnergy, pair_dissimilarity, lightness_gain, LRGB2OPP, EDGE_SIGMA, METHODS, NEWEST
@@ -35,6 +35,7 @@ class Converter:
             flare: float = 0.1,
             method: str = NEWEST,       # how a pair is scored on a block, see energy.METHODS
             surface: float = 0.0,
+            dithering: float = 1.0,
     ):
         self.mode = mode
         self.size = mode.size
@@ -55,6 +56,7 @@ class Converter:
             raise ValueError(f'unknown selection method {method!r}')
         self.method = method
         self.flare = flare          # flattens the per-pixel lightness gain of the error, see energy.lightness_gain
+        self.dithering = dithering  # share of the lightness range between a cell's paper and ink left mixed, see dither_levels
         self.energy = SelectionEnergy(self, weights)
         self.image_rgb = None
         self.set_palette(mode.palette)
@@ -220,13 +222,19 @@ class Converter:
         the attribute grid, plainest in smooth backgrounds. Each pixel is given the reachable projection
         of its target instead, so a cell's residual is zero-mean and there is nothing for the neighbour to
         cancel. The pair optimiser already owns the unreachable part (energy.py)."""
-        target = self.opponent(self.image_lrgb)
-        return paper + duo_levels(target, paper, ink)[..., None] * (ink - paper)
+        return paper + self.target_levels(paper, ink)[..., None] * (ink - paper)
+
+    def target_levels(self, paper, ink):
+        """Each pixel's mix of its cell's paper and ink (opponent space): its target's projection, made solid outside
+        the middle of the lightness range by dithering."""
+        y = lambda rgb: lrgb2luminance(rgb ** self.gamma)
+        return dither_levels(duo_levels(self.opponent(self.image_lrgb), paper, ink), y(self.best_paper), y(self.best_ink),
+                             self.dithering, self.flare)
 
     def projected_target(self):
         """halftone_target in sRGB, for display: the opponent map is linear, so the same mix in linear RGB."""
         paper, ink = self.best_paper ** self.gamma, self.best_ink ** self.gamma
-        t = duo_levels(self.opponent(self.image_lrgb), self.opponent(paper), self.opponent(ink))[..., None]
+        t = self.target_levels(self.opponent(paper), self.opponent(ink))[..., None]
         return (paper + t * (ink - paper)) ** (1 / self.gamma)
 
     def save(self, filename: str) -> None:
