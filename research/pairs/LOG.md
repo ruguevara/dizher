@@ -129,3 +129,45 @@ Result: chroma noise down on all four pictures that count; luma noise and cohere
 differ by picture; no two knobs change the render alike. Thin data. Next (the user): a pairwise search with a Gaussian
 process per picture (PLAN step 3b).
 
+
+## 2026-10-04 — PLAN step 3b: a pairwise search (`duel.py`)
+
+A pairwise mode for one picture's knobs (the user's idea): the user picks the better of two renders; a GP with a probit
+likelihood on the comparisons, the gallery's too, proposes the next pair, the best so far against the point of the most
+expected improvement around it. One new render a duel, 0.6 s without DBS. A simulated user over 10 knobs, from no data:
+60 duels cut the loss at the start from 16.5 to 5.9, level with a noiseless random search of 120 renders; other
+acquisitions and hyperparameter grids, no better. The galleries' comparisons fit best with a length scale of 0.03-0.05
+on diver-sunset and rocket-rackoon: their discard orders are not smooth in the knobs at the gallery's spacing.
+The user's first 12 duels on autumn: the best won all 12 and the evidence did not move. Seeded by the gallery, the
+GP's length scale is 0.1, and the challengers landed 0.27-0.40 off, unrelated to anything the GP knew. Now the
+challenger is within a step that grows when it wins and shrinks when it loses (the 1/5 rule); a simulated user seeded
+like a gallery: the challenger wins 17-24% instead of 2-3%, the result better. Space did not work for the user (not
+reproduced): the page's busy check now has its own flag, Space is matched by its code too, and a Can't tell button.
+jojo (no gallery): the first version's first challenger jumped 0.95 to surface dE 13 and Halftone chroma 0 and won (the
+face not a patchwork); the duel stuck there, overall bad. Challengers along 1-3 knobs: no better on simulated users;
+a can't-tell now grows the step. jojo to start again.
+Result (the user, after duels on autumn 13, jojo 23 and 44, RC1 12): no use; step 3b skipped. `duel.py` and
+`rounds/duel` stay as the record. The user: autumn's gallery best is good enough and counts for the criterion as it
+is (the third picture, with jojo and rocket-rackoon). Step 4 on the data so far: 10 -> 6 knobs, no merges; the user:
+too thin, more galleries first. Next: galleries without DBS, every training picture to ~10 picks (PLAN step 4).
+
+## 2026-10-05 — the Metric method by the user (`methods.py`; `rounds/methods`)
+
+The gallery's grid any size (`--side N`, the same span); the user's mode 3x3. Should the gallery vary the Metric method
+too: no, a switch, and each method sets its own preset, so the same sliders mean other renders. anubis and
+rocket-rackoon ran Halftoned, the other four Exact mixture; the two never compared by the user. `methods.py`: both at
+their presets, without DBS, one blind sheet per training picture. The user: Halftoned on RC1, anubis, diver-sunset;
+Exact mixture on autumn and rocket-rackoon (as in README 12); jojo both bad.
+Result: the method is a setting by the picture. The user: the gallery picks it, its first round mixes the methods
+(a grid around each one's start), the pick's method the gallery's. RC1, diver-sunset and rocket-rackoon start again
+with it; their old galleries kept as NAME-method.json. Next: the galleries (PLAN step 4).
+
+## 2026-10-05 — the galleries and new defaults per method (`gallery.py defaults`)
+
+A gallery per training picture, 11-14 picks, 3x3, without DBS; the first round mixed the methods. The user picked
+Exact mixture on RC1 (the sheet vote said Halftoned), autumn, jojo, rocket-rackoon; Halftoned on anubis, diver-sunset.
+The user: more or less good. `gallery.py report`: chroma noise down on 4 of 6 and to ~0 on 5; luma noise at 0-0.06
+everywhere; Metric chroma (0.2-3.75) and coherence by the picture; no two knobs change the render alike (|cos| <= 0.35).
+New defaults per method (the user asked): the median of the last picks where it agrees with the preferred direction.
+Result, robust over bootstrap seeds: Exact mixture chroma noise 0, eye luma blur 0.9; Halftoned chroma noise 0, eye
+chroma blur 1.6; the rest stays (borderline ones in PLAN step 4).

@@ -1,0 +1,38 @@
+{
+ "u01": {
+  "id": "diver-sunset",
+  "left": "Halftoned",
+  "right": "Exact mixture",
+  "same": false
+ },
+ "u02": {
+  "id": "autumn",
+  "left": "Exact mixture",
+  "right": "Halftoned",
+  "same": false
+ },
+ "u03": {
+  "id": "rocket-rackoon",
+  "left": "Halftoned",
+  "right": "Exact mixture",
+  "same": false
+ },
+ "u04": {
+  "id": "jojo",
+  "left": "Halftoned",
+  "right": "Exact mixture",
+  "same": false
+ },
+ "u05": {
+  "id": "RC1",
+  "left": "Exact mixture",
+  "right": "Halftoned",
+  "same": false
+ },
+ "u06": {
+  "id": "anubis",
+  "left": "Exact mixture",
+  "right": "Halftoned",
+  "same": false
+ }
+}

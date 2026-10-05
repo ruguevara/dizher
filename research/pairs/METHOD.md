@@ -59,11 +59,13 @@ The code is in `research/pairs/` (pytest does not collect it). The commands are 
 | `dp.py` | alternatives where the DP is unsure, waves of judges, the count, sheets for the user, the vote page `vote` (steps 3–4) |
 | `smooth.py`, `surface.py` | the selection on a smoothed target; a pair per surface (after E) |
 | `rivals.py`, `Izx.java` | the competitor baseline: img2spec, Image to ZX Spec (without its window), ZX-Paintbrush (the user's SCR); the best setting by the judges, sheets for the user, the count (plan step 1) |
-| `gallery.py` | a gallery per picture: a 4×4 grid of renders on a plane through the best point in 13 knobs (10 without DBS); the user's discards and picks go to `rounds/gallery/NAME.json`; `report`, what they say (plan step 3) |
+| `gallery.py` | a gallery per picture (`defaults`: new defaults per method): a 4×4 grid of renders (`--side N`, the same span; the first round mixes the Metric methods, the pick sets it) on a plane through the best point in 13 knobs (10 without DBS); the user's discards and picks go to `rounds/gallery/NAME.json`; `report`, what they say (plan step 3) |
+| `duel.py` | a pairwise search per picture: the best so far against the point of the most expected improvement, by a GP with a probit likelihood on the comparisons, the gallery's too; each answer to `rounds/duel/NAME.json`; `check` against a simulated user (plan step 3b, skipped) |
+| `methods.py` | the Metric method, Exact mixture against Halftoned at their presets, without DBS, one blind sheet per training picture; `tally` (before more galleries, plan step 4) |
 | `vote.html` | the old vote page (an Artifact with a db, round cal1); `dp.py vote` replaces it |
 
 The data in git are in `rounds/`: `pilot1`, `cal1`, `opt1`, `opt3`, `opt4`, `aopt`, `c1`, `acuity`, `curve`, `e1`,
-`surface/r1`, `surface/r2`, `rivals`, `gallery` (the keys, the verdicts of the judges and of the user). The renders in
+`surface/r1`, `surface/r2`, `rivals`, `gallery`, `duel`, `methods` (the keys, the verdicts of the judges and of the user). The renders in
 `data/` are not in git; the scripts make them again:
 
 - `build.py` ~15 min on 9 processes;
