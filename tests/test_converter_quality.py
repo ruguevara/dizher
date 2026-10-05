@@ -177,20 +177,29 @@ def test_halftone_target_is_reachable():
     np.testing.assert_allclose(duo_levels(target, paper, ink), duo_levels(raw, paper, ink), atol=1e-6)   # same mixture
 
 
-def test_dither_zero_thresholds_by_lightness():
-    """Dithering 1 keeps the projected mix; 0 makes every halftoner, and DBS, paint each pixel the colour nearer in
-    lightness; in between the ends of a ramp go solid and only its middle is mixed."""
+def grey_ramp():
     mode = Mode('ramp', (8, 64), (8, 8), ZXPalette().with_subset('Mono'))
     image = np.repeat(np.linspace(0, 1, 64, dtype=np.float32)[None, :, None], 8, 0).repeat(3, -1)
     converter = Converter({'Luma': 1.0, 'Chroma': 1.0}, mode)
     converter.set_image(image)
     converter.dither(Stohastic())
+    return image, converter
+
+
+HALFTONERS_AND_DBS = ((Stohastic(), False), (Ordered(), False), (ErrorDiffusion(), False), (Ordered(), True),
+                      (Stohastic(), True))
+
+
+def test_dither_zero_thresholds_by_lightness():
+    """Dithering 1 keeps the projected mix; 0 makes every halftoner, and DBS, paint each pixel the colour nearer in
+    lightness; in between the ends of a ramp go solid and only its middle is mixed."""
+    image, converter = grey_ramp()
     paper, ink = converter.opponent(converter.best_paper ** converter.gamma), converter.opponent(converter.best_ink ** converter.gamma)
     np.testing.assert_allclose(converter.halftone_target(paper, ink),
                                paper + duo_levels(converter.opponent(converter.image_lrgb), paper, ink)[..., None] * (ink - paper))
     y = lambda rgb: lightness((rgb ** converter.gamma).mean(-1), converter.flare)   # greys: luminance is any channel
     nearer_ink = np.abs(y(image) - y(converter.best_ink)) < np.abs(y(image) - y(converter.best_paper))
-    for ditherer, optimise in ((Stohastic(), False), (Ordered(), False), (ErrorDiffusion(), False), (Ordered(), True)):
+    for ditherer, optimise in HALFTONERS_AND_DBS:
         c = converter.copy(dithering=0.0)
         c.dither(ditherer, optimise=optimise)
         np.testing.assert_array_equal(c.dithered_bitmap > 0, nearer_ink, err_msg=f'{ditherer.label} {optimise}')
@@ -199,6 +208,32 @@ def test_dither_zero_thresholds_by_lightness():
     ink_share = (c.dithered_bitmap > 0).mean(0)
     assert ink_share[:8].max() == 0 and ink_share[-8:].min() == 1 and ((ink_share > 0) & (ink_share < 1)).any()
     assert (np.diff(c.target_levels(paper, ink)[0]) >= 0).all()
+
+
+def test_checker_is_a_third_level():
+    """With the checker on, dithering 0 makes each pixel of a ramp paper, ink or a checkerboard of the two, whichever is
+    nearest in lightness, for every halftoner and DBS; dithering 1 keeps the projected mix."""
+    image, converter = grey_ramp()
+    paper, ink = converter.opponent(converter.best_paper ** converter.gamma), converter.opponent(converter.best_ink ** converter.gamma)
+    np.testing.assert_allclose(converter.copy(checker=True).target_levels(paper, ink), converter.target_levels(paper, ink))
+    paper_y, ink_y = converter.luminances()
+    L = lambda y: lightness(y, converter.flare)
+    stops = np.stack([paper_y, (paper_y + ink_y) / 2, ink_y])
+    nearest = np.abs(L((image ** converter.gamma).mean(-1)) - L(stops)).argmin(0)   # greys: luminance is any channel
+    parity = np.indices(nearest.shape).sum(0) % 2 == 1
+    expected = (nearest == 2) | ((nearest == 1) & (parity == (ink_y > paper_y)))
+    assert (nearest == 1).any()
+    for ditherer, optimise in HALFTONERS_AND_DBS:
+        c = converter.copy(dithering=0.0, checker=True)
+        c.dither(ditherer, optimise=optimise)
+        np.testing.assert_array_equal(c.dithered_bitmap > 0, expected, err_msg=f'{ditherer.label} {optimise}')
+    # where the lightness gain varies from pixel to pixel, DBS would break the checker into dashes; it must not touch it
+    converter.set_image((image + np.random.default_rng(0).normal(0, 0.05, image.shape[:2])[..., None]).clip(0, 1))
+    c = converter.copy(dithering=0.0, checker=True)
+    c.dither(Ordered(), optimise=True)
+    checkered = c.target_levels(*c._duo()) == 0.5
+    assert checkered.sum() > 100
+    np.testing.assert_array_equal(c.dithered_bitmap[checkered], c.halftoned[checkered])
 
 
 def test_colour_diffusion_preserves_scalar_projection():
@@ -299,6 +334,7 @@ if __name__ == '__main__':
     test_dbs_lowers_complete_colour_objective()
     test_halftone_target_is_reachable()
     test_dither_zero_thresholds_by_lightness()
+    test_checker_is_a_third_level()
     test_colour_diffusion_preserves_scalar_projection()
     test_candidates_follow_the_halftoner()
     test_ordered_matrices_cover_tone()

@@ -14,11 +14,17 @@ def duo_levels(luma, paper, ink):
         return np.divide(numerator, denominator, out=np.zeros_like(numerator), where=denominator != 0).clip(0, 1)
     return np.divide(luma - paper, span, out=np.zeros_like(luma), where=span != 0).clip(0, 1)
 
-def dither_levels(levels, paper_y, ink_y, dithering, flare):
+def dither_levels(levels, paper_y, ink_y, dithering, flare, checker=False):
     """Ink fractions in 0..1 pushed away from the lightness halfway between paper and ink (luminances paper_y, ink_y),
     so only the middle `dithering` of the lightness range between them stays a mix, the rest solid paper or ink: 1 keeps
     them, 0 thresholds each pixel to the colour nearer in lightness. Lightness as the metric weighs it (energy.py),
-    as in linear light a mid grey would threshold to black."""
+    as in linear light a mid grey would threshold to black. checker: the half-and-half mix, which the halftone draws as a
+    checkerboard, is a third level, each half of the range on either side of it treated as a pair of its own."""
+    if checker:
+        mid = (paper_y + ink_y) / 2
+        low = dither_levels(2 * levels, paper_y, mid, dithering, flare) / 2
+        high = 0.5 + dither_levels(2 * levels - 1, mid, ink_y, dithering, flare) / 2
+        return np.where(levels < 0.5, low, high)
     if dithering >= 1:
         return levels
     lp, li = lightness(paper_y, flare), lightness(ink_y, flare)
@@ -27,7 +33,7 @@ def dither_levels(levels, paper_y, ink_y, dithering, flare):
     u = np.where(flat, levels, (lightness(paper_y + levels * (ink_y - paper_y), flare) - lp) / np.where(flat, 1, span))
     u = (u > 0.5).astype(np.float32) if dithering <= 0 else np.clip(0.5 + (u - 0.5) / dithering, 0, 1)
     t = (luminance_of(lp + u * span, flare) - paper_y) / np.where(flat, 1, ink_y - paper_y)
-    return np.where(flat, u, t).clip(0, 1).astype(np.float32)
+    return np.where(flat | (u == 0) | (u == 1), u, t).clip(0, 1).astype(np.float32)   # solid exactly, not by roundtrip
 
 class Ditherer:
     """Halftones scalar luminance or weighted opponent colour to a paper (0) / ink (1) bitmap.

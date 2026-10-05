@@ -102,7 +102,8 @@ class _Structure:
         self.ssim = self._ssim(self.my, self.wyy, self.wxy)
 
 def dbs_duo(luma, paper, ink, init, scale=1.4, alpha=2.0, structure=0.06, max_sweeps=10,
-            stop_fraction=1e-3, kernels=None, noise=0, on_step=None):
+            stop_fraction=1e-3, kernels=None, noise=0, on_step=None, fixed=None):
+    """fixed: (H, W) pixels no move changes, as are those whose paper and ink are one colour."""
     luma, paper, ink = [np.asarray(a, dtype=np.float32) for a in (luma, paper, ink)]
     if luma.ndim == 2:
         luma, paper, ink = [a[..., None] for a in (luma, paper, ink)]
@@ -128,7 +129,7 @@ def dbs_duo(luma, paper, ink, init, scale=1.4, alpha=2.0, structure=0.06, max_sw
 
     b = init.astype(bool)
     span = (ink - paper).astype(np.float32)
-    fixed = ~span.any(-1)   # paper and ink one colour: toggling changes nothing
+    fixed = ~span.any(-1) if fixed is None else fixed | ~span.any(-1)
     y = (paper + b[..., None] * span).astype(np.float32)
     e = y - luma
     struct = None
@@ -153,7 +154,7 @@ def dbs_duo(luma, paper, ink, init, scale=1.4, alpha=2.0, structure=0.06, max_sw
                 if struct is not None:
                     sdelta = structure * struct.delta(r, c, lattice, a[..., 0], y[..., 0], [(0, 0)] + NEIGHBOURS)
                     best += sdelta[0]
-                best[fixed[sl]] = 0   # no move: rounding in the SSIM delta would toggle them back and forth every sweep
+                best[fixed[sl]] = 0   # one-colour cells too: rounding in the SSIM delta would toggle them back and forth
                 rows, cols = np.arange(r, b.shape[0], lattice), np.arange(c, b.shape[1], lattice)
                 partner = np.zeros(best.shape, dtype=np.int8)  # 0: toggle, i + 1: swap with NEIGHBOURS[i]
                 for i, (dr, dc) in enumerate(NEIGHBOURS):

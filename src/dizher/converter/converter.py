@@ -36,6 +36,7 @@ class Converter:
             method: str = NEWEST,       # how a pair is scored on a block, see energy.METHODS
             surface: float = 0.0,
             dithering: float = 1.0,
+            checker: bool = False,
     ):
         self.mode = mode
         self.size = mode.size
@@ -57,6 +58,7 @@ class Converter:
         self.method = method
         self.flare = flare          # flattens the per-pixel lightness gain of the error, see energy.lightness_gain
         self.dithering = dithering  # share of the lightness range between a cell's paper and ink left mixed, see dither_levels
+        self.checker = checker      # a checkerboard of the two as a third level, see dither_levels
         self.energy = SelectionEnergy(self, weights)
         self.image_rgb = None
         self.set_palette(mode.palette)
@@ -193,7 +195,10 @@ class Converter:
         """Run the chosen halftoner once on the final composite, quantising each pixel to its block's paper or ink."""
         paper, ink = self._duo()
         report_stage(self.ditherer.label)
-        self.set_bitmap(self.ditherer(self.halftone_target(paper, ink), paper, ink))
+        levels = self.target_levels(paper, ink)
+        if self.checker:   # as exact 0 and 1, error diffusion has nothing to spread
+            levels = np.where(levels == 0.5, self.checkerboard(), levels)
+        self.set_bitmap(self.ditherer(paper + levels[..., None] * (ink - paper), paper, ink))
         self.halftoned = self.dithered_bitmap
 
     def optimise(self):
@@ -207,7 +212,15 @@ class Converter:
         self.set_bitmap(dbs_duo(self.halftone_target(paper, ink) * g, paper * g, ink * g, init=self.dithered_bitmap,
             scale=self.luma_scale, alpha=self.luma_alpha, structure=self.structure,
             kernels=self.eye_kernels(), noise=(self.luma_noise, self.chroma_noise, self.chroma_noise),
-            on_step=lambda b: report_progress(lambda: self.snapshot(bitmap=b))))
+            on_step=lambda b: report_progress(lambda: self.snapshot(bitmap=b)),
+            # the checker stays a checker: where the lightness gain varies over it, DBS would break it into dashes
+            fixed=self.target_levels(paper, ink) == 0.5 if self.checker else None))
+
+    def checkerboard(self):
+        """The checker level's pattern (dither_levels): each cell's brighter colour on one parity all over the screen,
+        so neighbouring cells' checkers line up."""
+        paper_y, ink_y = self.luminances()
+        return (np.indices(paper_y.shape).sum(0) % 2 == 1) == (ink_y > paper_y)
 
     def _duo(self):
         return self.opponent(self.best_paper ** self.gamma), self.opponent(self.best_ink ** self.gamma)
@@ -227,9 +240,12 @@ class Converter:
     def target_levels(self, paper, ink):
         """Each pixel's mix of its cell's paper and ink (opponent space): its target's projection, made solid outside
         the middle of the lightness range by dithering."""
-        y = lambda rgb: lrgb2luminance(rgb ** self.gamma)
-        return dither_levels(duo_levels(self.opponent(self.image_lrgb), paper, ink), y(self.best_paper), y(self.best_ink),
-                             self.dithering, self.flare)
+        return dither_levels(duo_levels(self.opponent(self.image_lrgb), paper, ink), *self.luminances(),
+                             self.dithering, self.flare, self.checker)
+
+    def luminances(self):
+        """Each pixel's paper and ink luminance."""
+        return lrgb2luminance(self.best_paper ** self.gamma), lrgb2luminance(self.best_ink ** self.gamma)
 
     def projected_target(self):
         """halftone_target in sRGB, for display: the opponent map is linear, so the same mix in linear RGB."""
