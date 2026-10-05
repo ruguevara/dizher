@@ -208,8 +208,8 @@ Gogh) and lost the small accents of dense illustrations, so it is a choice per p
 #### Selection methods
 
 How a pair is scored on a block is a choice, [Metric: method]; the rest (the solver, coherence,
-Overpaint, halftoning and DBS) is shared. Picking a method also sets the Metric, Select pairs and
-Eye model values it was tuned with, as one undo step. No chroma noise and the blurs are the author's
+Overpaint, halftoning and DBS) is shared. Picking a method also sets the Metric, Select pairs,
+Halftone, Optimise and Eye model values it was tuned with, as one undo step. No chroma noise and the blurs are the author's
 picks over galleries of renders, a gallery per test picture.
 
 | Method | A pair is scored on | Tuned values |
