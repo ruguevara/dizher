@@ -75,6 +75,15 @@ def lightness_gain(luminance: np.ndarray, flare: float) -> np.ndarray:
     slope = lambda y: np.where(y > (6 / 29) ** 3, np.cbrt(np.maximum(y, 1e-6)) ** -2 / 3, (29 / 6) ** 2 / 3)
     return (slope(luminance + flare) / slope(LIGHTNESS_REF + flare))[..., None].astype(np.float32)
 
+def lightness(luminance: np.ndarray, flare: float) -> np.ndarray:
+    """CIELAB's f of luminance plus flare, L* / 116 + 16 / 116: the lightness lightness_gain is the slope of."""
+    y = luminance + flare
+    return np.where(y > (6 / 29) ** 3, np.cbrt(np.maximum(y, 1e-6)), y * (29 / 6) ** 2 / 3 + 4 / 29)
+
+def luminance_of(lightness: np.ndarray, flare: float) -> np.ndarray:
+    """The inverse of lightness."""
+    return np.where(lightness > 6 / 29, lightness ** 3, (lightness - 4 / 29) * 3 * (6 / 29) ** 2) - flare
+
 def dot_contrast(color_pairs: np.ndarray, gamma: float) -> np.ndarray:
     """(P, 2, 3) gamma-encoded RGB pairs -> (P, 2) squared contrast between a pair's paper and ink dots, per GROUPS.
     Luma: of the opponent luminance channel. Chroma: of hue alone, in CIELAB, 2 (|ab_p| |ab_i| - ab_p . ab_i) / 100^2:
