@@ -53,7 +53,9 @@ def test_dot_weights_move_the_dots_not_the_pairs():
     memo = Memo()
     graph = pipeline(COLOUR, enabled=True)
     result = evaluate(graph, 'optimise', memo)
-    direct = evaluate(graph, 'prepare', memo).copy()
+    select = graph['select'].params   # the one-shot Converter at Select pairs' values, not at its own defaults
+    direct = evaluate(graph, 'prepare', memo).copy(coherence=select.coherence, edge=select.edge,
+                                                  luma_noise=select.luma_noise, chroma_noise=select.chroma_noise)
     np.testing.assert_array_equal(direct.dither(Ordered('Void dispersed dots'), optimise=True), result.dithered_result)
     changed = pipeline(COLOUR, enabled=True, chroma_noise=0.3)
     changed = changed.with_params('halftone', replace(changed['halftone'].params, chroma=0.5))
