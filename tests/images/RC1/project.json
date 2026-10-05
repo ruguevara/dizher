@@ -41,9 +41,9 @@
       "op": "dizher.ops:levels",
       "params": {
         "mode": "Levels",
-        "in_black": 0,
-        "in_white": 255,
-        "gamma": 0.58,
+        "in_black": 38,
+        "in_white": 218,
+        "gamma": 1.0,
         "out_black": 0,
         "out_white": 255,
         "channels": [
@@ -109,9 +109,9 @@
     "local": {
       "op": "dizher.ops:local_tone",
       "params": {
-        "local_contrast": 30.386999130249023,
-        "shadows": 99.447998046875,
-        "highlights": 48.34299850463867,
+        "local_contrast": 0.0,
+        "shadows": 0.0,
+        "highlights": 0.0,
         "clarity": 0.0
       },
       "inputs": [
@@ -121,7 +121,7 @@
     "contrast": {
       "op": "dizher.ops:contrast",
       "params": {
-        "contrast": 100.0
+        "contrast": 0.0
       },
       "inputs": [
         "local"
@@ -131,7 +131,7 @@
       "op": "dizher.ops:color",
       "params": {
         "vibrance": 100.0,
-        "saturation": 12.430999755859375
+        "saturation": 0.0
       },
       "inputs": [
         "contrast"
@@ -140,9 +140,9 @@
     "detail": {
       "op": "dizher.ops:detail",
       "params": {
-        "texture": -37.292999267578125,
-        "sharpen": 217.54200744628906,
-        "radius": 0.9430000185966492
+        "texture": -55.80099868774414,
+        "sharpen": 229.55799865722656,
+        "radius": 1.0
       },
       "inputs": [
         "color"
@@ -177,7 +177,7 @@
       "op": "dizher.ops:metric",
       "params": {
         "method": "Exact mixture",
-        "chroma": 2.0,
+        "chroma": 1.4299999475479126,
         "flare": 0.1
       },
       "inputs": []
@@ -195,8 +195,8 @@
     "halftoner": {
       "op": "dizher.ops:halftoner",
       "params": {
-        "halftoner": "Stohastic",
-        "matrix": "Bayer 32x32",
+        "halftoner": "Ordered",
+        "matrix": "Bayer 2x2",
         "kernel": "Shiau-Fan 3",
         "noise_x": 294,
         "noise_y": 421
@@ -220,7 +220,8 @@
         "coherence": 6.0,
         "edge": 0.1,
         "luma_noise": 0.0,
-        "chroma_noise": 0.02
+        "chroma_noise": 0.02,
+        "surface": 16.573999404907227
       },
       "inputs": [
         "prepare"
@@ -942,7 +943,7 @@
             3,
             22,
             10,
-            13
+            14
           ],
           [
             3,
@@ -1128,19 +1129,19 @@
             4,
             21,
             10,
-            15
+            14
           ],
           [
             4,
             22,
             10,
-            13
+            15
           ],
           [
             4,
             23,
             13,
-            14
+            10
           ],
           [
             4,
@@ -1236,13 +1237,13 @@
             5,
             7,
             13,
-            12
+            15
           ],
           [
             5,
             8,
             13,
-            12
+            15
           ],
           [
             5,
@@ -1320,18 +1321,18 @@
             5,
             21,
             10,
-            13
+            15
           ],
           [
             5,
             22,
-            13,
+            15,
             10
           ],
           [
             5,
             23,
-            14,
+            15,
             13
           ],
           [
@@ -1428,7 +1429,7 @@
             6,
             7,
             13,
-            12
+            15
           ],
           [
             6,
@@ -1512,19 +1513,19 @@
             6,
             21,
             10,
-            13
+            15
           ],
           [
             6,
             22,
             13,
-            14
+            15
           ],
           [
             6,
             23,
             13,
-            14
+            15
           ],
           [
             6,
@@ -1619,8 +1620,8 @@
           [
             7,
             7,
-            12,
-            15
+            13,
+            14
           ],
           [
             7,
@@ -1649,7 +1650,7 @@
           [
             7,
             12,
-            12,
+            10,
             14
           ],
           [
@@ -1991,7 +1992,7 @@
           [
             9,
             5,
-            12,
+            9,
             13
           ],
           [
@@ -2075,13 +2076,13 @@
           [
             9,
             19,
-            13,
-            15
+            9,
+            13
           ],
           [
             9,
             20,
-            9,
+            8,
             12
           ],
           [
@@ -2196,7 +2197,7 @@
             10,
             7,
             12,
-            14
+            15
           ],
           [
             10,
@@ -2387,7 +2388,7 @@
           [
             11,
             7,
-            10,
+            14,
             15
           ],
           [
@@ -2573,7 +2574,7 @@
           [
             12,
             6,
-            10,
+            14,
             15
           ],
           [
@@ -2711,14 +2712,14 @@
           [
             12,
             29,
-            4,
-            7
+            0,
+            5
           ],
           [
             12,
             30,
-            4,
-            7
+            0,
+            4
           ],
           [
             12,
@@ -4007,8 +4008,8 @@
           [
             19,
             21,
-            8,
-            2
+            0,
+            6
           ],
           [
             19,
@@ -4356,7 +4357,7 @@
             21,
             15,
             0,
-            3
+            7
           ],
           [
             21,
@@ -4847,7 +4848,9 @@
     "halftone": {
       "op": "dizher.ops:halftone",
       "params": {
-        "dithering": 1.0
+        "chroma": 0.054999999701976776,
+        "dithering": 0.49300000071525574,
+        "checker": true
       },
       "inputs": [
         "overpaint"
@@ -4856,8 +4859,10 @@
     "optimise": {
       "op": "dizher.ops:optimise",
       "params": {
-        "enabled": true,
-        "structure": 0.061000000685453415
+        "enabled": false,
+        "structure": 0.0,
+        "luma_noise": 0.0,
+        "chroma_noise": 0.0
       },
       "inputs": [
         "halftone"

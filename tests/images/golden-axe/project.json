@@ -40,11 +40,67 @@
     "levels": {
       "op": "dizher.ops:levels",
       "params": {
+        "mode": "Levels",
         "in_black": 0,
         "in_white": 217,
         "gamma": 1.15,
         "out_black": 0,
-        "out_white": 255
+        "out_white": 255,
+        "channels": [
+          [
+            0.0,
+            255.0,
+            1.0,
+            0.0,
+            255.0
+          ],
+          [
+            0.0,
+            255.0,
+            1.0,
+            0.0,
+            255.0
+          ],
+          [
+            0.0,
+            255.0,
+            1.0,
+            0.0,
+            255.0
+          ]
+        ],
+        "curves": [
+          [
+            0.0,
+            0.0,
+            255.0,
+            255.0
+          ],
+          [
+            0.0,
+            0.0,
+            255.0,
+            255.0
+          ],
+          [
+            0.0,
+            0.0,
+            255.0,
+            255.0
+          ],
+          [
+            0.0,
+            0.0,
+            255.0,
+            255.0
+          ]
+        ],
+        "picks": [],
+        "targets": [
+          -1,
+          -1,
+          -1
+        ]
       },
       "inputs": [
         "light"
@@ -139,8 +195,8 @@
     "halftoner": {
       "op": "dizher.ops:halftoner",
       "params": {
-        "halftoner": "Stohastic",
-        "matrix": "Void dispersed dots",
+        "halftoner": "Ordered",
+        "matrix": "Bayer 8x8",
         "kernel": "Shiau-Fan 3",
         "noise_x": 101,
         "noise_y": 68
@@ -164,7 +220,8 @@
         "coherence": 6.0,
         "edge": 0.1,
         "luma_noise": 0.0,
-        "chroma_noise": 0.02
+        "chroma_noise": 0.02,
+        "surface": 0.0
       },
       "inputs": [
         "prepare"
@@ -430,13 +487,19 @@
             3,
             8,
             0,
-            6
+            4
           ],
           [
             3,
             11,
             8,
             10
+          ],
+          [
+            3,
+            12,
+            -1,
+            15
           ],
           [
             3,
@@ -658,7 +721,7 @@
             6,
             9,
             0,
-            4
+            6
           ],
           [
             6,
@@ -1544,6 +1607,18 @@
           ],
           [
             16,
+            21,
+            -1,
+            10
+          ],
+          [
+            16,
+            22,
+            -1,
+            2
+          ],
+          [
+            16,
             23,
             10,
             14
@@ -1802,6 +1877,12 @@
           ],
           [
             19,
+            24,
+            -1,
+            14
+          ],
+          [
+            19,
             27,
             0,
             0
@@ -1829,6 +1910,12 @@
             16,
             1,
             5
+          ],
+          [
+            20,
+            17,
+            2,
+            -1
           ],
           [
             20,
@@ -2120,7 +2207,11 @@
     },
     "halftone": {
       "op": "dizher.ops:halftone",
-      "params": null,
+      "params": {
+        "chroma": 0.2759999930858612,
+        "dithering": 0.33399999141693115,
+        "checker": true
+      },
       "inputs": [
         "overpaint"
       ]
@@ -2128,8 +2219,10 @@
     "optimise": {
       "op": "dizher.ops:optimise",
       "params": {
-        "enabled": true,
-        "structure": 0.06
+        "enabled": false,
+        "structure": 0.06,
+        "luma_noise": 0.0,
+        "chroma_noise": 0.0
       },
       "inputs": [
         "halftone"
