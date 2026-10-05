@@ -119,8 +119,10 @@ class Halftoned:
     """Each pair scored on one halftone of its per-pixel mixture, painted by the chosen halftoner: the pairs are chosen
     for the dots they will get. The halftone's noise decides near ties block by block, and the dot contrast of a
     bright pair is charged twice (in the blurred error and in the unblurred one), so dim pairs win. Develop's and
-    0.2.4's scoring, kept exactly; a project saved without a method opens with it."""
-    preset = dict(chroma=1.0, flare=0.1, coherence=2.0, edge=EDGE_SIGMA, luma_noise=0.0, chroma_noise=0.05)
+    0.2.4's scoring, kept exactly; a project saved without a method opens with it. No chroma noise and a wider chroma
+    blur by the user's picks."""
+    preset = dict(chroma=1.0, flare=0.1, coherence=2.0, edge=EDGE_SIGMA, luma_noise=0.0, chroma_noise=0.0,
+                  luma_scale=1.4, chroma_scale=1.6)
 
     def candidates(self, c, X):
         Y = (c.realized ** c.gamma) @ LRGB2OPP.T
@@ -131,8 +133,9 @@ class ExactMixture:
     """Each pair scored on the exact mixture its per-pixel level asks for, and its dots apart from the mixture:
     t (1 - t) times the squared contrast of paper and ink (dot_contrast), in lightness and in hue alone. Blue dots
     on yellow cost the most, black, white or grey dots nothing. Defaults fitted to the hand-painted references of
-    tests/pair_bench.py."""
-    preset = dict(chroma=2.0, flare=0.1, coherence=6.0, edge=EDGE_SIGMA, luma_noise=0.0, chroma_noise=0.02)
+    tests/pair_bench.py; no chroma noise and a narrower luma blur by the user's picks."""
+    preset = dict(chroma=2.0, flare=0.1, coherence=6.0, edge=EDGE_SIGMA, luma_noise=0.0, chroma_noise=0.0,
+                  luma_scale=0.9, chroma_scale=1.4)
 
     def candidates(self, c, X):
         lin = (c.color_pairs.astype(np.float32) ** c.gamma) @ LRGB2OPP.T              # (P, 2, 3) paper, ink
@@ -147,7 +150,7 @@ class ExactMixture:
 
 
 # How a pair is scored on a block (Metric: method): the rest of pair selection, the halftoner and DBS are shared.
-# Each has the Metric and Select pairs values it was tuned with, set when it is picked (ops.apply_preset).
+# Each has the Metric, Select pairs and Eye values it was tuned with, set when it is picked (ops.apply_preset).
 METHODS = {'Exact mixture': ExactMixture(), 'Halftoned': Halftoned()}
 NEWEST = 'Exact mixture'    # new projects
 LEGACY = 'Halftoned'        # projects saved before there was a choice

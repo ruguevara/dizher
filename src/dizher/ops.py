@@ -158,13 +158,14 @@ def detail(picture: np.ndarray,
     return tone.detail(picture, texture, sharpen, radius)
 
 
-NEWEST_PRESET = METHODS[NEWEST].preset   # new projects' Metric and Select pairs values
+NEWEST_PRESET = METHODS[NEWEST].preset   # new projects' Metric, Select pairs and Eye values
 
 
 def metric(method: Annotated[str, meta(choices=tuple(METHODS), legacy=LEGACY,
                                        help="how a pair is scored on a cell: Exact mixture, its mixture and a cost "
                                             "for dots of clashing hues; Halftoned, one halftone of it (0.2.4). "
-                                            "Picking one sets the Metric and Select pairs values it was tuned with")] = NEWEST,
+                                            "Picking one sets the Metric, Select pairs and Eye values it was tuned "
+                                            "with")] = NEWEST,
            chroma: Annotated[float, meta(min=0.0, max=4.0, help="weight of chroma error; luma error weighs 1")]
                = NEWEST_PRESET['chroma'],
            flare: Annotated[float, meta(min=0.0, max=1.0, help="stray light on the screen, in units of white: 0 weighs "
@@ -178,9 +179,9 @@ def metric(method: Annotated[str, meta(choices=tuple(METHODS), legacy=LEGACY,
 
 
 def apply_preset(graph: Graph, method: str) -> Graph:
-    """The graph with the selection method and the Metric and Select pairs values it was tuned with."""
+    """The graph with the selection method and the Metric, Select pairs and Eye values it was tuned with."""
     preset = dict(METHODS[method].preset, method=method)
-    for nid in ('metric', 'select'):
+    for nid in ('metric', 'select', 'eye'):
         params = graph[nid].params
         graph = graph.with_params(nid, replace(params, **{k: v for k, v in preset.items() if hasattr(params, k)}))
     return graph
@@ -188,10 +189,12 @@ def apply_preset(graph: Graph, method: str) -> Graph:
 
 def eye(luma_alpha: Annotated[float, meta(min=0.5, max=2.0)] = eye_model.LUMA_ALPHA,
         # the kernel radius is capped at half a cell (4 px): beyond ~1.9 px at alpha 2 the blur changes nothing
-        luma_scale: Annotated[float, meta(min=0.3, max=1.9, label="luma blur px")] = eye_model.LUMA_SCALE,
+        luma_scale: Annotated[float, meta(min=0.3, max=1.9, label="luma blur px")] = NEWEST_PRESET['luma_scale'],
         chroma_alpha: Annotated[float, meta(min=0.5, max=2.0)] = eye_model.CHROMA_ALPHA,
-        chroma_scale: Annotated[float, meta(min=0.3, max=1.9, label="chroma blur px")] = eye_model.CHROMA_SCALE) -> Eye:
-    """Alpha-stable blur of each channel group, see converter/eye.py."""
+        chroma_scale: Annotated[float, meta(min=0.3, max=1.9, label="chroma blur px")]
+            = NEWEST_PRESET['chroma_scale']) -> Eye:
+    """Alpha-stable blur of each channel group, see converter/eye.py; the blurs are the selection method's (a preset
+    sets them)."""
     return Eye(luma_alpha, luma_scale, chroma_alpha, chroma_scale)
 
 

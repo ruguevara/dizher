@@ -399,7 +399,8 @@ def test_custom_palette(ctx):
 
 
 def test_method_switch_brings_its_values(ctx):
-    """Picking another selection method sets the Metric and Select pairs values it was tuned with, as one undo step."""
+    """Picking another selection method sets the Metric, Select pairs and Eye values it was tuned with, as one undo
+    step."""
     from dizher.converter.energy import METHODS
     before = ui.app.graph
     ctx.set_ref('//Convert')
@@ -408,6 +409,7 @@ def test_method_switch_brings_its_values(ctx):
     preset = METHODS['Halftoned'].preset
     assert params('metric').method == 'Halftoned' and params('metric').chroma == preset['chroma'], params('metric')
     assert (params('select').coherence, params('select').chroma_noise) == (preset['coherence'], preset['chroma_noise'])
+    assert (params('eye').luma_scale, params('eye').chroma_scale) == (preset['luma_scale'], preset['chroma_scale'])
     ui.app.undo()
     ctx.yield_(2)
     assert ui.app.graph == before
