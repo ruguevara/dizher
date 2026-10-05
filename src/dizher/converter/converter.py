@@ -60,10 +60,12 @@ class Converter:
         self.set_palette(mode.palette)
 
     def copy(self, **attrs) -> 'Converter':
-        """Shallow copy for a later pipeline stage (ops.py): arrays are shared read-only, the energy is rebound to the copy."""
+        """Shallow copy for a later pipeline stage (ops.py): arrays are shared read-only, the energy is rebound to the
+        copy with weights of its own (Halftone reweighs chroma)."""
         c = copy.copy(self)
         c.energy = copy.copy(self.energy)
         c.energy.converter = c
+        c.energy.weights = c.energy.weights.copy()
         for name, value in attrs.items():
             assert hasattr(c, name), name
             setattr(c, name, value)
@@ -195,7 +197,8 @@ class Converter:
     def optimise(self):
         """Direct binary search from the halftone bitmap under the eye model (halftoning/dbs.py); the start
         stays in halftoned. Target and colours are scaled by the lightness gain, so it minimises the selection's
-        metric (its SSIM term then compares gained luma)."""
+        metric under the weights it is given, which ops.halftone and ops.optimise set apart from the selection's (its
+        SSIM term then compares gained luma)."""
         paper, ink = self._duo()
         g = self.gain
         report_stage('DBS')
