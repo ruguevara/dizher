@@ -17,13 +17,13 @@ Items 3 and 4 are not pair selection, but dithering (Halftoner, DBS). Colorimetr
 aim (`FINDINGS.md`). Done, by the project's focus (the coach): the conversion is visibly better than the known
 converters (ZX-Paintbrush, image2zx, img2spec) on three reference pictures, in a blind test by the user.
 
-## The state (2026-10-04)
+## The state (2026-10-05)
 
-The branch is `feature/gallant-wright-6dtgj6`, rebased on `develop` 03d239b. Sessions A, B, C, E and steps 1 and 2
-are closed (`LOG.md`); step 3, the gallery, has its first data (README 13). In the app: Select pairs: surface dE, one
-pair per surface, off by default (PR #14); the selection energy's seam terms by matmul, a conversion without DBS ~2.4x
-faster (PR #15). Merged here, not into `develop`: `feature/dbs-weights`, the dots have their own weights: chroma on
-Halftone, noise on Optimise (step 2).
+The branch is `feature/gallant-wright-6dtgj6`, rebased on `develop` 06b84bf; it has no changes of its own outside
+`research/pairs` but the unused `tests/images/pairs` removed. Sessions A, B, C, E and steps 1 and 2 are closed
+(`LOG.md`); step 3, the galleries, done. In the app: Select pairs: surface dE, one pair per surface, off by default
+(PR #14); the selection energy's seam terms by matmul, a conversion without DBS ~2.4x faster (PR #15); new defaults per
+method (PR #16); the dots' own weights, chroma on Halftone, noise on Optimise (step 2, PR #17).
 
 Step 3b, a pairwise mode (`duel.py`), the user, 2026-10-04: no use, skipped. The user: autumn's gallery best is good
 enough, and it counts for the criterion as it is (not blind against the competitors). Next: more galleries (step 3),
@@ -56,8 +56,8 @@ Seams in the algorithm and adaptive binding come after, from the gallery results
   Optimise). Projects saved before this step get the values of their Metric and Select pairs. (`legacy` in mokit is a
   constant, but here the value of the adjacent node is necessary.) A test covers the two cases; pytest and
   `tests/test_ui.py` are green.
-- The branch is from `develop`, merged here (the user, 2026-10-02): the gallery needs the knobs. A PR into `develop`
-  when the user decides.
+- The branch is from `develop`, merged here (the user, 2026-10-02): the gallery needs the knobs. In `develop` as PR #17
+  (2026-10-05), reconciled with #16; the research branch dropped its commits in the rebase.
 - Done: an older project gets the weights through `meta(legacy=Like(node, field))` in mokit. In the research,
   `common.Project.changed` moves the dots' weights together with the Metric and Select pairs weights, if a script does
   not set them. All earlier rounds give the same renders: rocket-rackoon at the `tune` base and with a shift of chroma
@@ -150,8 +150,8 @@ and `rounds/duel` stay as the record; the method and its checks in `LOG.md`.
   1.4 -> 0.9; Halftoned chroma noise 0.05 -> 0, eye chroma blur 1.4 -> 1.6. On some seeds only: Exact mixture
   Halftone chroma 2 -> 1.8 (3 of 4), edge 0.1 -> 0.06 (2), Metric chroma 2 -> 1.8 (1); Halftoned flare 0.1 -> 0.12 (1).
   All without DBS; Optimise's weights have no data. In the app (the user, 2026-10-05): the four robust ones, PR #16
-  into `develop` (1b0f386); a preset sets the Eye model too. On `develop` DBS reads Select pairs' noise, so DBS's
-  chroma noise is 0 too; `feature/dbs-weights`, when it goes in, needs its Optimise noise apart in the preset.
+  into `develop` (1b0f386); a preset sets the Eye model too, and Optimise's noise as Select pairs' (PR #17), so DBS's
+  chroma noise is 0 too.
 - The data so far (README 13, 2026-10-04): no preference on any picture for Metric flare and Eye chroma blur; Select
   edge only on anubis (3 picks), Eye luma blur only on autumn (lower; its effect the closest to luma noise's, cosine
   -0.48); chroma noise down on all four; luma noise, coherence, Metric and Halftone chroma by the picture; surface dE

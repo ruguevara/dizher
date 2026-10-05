@@ -171,3 +171,6 @@ everywhere; Metric chroma (0.2-3.75) and coherence by the picture; no two knobs 
 New defaults per method (the user asked): the median of the last picks where it agrees with the preferred direction.
 Result, robust over bootstrap seeds: Exact mixture chroma noise 0, eye luma blur 0.9; Halftoned chroma noise 0, eye
 chroma blur 1.6; the rest stays (borderline ones in PLAN step 4).
+In the app: PR #16 (the new defaults, a preset sets the Eye model too) and PR #17 (`feature/dbs-weights`, the dots' own
+weights, reconciled with #16), both into `develop`. The research branch rebased on it, without those commits: no
+changes of its own outside `research/pairs` but the unused `tests/images/pairs` removed, so rebases do not conflict.
