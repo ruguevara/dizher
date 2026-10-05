@@ -128,6 +128,7 @@ def dbs_duo(luma, paper, ink, init, scale=1.4, alpha=2.0, structure=0.06, max_sw
 
     b = init.astype(bool)
     span = (ink - paper).astype(np.float32)
+    fixed = ~span.any(-1)   # paper and ink one colour: toggling changes nothing
     y = (paper + b[..., None] * span).astype(np.float32)
     e = y - luma
     struct = None
@@ -152,6 +153,7 @@ def dbs_duo(luma, paper, ink, init, scale=1.4, alpha=2.0, structure=0.06, max_sw
                 if struct is not None:
                     sdelta = structure * struct.delta(r, c, lattice, a[..., 0], y[..., 0], [(0, 0)] + NEIGHBOURS)
                     best += sdelta[0]
+                best[fixed[sl]] = 0   # no move: rounding in the SSIM delta would toggle them back and forth every sweep
                 rows, cols = np.arange(r, b.shape[0], lattice), np.arange(c, b.shape[1], lattice)
                 partner = np.zeros(best.shape, dtype=np.int8)  # 0: toggle, i + 1: swap with NEIGHBOURS[i]
                 for i, (dr, dc) in enumerate(NEIGHBOURS):
@@ -161,7 +163,7 @@ def dbs_duo(luma, paper, ink, init, scale=1.4, alpha=2.0, structure=0.06, max_sw
                     d = delta[sl] + np.roll(delta, *shift)[sl] + 2 * (a[sl] * am * cpp_near[1 + dr, 1 + dc]).sum(-1)
                     if struct is not None:
                         d += sdelta[i + 1]
-                    better = inside & (np.roll(b, *shift)[sl] != b[sl]) & (d < best)
+                    better = inside & ~fixed[sl] & ~np.roll(fixed, *shift)[sl] & (np.roll(b, *shift)[sl] != b[sl]) & (d < best)
                     best[better] = d[better]
                     partner[better] = i + 1
                 n = int((best < 0).sum())
