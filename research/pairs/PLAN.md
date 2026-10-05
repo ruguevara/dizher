@@ -25,11 +25,13 @@ pair per surface, off by default (PR #14); the selection energy's seam terms by 
 faster (PR #15). Merged here, not into `develop`: `feature/dbs-weights`, the dots have their own weights: chroma on
 Halftone, noise on Optimise (step 2).
 
-The next session (the user, 2026-10-04): a pairwise mode for one picture's knobs, below ("Step 3b").
+Step 3b, a pairwise mode (`duel.py`), the user, 2026-10-04: no use, skipped. The user: autumn's gallery best is good
+enough, and it counts for the criterion as it is (not blind against the competitors). Next: more galleries (step 3),
+then step 4 (the user: the data is too thin to fix knobs yet).
 
 Against the competitors (step 1, README 12; `rivals.py`, `rounds/rivals`): not worse anywhere. The criterion holds on
 two of the three necessary pictures: jojo with surface dE 20, rocket-rackoon with Exact mixture, each with its own
-style. autumn and diver-sunset: "both bad".
+style. autumn and diver-sunset: "both bad". The third: autumn by its gallery best (the user, 2026-10-04).
 
 The steps (the user, 2026-10-02): for a time there are more knobs, so that later there are fewer, each with a meaning.
 
@@ -93,7 +95,11 @@ Seams in the algorithm and adaptive binding come after, from the gallery results
   - 2026-10-04: when all directions are bad, the round is drawn again from the same centre, with new directions or
     wider (step ×1.5). The json keeps the shown grid with a mark;
   - Backspace: back;
-  - `--no-dbs`: Optimise off and its knobs removed (the user permitted it).
+  - `--no-dbs`: Optimise off and its knobs removed (the user permitted it);
+  - 2026-10-05, at the user's request: `--side N`, an N×N grid over the 4×4's span; the user's mode is 3×3 (steps of
+    0.3, not 0.2). The step shrinks when the pick is within a quarter of the reach from the centre, grows on the far
+    edge: on the 3×3 the centre shrinks it, the other 8 grow it (steady when the centre wins ~38% of rounds); the 4×4
+    as before.
 
   The centre of the grid is byte for byte the same as the project's render. Measured at a load of 60–160 (arc, VS
   Code ripgrep): one autumn render with DBS 118 s, without DBS 12 s; a round without DBS 55–108 s. On a quiet machine
@@ -110,22 +116,49 @@ Seams in the algorithm and adaptive binding come after, from the gallery results
   diver-sunset, down (to its floor 0) on rocket-rackoon and autumn; coherence from 2 to ~5 on anubis and diver-sunset,
   autumn stayed near 6; the preferred directions differ by picture. No two knobs change the render alike (mean cosine
   at most 0.48, luma noise against luma blur). Thin: each round spans 2 of 10 directions, ~10 rounds a picture. The
-  best on autumn and diver-sunset is not yet against the competitors.
+  best on autumn and diver-sunset is not yet against the competitors. The user (2026-10-04): autumn's gallery best
+  is good enough.
 
-## Step 3b: a pairwise search for one picture's knobs (the next session, the user's idea, 2026-10-04)
+## Step 3b: a pairwise search for one picture's knobs, skipped 2026-10-04
 
-- The user picks one render of a pair, interactively as in the gallery; the backend fits a Gaussian process to the
-  comparisons so far (preferential Bayesian optimisation: a GP with a probit likelihood on pairs, Chu and Ghahramani
-  2005; Brochu et al. 2007; González et al. 2017) and proposes the next pair in the knob space, refining around the
-  best.
-- Known: the knobs and ranges as in the gallery (`gallery.KNOBS`, `span`, `params`, the unit box); preferences differ
-  by picture, so a GP per picture; a render without DBS ~0.5 s on a quiet machine, so a pair in ~1 s; the galleries'
-  comparisons (`gallery.comparisons`, `rounds/gallery/*.json`) can seed a picture's GP.
-- Its result per picture goes where the gallery's would: autumn and diver-sunset against the competitors, the log to
-  step 4.
+`duel.py`: the user picks the better of two renders, a GP with a probit likelihood on the comparisons (the gallery's
+too) proposes the next pair. The user, after duels on autumn (13), jojo (23, then 44) and RC1 (12): no use. The script
+and `rounds/duel` stay as the record; the method and its checks in `LOG.md`.
 
 ## Step 4: fewer knobs from the gallery data
 
+- First the Metric method (2026-10-05): a switch, and each method sets its own preset, so not a gallery knob; anubis
+  and rocket-rackoon run Halftoned, the other four Exact mixture, and the two were never compared by the user.
+  `methods.py`: both at their presets, without DBS, one blind sheet per training picture. If one is never worse, the
+  galleries fix it (anubis and rocket-rackoon start again on it); if the pictures split, `--method` and a gallery per
+  method, the bests against each other blind.
+  The user (2026-10-05), one sheet each: Halftoned on RC1, anubis, diver-sunset; Exact mixture on autumn and
+  rocket-rackoon; jojo both bad. Split, so the method is a setting by the picture. The user: the gallery picks it.
+  A new gallery's first round mixes the methods: a grid around each one's start (the project's own method at its
+  settings, the other at its preset; 18 renders on the 3×3); the pick's method is the gallery's from then on, a
+  redraw mixes them again. The report leaves the mixed round out (it compares methods, not knobs). RC1, diver-sunset
+  and rocket-rackoon start again with it, their old galleries kept as NAME-method.json (and their renders) for their
+  method; anubis and autumn as they are.
+- Then more galleries (the user, 2026-10-04): without DBS, as the five so far, so that they pool; every training
+  picture (`tune.TRAIN`) to ~10 picks, 3×3 (the user): jojo new, RC1, diver-sunset and rocket-rackoon anew (the
+  method in the first round), anubis 3 -> 10; autumn is done (11). Then `gallery.py report` over all six.
+- Done 2026-10-05: a gallery per training picture, 11-14 picks, 3×3, the method by the first round (Exact mixture on
+  RC1, autumn, jojo, rocket-rackoon; Halftoned on anubis, diver-sunset). The user: more or less good.
+- New defaults per method (the user, 2026-10-05), `gallery.py defaults`: a knob moves to the median of its last picks
+  over the method's pictures when the move agrees with the net direction its galleries prefer (5-95% excluding 0);
+  else it stays (the picks drift). Robust over 4 bootstrap seeds: Exact mixture chroma noise 0.02 -> 0, eye luma blur
+  1.4 -> 0.9; Halftoned chroma noise 0.05 -> 0, eye chroma blur 1.4 -> 1.6. On some seeds only: Exact mixture
+  Halftone chroma 2 -> 1.8 (3 of 4), edge 0.1 -> 0.06 (2), Metric chroma 2 -> 1.8 (1); Halftoned flare 0.1 -> 0.12 (1).
+  All without DBS; Optimise's weights have no data. In the app (the user, 2026-10-05): the four robust ones, PR #16
+  into `develop` (1b0f386); a preset sets the Eye model too. On `develop` DBS reads Select pairs' noise, so DBS's
+  chroma noise is 0 too; `feature/dbs-weights`, when it goes in, needs its Optimise noise apart in the preset.
+- The data so far (README 13, 2026-10-04): no preference on any picture for Metric flare and Eye chroma blur; Select
+  edge only on anubis (3 picks), Eye luma blur only on autumn (lower; its effect the closest to luma noise's, cosine
+  -0.48); chroma noise down on all four; luma noise, coherence, Metric and Halftone chroma by the picture; surface dE
+  flat in the galleries, but by the picture in README 11-12. No merges: the preferences point different ways by
+  picture, no two knobs change the render alike. So far: 10 -> 6 knobs, flare, edge and the two eye blurs fixed (flare
+  and the eye model the viewer, as in step 2). The Optimise knobs have no data. Before the gate, a cheap check: each
+  gallery's best against it with the fixed knobs at their defaults, blind.
 - From the log:
   - fix the knobs that the user does not move, or whose move does not change the pick;
   - merge the knobs that move together into one (the main directions of the picked moves across pictures);

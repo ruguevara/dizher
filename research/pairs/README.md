@@ -65,7 +65,9 @@ over its cells grown by two cells (`common.window`).
     python research/pairs/dp.py vote [ROUND SHEETS]          # the user's blind vote in the browser
     python research/pairs/surface.py make|user R V...        # pairs per surface (section 11)
     python research/pairs/rivals.py make|judges|best|user|tally   # the competitor baseline (section 12)
-    python research/pairs/gallery.py NAME [--no-dbs] | best NAME | report   # PLAN step 3: the gallery (section 13)
+    python research/pairs/gallery.py NAME [--no-dbs] [--side N] | best NAME | report   # PLAN step 3: the gallery (section 13)
+    python research/pairs/duel.py NAME [--no-dbs] | best NAME | check      # PLAN step 3b: a pairwise search, a GP
+    python research/pairs/methods.py user | tally      # the Metric method by the user, before more galleries
 
 ## Results
 
