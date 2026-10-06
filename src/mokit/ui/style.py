@@ -48,6 +48,9 @@ METRICS = {
 COLORS = {
     "separator": (1, 1, 1, 0.18),
 }
+# The theme's colours at full alpha: windows, dialogs, combos and tooltips are not see-through. Several themes
+# (Darcula, Classic, ImGui Dark) make the window, popup and title backgrounds translucent.
+OPAQUE = ("window_bg", "popup_bg", "title_bg", "title_bg_active", "title_bg_collapsed", "menu_bar_bg")
 
 # Node editor (mokit.ui.nodes). NODES are imgui-node-editor style vars, NODE_COLORS its colours (names as in
 # `ed.StyleVar` / `ed.StyleColor`); LINKS the wires, PORTS and NODE_LAYOUT our own port disks and auto-placement. All lengths in em.
@@ -93,7 +96,7 @@ STATUS_DOT = {"radius": 0.22, "offset": (0.0, 0.0)}   # `widgets.status_dot`: di
 
 # layout constants, in em
 GAP = 0.6            # vertical gap between groups (`widgets.gap()`)
-FIELD_WIDTH = 10     # numeric inputs and combos
+FIELD_WIDTH = 16.5   # numeric inputs, sliders and combos: Dizher's pattern combo, an icon and its longest name
 DIALOG_WIDTH = 40    # text inputs in dialogs
 PROGRESS_WIDTH = 8   # status-bar progress bar
 
@@ -156,6 +159,9 @@ def sync() -> None:
         setattr(style, name, em_to_vec2(*value) if isinstance(value, tuple) else em_size(value))
     for name, rgba in COLORS.items():
         style.set_color_(getattr(imgui.Col_, name).value, imgui.ImVec4(*rgba))
+    for name in OPAQUE:
+        c = style.color_(getattr(imgui.Col_, name).value)
+        style.set_color_(getattr(imgui.Col_, name).value, imgui.ImVec4(c.x, c.y, c.z, 1))
 
 
 # ----- classes (local overrides) -------------------------------------------------------------------
