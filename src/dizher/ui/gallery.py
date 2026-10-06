@@ -24,6 +24,8 @@ PICKERS = {Ordered.label: ('matrix', MATRIX_GROUPS), ErrorDiffusion.label: ('ker
 EMPTY = {'Custom': 'Patterns drawn in the pattern editor, to come'}   # what an empty section says
 ZOOM = 2        # gallery image px per screen px on a 96 dpi display
 RAMP = 4        # icon width / height
+NAME_GAP = 0.1  # em between a gallery image and its name
+ROW_GAP = 0.8   # em added between gallery rows
 
 
 def halftoner(label: str, name: str, origin=(0, 0)):
@@ -255,16 +257,19 @@ class PatternPicker:
         for i, name in enumerate(names):
             if i % per_row:
                 imgui.same_line()
+            elif i:   # rows further apart than a name from its image, so the name reads as the one above it
+                imgui.set_cursor_pos_y(imgui.get_cursor_pos_y() + em_size(ROW_GAP))
             imgui.begin_group()
             image = self.thumbs.images.get(name)
             imgui.push_style_var(imgui.StyleVar_.frame_padding.value, imgui.ImVec2(0, 0))   # the image is the button, its name under its left edge
+            imgui.push_style_var(imgui.StyleVar_.item_spacing.value, imgui.ImVec2(gap.x, em_size(NAME_GAP)))   # the name close under it
             if image is not None and image.shape[:2] == tuple(shape):
                 shown.add(name)
                 if imgui.image_button(name, self.images.ref(name, image, zoom), size):
                     picked = name
             else:   # not halftoned yet: a button of the same size, so the grid does not jump
                 imgui.button(f'…##{name}', size)
-            imgui.pop_style_var()
+            imgui.pop_style_var(2)
             lo, hi = imgui.get_item_rect_min(), imgui.get_item_rect_max()
             if name == current:
                 imgui.get_window_draw_list().add_rect(lo, hi, style.u32(Palette.hovered), 0, 3)
