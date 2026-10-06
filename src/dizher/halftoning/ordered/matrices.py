@@ -3,7 +3,7 @@
 Bayer matrices are generated. The rest are copied from libdither (Copyright (C) 2022-2025 Robert Kist,
 BSD-style licence in halftoning/libdither-LICENSE.txt, https://github.com/robertkist/libdither,
 dither_ordered_data.h), in img2spec's menu order: dispersed
-dots, line screens (non-rectangular), clustered dots, magic squares.
+dots, line screens (non-rectangular), clustered dots, magic squares; GROUPS sorts them by look for the UI.
 """
 import numpy as np
 
@@ -281,3 +281,16 @@ MATRICES['Magic 8x8'] = (np.array([
     [ 8, 18, 34, 42, 32, 20,  6,  2],
     [ 5, 13, 25, 39, 24, 12,  3,  1]]), 65)
 MATRICES = {k: (np.asarray(m), d) for k, (m, d) in MATRICES.items()}
+
+GROUPS = {   # the dropdown's sections and the gallery's tabs, in order; Custom: patterns from the editor, to come
+    'Bayer': ('Bayer 2x2', 'Bayer 3x3', 'Bayer 4x4', 'Bayer 8x8', 'Bayer 16x16', 'Bayer 32x32', 'Dispersed dots 1',
+              'Dispersed dots 2', 'Void dispersed dots', 'Ulichney Bayer 5'),
+    'Dots': ('Magic circle 5x5', 'Magic circle 6x6', 'Magic circle 7x7', 'Magic 8x8', 'Clustered dot 11', 'Clustered dot 6'),
+    'Non-rect': ('Non-rectangular 1', 'Non-rectangular 2', 'Non-rectangular 3', 'Non-rectangular 4'),
+    'Rombs': ('Magic 45deg 4x4', 'Magic 45deg 6x6', 'Magic 45deg 8x8', 'Clustered dot 1', 'Clustered dot 4',
+              'Clustered dot 5', 'Diagonal', 'Ulichney clustered dot'),
+    'Squares': ('Magic 4x4', 'Magic 6x6', 'Ulichney', 'Clustered dot 7', 'Clustered dot 8', 'Central white point',
+                'Balanced centre point'),
+    'Lines': ('Clustered dot 2', 'Clustered dot 10', 'Clustered dot 3', 'Clustered dot 9'),
+    'Custom': (),
+}

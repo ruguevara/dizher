@@ -38,7 +38,7 @@ from .. import ops, tone, version
 from ..converter.converter import os_path
 from .app import Pipeline, project_folder
 from .levels import LevelsEditor
-from . import views
+from . import gallery, views
 
 HEADER_TINT = dict(running=Palette.warn, error=Palette.error)   # header background of a running or failed stage
 LABELS = {nid: label for nid, label, _, _ in ops.PIPELINE}
@@ -159,14 +159,23 @@ def as_ubyte(rgb: np.ndarray) -> np.ndarray:
 
 
 class HalftoneEditor:
-    """The halftoner combo plus only the params that method uses (Ditherer.controls), as a narrowed params view."""
+    """The halftoner combo plus only the params that method uses (Ditherer.controls), as a narrowed params view; a
+    matrix or kernel by the pattern picker (gallery.py)."""
+
+    def __init__(self, app) -> None:
+        self.picker = gallery.PatternPicker(app)
 
     def draw(self, params, picture, on_change, id: str) -> None:
-        names = ('halftoner',) + ops.HALFTONERS[params.halftoner].controls
+        picked = gallery.PICKERS.get(params.halftoner, (None,))[0]
+        names = ('halftoner',) + tuple(n for n in ops.HALFTONERS[params.halftoner].controls if n != picked)
         view = make_dataclass('halftone', [(f.name, f.type, field(default=f.default, metadata=f.metadata))
                                            for f in fields(params) if f.name in names], frozen=True)
         params_editor(view(**{n: getattr(params, n) for n in names}),
                       lambda v: on_change(replace(params, **asdict(v))), id=id, help='tooltip')
+        if picked:
+            imgui.push_id(id)
+            self.picker.draw(params, on_change)
+            imgui.pop_id()
 
 
 def palette_grid(palette, click, tip, marks={}, specials=()) -> None:
@@ -345,7 +354,7 @@ class Window:
             self._open_image(path)
         self.images = {}       # immvision params per preview
         self.expanded = {}     # node id -> block open; imgui keeps no header state in its ini
-        self.editors = {'levels': LevelsEditor(self._palette, palette_grid), 'halftoner': HalftoneEditor(), 'target': TargetEditor(),
+        self.editors = {'levels': LevelsEditor(self._palette, palette_grid), 'halftoner': HalftoneEditor(self.app), 'target': TargetEditor(),
                         'overpaint': OverpaintEditor(self.app)}   # node id -> custom params editor
         self.view, self.grid = 'Screen', False     # the conversion's view and the cell grid; not persisted
         self._debug = {}       # image key -> (the Converter it came from, the image)

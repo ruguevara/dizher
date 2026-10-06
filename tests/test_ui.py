@@ -7,7 +7,8 @@ from pathlib import Path
 from imgui_bundle import imgui
 
 from dizher import tone
-from dizher.converter.dither import Ordered
+from dizher.converter.dither import ErrorDiffusion, Ordered
+from dizher.halftoning.ordered.matrices import GROUPS as MATRIX_GROUPS
 from dizher.ui.levels import CROSS, pick_label
 from dizher.ui.window import REDO, UNDO, Window
 
@@ -575,6 +576,51 @@ def test_paint(ctx):
     ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x - 50, r.min.y - 50))
 
 
+def test_pattern_combo(ctx):
+    """The matrix combo in sections, an icon on every entry: a click picks it; Error diffusion's kernel likewise."""
+    ctx.set_ref('//Convert')
+    pick(ctx, 'halftoner/matrix', '##Bayer 4x4')
+    ctx.yield_(2)
+    assert params('halftoner').matrix == 'Bayer 4x4', params('halftoner')
+    ui.app.set_params('halftoner', replace(params('halftoner'), halftoner=ErrorDiffusion.label))
+    ctx.yield_(2)
+    pick(ctx, 'halftoner/kernel', '##Atkinson')
+    ctx.yield_(2)
+    assert params('halftoner').kernel == 'Atkinson', params('halftoner')
+    ui.app.set_params('halftoner', replace(type(params('halftoner'))(), halftoner=Ordered.label))
+
+
+def test_pattern_gallery(ctx):
+    """Gallery opens on the current matrix's section, fills in, a tab switches the section, a click picks and closes;
+    Escape closes it unchanged."""
+    from imgui_bundle.imgui.test_engine import CaptureFlags_
+    picker = ui.editors['halftoner'].picker
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('halftone') is not None, 'a halftone to show')
+    ctx.set_ref('//Convert')
+    ctx.item_click('halftoner/Gallery…')
+    ctx.yield_(2)
+    assert picker.visible and picker.tab == 'Bayer', picker.tab   # Void dispersed dots, the default
+    ctx.set_ref('//$FOCUSED')
+    ctx.item_click('**/Squares')
+    ctx.yield_(2)
+    assert picker.tab == 'Squares'
+    wait(ctx, lambda: not picker.thumbs.pending and set(MATRIX_GROUPS['Squares']) <= set(picker.thumbs.images),
+         'the section halftoned')
+    ctx.capture_set_filename('/tmp/dizher_gallery.png')
+    ctx.capture_screenshot(CaptureFlags_.hide_mouse_cursor.value)
+    ctx.item_click('**/Magic 4x4')
+    ctx.yield_(2)
+    assert params('halftoner').matrix == 'Magic 4x4' and not picker.visible, (params('halftoner'), picker.visible)
+    ctx.set_ref('//Convert')
+    ctx.item_click('halftoner/Gallery…')
+    ctx.yield_(2)
+    assert picker.visible and picker.tab == 'Squares'
+    ctx.key_press(imgui.Key.escape)
+    ctx.yield_(2)
+    assert not picker.visible and params('halftoner').matrix == 'Magic 4x4'
+    ui.app.set_params('halftoner', replace(type(params('halftoner'))(), halftoner=Ordered.label))
+
+
 def test_capture_layout(ctx):   # keep last: a picture of the default layout for review
     from imgui_bundle.imgui.test_engine import CaptureFlags_
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the conversion to settle')
@@ -609,6 +655,8 @@ TESTS = [
     ('ui', 'hover_inspector', test_hover_inspector),
     ('ui', 'cell_popup', test_cell_popup),
     ('ui', 'paint', test_paint),
+    ('ui', 'pattern_combo', test_pattern_combo),
+    ('ui', 'pattern_gallery', test_pattern_gallery),
     ('ui', 'capture_layout', test_capture_layout),
 ]
 
