@@ -48,7 +48,9 @@ METRICS = {
 COLORS = {
     "separator": (1, 1, 1, 0.18),
 }
-OPAQUE = ("popup_bg",)   # the theme's colour at full alpha: dialogs, combos and tooltips are not see-through
+# The theme's colours at full alpha: windows, dialogs, combos and tooltips are not see-through. Several themes
+# (Darcula, Classic, ImGui Dark) make the window, popup and title backgrounds translucent.
+OPAQUE = ("window_bg", "popup_bg", "title_bg", "title_bg_active", "title_bg_collapsed", "menu_bar_bg")
 
 # Node editor (mokit.ui.nodes). NODES are imgui-node-editor style vars, NODE_COLORS its colours (names as in
 # `ed.StyleVar` / `ed.StyleColor`); LINKS the wires, PORTS and NODE_LAYOUT our own port disks and auto-placement. All lengths in em.
