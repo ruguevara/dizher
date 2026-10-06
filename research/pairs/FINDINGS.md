@@ -113,11 +113,18 @@ bottom. How we found it: `LOG.md`.
   score lower than the artists'). (19)
 - Recovery of the artists' cells is a judge with an expert's ground truth and no user time, on art drawn to the grid;
   the pictures are not photographs. (19)
-- **A soft shared-colour term** (0.3 x coherence on a flat seam whose pairs share no colour) brings the converter's
-  share of such changes to the artists' (10% -> 5.5% at 3x the blur) with recovery up one point and the other border
-  statistics untouched; as a hard constraint it overshoots and loses recovery. (19)
-- **The artists' transition table as V** recovers 1-2 points more (in-sample) but doubles the change rate's excess and
-  the bright/dim switches over the artists': it frees cheap changes, it does not remove bad ones. (19)
+- **The count of recovered cells cannot judge a seam cost.** The target is the artist's own render through a mild
+  blur, so the unary term fits it best: the current selection at coherence 0 recovers the most (0.849 against 0.824),
+  and every weight of the seam score fewer, monotonically. The artists' pictures hold no clash for a seam cost to fix.
+  (19)
+- **The borders' statistics are the usable prior** (the artists' fingerprint: a change on 50% of borders, 9%
+  bright/dim-only, E = 0 on 22%, the changes' score 3.96). The current selection is nearest on all; coherence 0
+  doubles the bright/dim switches; the seam score at the user's weight 16 makes the borders smoother than the
+  artists' (its changes 3.4-3.6), at weight 1-4 it stays in range. (19)
+- By the user's measure, the changes the converter makes and the artist does not are the less visible ones (2.3
+  against the artist's own 1.8 at the eye's blur). (19)
+- A shared-colour binary on the attributes (dropped: not a visibility measure, its weight a sweep) and the artists'
+  transition table as V (in-sample; it frees cheap changes, doubling the bright/dim switches) are not the way. (19)
 
 ## Against the competitors
 

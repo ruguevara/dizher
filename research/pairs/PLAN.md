@@ -328,10 +328,17 @@ and `rounds/duel` stay as the record; the method and its checks in `LOG.md`.
      on the other 50) and with the bright/dim switch charged apart.
   3. The recovery's own blind spots: hue ramps the artists make and the score charges (B/M | M/Y), the one-colour cell
      next to its own colour (made 7-8x); whether the selection makes them at 3x.
-- Next: the shared-colour term at W 0.3 and 1 against the current selection, blind, on the six training pictures at
-  their gallery best with DBS (as `selection.py user`); then, if it holds, the term in `SelectionEnergy` on a
-  `feature/*` branch from `develop` (a pairwise cost from the pairs' palette indexes, its weight a fraction of
-  coherence), with tests (zero where a colour is shared, zero across an edge), a PR into `develop`.
+  4. **The seam score in the recovery test** (the user, 2026-10-06: the visibility measure from their votes, the
+     method agreed before anything is built), done (README 19): every weight recovers fewer cells, and the control,
+     coherence 0, the most. **The count of recovered cells judges the unary fit, not a seam cost**: the artist's own
+     render holds no clash. The borders' statistics are the prior: the current selection is nearest the artists' on
+     all; the score at 16 over-smooths against them, at 1-4 it stays in range. The shared-colour term (1) is dropped:
+     an attribute binary, not a measure, its weight a sweep.
+- What step 6 leaves: the artists' fingerprint (README 19) as a check on any selection, that its borders stay in
+  the artists' range (the change rate ~0.5, bright/dim-only ~0.09, E = 0 ~0.22, the changes' score ~4); the hint that
+  the score's weight on photographs may be nearer 1-4 than 16 (the held-out 1-1-3 at 16, README 18); and the border
+  masking artists do with the pixels (E = 0 five times chance), which E already prices. A seam cost is tested only on
+  photographs, by the user's blind vote (step 5's "Next"); the next method is agreed with the user first.
 - Caveats: the pictures are drawn to the grid, not photographs; a blur of 2-3x the eye is a stand-in for that. The
   recovery judges the selection against one expert's answer among the good ones (there is no correct colouring,
   `FINDINGS.md`), so a few points of recovery mean nothing, a shift of the shared-colour share does.

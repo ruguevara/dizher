@@ -890,4 +890,33 @@ so in-sample). Recovery +1.6 at 2x and +0.9 at 3x, but the borders drift from th
 before. Many adjacencies are free in the table (made more than expected), so it makes more cheap changes, not fewer
 bad ones; the dim/bright switch the user kept on david (18) is what it multiplies.
 
+**Step 6.3, the seam score in the recovery test** (the user, 2026-10-06: the measure fitted to their votes, not
+an attribute binary; `recover K 0 score[+][:N]`): the step 5d selection (`selection.table` at weight N x SCALE
+0.0048, the coherence term off, or kept with `score+`), and the control `coh:N`, the current selection at coherence
+N. `extra K`: the converter's own changes (the artist keeps the pair) by the score's terms.
+
+| selection | x1 recovered | x2 | x3 | x1 change rate | bright/dim only | E = 0 | score of changes | the converter alone (its score) | the artist alone |
+|---|---|---|---|---|---|---|---|---|---|
+| the current (coherence 2 or 6) | 0.824 | 0.735 | 0.632 | 0.471 | 0.070 | 0.19 | 3.85 | 0.036 (2.27) | 0.071 |
+| **coherence 0** (the control) | **0.849** | **0.753** | | 0.534 | 0.145 | 0.16 | 3.55 | 0.061 (1.16) | 0.033 |
+| score + coherence, weight 1 | 0.821 | 0.734 | | 0.465 | 0.063 | 0.19 | 3.83 | 0.034 (2.23) | 0.074 |
+| weight 4 | 0.806 | 0.723 | | 0.457 | 0.055 | 0.21 | 3.77 | 0.032 (2.16) | 0.081 |
+| weight 16 (the user's strength, 18) | 0.758 | 0.677 | 0.587 | 0.441 | 0.048 | 0.23 | 3.59 | 0.033 (1.93) | 0.097 |
+| the score alone, weight 16 | 0.747 | 0.659 | 0.569 | 0.467 | 0.063 | 0.25 | 3.41 | 0.043 (1.45) | 0.082 |
+| the artists | | | | 0.505 | 0.092 | 0.22 | 3.96 | | |
+
+Every weight of the score recovers fewer cells, monotonically (x1: 0.821, 0.806, 0.758 at 1, 4, 16; x2: 0.734,
+0.723, 0.677), and the score alone the fewest. **But the control recovers the most**: the current term at coherence
+0 gives 0.849 and 0.753. The target is the artist's own render through a mild blur, so the unary term alone fits it
+best, and **any pairwise cost loses cells: the count of recovered cells judges the unary fit, not a seam cost**. What
+the test can judge is the borders' statistics, the artists' fingerprint: coherence 0 overshoots on cheap changes
+(bright/dim-only switches 0.145 against 0.092, the change rate 0.534 against 0.505); the current is nearest on all of
+them; the score at 16 makes the borders smoother than the artists' (E = 0 on 0.23-0.25, its changes score 3.4-3.6
+against the artists' 3.96, the artist-alone changes up to 0.08-0.10), at weight 1-4 it stays within the artists'
+range. `extra`: the converter's own changes at x1 (3.6% of borders) score 2.27, the artist's own 1.81; at x3 (7.1%)
+2.11 against 2.64, 13% without a shared colour: by the user's measure the changes the converter makes and the artist
+does not are the less visible ones, and at 3x the artist's own changes are where the blur erased an edge: content,
+not seam handling. The artists' pictures have no clash for a seam cost to fix; the unary reproduces them. A seam cost
+is for photographs, and the recovery test cannot stand in for the user's votes there.
+
 Findings: `FINDINGS.md`; next steps: `PLAN.md`; the log: `LOG.md`.

@@ -271,3 +271,13 @@ no colour; at W 0.3 the changes without a shared colour fall to the artists' sha
 as V (in-sample): recovery +1.6 / +0.9, but the change rate 0.55 and bright/dim switches 0.17, twice the artists'; it
 frees cheap changes rather than removing bad ones. Next: the shared-colour term at 0.3 (and 1) by the user, blind,
 on the training pictures.
+Step 6.3 (the user: the method is agreed before anything is built; the visibility measure from their votes, not an
+attribute binary; README 19): the step 5d seam-score selection in the recovery test at weights 1, 4, 16, with and
+without the coherence term, and the control, coherence 0. Every weight recovers fewer cells, monotonically; coherence
+0 recovers the most (0.849 against 0.824 at x1). The count of recovered cells judges the unary fit on the artist's
+own render; it cannot judge a seam cost. The borders' statistics can: the current is nearest the artists' on all,
+coherence 0 doubles the bright/dim switches, the score at 16 makes the borders smoother than the artists' (its
+changes 3.4-3.6 against 3.96), at 1-4 it stays in range. `extra`: the converter's own changes are the less visible
+ones by the score (2.27 against the artist's own 1.81 at x1); at 3x the artist's own changes are the blur's lost
+edges. The shared-colour term (6.1) is dropped: an attribute binary, its weight a sweep. The valid test of a seam
+cost stays the user's blind vote on photographs.

@@ -9,7 +9,7 @@ the real border over it says how much the artist hides at the border itself.
     python research/pairs/zxart.py stats    the priors: the pairs used, the borders (same set, a shared colour, none)
                                             by lightness, the seam terms on the changed borders against the null,
                                             the bright/dim switches; the per-border table to data/zxart/seams.npz
-    python research/pairs/zxart.py recover [K [W [artists]]]   the recovery test: each screen through the user's eye (views.seen2
+    python research/pairs/zxart.py recover [K [W [artists|score|score+]]]   the recovery test: each screen through the user's eye (views.seen2
                                             at 1x; K times its sigmas, 1) as a new project's source, Select pairs at the defaults without DBS; per
                                             cell the shown set against the artist's, per border the change rate, the
                                             shared colour, E and the score, the converter against the artist on the
@@ -37,6 +37,7 @@ from multiprocessing import Pool
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import seamfit   # noqa: E402
 import seams   # noqa: E402
+import selection   # noqa: E402
 from acuity import EYE   # noqa: E402
 from common import DATA, Project   # noqa: E402
 from views import seen2   # noqa: E402
@@ -50,6 +51,7 @@ TOP = 100
 API = 'https://zxart.ee/api/export:zxPicture/filter:zxPictureType=standard/limit:100/start:{}/order:votes,desc'
 UA = {'User-Agent': 'dizher research (pair-selection priors)'}
 YBINS = (0, 0.25, 0.5, 0.75, 1.01)
+SCALE = 0.0048   # selection.py make: the coherence term's cost over the score's on the training pictures' pair changes
 
 
 def fetch():
@@ -231,7 +233,9 @@ def recover_job(job) -> dict:
     png = folder / f'{f.stem}.png'
     cv2.imwrite(str(png), cv2.cvtColor(seen2((X * 255).round().astype(np.uint8), *(s * K for s in EYE), k=1),
                                        cv2.COLOR_RGB2BGR))
-    p = Project(str(png), optimise={'enabled': False})
+    params = {'select': {'coherence': float(V[4:])}} if V.startswith('coh:') else {}
+    p = Project(str(png), optimise={'enabled': False}, **params)
+    V = '' if V.startswith('coh:') else V
     labels = p.selection.best_attr_indexes if not (W or V) else select_shared(p, W, V)
     idx2 = p.pairs[labels]
     X2 = p.convert() if not (W or V) else p.render(labels)
@@ -261,10 +265,11 @@ def artists_V(pairs: np.ndarray) -> np.ndarray:
     return V.astype(np.float32)
 
 
-def select_shared(p: Project, W: float, V: bool = False) -> np.ndarray:
+def select_shared(p: Project, W: float, V='') -> np.ndarray:
     """Select pairs' DP at the project's settings (as selection.select) plus the shared-colour term: W x coherence
-    on each flat seam whose two pairs share no colour (black's two indexes one), times the seam's smoothness; V: the
-    artists' table in place of the pairs' attribute distance."""
+    on each flat seam whose two pairs share no colour (black's two indexes one), times the seam's smoothness; V
+    'artists': the artists' table in place of the pairs' attribute distance; 'score' / 'score+': the seam score's
+    table at selection.WEIGHT x SCALE, the coherence term off / kept."""
     c = p.selection
     e, w = c.energy, c.energy.weights
     D = e.unary()
@@ -276,18 +281,24 @@ def select_shared(p: Project, W: float, V: bool = False) -> np.ndarray:
     cost = (W * c.coherence * ~(col[:, None, :, None] == col[None, :, None, :]).any((2, 3))).astype(np.float32)
     S[(1, 0)] = S[(1, 0)] + Lh[..., None, None] * cost
     S[(0, 1)] = S[(0, 1)] + Lv[..., None, None] * cost
-    return optimise(D, S, artists_V(p.pairs) if V else c.pair_dissimilarity, Lh, Lv, c.coherence)
+    if V.startswith('score'):
+        mode, _, weight = V.partition(':')
+        cells = selection.per_cell(c)
+        for off in ((0, 1), (1, 0)):
+            S[off] = S[off] + (float(weight) if weight else selection.WEIGHT) * SCALE * selection.table(c, cells, off)
+        return optimise(D, S, c.pair_dissimilarity, Lh, Lv, c.coherence if mode == 'score+' else 0.0)
+    return optimise(D, S, artists_V(p.pairs) if V == 'artists' else c.pair_dissimilarity, Lh, Lv, c.coherence)
 
 
 def recover():
     K = float(sys.argv[2]) if len(sys.argv) > 2 else 1.0
     W = float(sys.argv[3]) if len(sys.argv) > 3 else 0.0
-    V = len(sys.argv) > 4 and sys.argv[4] == 'artists'
-    folder = OUT / ('recover' + (f'-x{K:g}' if K != 1 else '') + (f'-shared{W:g}' if W else '') + ('-artists' if V else ''))
+    V = sys.argv[4] if len(sys.argv) > 4 else ''
+    folder = OUT / ('recover' + (f'-x{K:g}' if K != 1 else '') + (f'-shared{W:g}' if W else '') + (f'-{V}' if V else ''))
     folder.mkdir(parents=True, exist_ok=True)
     with Pool(8) as pool:
         res = pool.map(recover_job, [(f, K, W, V, folder) for f in sorted(OUT.glob('*.scr'))])
-    print(f'blur x{K:g}' + (f', shared-colour term {W:g} x coherence' if W else '') + (", the artists' V" if V else ''))
+    print(f'blur x{K:g}' + (f', shared-colour term {W:g} x coherence' if W else '') + (f', {V}' if V else ''))
     cells = np.concatenate([r['cells'] for r in res], 1)
     T = {who: {k: np.concatenate([r[who][k] for r in res]) for k in res[0][who]} for who in ('artist', 'converter')}
     print(f"{len(res)} screens; cells with the artist's shown set {np.mean(cells[0] == cells[1]):.3f}")
@@ -312,6 +323,33 @@ def recover():
               f"{sc[b & c['changed']].mean():.2f}")
 
 
+def extra():
+    """At K times the blur: the converter's own changes (the artist keeps the pair), the artist's own (the converter
+    keeps), and the changes both make, by the seam score and its terms, and the share without a shared colour."""
+    K = float(sys.argv[2])
+    folder = OUT / ('recover' if K == 1 else f'recover-x{K:g}')
+    zs = [np.load(f) for f in sorted(folder.glob('*.npz'))]
+    t = {who: {k: np.concatenate([z[f'{who}_{k}'] for z in zs]) for k in ('changed', 'shared', 'E', 'M', 'S', 'Y')}
+         for who in ('artist', 'converter')}
+    a, c = t['artist'], t['converter']
+    print(f'blur x{K:g}: the changes, their share of borders, the seam score and its terms (E, M, S, Y), '
+          f'without a shared colour')
+    for label, who, sel in (("the converter's own", c, c['changed'] & ~a['changed']),
+                            ("both", c, c['changed'] & a['changed']),
+                            ("the artist's own", a, a['changed'] & ~c['changed']),
+                            ("the artist's, all", a, a['changed'])):
+        sc = score(who)
+        print(f"  {label:20} {sel.mean():.3f}  score {sc[sel].mean():.2f}  E {who['E'][sel].mean():5.1f}  "
+              f"M {who['M'][sel].mean():5.1f}  S {who['S'][sel].mean():.2f}  Y {who['Y'][sel].mean():.2f}  "
+              f"no shared {(~who['shared'][sel]).mean():.3f}")
+    for lo, hi in zip(YBINS, YBINS[1:]):
+        b = (a['Y'] >= lo) & (a['Y'] < hi)
+        own, art = b & c['changed'] & ~a['changed'], b & a['changed'] & ~c['changed']
+        print(f"  Y {lo:.2f}-{min(hi, 1):.2f}: the converter's own {own.sum() / b.sum():.3f} score "
+              f"{score(c)[own].mean():.2f} no shared {(~c['shared'][own]).mean():.2f}; the artist's own "
+              f"{art.sum() / b.sum():.3f} score {score(a)[art].mean():.2f}")
+
+
 def check():
     """decode inverts to_scr; shown merges the blacks and drops a colour with no pixel."""
     rng = np.random.default_rng(0)
@@ -327,4 +365,4 @@ def check():
 
 
 if __name__ == '__main__':
-    {'fetch': fetch, 'stats': stats, 'recover': recover, 'check': check}[sys.argv[1]]()
+    {'fetch': fetch, 'stats': stats, 'recover': recover, 'extra': extra, 'check': check}[sys.argv[1]]()
