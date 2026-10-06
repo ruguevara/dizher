@@ -188,7 +188,7 @@ class PatternPicker:
             imgui.open_popup('gallery')
             self._open = False
             viewport = imgui.get_main_viewport()
-            imgui.set_next_window_size(imgui.ImVec2(viewport.work_size.x * 0.9, viewport.work_size.y * 0.9))
+            imgui.set_next_window_size(imgui.ImVec2(self._width(viewport.work_size.x * 0.9), viewport.work_size.y * 0.9))
             imgui.set_next_window_pos(viewport.get_center(), imgui.Cond_.always.value, imgui.ImVec2(0.5, 0.5))
         self.visible = imgui.begin_popup_modal(f'{label} gallery###gallery', True,
                                                imgui.WindowFlags_.no_saved_settings.value)[0]
@@ -214,7 +214,8 @@ class PatternPicker:
         names = groups[self.tab]
         origin = (params.noise_y, params.noise_x)
         footer = imgui.get_frame_height_with_spacing()
-        imgui.begin_child('images', imgui.ImVec2(0, -footer))
+        # the scrollbar always there: the images per row do not change as a tab's rows outgrow the height
+        imgui.begin_child('images', imgui.ImVec2(0, -footer), 0, imgui.WindowFlags_.always_vertical_scrollbar.value)
         if conv is None:
             widgets.hint('The gallery shows once the conversion has run through Halftone')
         elif not names:
@@ -233,13 +234,27 @@ class PatternPicker:
             imgui.text_disabled('Halftoning…')
         imgui.end_popup()
 
-    def _grid(self, names, current, shape):
-        """The images in rows as many as fit, each with its name under it; the name clicked, else None."""
+    @staticmethod
+    def _cell(shape):
+        """(zoom, image size, image button width) of an image of shape (rows, columns)."""
         zoom = max(1, round(ZOOM * hello_imgui.dpi_window_size_factor()))   # whole screen px per image px
         size = imgui.ImVec2(shape[1] * zoom, shape[0] * zoom)
+        return zoom, size, size.x + 2 * imgui.get_style().frame_padding.x
+
+    def _width(self, most: float) -> float:
+        """The modal's width at most `most`: as many whole images per row as fit, the window around them, no gap."""
+        conv = self.app.shown('halftone')
+        _, _, cell = self._cell((192, 256) if conv is None else conv.dithered_result.shape[:2])
         style_ = imgui.get_style()
-        pad, gap = style_.frame_padding, style_.item_spacing
-        cell = size.x + 2 * pad.x
+        frame = 2 * (style_.window_padding.x + style_.popup_border_size) + style_.scrollbar_size
+        gap = style_.item_spacing.x
+        per_row = max(1, int((most - frame + gap) // (cell + gap)))
+        return frame + per_row * cell + (per_row - 1) * gap + 1   # 1 px: no row lost to rounding
+
+    def _grid(self, names, current, shape):
+        """The images in rows as many as fit, each with its name under it; the name clicked, else None."""
+        zoom, size, cell = self._cell(shape)
+        pad, gap = imgui.get_style().frame_padding, imgui.get_style().item_spacing
         per_row = max(1, int((imgui.get_content_region_avail().x + gap.x) // (cell + gap.x)))
         picked, shown = None, set()
         for i, name in enumerate(names):
