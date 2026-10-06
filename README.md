@@ -9,8 +9,10 @@ Turn on, tune in, drop out.
 
 * ZX Spectrum
   * Standard mode: 256x192, 15 colours, two colours per 8x8 character block. No flash attribute.
+    Saves a screen file (`.scr`) or PNG.
 * Commodore 64
-  * Hires mode: 320x200, 16 colours, two colours per 8x8 character block. PNG output only for now.
+  * Hires mode: 320x200, 16 colours, two colours per 8x8 character block. Saves an Art Studio hires
+    file (`.art`) or PNG.
 
 ## Installation
 
@@ -60,7 +62,8 @@ on most machines, and the UI tests on Linux under Xvfb.
 ## How it works
 
 Dizher turns a full-colour picture into a ZX Spectrum screen: 256x192 pixels where every 8x8
-block may use only two colours out of the 15-colour palette. The conversion is one optimisation
+block may use only two colours out of the 15-colour palette. The C64 hires mode works the same way at
+320x200 with 16 colours. The conversion is one optimisation
 problem in two stages, colour selection and halftoning, both judged by the same model of the eye.
 
 ### Pipeline
@@ -107,6 +110,8 @@ The GUI block that owns each control is in brackets.
    │  is rolled by [Halftoner: noise x, y]                                                          │
    │  [Halftone: chroma] the dots' chroma weight, DBS's too, in place of Metric's: it places the    │
    │  target on the pair's mixtures; a method's preset sets both alike                              │
+   │  [Halftone: dithering] the share of each pair's lightness range left as dots, the rest solid;  │
+   │  [Halftone: checker] a 50% checkerboard as a third level between paper and ink                 │
    └──────────────────────────────────────────┬─────────────────────────────────────────────────────┘
                                               │ bitmap
                                               ▼
@@ -128,7 +133,7 @@ The GUI block that owns each control is in brackets.
    └──────────────────────────────────────────┬─────────────────────────────────────────────────────┘
                                               │ bitmap + attributes
                                               ▼
-                                  screen file (.scr) or PNG
+                    native file (.scr on the Spectrum, .art on the C64) or PNG
 ```
 
 The views in the Preview tab show what each stage sees: Projected is the stage 2 target,
@@ -235,6 +240,14 @@ matches the blurred image. All halftoners take the same colour-aware inputs:
 The Halftoner block shows only the controls of the chosen method, and the same method paints the
 pair candidates of the live preview while colours are being selected.
 
+Two Halftone controls change the target itself, so every halftoner and DBS follow them. Dithering
+(1 by default) is the share of the lightness range between a block's paper and ink that is mixed
+with dots; the rest goes solid, and 0 sets each pixel to the colour nearer in lightness. Checker adds
+the half-and-half mix of paper and ink as a level of its own, drawn as a checkerboard with each
+block's brighter colour on the same parity over the whole screen, so neighbouring checkers line up;
+the two halves of the range on either side of it are dithered as pairs of their own. DBS leaves the
+checker's pixels as they are, and skips blocks whose paper and ink are the same colour.
+
 The Optimise stage, on by default, then runs Direct Binary Search (DBS) from that halftone: it
 repeatedly visits every pixel and either flips it or swaps it with one of its 8 neighbours,
 whichever lowers the eye-model error most, until no move helps. A swap moves a dot without
@@ -274,7 +287,7 @@ Done:
 * [x] Palette subsets: bright only, non-bright only, grayscale, black and white, or a custom set
   with any colour toggled on or off
 * [x] Python installation package
-* [x] Save as SCR and PNG
+* [x] Save as SCR (ZX Spectrum), Art Studio hires (C64) and PNG
 * [x] Projects: a folder with a `project.json` (every stage's params and the image path relative
   to the folder, in mokit's format, as in AmaZX); exports go to its `build/` by default, and the
   last session, unsaved edits included, comes back on start. Every image has its own project,
@@ -285,7 +298,8 @@ Done:
 * [x] Undo/Redo (Edit menu, Cmd+Z / Shift+Cmd+Z): a slider drag is one step, and opening an image
   starts the history over. The History panel lists every step, newest on top, named after the
   params it changed; a click goes back or forward to it.
-* [x] Overpaint: attributes and brightness painted by hand
+* [x] Overpaint: attributes and brightness painted by hand; Fix keeps the whole field as shown, so it
+  no longer follows Select pairs; Hide shows the conversion without the painted cells
 * [x] Standalone binary packages with PyInstaller for macOS, Windows and Linux
 
 ### Alpha
