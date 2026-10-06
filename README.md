@@ -276,7 +276,15 @@ Done:
   structure-aware (SSIM) term
 * [x] Colour selection as one eye-model energy with a coherence prior
 * [x] Adjustable metric weights (luma, chroma, coherence) and eye-model parameters
+* [x] Pair selection methods: Exact mixture (new projects) and Halftoned (0.2.4's scoring); picking
+  one sets the values it was tuned with, the Eye model's included, as one undo step;
+  `tests/pair_bench.py` scores them against hand-painted references
+* [x] Surface dE in Select pairs: the blocks of a smooth surface take one pair (off by default)
 * [x] Selectable dithering methods
+* [x] Halftone's Dithering (the share of each pair's lightness range left as dots, the rest solid)
+  and Checker (a 50% checkerboard of paper and ink as a third level)
+* [x] The dots' own weights: Halftone's chroma and Optimise's luma and chroma noise, tuned without
+  moving the pairs
 * [x] Tune stages: framing (fill or fit, scale, rotation, pixel shift and per-edge nudges onto
   the cell grid), exposure and white balance (temperature, tint), Photoshop-style Levels with
   Auto and a histogram, local tone (local contrast, shadows, highlights and clarity on an
@@ -290,17 +298,23 @@ Done:
 * [x] Save as SCR (ZX Spectrum), Art Studio hires (C64) and PNG
 * [x] Projects: a folder with a `project.json` (every stage's params and the image path relative
   to the folder, in mokit's format, as in AmaZX); exports go to its `build/` by default, and the
-  last session, unsaved edits included, comes back on start. Every image has its own project,
+  last session's unsaved edits come back on start, while a project changed on disk opens as it is.
+  Every image has its own project,
   the Lightroom way: File → Open image opens the project folder next to the image, named after
   it, or starts a new one there. Autosave (File menu, on by default) writes the project after
   every edit; with autosave off, opening another image over unsaved edits asks to save them.
-  File → Open recent lists the last 20 images.
+  File → Open recent lists the last 20 images. The source image is watched: saved over in an
+  editor, it is converted again.
 * [x] Undo/Redo (Edit menu, Cmd+Z / Shift+Cmd+Z): a slider drag is one step, and opening an image
   starts the history over. The History panel lists every step, newest on top, named after the
   params it changed; a click goes back or forward to it.
 * [x] Overpaint: attributes and brightness painted by hand; Fix keeps the whole field as shown, so it
-  no longer follows Select pairs; Hide shows the conversion without the painted cells
+  no longer follows Select pairs; Hide shows the conversion without the painted cells. On the
+  Spectrum ink and paper share a brightness, and the B1 and B0 brushes make a cell bright or not
 * [x] Standalone binary packages with PyInstaller for macOS, Windows and Linux
+* [x] Versioning, and Help → About with the version, links and greetings
+* [x] CI: the tests on Windows, macOS and Linux and the UI tests on every push; builds of
+  `develop`, of release PRs and of `v*` tags, a tag on `main` published as a release
 
 ### Alpha
 
