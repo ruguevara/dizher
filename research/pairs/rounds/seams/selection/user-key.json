@@ -1,0 +1,32 @@
+{
+ "u01": {
+  "id": "diver-sunset",
+  "variant": "seam score",
+  "x": 1
+ },
+ "u02": {
+  "id": "autumn",
+  "variant": "seam score",
+  "x": 1
+ },
+ "u03": {
+  "id": "rocket-rackoon",
+  "variant": "seam score",
+  "x": 2
+ },
+ "u04": {
+  "id": "jojo",
+  "variant": "seam score",
+  "x": 2
+ },
+ "u05": {
+  "id": "RC1",
+  "variant": "seam score",
+  "x": 2
+ },
+ "u06": {
+  "id": "anubis",
+  "variant": "seam score",
+  "x": 2
+ }
+}

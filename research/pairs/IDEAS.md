@@ -5,6 +5,10 @@ tested, the result is in `LOG.md` and `FINDINGS.md`. The cost is the user's time
 
 ## next
 
+- **Seams by the pixels** (the user, 2026-10-06), in progress: a seam score from the user's painted seams, rated
+  patches and a sorting replaces the coherence term in a prototype; better on 5 of 6 training pictures, 1-1 held out
+  (README 14-18). Next, before the app (`PLAN.md`, step 5 "Next"): a brightness switch as a tone (david), a fair
+  held-out test (the current presets), the dark end, the strength by picture. It took over the parked seam terms.
 - **Fewer settings, but each with a meaning** (the user, 2026-10-02). There are too many settings now, and it is hard
   to find a good combination for a picture. The path goes through more knobs for a time:
   - the dithering gets its own weights. Chroma and the noise weights were shared by the selection and the dots; now
@@ -47,7 +51,7 @@ tested, the result is in `LOG.md` and `FINDINGS.md`. The cost is the user's time
 
 ## parked
 
-- **New decomposable energy terms** (from session C, step 4): the colour step at a seam (the judges hold on to
+- **New decomposable energy terms** (taken over by the seam score, step 5) (from session C, step 4): the colour step at a seam (the judges hold on to
   `seam_ab_1`; the DP already has the pair terms `S`); a `V` that knows the bright and dim variants (a change k/b↔K/B
   costs 0.06 against a median of 0.52). Take them if the competitor baseline shows a loss at the seams. README 12
   shows no losses, but the user explains "both bad" on autumn and diver-sunset by the seams (see next).

@@ -1,0 +1,52 @@
+{
+ "u01": {
+  "id": "golden-axe",
+  "variant": "seam score",
+  "x": 1
+ },
+ "u02": {
+  "id": "burning-hand",
+  "variant": "seam score",
+  "x": 1
+ },
+ "u03": {
+  "id": "david",
+  "variant": "seam score",
+  "x": 1
+ },
+ "u04": {
+  "id": "andy",
+  "variant": "seam score",
+  "x": 2
+ },
+ "u05": {
+  "id": "sunset",
+  "variant": "seam score",
+  "x": 2
+ },
+ "u06": {
+  "id": "golden-axe",
+  "variant": "seam score",
+  "x": 2
+ },
+ "u07": {
+  "id": "david",
+  "variant": "seam score",
+  "x": 2
+ },
+ "u08": {
+  "id": "sunset",
+  "variant": "seam score",
+  "x": 1
+ },
+ "u09": {
+  "id": "andy",
+  "variant": "seam score",
+  "x": 1
+ },
+ "u10": {
+  "id": "burning-hand",
+  "variant": "seam score",
+  "x": 2
+ }
+}

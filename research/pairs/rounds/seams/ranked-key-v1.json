@@ -1,0 +1,2051 @@
+{
+ "15": [
+  {
+   "left": "kb",
+   "right": "KB",
+   "level": 0.4330034778806471,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1826701615,
+   "origin": [
+    40,
+    32
+   ],
+   "id": "L15-00",
+   "score": 0.36163976542779297,
+   "dL": 2.3658260282683865,
+   "dab": 3.352363947952951
+  }
+ ],
+ "26": [
+  {
+   "left": "KB",
+   "right": "km",
+   "level": 0.6574106055032076,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1566581935,
+   "origin": [
+    40,
+    34
+   ],
+   "id": "L26-00",
+   "score": 2.7207495389187133,
+   "dL": 6.508018178901384,
+   "dab": 40.432227569449545
+  },
+  {
+   "left": "KR",
+   "right": "KM",
+   "level": 0.22325985756035552,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1818006483,
+   "origin": [
+    11,
+    5
+   ],
+   "id": "L26-01",
+   "score": 2.7982105336119565,
+   "dL": 1.0335283989090598,
+   "dab": 49.208185676188634
+  },
+  {
+   "left": "kr",
+   "right": "km",
+   "level": 0.3657026536229657,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 579362556,
+   "origin": [
+    19,
+    2
+   ],
+   "id": "L26-02",
+   "score": 3.0174047103923716,
+   "dL": 1.9414084543834622,
+   "dab": 51.948820624607656
+  },
+  {
+   "left": "KB",
+   "right": "KM",
+   "level": 0.6574106055032076,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1081530687,
+   "origin": [
+    38,
+    62
+   ],
+   "id": "L26-03",
+   "score": 3.1661432752509033,
+   "dL": 12.257589311111603,
+   "dab": 40.740558256294555
+  },
+  {
+   "left": "KB",
+   "right": "KM",
+   "level": 0.6574106055032076,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 72124473,
+   "origin": [
+    48,
+    46
+   ],
+   "id": "L26-04",
+   "score": 3.2745666594530083,
+   "dL": 13.716826133862986,
+   "dab": 40.73531848969649
+  },
+  {
+   "left": "KB",
+   "right": "KM",
+   "level": 0.6574106055032076,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1752032166,
+   "origin": [
+    42,
+    0
+   ],
+   "id": "L26-05",
+   "score": 3.305336623856706,
+   "dL": 13.424978769312709,
+   "dab": 41.684913300956765
+  },
+  {
+   "left": "KB",
+   "right": "KR",
+   "level": 0.6574106055032076,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1746484540,
+   "origin": [
+    41,
+    58
+   ],
+   "id": "L26-06",
+   "score": 5.881134014840175,
+   "dL": 8.066884576957706,
+   "dab": 95.48193695943625
+  },
+  {
+   "left": "KB",
+   "right": "KR",
+   "level": 0.6574106055032076,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 846428920,
+   "origin": [
+    54,
+    35
+   ],
+   "id": "L26-07",
+   "score": 6.173261736048081,
+   "dL": 9.157004114384426,
+   "dab": 99.29593000951974
+  },
+  {
+   "left": "KB",
+   "right": "kr",
+   "level": 0.6574106055032076,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 161576974,
+   "origin": [
+    1,
+    11
+   ],
+   "id": "L26-08",
+   "score": 6.23831366872855,
+   "dL": 5.975065641227015,
+   "dab": 104.75897429398078
+  },
+  {
+   "left": "KB",
+   "right": "KR",
+   "level": 0.6574106055032076,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1202413558,
+   "origin": [
+    59,
+    17
+   ],
+   "id": "L26-09",
+   "score": 6.361042571098068,
+   "dL": 9.811075836840455,
+   "dab": 101.8104416139865
+  }
+ ],
+ "37": [
+  {
+   "left": "kc",
+   "right": "kw",
+   "level": 0.19841554718679327,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 495300372,
+   "origin": [
+    49,
+    3
+   ],
+   "id": "L37-00",
+   "score": 0.8607365631083223,
+   "dL": 1.2560087593995728,
+   "dab": 13.872765109096818
+  },
+  {
+   "left": "br",
+   "right": "bm",
+   "level": 0.5985213807327707,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 823941273,
+   "origin": [
+    29,
+    63
+   ],
+   "id": "L37-01",
+   "score": 1.5164902546317294,
+   "dL": 2.692921404467383,
+   "dab": 23.795074321860927
+  },
+  {
+   "left": "ky",
+   "right": "kw",
+   "level": 0.16839017229454734,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 2023172499,
+   "origin": [
+    3,
+    23
+   ],
+   "id": "L37-02",
+   "score": 1.6488572074687002,
+   "dL": 0.4299032039652498,
+   "dab": 29.23742167763633
+  },
+  {
+   "left": "br",
+   "right": "KM",
+   "level": 0.5985213807327707,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 641445060,
+   "origin": [
+    57,
+    43
+   ],
+   "id": "L37-03",
+   "score": 1.9081446376057674,
+   "dL": 21.51302510029912,
+   "dab": 5.5230428143486945
+  },
+  {
+   "left": "br",
+   "right": "KM",
+   "level": 0.5985213807327707,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 875079009,
+   "origin": [
+    31,
+    26
+   ],
+   "id": "L37-04",
+   "score": 2.0940059302387866,
+   "dL": 22.05173461214993,
+   "dab": 8.158258619052743
+  },
+  {
+   "left": "br",
+   "right": "KM",
+   "level": 0.5985213807327707,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1472190201,
+   "origin": [
+    60,
+    41
+   ],
+   "id": "L37-05",
+   "score": 2.210578287497232,
+   "dL": 21.74390060537804,
+   "dab": 10.680970929413535
+  },
+  {
+   "left": "br",
+   "right": "KM",
+   "level": 0.5985213807327707,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 2049967475,
+   "origin": [
+    12,
+    31
+   ],
+   "id": "L37-06",
+   "score": 2.41797118280126,
+   "dL": 21.897817608763983,
+   "dab": 14.223937991832615
+  },
+  {
+   "left": "BR",
+   "right": "br",
+   "level": 0.16509396341749047,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 322722697,
+   "origin": [
+    55,
+    28
+   ],
+   "id": "L37-07",
+   "score": 2.6844913252942675,
+   "dL": 8.351579824034104,
+   "dab": 37.29292275594443
+  },
+  {
+   "left": "BR",
+   "right": "br",
+   "level": 0.16509396341749047,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 107014968,
+   "origin": [
+    27,
+    60
+   ],
+   "id": "L37-08",
+   "score": 2.9842078058367103,
+   "dL": 8.682273641217165,
+   "dab": 42.26724086014523
+  },
+  {
+   "left": "br",
+   "right": "kr",
+   "level": 0.5985213807327707,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 552547096,
+   "origin": [
+    39,
+    48
+   ],
+   "id": "L37-09",
+   "score": 3.9382541591048095,
+   "dL": 9.105890819551044,
+   "dab": 58.94873947646034
+  },
+  {
+   "left": "kr",
+   "right": "km",
+   "level": 0.7348654837953011,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1853662621,
+   "origin": [
+    1,
+    34
+   ],
+   "id": "L37-10",
+   "score": 4.126349344424223,
+   "dL": 4.008069067114245,
+   "dab": 69.21786978163131
+  },
+  {
+   "left": "br",
+   "right": "KR",
+   "level": 0.5985213807327707,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1728701087,
+   "origin": [
+    62,
+    24
+   ],
+   "id": "L37-11",
+   "score": 4.373995337992218,
+   "dL": 17.135495821071814,
+   "dab": 56.01086617219472
+  },
+  {
+   "left": "br",
+   "right": "KR",
+   "level": 0.5985213807327707,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1338252685,
+   "origin": [
+    37,
+    57
+   ],
+   "id": "L37-12",
+   "score": 4.661222852255503,
+   "dL": 17.88940561486134,
+   "dab": 60.18918867899337
+  },
+  {
+   "left": "br",
+   "right": "KR",
+   "level": 0.5985213807327707,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 987939414,
+   "origin": [
+    53,
+    48
+   ],
+   "id": "L37-13",
+   "score": 4.939799300856256,
+   "dL": 18.341751491135053,
+   "dab": 64.6173384225442
+  },
+  {
+   "left": "km",
+   "right": "kg",
+   "level": 0.5485688267376441,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 835202398,
+   "origin": [
+    56,
+    8
+   ],
+   "id": "L37-14",
+   "score": 5.709335842671705,
+   "dL": 8.721950642342883,
+   "dab": 91.4927761268926
+  },
+  {
+   "left": "BR",
+   "right": "KR",
+   "level": 0.16509396341749047,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 773786671,
+   "origin": [
+    9,
+    33
+   ],
+   "id": "L37-15",
+   "score": 7.8715052614014684,
+   "dL": 24.8999105560048,
+   "dab": 108.79677983687361
+  }
+ ],
+ "48": [
+  {
+   "left": "bg",
+   "right": "bc",
+   "level": 0.3155450383937233,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1954121990,
+   "origin": [
+    60,
+    2
+   ],
+   "id": "L48-00",
+   "score": 0.5993326002734839,
+   "dL": 0.7764505835622707,
+   "dab": 9.79180889327477
+  },
+  {
+   "left": "bg",
+   "right": "by",
+   "level": 0.3155450383937233,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 17257122,
+   "origin": [
+    19,
+    62
+   ],
+   "id": "L48-01",
+   "score": 1.1106434590862355,
+   "dL": 2.409192622806298,
+   "dab": 16.838311187833025
+  },
+  {
+   "left": "bg",
+   "right": "bw",
+   "level": 0.3155450383937233,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 892030427,
+   "origin": [
+    55,
+    53
+   ],
+   "id": "L48-02",
+   "score": 1.5766796436274289,
+   "dL": 2.925828849032214,
+   "dab": 24.569717800624392
+  },
+  {
+   "left": "BR",
+   "right": "BM",
+   "level": 0.6819413473847847,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 873913747,
+   "origin": [
+    11,
+    0
+   ],
+   "id": "L48-03",
+   "score": 2.1106177108560016,
+   "dL": 3.764996310311575,
+   "dab": 33.094493412979915
+  },
+  {
+   "left": "BR",
+   "right": "BM",
+   "level": 0.6819413473847847,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 677186467,
+   "origin": [
+    11,
+    43
+   ],
+   "id": "L48-04",
+   "score": 2.4036474842566142,
+   "dL": 3.617349396181709,
+   "dab": 38.59231381991098
+  },
+  {
+   "left": "BR",
+   "right": "BM",
+   "level": 0.6819413473847847,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 910761742,
+   "origin": [
+    19,
+    62
+   ],
+   "id": "L48-05",
+   "score": 2.618685169344638,
+   "dL": 4.134113595636239,
+   "dab": 41.7846963195251
+  },
+  {
+   "left": "BR",
+   "right": "KR",
+   "level": 0.6819413473847847,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 793289932,
+   "origin": [
+    5,
+    35
+   ],
+   "id": "L48-06",
+   "score": 3.2467225028390247,
+   "dL": 6.393220277893126,
+   "dab": 50.09814813989126
+  },
+  {
+   "left": "KR",
+   "right": "KY",
+   "level": 0.7899556216971957,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 289993664,
+   "origin": [
+    49,
+    59
+   ],
+   "id": "L48-07",
+   "score": 4.438506680919874,
+   "dL": 19.66594482713081,
+   "dab": 53.76842298912529
+  },
+  {
+   "left": "KR",
+   "right": "KM",
+   "level": 0.7899556216971957,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1461111208,
+   "origin": [
+    25,
+    57
+   ],
+   "id": "L48-08",
+   "score": 4.681298291088735,
+   "dL": 4.281760509766104,
+   "dab": 78.88439662045498
+  },
+  {
+   "left": "KR",
+   "right": "KM",
+   "level": 0.7899556216971957,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 188480101,
+   "origin": [
+    20,
+    25
+   ],
+   "id": "L48-09",
+   "score": 4.9158838625957,
+   "dL": 4.872348166285567,
+   "dab": 82.33081237264783
+  },
+  {
+   "left": "KR",
+   "right": "KW",
+   "level": 0.7899556216971957,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 188070709,
+   "origin": [
+    4,
+    32
+   ],
+   "id": "L48-10",
+   "score": 5.117773286238302,
+   "dL": 21.922086662886354,
+   "dab": 63.0122573210356
+  },
+  {
+   "left": "KR",
+   "right": "KW",
+   "level": 0.7899556216971957,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 272337653,
+   "origin": [
+    2,
+    55
+   ],
+   "id": "L48-11",
+   "score": 5.575611693505602,
+   "dL": 24.8450315512712,
+   "dab": 67.35364996267445
+  },
+  {
+   "left": "KR",
+   "right": "KC",
+   "level": 0.7899556216971957,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1081734388,
+   "origin": [
+    11,
+    16
+   ],
+   "id": "L48-12",
+   "score": 5.825064012048601,
+   "dL": 18.152577175901712,
+   "dab": 80.88059697005286
+  },
+  {
+   "left": "KR",
+   "right": "KG",
+   "level": 0.7899556216971957,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 2103281006,
+   "origin": [
+    55,
+    14
+   ],
+   "id": "L48-13",
+   "score": 6.1254256366034845,
+   "dL": 19.049167077585356,
+   "dab": 85.10420776353301
+  },
+  {
+   "left": "KR",
+   "right": "bg",
+   "level": 0.7899556216971957,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1371385241,
+   "origin": [
+    56,
+    10
+   ],
+   "id": "L48-14",
+   "score": 6.448341778735428,
+   "dL": 21.03237508708123,
+   "dab": 88.27178724679705
+  },
+  {
+   "left": "BR",
+   "right": "KG",
+   "level": 0.6819413473847847,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1487200420,
+   "origin": [
+    20,
+    38
+   ],
+   "id": "L48-15",
+   "score": 7.909400103079472,
+   "dL": 33.31163730162344,
+   "dab": 98.14978524608544
+  }
+ ],
+ "59": [
+  {
+   "left": "mg",
+   "right": "mc",
+   "level": 0.3669101142131916,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 427989927,
+   "origin": [
+    18,
+    32
+   ],
+   "id": "L59-00",
+   "score": 0.6002675016703071,
+   "dL": 0.7465870995791065,
+   "dab": 9.848946885201874
+  },
+  {
+   "left": "rc",
+   "right": "rw",
+   "level": 0.40034466450479755,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 961768508,
+   "origin": [
+    35,
+    26
+   ],
+   "id": "L59-01",
+   "score": 1.0094590188979713,
+   "dL": 2.5120175187991456,
+   "dab": 14.870049073190506
+  },
+  {
+   "left": "bc",
+   "right": "by",
+   "level": 0.5180622387546947,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 631597703,
+   "origin": [
+    33,
+    5
+   ],
+   "id": "L59-02",
+   "score": 1.3523949658538312,
+   "dL": 2.2881213190918963,
+   "dab": 21.37305474830895
+  },
+  {
+   "left": "BG",
+   "right": "BY",
+   "level": 0.30805203114347957,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1282789958,
+   "origin": [
+    45,
+    54
+   ],
+   "id": "L59-03",
+   "score": 1.526175181548322,
+   "dL": 3.13373783591769,
+   "dab": 23.37634200311852
+  },
+  {
+   "left": "bg",
+   "right": "bc",
+   "level": 0.5762334574764505,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1266930725,
+   "origin": [
+    44,
+    44
+   ],
+   "id": "L59-04",
+   "score": 1.8890057618676748,
+   "dL": 1.6126281350908698,
+   "dab": 31.98670824237622
+  },
+  {
+   "left": "rg",
+   "right": "rw",
+   "level": 0.45785537834730927,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1393151831,
+   "origin": [
+    27,
+    19
+   ],
+   "id": "L59-05",
+   "score": 2.3474792658213985,
+   "dL": 3.14255691192349,
+   "dab": 38.21625272844663
+  },
+  {
+   "left": "bg",
+   "right": "bw",
+   "level": 0.5762334574764505,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 239728443,
+   "origin": [
+    56,
+    21
+   ],
+   "id": "L59-06",
+   "score": 2.5932622910787515,
+   "dL": 5.201473509390603,
+   "dab": 39.88702558099732
+  },
+  {
+   "left": "mg",
+   "right": "BG",
+   "level": 0.3669101142131916,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1746428396,
+   "origin": [
+    33,
+    63
+   ],
+   "id": "L59-07",
+   "score": 2.7777097615640134,
+   "dL": 16.19837875612253,
+   "dab": 28.407423946345116
+  },
+  {
+   "left": "mg",
+   "right": "BC",
+   "level": 0.3669101142131916,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 987067694,
+   "origin": [
+    14,
+    32
+   ],
+   "id": "L59-08",
+   "score": 2.9950836580676072,
+   "dL": 17.19302880416441,
+   "dab": 30.998246151127645
+  },
+  {
+   "left": "mg",
+   "right": "BW",
+   "level": 0.3669101142131916,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 374472388,
+   "origin": [
+    12,
+    23
+   ],
+   "id": "L59-09",
+   "score": 3.2038262643070876,
+   "dL": 19.33037411339588,
+   "dab": 31.893551407940233
+  },
+  {
+   "left": "RM",
+   "right": "mg",
+   "level": 0.7988567316517635,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 697978994,
+   "origin": [
+    12,
+    24
+   ],
+   "id": "L59-10",
+   "score": 3.4229232431716166,
+   "dL": 8.31053880581672,
+   "dab": 50.70141233523094
+  },
+  {
+   "left": "RM",
+   "right": "mg",
+   "level": 0.7988567316517635,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 386336714,
+   "origin": [
+    27,
+    13
+   ],
+   "id": "L59-11",
+   "score": 3.7546611580100873,
+   "dL": 8.760133249436024,
+   "dab": 56.09459730428758
+  },
+  {
+   "left": "mg",
+   "right": "KC",
+   "level": 0.3669101142131916,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1593244352,
+   "origin": [
+    9,
+    3
+   ],
+   "id": "L59-12",
+   "score": 4.281622744213029,
+   "dL": 36.70678729145448,
+   "dab": 27.974088444840316
+  },
+  {
+   "left": "mg",
+   "right": "KY",
+   "level": 0.3669101142131916,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1548691733,
+   "origin": [
+    61,
+    43
+   ],
+   "id": "L59-13",
+   "score": 5.461410530770925,
+   "dL": 38.661278435917616,
+   "dab": 46.67532165090529
+  },
+  {
+   "left": "mg",
+   "right": "KG",
+   "level": 0.3669101142131916,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 888963488,
+   "origin": [
+    22,
+    39
+   ],
+   "id": "L59-14",
+   "score": 6.316451461167174,
+   "dL": 34.302330030790955,
+   "dab": 68.0095456396609
+  },
+  {
+   "left": "mw",
+   "right": "KG",
+   "level": 0.22080273092471706,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 153348794,
+   "origin": [
+    22,
+    50
+   ],
+   "id": "L59-15",
+   "score": 8.116839568344435,
+   "dL": 34.72535988740446,
+   "dab": 99.99638800601814
+  }
+ ],
+ "70": [
+  {
+   "left": "MY",
+   "right": "MW",
+   "level": 0.1908151744976942,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 174013864,
+   "origin": [
+    47,
+    9
+   ],
+   "id": "L70-00",
+   "score": 0.2763767504379121,
+   "dL": 0.29809927278153275,
+   "dab": 4.5961727778605415
+  },
+  {
+   "left": "RG",
+   "right": "RY",
+   "level": 0.3877719005213239,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 28450681,
+   "origin": [
+    42,
+    59
+   ],
+   "id": "L70-01",
+   "score": 0.8140377091053286,
+   "dL": 2.1544447621934117,
+   "dab": 11.817930819564546
+  },
+  {
+   "left": "MG",
+   "right": "MY",
+   "level": 0.28507006784855343,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 283303779,
+   "origin": [
+    24,
+    42
+   ],
+   "id": "L70-02",
+   "score": 1.0574534353076948,
+   "dL": 1.8606568400761285,
+   "dab": 16.61545209262248
+  },
+  {
+   "left": "RG",
+   "right": "RY",
+   "level": 0.3877719005213239,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1663278443,
+   "origin": [
+    31,
+    20
+   ],
+   "id": "L70-03",
+   "score": 1.268448607863768,
+   "dL": 2.937879221172834,
+   "dab": 18.979685459066758
+  },
+  {
+   "left": "RG",
+   "right": "RY",
+   "level": 0.3877719005213239,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 351043579,
+   "origin": [
+    50,
+    5
+   ],
+   "id": "L70-04",
+   "score": 1.5022611946256652,
+   "dL": 2.937879221172834,
+   "dab": 23.207761169046815
+  },
+  {
+   "left": "mc",
+   "right": "BG",
+   "level": 0.7614025423114354,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 235751907,
+   "origin": [
+    8,
+    18
+   ],
+   "id": "L70-05",
+   "score": 1.8804955044074254,
+   "dL": 14.319483567323758,
+   "dab": 14.71417682896574
+  },
+  {
+   "left": "mc",
+   "right": "mw",
+   "level": 0.7614025423114354,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1235962401,
+   "origin": [
+    3,
+    27
+   ],
+   "id": "L70-06",
+   "score": 2.0167300303280298,
+   "dL": 5.102535585060764,
+   "dab": 29.594776297305657
+  },
+  {
+   "left": "KG",
+   "right": "KY",
+   "level": 0.5697625240520378,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1062102815,
+   "origin": [
+    42,
+    22
+   ],
+   "id": "L70-07",
+   "score": 2.1571423597142,
+   "dL": 4.602677446504107,
+   "dab": 32.8072855325433
+  },
+  {
+   "left": "bc",
+   "right": "kw",
+   "level": 0.832327905153422,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1224991937,
+   "origin": [
+    28,
+    41
+   ],
+   "id": "L70-08",
+   "score": 2.3456911207846236,
+   "dL": 13.894424214761917,
+   "dab": 23.699032853252458
+  },
+  {
+   "left": "mc",
+   "right": "KC",
+   "level": 0.7614025423114354,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1768697286,
+   "origin": [
+    56,
+    41
+   ],
+   "id": "L70-09",
+   "score": 2.6416475365674335,
+   "dL": 27.07942915029137,
+   "dab": 11.2880662725267
+  },
+  {
+   "left": "RG",
+   "right": "RW",
+   "level": 0.3877719005213239,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 936126917,
+   "origin": [
+    36,
+    38
+   ],
+   "id": "L70-10",
+   "score": 2.8670826466414945,
+   "dL": 3.8321770395174326,
+   "dab": 46.68328132364278
+  },
+  {
+   "left": "BG",
+   "right": "KW",
+   "level": 0.5214528105785652,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 110748415,
+   "origin": [
+    41,
+    59
+   ],
+   "id": "L70-11",
+   "score": 3.226471551653902,
+   "dL": 22.491522639985902,
+   "dab": 28.044360126129344
+  },
+  {
+   "left": "mc",
+   "right": "KW",
+   "level": 0.7614025423114354,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1067159401,
+   "origin": [
+    29,
+    11
+   ],
+   "id": "L70-12",
+   "score": 3.6162807581699106,
+   "dL": 35.46145893254609,
+   "dab": 17.620290555067402
+  },
+  {
+   "left": "RG",
+   "right": "mc",
+   "level": 0.3877719005213239,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1641364210,
+   "origin": [
+    38,
+    48
+   ],
+   "id": "L70-13",
+   "score": 4.28079341153916,
+   "dL": 9.900244109035542,
+   "dab": 64.0727888863655
+  },
+  {
+   "left": "MG",
+   "right": "RG",
+   "level": 0.28507006784855343,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1044664754,
+   "origin": [
+    57,
+    50
+   ],
+   "id": "L70-14",
+   "score": 5.027800384866697,
+   "dL": 5.536759279869962,
+   "dab": 83.45952655544998
+  },
+  {
+   "left": "mw",
+   "right": "KG",
+   "level": 0.5350683973234445,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 846247086,
+   "origin": [
+    18,
+    5
+   ],
+   "id": "L70-15",
+   "score": 6.741807770067758,
+   "dL": 24.776721532743892,
+   "dab": 88.53421366868604
+  }
+ ],
+ "81": [
+  {
+   "left": "MY",
+   "right": "MW",
+   "level": 0.46642451148367803,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 994481346,
+   "origin": [
+    62,
+    61
+   ],
+   "id": "L81-00",
+   "score": 1.3163332933971632,
+   "dL": 1.311636800238744,
+   "dab": 22.036462057493253
+  },
+  {
+   "left": "yw",
+   "right": "MG",
+   "level": 0.41501979241743914,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 643529145,
+   "origin": [
+    36,
+    29
+   ],
+   "id": "L81-01",
+   "score": 1.8179476381642903,
+   "dL": 11.300863913059537,
+   "dab": 17.649788004364463
+  },
+  {
+   "left": "MG",
+   "right": "RG",
+   "level": 0.6968191470353277,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 872524549,
+   "origin": [
+    17,
+    32
+   ],
+   "id": "L81-02",
+   "score": 2.119457725855737,
+   "dL": 1.9194098836882538,
+   "dab": 35.74071771285646
+  },
+  {
+   "left": "MG",
+   "right": "MC",
+   "level": 0.6968191470353277,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1491509880,
+   "origin": [
+    50,
+    24
+   ],
+   "id": "L81-03",
+   "score": 2.281059887740131,
+   "dL": 2.0417737800345197,
+   "dab": 38.49815083413308
+  },
+  {
+   "left": "yw",
+   "right": "RC",
+   "level": 0.41501979241743914,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1968587376,
+   "origin": [
+    56,
+    30
+   ],
+   "id": "L81-04",
+   "score": 2.577262295327096,
+   "dL": 16.41302065051718,
+   "dab": 24.493530865525603
+  },
+  {
+   "left": "RG",
+   "right": "RY",
+   "level": 0.7403719874333566,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1416046502,
+   "origin": [
+    50,
+    58
+   ],
+   "id": "L81-05",
+   "score": 2.7422551132253474,
+   "dL": 6.561263593952664,
+   "dab": 40.74938472831598
+  },
+  {
+   "left": "BG",
+   "right": "BY",
+   "level": 0.797062147564549,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 173592021,
+   "origin": [
+    21,
+    29
+   ],
+   "id": "L81-06",
+   "score": 2.8501371162323026,
+   "dL": 7.148839438187231,
+   "dab": 41.90865421496119
+  },
+  {
+   "left": "yw",
+   "right": "MY",
+   "level": 0.41501979241743914,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 510212157,
+   "origin": [
+    23,
+    5
+   ],
+   "id": "L81-07",
+   "score": 3.0262897277545653,
+   "dL": 17.55441861107934,
+   "dab": 31.075687906494654
+  },
+  {
+   "left": "MG",
+   "right": "MY",
+   "level": 0.6968191470353277,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 2102970997,
+   "origin": [
+    37,
+    0
+   ],
+   "id": "L81-08",
+   "score": 3.2261760688056587,
+   "dL": 5.777829134973241,
+   "dab": 50.55565638788702
+  },
+  {
+   "left": "yw",
+   "right": "MC",
+   "level": 0.41501979241743914,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1336466032,
+   "origin": [
+    23,
+    40
+   ],
+   "id": "L81-09",
+   "score": 3.4621971383106827,
+   "dL": 14.64055822278938,
+   "dab": 42.883825510178546
+  },
+  {
+   "left": "MG",
+   "right": "MW",
+   "level": 0.6968191470353277,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 2088409858,
+   "origin": [
+    49,
+    36
+   ],
+   "id": "L81-10",
+   "score": 3.622460265085794,
+   "dL": 7.0256579057819595,
+   "dab": 56.04066457694463
+  },
+  {
+   "left": "MG",
+   "right": "MW",
+   "level": 0.6968191470353277,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 26079655,
+   "origin": [
+    1,
+    12
+   ],
+   "id": "L81-11",
+   "score": 3.9180463384101376,
+   "dL": 7.408875609733703,
+   "dab": 60.869531744755456
+  },
+  {
+   "left": "yw",
+   "right": "MW",
+   "level": 0.41501979241743914,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 194986764,
+   "origin": [
+    0,
+    44
+   ],
+   "id": "L81-12",
+   "score": 4.223511771832538,
+   "dL": 18.690661742552546,
+   "dab": 51.19452933114598
+  },
+  {
+   "left": "RG",
+   "right": "RW",
+   "level": 0.7403719874333566,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1285565934,
+   "origin": [
+    61,
+    6
+   ],
+   "id": "L81-13",
+   "score": 4.4391957453444215,
+   "dL": 6.897918671131379,
+   "dab": 70.98193136247981
+  },
+  {
+   "left": "yw",
+   "right": "KW",
+   "level": 0.41501979241743914,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 2129887766,
+   "origin": [
+    37,
+    20
+   ],
+   "id": "L81-14",
+   "score": 4.660322830803645,
+   "dL": 47.48650843125845,
+   "dab": 20.299782146019737
+  },
+  {
+   "left": "yw",
+   "right": "KG",
+   "level": 0.41501979241743914,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1662092483,
+   "origin": [
+    3,
+    54
+   ],
+   "id": "L81-15",
+   "score": 5.811621589793748,
+   "dL": 39.544421001294445,
+   "dab": 51.818485084942346
+  }
+ ],
+ "92": [
+  {
+   "left": "MY",
+   "right": "RY",
+   "level": 0.812199314544513,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1570579417,
+   "origin": [
+    42,
+    40
+   ],
+   "id": "L92-00",
+   "score": 0.5845209009015924,
+   "dL": 0.6644111135843955,
+   "dab": 9.6749054781113
+  },
+  {
+   "left": "MY",
+   "right": "RY",
+   "level": 0.812199314544513,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 988359409,
+   "origin": [
+    57,
+    0
+   ],
+   "id": "L92-01",
+   "score": 1.1611140276885217,
+   "dL": 1.2549987701038583,
+   "dab": 19.305906316741126
+  },
+  {
+   "left": "GY",
+   "right": "GW",
+   "level": 0.4320045120043361,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 912685013,
+   "origin": [
+    41,
+    35
+   ],
+   "id": "L92-02",
+   "score": 1.7896072044710345,
+   "dL": 0.9539176729009048,
+   "dab": 31.07667880361514
+  },
+  {
+   "left": "GY",
+   "right": "GW",
+   "level": 0.4320045120043361,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 2101783445,
+   "origin": [
+    9,
+    60
+   ],
+   "id": "L92-03",
+   "score": 1.8745978366814149,
+   "dL": 1.0433474547353645,
+   "dab": 32.49310038523743
+  },
+  {
+   "left": "GY",
+   "right": "GW",
+   "level": 0.4320045120043361,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 101614503,
+   "origin": [
+    4,
+    53
+   ],
+   "id": "L92-04",
+   "score": 1.9025471741147773,
+   "dL": 1.2520169456824375,
+   "dab": 32.71739442425743
+  },
+  {
+   "left": "GY",
+   "right": "GW",
+   "level": 0.4320045120043361,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 306969186,
+   "origin": [
+    29,
+    2
+   ],
+   "id": "L92-05",
+   "score": 2.1657637001487475,
+   "dL": 1.1625871638479777,
+   "dab": 37.59766648177348
+  },
+  {
+   "left": "MY",
+   "right": "RW",
+   "level": 0.812199314544513,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 722065825,
+   "origin": [
+    20,
+    15
+   ],
+   "id": "L92-06",
+   "score": 2.2391593312424494,
+   "dL": 3.9180777335854238,
+   "dab": 35.212704160765554
+  },
+  {
+   "left": "GY",
+   "right": "MY",
+   "level": 0.4320045120043361,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 383441741,
+   "origin": [
+    62,
+    31
+   ],
+   "id": "L92-07",
+   "score": 2.6304418745971465,
+   "dL": 10.28141242855058,
+   "dab": 33.71567176618677
+  },
+  {
+   "left": "MY",
+   "right": "MW",
+   "level": 0.812199314544513,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 450589309,
+   "origin": [
+    59,
+    25
+   ],
+   "id": "L92-08",
+   "score": 2.6658853135634915,
+   "dL": 2.325174327695955,
+   "dab": 45.07522289602428
+  },
+  {
+   "left": "GY",
+   "right": "MY",
+   "level": 0.4320045120043361,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1101067186,
+   "origin": [
+    20,
+    53
+   ],
+   "id": "L92-09",
+   "score": 2.8140986042901215,
+   "dL": 9.424628059504697,
+   "dab": 38.19102737535301
+  },
+  {
+   "left": "GY",
+   "right": "MY",
+   "level": 0.4320045120043361,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 533790195,
+   "origin": [
+    48,
+    57
+   ],
+   "id": "L92-10",
+   "score": 2.9170104092805826,
+   "dL": 10.852602007914498,
+   "dab": 38.12823796909498
+  },
+  {
+   "left": "MY",
+   "right": "MW",
+   "level": 0.812199314544513,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 496133505,
+   "origin": [
+    59,
+    46
+   ],
+   "id": "L92-11",
+   "score": 2.957475602054135,
+   "dL": 2.354984254974109,
+   "dab": 50.30794349111327
+  },
+  {
+   "left": "RY",
+   "right": "RW",
+   "level": 0.8311579407887609,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1457906171,
+   "origin": [
+    58,
+    13
+   ],
+   "id": "L92-12",
+   "score": 3.258670515809916,
+   "dL": 1.7885956366891964,
+   "dab": 56.5175432346577
+  },
+  {
+   "left": "RY",
+   "right": "RW",
+   "level": 0.8311579407887609,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1531162697,
+   "origin": [
+    10,
+    61
+   ],
+   "id": "L92-13",
+   "score": 3.3891945257717153,
+   "dL": 2.086694909470729,
+   "dab": 58.47623426792307
+  },
+  {
+   "left": "RY",
+   "right": "BW",
+   "level": 0.8311579407887609,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 1071596015,
+   "origin": [
+    4,
+    11
+   ],
+   "id": "L92-14",
+   "score": 4.206570427379025,
+   "dL": 4.743892820774616,
+   "dab": 69.67722264432759
+  },
+  {
+   "left": "GY",
+   "right": "MW",
+   "level": 0.4320045120043361,
+   "right_level": "match",
+   "halftone": "blue",
+   "dots": "continue",
+   "angle": 0.0,
+   "slope": 0.0,
+   "seed": 2068613227,
+   "origin": [
+    14,
+    27
+   ],
+   "id": "L92-15",
+   "score": 5.51064626648853,
+   "dL": 13.348932377258812,
+   "dab": 81.66637982608948
+  }
+ ]
+}

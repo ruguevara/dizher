@@ -62,12 +62,15 @@ over its cells grown by two cells (`common.window`).
     python research/pairs/acuity.py make|prompts L|score     # session E step 1: what a Claude judge sees (section 8)
     python research/pairs/curve.py make|prompts V|score|user # step 2: the threshold curve (section 9)
     python research/pairs/dp.py make|wave N|score|user       # steps 3-4: where Select pairs is unsure (section 10)
-    python research/pairs/dp.py vote [ROUND SHEETS]          # the user's blind vote in the browser
+    python research/pairs/dp.py vote ROUND SHEETS            # the user's blind vote in the browser (both required)
     python research/pairs/surface.py make|user R V...        # pairs per surface (section 11)
     python research/pairs/rivals.py make|judges|best|user|tally   # the competitor baseline (section 12)
     python research/pairs/gallery.py NAME [--no-dbs] [--side N] | best NAME | report   # PLAN step 3: the gallery (section 13)
     python research/pairs/duel.py NAME [--no-dbs] | best NAME | check      # PLAN step 3b: a pairwise search, a GP
     python research/pairs/methods.py user | tally      # the Metric method by the user, before more galleries
+    python research/pairs/seams.py make|paint|check|report     # PLAN step 5: which seams the user sees
+    python research/pairs/patches.py make|rate|report [vN]     # step 5b: seam visibility on synthetic patches
+    python research/pairs/seamfit.py                           # step 5c: one seam score from all the seam data
 
 ## Results
 
@@ -626,5 +629,190 @@ last pick; - and + where the preference's 5-95% excludes 0:
 - Thin: each round spans 2 of 10 directions and ~10 rounds a picture, so the fitted preference sometimes points against
   the picks (diver-sunset's Eye luma blur, Halftone chroma); the picks count more than the fit. The user's earlier note
   that less Halftone chroma evens blockiness: down on rocket-rackoon and autumn, up on diver-sunset, not shown.
+
+### 14. Which seams the user sees (2026-10-06)
+
+PLAN step 5 (`seams.py`). The user painted the seams seen (where the source has none) on 12 whole renders with DBS,
+at 3x: each training picture at its gallery best and at coherence 0, in a blind order, then 2 of them again; ~32 min,
+27-245 marks a render, 1342 in all. 1338 of them are on seams where the pair changes (7197 of the 17760), so the score
+is on those: where the pair stays no measure sees a seam, and those seams flatter every measure (the attributes 0.86
+on all seams, 0.62 on the changed). `seams.py report`, AUC per render, mean; the lightness-colour mix chosen with the
+picture left out; top k: the share of the k seams a measure ranks highest that the user marked (k, the user's marks):
+
+| measure (changed seams) | L | ab | both | top k |
+|---|---|---|---|---|
+| A attributes, V | | | 0.62 | 0.34 |
+| A x edge weight (the coherence term) | | | 0.51 | 0.24 |
+| B pixel step, raw | 0.75 | 0.79 | 0.79 | 0.42 |
+| B pixel step, through the eye | 0.66 | 0.68 | 0.67 | 0.26 |
+| B pixel step, blur 2 | 0.56 | 0.61 | 0.60 | 0.23 |
+| C line filter less the texture, raw | 0.64 | 0.74 | 0.74 | 0.42 |
+| C, through the eye | 0.61 | 0.63 | 0.65 | 0.32 |
+| D strips, raw | 0.65 | 0.74 | 0.73 | 0.38 |
+| B less the cells' own pixel steps, raw | 0.68 | 0.74 | 0.73 | 0.41 |
+| E the pair switch at the border's pixels, the dots the same | 0.70 | 0.71 | 0.71 | 0.31 |
+| the user's repeats | | | | 0.48-0.75 |
+
+- **The seams the user sees are pair changes** (1338 of 1342): a pairwise term on the labels is the right place.
+- **The edge weight works against the user.** The user marked 0.22 of the changed seams where the coherence term
+  excuses a seam (the target's block means step, weight < 0.5) and 0.15 where it does not. With the weight the
+  attributes are a coin toss (0.51), without it 0.62. At an outline the render makes a staircase of cell borders,
+  which shows though the source has an edge there; the source's own step lowers the share marked, but it does not
+  remove it (an ad-hoc look: 0.58 to 0.27 among the largest pixel steps).
+- **The raw pixels' colour step across the border, beyond the source's, is the measure**: AUC 0.79 on ab alone,
+  above the attributes on 11 of 12 renders. Lightness adds nothing on these renders (a logistic over B, C, D and A,
+  each picture left out: 0.76-0.78, the L weights ~0); the lightness steps are mostly the dots'.
+- **The eye blur makes every measure worse** (0.67 and 0.60 against 0.79): the user sees a seam at the pixel level,
+  sharper than the judges' eye, as `seams.py check` says (it carries the dots' colour onto a black border).
+- The texture terms (C, D) and the runs along a border add nothing.
+- **Far from the ceiling**: top k 0.42 against the repeats' 0.48-0.75.
+- The painted segments (README 1) say the other: through the eye C rates the painting below Select pairs in 0.73,
+  raw B in 0.61, `seam_excess` 0.65. Those comparisons mix the seams with the accuracy; the marks test the seams alone.
+
+### 15. Seam visibility on synthetic patches (2026-10-06)
+
+PLAN step 5b (`patches.py`): seam visibility itself, without picture content. A patch of 8 x 6 cells, the left half
+one pair, the right another, one blue-noise threshold map over both, so the dots run on across the border; the level
+varies slowly (sd 0.08, 6 px). The colour changes come at the same mean luminance, and the user could move the right
+side's lightness to where the seam is least visible (the minimally distinct border) before rating it 0-3. Round v3,
+51 patches and 10 repeats (v1, at one level, and v2, with Bayer on a uniform level, stopped by the user: the lightness
+and the regular texture gave the seams away). `patches.py report v3`, the mean rating:
+
+| at 30 / 50 / 75% dots | r-m | g-c | y-w | r-g |
+|---|---|---|---|---|
+| hue, the same luminance | 2 / 1 / 2 | 2 / 1 / 2 | 2 / 2 / 3 | 3 / 3 / 3 |
+| brightness alone (the inks' capitals), the same luminance | 1 / 1 / 1 | 1 / 1 / 1 | 1 / 1 / 2 | (w-W) 1 / 1 / 2 |
+
+- **A colour change shows at the same lightness**: near hues ~2 (clear), red-green 3. Brightness alone is faint (1).
+  Hue and brightness together 2.
+- **Lightness alone hides in the surface's variation**: one pair, a step of the level of 0.06 or 0.12, rated 0 on all
+  three pairs; 0.25 rated 1-2.
+- The user never moved the lightness: the CIE match was left as it was.
+- No change, 0; the user's black border, 1 (dots away from the border) against 2 (dots on it).
+- Repeats: 80% the same rating, 20% one step off.
+- The measures, Spearman with the ratings (AUC, any seam against none): E, the pair switch at the border's pixels,
+  0.75 (0.95); D strips 0.75 (0.96); the attributes 0.72 (0.96); B raw 0.14 (0.54): with the dots running on, the step
+  across the border is the dots', and B sees a dotted pair's own texture as a seam, even where the pair stays (0.15
+  among the 37 patches where it changes, E 0.62).
+- **The renders and the patches disagree**: on the renders B raw is the best (0.79, E 0.71), on the patches the worst.
+  On a render the dots break at a pair change (each pair its own dots, then DBS); on the patches they run on.
+
+Round v4 (the user): the same with a gradient of random direction and strength on each patch, each change twice, and
+the dots breaking at the border on some; 124 patches and 10 repeats (`patches.py report v4`):
+
+- **The dots breaking makes no seam**: no change with only the dots breaking, 0; the colour changes rated as with the
+  dots running on (hue ~2, brightness ~1). It does not explain B raw on the renders.
+- The user moved the lightness this time: the brighter side darker than the CIE match by 1-4 dL* (y-w, y-Y, g-G):
+  bright and white dots look lighter than their luminance.
+- Lightness alone: a step of 0.12, 0-0.5; 0.25, 0.5-1.5. Repeats 90% the same.
+- The measures: the attributes 0.83, E 0.81, D 0.76, B raw 0.20.
+- **The set was narrow** (the user): inks on black paper, near hues, no blue. The renders are full of what it lacks:
+  a paper's change under one ink (bright white on cyan against on green: skies, foliage), blue, contrasting pairs, the
+  same mean colour from other dots. Round v5 has them.
+
+Round v5 (the user: the pairs the earlier rounds lacked), 25 changes twice and 10 repeats (`patches.py report v5`):
+a paper's change under bright white 1-2 (cyan-green, magenta-red 1; cyan-blue, yellow-cyan, yellow-green 2); blue on
+black against red 3, against magenta 2.5, bright against dim blue 0.5; blue paper with cyan against white ink 2, with
+yellow against white 1; **the same mean colour from other dots 1-2** (black/white against blue/yellow 1, against
+red/cyan and magenta/green 2). Repeats 100% the same. The measures turn over: E 0.36, the cells' mean colours 0.58,
+the colour step at a blur of 2 0.58, B raw 0.01. The eye averages part of the dots: the colour change at the pixels
+over-counts a change of dots that keeps the mean colour.
+
+### 16. One seam score (2026-10-06)
+
+PLAN step 5c (`seamfit.py`): the seam measures (lightness and colour apart), weights >= 0, fitted at once to the
+painted renders (the seams where the pair changes, marked or not, each render its own rate) and to the rounds v3-v5
+(the order of the mean ratings). Each picture or round left out in turn:
+
+| | renders AUC (top k) | v3 | v4 | v5 |
+|---|---|---|---|---|
+| the coherence term (attributes x edge weight) | 0.51 (0.24) | | | |
+| the attributes alone | 0.62 (0.34) | 0.72 | 0.83 | 0.48 |
+| B raw, the best on the renders | 0.79 (0.42) | 0.14 | 0.20 | 0.01 |
+| fitted on the renders alone (in sample) | 0.80 (0.46) | 0.47 | 0.55 | 0.25 |
+| all the measures, joint | 0.73 (0.39) | 0.82 | 0.89 | 0.70 |
+| **two: E lightness + the cells' mean colour** | 0.68 (0.35) | 0.79 | 0.88 | 0.77 |
+
+- **The two-term score**: 0.075 x E_L + 0.055 x M_ab, per dE. E_L: the lightness change of the pixels along the
+  border when the pair switches, the dots the same; M_ab: the colour difference of the two cells' mean colours (in
+  linear light), beyond the source's. Lightness at the pixels, colour averaged: the eye's sharp lightness and coarse
+  colour, from the user's data. Zero for the same pair; each part computable for any two pairs from their dots.
+- What the patches teach carries over to the renders; the renders' own fit does not carry over to the patches. The
+  renders' extra: the same change shows more among busy dots (the cells' own pixel steps alone, AUC 0.69; E times
+  them 0.77; as a term in the joint fit, +0.02); perhaps attention in a whole picture rather than the seam.
+- The joint fit of all the measures adds 0.05 on the renders over the two terms, with four more measures.
+
+### 17. The user's sorting, and lightness (2026-10-06)
+
+`seamfit.py ranked`: per global lightness (L* 15-92) every two Spectrum pairs that reach it, side by side as a patch
+(blue noise, the slow variation, the lightness matched), ranked by the two-term score; 16 evenly along the ranking on a
+sheet. The user did not quite agree and sorted the same patches (`seamfit.py sort`, blind, shuffled first on 6 of 7
+sheets; `rounds/seams/ranked-v1.json`): Spearman with the two-term score 0.66-0.94. The largest misses are the user's
+rule: **a dim pair whose colours are near in lightness (yellow and white; cyan, green) reads as one solid block and
+stands out next to any bright pair**; dim and bright pairs with black, blue or magenta mix (dim blue/red against black/
+bright magenta, the least visible at L* 37); dim green/blue against bright cyan/black too. At L* 81 the user put all
+seven dim yellow/white patches at 10-16 of 16, the score some at 2 and 5.
+
+- A cell's solidity, exp(-sd / 3) of its pixels' L* (dim yellow/white sd 1.2, bright magenta/green 12.5); the step of
+  it across a seam. On the renders a solid cell next to a dotted one is common in the dark and not a seam there
+  (below L* 30 the user marked 1% of the pair changes; AUC 0.35); the share marked rises with lightness: 1%, 16%, 25%,
+  36% (L* < 30, 30-55, 55-75, > 75).
+- **The score, three terms** (Y, the two cells' mean L* / 100): 0.054 x the cells' mean colour difference (ab) +
+  0.126 x Y x the lightness change of the border's pixels + 1.68 x Y x the solidity step. Held out:
+
+| | renders AUC (top k) | v3 | v4 | v5 | sorted |
+|---|---|---|---|---|---|
+| two terms (README 16) | 0.68 (0.34) | 0.79 | 0.88 | 0.77 | 0.83 |
+| three terms | 0.72 (0.38) | 0.78 | 0.87 | 0.83 | 0.85 |
+
+- Per sheet of the sorting: L* 81 0.66 -> 0.90, L* 92 0.89 -> 0.99; the darkest, L* 26, 0.87 -> 0.65: there the user
+  ordered by lightness, and the lightness term scaled down lets colour lead. A compromise, by the renders.
+
+### 18. The seam score in the selection (2026-10-06)
+
+PLAN step 5d (`selection.py`): the three-term score as the DP's pairwise table, for each border and each two pairs from
+the pairs' halftones in the two cells, times coherence x 0.0048 (the old term's sum over the current selections' pair
+changes over the score's), the coherence term off; zero for the same pair. A copy of the selection with the old term
+gives the current labels on every picture. The score at the halftone ranks the changed seams as after DBS: Spearman
+0.85-0.96 on the training pictures (0.61-0.99 held out; david's few changes left are subtle). 35-184 cells changed a
+training picture, 96-279 held out.
+
+The user, blind, the six training pictures at their gallery best with DBS, raw at 1x enlarged by whole pixels (after
+a void first vote, on session E's sheets: `dp.py vote` had fallen back to its default folder): **the score better on
+5 of 6** (diver-sunset, autumn, jojo, RC1, anubis), rocket-rackoon both fine (35 cells changed), the current never.
+The score was fitted partly on these pictures' renders, so the held-out pictures decide: their projects' settings with
+DBS, 5 sheets and 5 repeats with the sides swapped.
+
+The held-out round (`rounds/seams/selection/held`), 5 pictures and 5 repeats with the sides swapped, every repeat the
+same: **both bad** on golden-axe, burning-hand, andy, sunset (their projects' own settings, no gallery: the conversions
+as a whole); **the current better on david** (the score keeps one brightness where the current switches dim and
+bright black/white, and the user prefers the switching there). The score wins none held out. The user: the score's
+contribution is low. The scale matched the old term's total cost over the current pair changes, so it only moved the
+cost from invisible changes to visible ones; at x1 the seams by the score even rise on anubis and diver-sunset.
+
+`selection.py strength`: the score at x1-x16 of that scale on the training pictures, the seams' sum by the score over
+the pair changes:
+
+| picture | current | x1 | x2 | x4 | x8 | x16 |
+|---|---|---|---|---|---|---|
+| RC1 | 2194 | 1321 | 1122 | 888 | 671 | 590 |
+| autumn | 1037 | 927 | 727 | 542 | 434 | 403 |
+| jojo | 694 | 428 | 336 | 281 | 264 | 256 |
+| anubis | 1233 | 1357 | 1208 | 1071 | 858 | 626 |
+| diver-sunset | 698 | 730 | 666 | 608 | 558 | 521 |
+| rocket-rackoon | 1214 | 1130 | 1019 | 866 | 738 | 594 |
+
+The user's strengths on that page: RC1 x2, anubis x8, autumn x4, diver-sunset x8, jojo the current, rocket-rackoon x1.
+**Times each picture's coherence** (the score was multiplied by it): 16, 26, 23, 14, (0), 8; the two Halftoned
+pictures want x8 because their coherence is 2-3x lower. So the score's weight is fixed, the picture's coherence aside:
+16 (the geometric mean of the picks, within a x2 step of four of them). The held-out check again at it
+(`selection.py make held fixed`, `user held fixed`; `rounds/seams/selection/held-fixed`).
+
+Held out at the fixed weight (the user asked to pick the less bad one when both are bad), every repeat the same:
+**burning-hand the score better; david the current better; golden-axe, andy, sunset both bad.** In all: the training
+pictures 5 better, 1 both fine, 0 worse (fitted partly on them); held out 1 better, 1 worse, 3 both bad. David is
+greyscale: switching dim and bright white gives it one more tone, and the score charges the switch as a seam (by the
+patches rightly, brightness alone ~1 against a hue's ~2); there the user wants the tone. The three both bad are their
+projects' old settings (no gallery): the conversions as a whole.
 
 Findings: `FINDINGS.md`; next steps: `PLAN.md`; the log: `LOG.md`.

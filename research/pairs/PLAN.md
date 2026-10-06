@@ -17,7 +17,12 @@ Items 3 and 4 are not pair selection, but dithering (Halftoner, DBS). Colorimetr
 aim (`FINDINGS.md`). Done, by the project's focus (the coach): the conversion is visibly better than the known
 converters (ZX-Paintbrush, image2zx, img2spec) on three reference pictures, in a blind test by the user.
 
-## The state (2026-10-05)
+## The state (2026-10-06)
+
+Step 5, the seams (below; README 14-18): a seam score from the user's own data (painted seams, rated patches, a
+sorting) replaces the coherence term's attributes in a research prototype of the selection. Better blind on 5 of 6
+training pictures, 1-1 held out (3 both bad at old settings). The user: more research before the app (step 5's
+"Next").
 
 The branch is `feature/gallant-wright-6dtgj6`, rebased on `develop` 06b84bf; it has no changes of its own outside
 `research/pairs` but the unused `tests/images/pairs` removed. Sessions A, B, C, E and steps 1 and 2 are closed
@@ -38,8 +43,9 @@ The steps (the user, 2026-10-02): for a time there are more knobs, so that later
 - Step 2: the dithering gets its own weights.
 - Step 3: a gallery per picture (first autumn and diver-sunset, for the seams).
 - Step 4: fewer knobs from the gallery data.
+- Step 5 (the user, 2026-10-06), now: a seam score from the pixels, in place of the coherence term's attributes.
 
-Seams in the algorithm and adaptive binding come after, from the gallery results.
+Seams in the algorithm and adaptive binding come after, from the gallery results and step 5.
 
 ## Step 2: the dithering gets its own weights (branch `feature/dbs-weights`), done 2026-10-02
 
@@ -168,6 +174,134 @@ and `rounds/duel` stay as the record; the method and its checks in `LOG.md`.
   direction in the current knobs. The old knobs go to the advanced settings, or we delete them. A PR into `develop`.
 - Gate: on two or three held-out pictures the best by the new knobs is not worse than the best by all knobs (blind,
   the user's vote).
+
+## Step 5: which seams the user sees (`seams.py`, ~20 min of the user's time)
+
+- Why (the user, 2026-10-06): the coherence term prices a seam by the attributes alone, V, the CIELUV distance of
+  the two cells' papers plus their inks (`energy.pair_dissimilarity`). The user sees a seam by its pixels, and can
+  tell steadily where one shows more or less: red on black against magenta on black, with mainly black pixels along
+  the border, is no seam at all; ~50% noise along a border hides it; the colours, the brightness, the noise and the
+  pixels along the border decide. First the measure, then it replaces V in the selection.
+- The data: the user paints the seams seen (drag along a border; shift: strong) on 12 whole renders, DBS on, 3x as
+  in the app: each training picture at its gallery best and the same at coherence 0 (more pair changes), in a blind
+  order, the two of a picture apart; then 2 of the first 6 again, for the user's own agreement. Hold S for the source:
+  only the seams the source does not have. Unmarked counts as no seam. The key (`rounds/seams/key.json`) goes into
+  git after the painting.
+- The candidates, each per seam, lightness and colour apart, their mix chosen with the picture left out:
+  - A: the attributes, V, and V times the target's edge weight (the coherence term's own);
+  - B: the pixel steps across the border beyond the target's, mean along it (`seam_excess` per seam): raw, through
+    the user's eye (`views.seen2`), at a blur of 2;
+  - C: a line filter along the border (the steps' mean along it, where noise cancels) beyond the target's, less the
+    same filter over the two cells' own columns (a seam shows when it steps more than the dots around it): raw and
+    through the eye;
+  - D: the 8 x 4 strips on the two sides, their mean and spread per channel.
+- The score: AUC per render, the marked seams above the rest; first on the seams where the pair changes (two thirds
+  keep it, and no measure sees a seam there, so all seams flatter every measure, A too), also on flat target only,
+  and strong against the rest. The ceiling: the repeats' agreement.
+- Done 2026-10-06 without the user (LOG):
+  - `seams.py check`, the user's cases, synthetic: the measures through the eye (B and C) fail red | magenta dots
+    with black along the border: the blur carries the dots' colour onto it. Raw B, C and D pass, A passes but by a
+    small margin.
+  - The painted segments (229, README 1), the share where a measure rates the painting below Select pairs (L + ab):
+    C through the eye 0.73, D 0.72, B at a blur of 2 0.69, against `seam_excess` 0.65; raw B and C 0.61-0.63.
+  - The renders (`seams.py make`, 27 s) and the page (`seams.py paint`), checked headless; `seams.py report` on a
+    simulated painter.
+- The user's painting (2026-10-06, README 14): 1338 of 1342 marks on pair changes; B raw, the colour step, AUC 0.79
+  against A's 0.62 (with the edge weight 0.51), above A on 11 of 12 renders; top k 0.42 against the repeats'
+  0.48-0.75. Half the gate: clearly above A, not near the repeats. Lightness adds nothing on the renders, where its
+  steps are mostly the dots'; whether the user does not see lightness seams or the measure misses them, the renders
+  cannot tell.
+- Step 5b (the user, 2026-10-06): seam visibility itself, on synthetic patches without picture content
+  (`patches.py`, ~7 min of the user's time). A patch of 8 x 6 cells, the left half one pair, the right another, one
+  threshold map over both (the app's blue noise), so the dots run on across the border, nested where the levels
+  differ; the level varies slowly (sd 0.08, sigma 6 px), the same across the border; the user rates the middle seam
+  0-3.
+  - The first version changed the colours at one level, and the user stopped it after 26 ratings: magenta is 34%
+    brighter than red, so the lightness gave every seam away (`patches-v1.json`). A pair switch on a smooth surface
+    is near the same lightness, both pairs dithered to one target. Now the colour changes come at the same mean
+    luminance (the right side's level set for it), and the user moves the right side's lightness (up/down) to where
+    the seam is least visible and rates it there: the minimally distinct border (Boynton and Kaiser), so the
+    perceived lightness, not the CIE one, is matched, and the move says how far they differ.
+  - v2 (that, with Bayer and blue noise on a uniform level), the user after 3: a regular texture and a uniform field
+    show any break, which no render has (DBS breaks the Bayer pattern). So blue noise only, and the slow variation
+    of the level (`patches-v2.json`).
+  - What changes: the ink's hue on black paper (near r-m, g-c, y-w; far r-g, its dots sparser), its brightness (at
+    30, 50 and 75%), both (50%); gradients of the level (black-white, red-yellow; the paper's or the ink's hue, brightness);
+    lightness alone, a step of the level of one pair (k/w, k/r, k/g; 0.06, 0.12, 0.25); the first version's hue
+    changes at one level; the user's black border; none. 51 patches and 10 repeats, random order.
+  - What it answers that the renders cannot: whether the user sees lightness seams (on the renders the lightness
+    steps are mostly the dots'), how much the dots hide a colour change (the user: ~50% noise hides it), and how
+    brightness counts.
+  - v3 (blue noise, the slow variation), 51 patches and 10 repeats, done (README 15): hue at the same lightness ~2,
+    brightness alone 1, lightness steps up to 0.12 0; E 0.75 on the patches, B raw 0.14; on the renders B raw 0.79,
+    E 0.71. The dots run on across the patches' border and break on a render's.
+  - v4 (the user, 2026-10-06): a gradient of random direction and strength on every patch (the ramps strong), each
+    change twice, and the dots breaking at the border (the right half's from elsewhere in the tile) on the near
+    hues, brightness and no change at 50%. 124 patches and 10 repeats, ~15 min; each instance in turn, so a stop
+    halfway covers all.
+  - v4 done (README 15): the dots breaking at the border makes no seam; the attributes 0.83, E 0.81, B raw 0.20 on the
+    patches. The user: inks on black only, near hues, no blue; the renders are full of the rest.
+  - v5 (2026-10-06): a paper's change under bright white (C-G, C-B, Y-C, Y-G, M-R, dim c-g), blue (b against r and m,
+    B against b, blue paper under c, y, w; B/C against B/G), the same mean colour from other dots (b/y, r/c, m/g
+    against k/w and each other; b/r against k/m, b/g against k/c, r/g against k/y), lightness on C/W, the v3-v4
+    anchors r-m and r-g. 25 changes twice, 10 repeats, ~7 min.
+  - A new candidate, E: the colour change the pair switch makes at the pixels along the border, the dots the same.
+    Zero for the same pair and for paper on both sides; the form a selection term can take, from each pair's dots.
+    B, the best on the renders, is not zero for the same pair: it charges a dotted pair's own steps at a border.
+- Step 5c, done 2026-10-06 (`seamfit.py`, README 16): one score from all the data. Two terms: 0.075 x E_L (the
+  lightness change of the border's pixels when the pair switches, the dots the same) + 0.055 x M_ab (the colour
+  difference of the cells' mean colours, beyond the source's), per dE. Held out: renders 0.68, rounds 0.79-0.88;
+  the coherence term 0.51. All the measures: 0.73 on the renders, four more terms.
+- The user on the ranked sheets (`seamfit.py ranked`: per L* 15-92 every two pairs that reach it, 16 evenly along
+  the score's ranking): not quite. The user sorts the same patches (`seamfit.py sort`, blind, starting in the score's
+  order, a shuffle on offer); the orders become data for the fit (a ranking within each lightness).
+- Done (README 17): the sorting, the user's rule (a solid-looking dim cell next to bright dots, where it is light),
+  and the score with three terms: 0.054 x M_ab + 0.126 x Y x E_L + 1.68 x Y x the solidity step (Y, the cells' mean
+  L* / 100). Held out: renders 0.72, rounds 0.78-0.87, the sorting 0.85. Each term from two pairs' dots and means.
+- Step 5d, the prototype (`selection.py`, 2026-10-06): the score as the DP's pairwise table, per border and two
+  pairs from each pair's halftone in each cell, times coherence x scale (0.0048: the old term's sum over the current
+  selections' pair changes over the score's), the coherence term off. My copy of the selection with the old term
+  gives the current labels on all six pictures. The score at the halftone against after DBS: Spearman 0.85-0.96 on
+  the changed seams. 35-184 cells changed a picture. The user's blind round, one sheet a training picture (`selection.py
+  user`, `dp.py vote rounds/seams/selection data/seams/selection/user`).
+- The user's round (README 18): the score better on 5 of 6, both fine 1, the current 0. The gate: the held-out
+  pictures (fitted partly on the training pictures' renders), 5 sheets and 5 repeats with the sides swapped. If it
+  holds: the term in `src` on a `feature/*` branch from `develop` (in `SelectionEnergy`, from `realized` and
+  `bitmaps`, `coherence` its weight), with tests (zero for the same pair, the user's cases), a PR into `develop`.
+- Held out (README 18): both bad on four, the current better on david, every repeat the same; the gate fails at x1.
+  The user: the score's contribution is low. The strength by the user on the training pictures (`selection.py
+  strength`, x1-x16 side by side), then the held-out check again at that strength; the held-out pictures stay out of
+  the choice.
+- The user's strengths (README 18): times each picture's coherence 8-26, so the weight fixed at 16, the coherence
+  aside. The held-out check at it (`held-fixed`). In `src` the seam term's weight would then not be the method
+  presets' coherence (2 and 6), or both presets get one value.
+- Held out at the fixed weight: 1 better (burning-hand), 1 worse (david, a tone from the brightness switch), 3 both
+  bad (old settings). The gate in full is not met; the user decides the next step (an option off by default, as
+  surface dE, or the default).
+- **Status (2026-10-06): the user chose more research before the app.** What a next session needs:
+  - The score: `seamfit.SEAM`, three terms, README 17; in the selection `selection.table` (per border, each two
+    pairs, from `realized` and `bitmaps`), weight fixed at `selection.WEIGHT` = 16 x 0.0048 per score unit, the
+    picture's coherence aside, the coherence term off (`select(c, scale, weight)`).
+  - Results: README 14-18, FINDINGS "Seams". Training pictures blind 5 better, 1 both fine, 0 worse (at the first,
+    weaker scale); held out at the fixed weight 1 better (burning-hand), 1 worse (david), 3 both bad.
+  - The data, all in `rounds/seams/`: the painted seams (`key.json`, `marks.json`), the patch rounds (`patches-vN`,
+    v3-v5 used), the sorting (`ranked-v1`), the selection rounds (`selection/`, `selection/held`, `held-fixed`, each
+    `user-key.json` and `user-verdicts.json`). Renders in `data/` are rebuilt by `seams.py make`, `patches.py make`
+    (keys hold the specs), `seamfit.py ranked`, `selection.py make [held] [fixed]`.
+- Next, research (in this order):
+  1. **Brightness as a tone** (david): a switch between the dim and bright variants of one pair's colours (k/w and
+     K/W) gives a tone between them, and the user keeps it in greyscale; the score charges it as a seam (by the
+     patches rightly, ~1 against a hue's ~2). Try: no lightness charge for such a switch where the target's tone lies
+     between the two; check david against the training pictures, blind.
+  2. **A fair held-out test**: three held-out pictures were both bad at their old project settings (no gallery),
+     which hides the comparison. Give them the current method presets (not tuning on them), then the check again.
+  3. The dark end: the lightness term times Y lets colour lead in the dark (the sorting at L* 26, 0.87 -> 0.65); a
+     floor on Y, if the user's dark sheets matter more than the renders' few dark marks.
+  4. The strength by picture: jojo wanted none, rocket-rackoon x1 (both had few changes); one weight may do, else a
+     knob.
+- Then the app: the term in `SelectionEnergy` on a `feature/*` branch from `develop`, its weight fixed (the method
+  presets' coherence 2 and 6 would scale it apart), tests (zero for the same pair; the user's cases from `seams.py
+  check`), as an option off by default or the default, by the user.
 
 ## After the gallery
 

@@ -255,7 +255,7 @@ def user(n=30, repeats=5, seed=4):
 
 PAGE = """<!doctype html><meta charset="utf-8"><title>dizher e1</title>
 <style>body{margin:0;background:#222;color:#ddd;font:15px system-ui}#bar{padding:8px 12px}
-img{display:block;margin:0 auto}b{color:#fff}</style>
+img{display:block;margin:0 auto;image-rendering:pixelated}b{color:#fff}</style>
 <div id="bar"></div><img id="img">
 <script>
 const S = %s, V = %s; let i = S.findIndex(s => !(s in V)); if (i < 0) i = S.length;
@@ -268,8 +268,9 @@ function show() {
     ` &nbsp; left the picture, middle 1, right 2 &nbsp; keys: <b>&larr;</b> 1 &nbsp; <b>&rarr;</b> 2 &nbsp; <b>Space</b> both fine &nbsp; <b>x</b> both bad &nbsp; Backspace back`;
 }
 function fit() {   // the whole sheet as large as the window holds, up or down
-  const k = Math.min(innerWidth / img.naturalWidth, (innerHeight - bar.offsetHeight) / img.naturalHeight);
-  img.style.width = img.naturalWidth * k + 'px';
+  // whole screen pixels per sheet pixel, square (a fractional enlargement smoothed the raw sheets); smaller only to fit
+  const d = devicePixelRatio, fit = d * Math.min(innerWidth / img.naturalWidth, (innerHeight - bar.offsetHeight) / img.naturalHeight);
+  img.style.width = img.naturalWidth * (fit >= 1 ? Math.floor(fit) : fit) / d + 'px';
 }
 img.onload = fit; addEventListener('resize', fit);
 addEventListener('keydown', async e => {
@@ -285,7 +286,7 @@ show();
 </script>"""
 
 
-def vote(round_dir=ROUND, sheets_dir=OUT / 'user', port=8765):
+def vote(round_dir, sheets_dir, port=8765):
     """The user's sheets one at a time in the browser; each key press saved to ROUND/user-verdicts.json."""
     import webbrowser
     from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -298,6 +299,7 @@ def vote(round_dir=ROUND, sheets_dir=OUT / 'user', port=8765):
         def send(self, body: bytes, kind: str):
             self.send_response(200)
             self.send_header('Content-Type', kind)
+            self.send_header('Cache-Control', 'no-store')   # sheets made again under the same names
             self.end_headers()
             self.wfile.write(body)
 
@@ -321,4 +323,5 @@ def vote(round_dir=ROUND, sheets_dir=OUT / 'user', port=8765):
 
 
 if __name__ == '__main__':
-    {'make': make, 'survey': survey, 'wave': lambda: wave(int(sys.argv[2])), 'score': score, 'user': user, 'vote': lambda: vote(*sys.argv[2:4])}[sys.argv[1]]()
+    {'make': make, 'survey': survey, 'wave': lambda: wave(int(sys.argv[2])), 'score': score, 'user': user, 'vote': lambda: vote(*sys.argv[2:4]) if len(sys.argv) >= 4 else
+             sys.exit('usage: dp.py vote ROUND SHEETS (both: a missing SHEETS once showed another round\'s sheets)')}[sys.argv[1]]()
