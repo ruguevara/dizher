@@ -285,8 +285,8 @@ MATRICES = {k: (np.asarray(m), d) for k, (m, d) in MATRICES.items()}
 GROUPS = {   # the dropdown's sections and the gallery's tabs, in order; Custom: patterns from the editor, to come
     'Bayer': ('Bayer 2x2', 'Bayer 3x3', 'Bayer 4x4', 'Bayer 8x8', 'Bayer 16x16', 'Bayer 32x32', 'Dispersed dots 1',
               'Dispersed dots 2', 'Void dispersed dots', 'Ulichney Bayer 5'),
-    'Dots': ('Magic circle 5x5', 'Magic circle 6x6', 'Magic circle 7x7', 'Magic 8x8', 'Clustered dot 11', 'Clustered dot 6'),
     'Non-rect': ('Non-rectangular 1', 'Non-rectangular 2', 'Non-rectangular 3', 'Non-rectangular 4'),
+    'Dots': ('Magic circle 5x5', 'Magic circle 6x6', 'Magic circle 7x7', 'Magic 8x8', 'Clustered dot 11', 'Clustered dot 6'),
     'Rombs': ('Magic 45deg 4x4', 'Magic 45deg 6x6', 'Magic 45deg 8x8', 'Clustered dot 1', 'Clustered dot 4',
               'Clustered dot 5', 'Diagonal', 'Ulichney clustered dot'),
     'Squares': ('Magic 4x4', 'Magic 6x6', 'Ulichney', 'Clustered dot 7', 'Clustered dot 8', 'Central white point',
