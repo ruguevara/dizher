@@ -190,7 +190,8 @@ class PatternPicker:
             viewport = imgui.get_main_viewport()
             imgui.set_next_window_size(imgui.ImVec2(self._width(viewport.work_size.x * 0.9), viewport.work_size.y * 0.9))
             imgui.set_next_window_pos(viewport.get_center(), imgui.Cond_.always.value, imgui.ImVec2(0.5, 0.5))
-        self.visible = imgui.begin_popup_modal(f'{label} gallery###gallery', True,
+        busy = ' · halftoning…' if self.thumbs.pending else ''
+        self.visible = imgui.begin_popup_modal(f'{label} gallery{busy}###gallery', True,
                                                imgui.WindowFlags_.no_saved_settings.value)[0]
         if not self.visible:
             self.thumbs.stop()
@@ -213,9 +214,8 @@ class PatternPicker:
             imgui.end_tab_bar()
         names = groups[self.tab]
         origin = (params.noise_y, params.noise_x)
-        footer = imgui.get_frame_height_with_spacing()
         # the scrollbar always there: the images per row do not change as a tab's rows outgrow the height
-        imgui.begin_child('images', imgui.ImVec2(0, -footer), 0, imgui.WindowFlags_.always_vertical_scrollbar.value)
+        imgui.begin_child('images', imgui.ImVec2(0, 0), 0, imgui.WindowFlags_.always_vertical_scrollbar.value)
         if conv is None:
             widgets.hint('The gallery shows once the conversion has run through Halftone')
         elif not names:
@@ -227,19 +227,14 @@ class PatternPicker:
                 pick(picked)
                 imgui.close_current_popup()
         imgui.end_child()
-        if imgui.button('Close'):
-            imgui.close_current_popup()
-        if self.thumbs.pending:
-            imgui.same_line()
-            imgui.text_disabled('Halftoning…')
         imgui.end_popup()
 
     @staticmethod
     def _cell(shape):
-        """(zoom, image size, image button width) of an image of shape (rows, columns)."""
+        """(zoom, image size, column width) of an image of shape (rows, columns)."""
         zoom = max(1, round(ZOOM * hello_imgui.dpi_window_size_factor()))   # whole screen px per image px
         size = imgui.ImVec2(shape[1] * zoom, shape[0] * zoom)
-        return zoom, size, size.x + 2 * imgui.get_style().frame_padding.x
+        return zoom, size, size.x
 
     def _width(self, most: float) -> float:
         """The modal's width at most `most`: as many whole images per row as fit, the window around them, no gap."""
@@ -254,7 +249,7 @@ class PatternPicker:
     def _grid(self, names, current, shape):
         """The images in rows as many as fit, each with its name under it; the name clicked, else None."""
         zoom, size, cell = self._cell(shape)
-        pad, gap = imgui.get_style().frame_padding, imgui.get_style().item_spacing
+        gap = imgui.get_style().item_spacing
         per_row = max(1, int((imgui.get_content_region_avail().x + gap.x) // (cell + gap.x)))
         picked, shown = None, set()
         for i, name in enumerate(names):
@@ -262,15 +257,19 @@ class PatternPicker:
                 imgui.same_line()
             imgui.begin_group()
             image = self.thumbs.images.get(name)
+            imgui.push_style_var(imgui.StyleVar_.frame_padding.value, imgui.ImVec2(0, 0))   # the image is the button, its name under its left edge
             if image is not None and image.shape[:2] == tuple(shape):
                 shown.add(name)
                 if imgui.image_button(name, self.images.ref(name, image, zoom), size):
                     picked = name
             else:   # not halftoned yet: a button of the same size, so the grid does not jump
-                imgui.button(f'…##{name}', imgui.ImVec2(cell, size.y + 2 * pad.y))
+                imgui.button(f'…##{name}', size)
+            imgui.pop_style_var()
+            lo, hi = imgui.get_item_rect_min(), imgui.get_item_rect_max()
             if name == current:
-                lo, hi = imgui.get_item_rect_min(), imgui.get_item_rect_max()
                 imgui.get_window_draw_list().add_rect(lo, hi, style.u32(Palette.hovered), 0, 3)
+            elif imgui.is_item_hovered():   # with no padding the button's own hover colour is hidden under the image
+                imgui.get_window_draw_list().add_rect(lo, hi, imgui.get_color_u32(imgui.Col_.button_hovered.value), 0, 3)
             imgui.text(name)
             imgui.end_group()
         self.images.keep(shown)
