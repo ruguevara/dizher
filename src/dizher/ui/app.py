@@ -153,12 +153,13 @@ class Pipeline:
 
     def restore(self, graph) -> None:
         """The params of a saved graph on the current pipeline: a node it lacks keeps its defaults, one the pipeline
-        lacks or has with another op is dropped, so a project from before a stage was added or removed still opens.
-        The history starts over."""
+        lacks or has with another op is dropped, so a project from before a stage was added or removed still opens;
+        a matrix under an old name takes its new one. The history starts over."""
         g = ops.make_graph()
         for nid, node in graph.nodes:
             if nid in g and node.op == g[nid].op and not isinstance(node.params, Unresolved):
                 g = g.with_params(nid, node.params)
+        g = ops.renamed(g)
         self.past, self.future, self._held = [], [], False   # a new document
         self.unpainted = False
         self._apply(g)

@@ -347,6 +347,9 @@ def test_project_round_trip_and_restore():
     loaded.restore(older)
     assert loaded.graph['metric'] == ops.make_graph()['metric'] and 'future' not in loaded.graph
     assert loaded.graph['contrast'].params.contrast == 25.0
+    # a matrix under img2spec's name takes its new one
+    loaded.restore(host.graph.with_params('halftoner', replace(host.graph['halftoner'].params, matrix='Clustered dot 5')))
+    assert loaded.graph['halftoner'].params.matrix == 'Diamond 8x8 coarse'
     host.close(), loaded.close()
 
 

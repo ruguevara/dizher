@@ -20,7 +20,7 @@ from .converter.converter import Converter
 from .converter.energy import METHODS, NEWEST, LEGACY
 from .converter.dither import Ditherer, ErrorDiffusion, Ordered, Stohastic
 from .halftoning.noise.noise import BLUE_NOISE_RESOLUTION
-from .halftoning.ordered.matrices import MATRICES
+from .halftoning.ordered.matrices import MATRICES, RENAMED
 from .halftoning.error_distribution.kernels import KERNELS
 from .platforms import Mode, c64, zxspectrum
 from . import tone
@@ -210,6 +210,13 @@ def halftoner(halftoner: Annotated[str, meta(choices=tuple(HALFTONERS))] = Order
     preview, and what the Halftoned selection method scores); each reads its own params (Ditherer.controls): Ordered
     the threshold matrix, Error diffusion the kernel, the tiled ones their origin."""
     return HALFTONERS[halftoner](matrix=matrix, kernel=kernel, origin=(noise_y, noise_x))
+
+
+def renamed(graph: Graph) -> Graph:
+    """A saved graph with the halftoner's matrix under its current name: projects from before the renaming."""
+    params = graph['halftoner'].params
+    new = RENAMED.get(getattr(params, 'matrix', None))
+    return graph.with_params('halftoner', replace(params, matrix=new)) if new else graph
 
 
 def prepare(picture: np.ndarray, target: Mode, metric: Metric, eye: Eye, halftoner: Ditherer, progress=None) -> Converter:

@@ -17,3 +17,8 @@ def test_every_kernel_is_in_exactly_one_group():
     names = grouped(KERNEL_GROUPS)
     assert len(names) == len(set(names))
     assert set(names) == set(KERNELS)
+
+
+def test_renamed_matrices_exist():
+    from dizher.halftoning.ordered.matrices import RENAMED
+    assert set(RENAMED.values()) <= set(MATRICES) and not set(RENAMED) & set(MATRICES)
