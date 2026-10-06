@@ -867,4 +867,27 @@ artists' 6.4%, at mid and high lightness; and the seam score does not see it, th
 the artists' (the blurred target's cell means are nearer). A judge with an expert's ground truth that costs the user
 no time, on art drawn to the grid; the pictures are not photographs.
 
+**Step 6.1, a shared-colour term** (`recover K W`): on each seam whose two pairs share no colour (black's two indexes
+one), W x coherence x the seam's smoothness weight (0 across the target's edges), added to the current selection; the
+gate is the recovery at 2x and 3x the blur, the share of changes without a shared colour against the artists' 6.4%:
+
+| W x coherence | x2: cells recovered / no shared colour | x3: cells recovered / no shared colour | change rate x3 | bright/dim only x3 |
+|---|---|---|---|---|
+| 0 (the current) | 0.735 / 0.080 | 0.632 / 0.101 | 0.436 | 0.095 |
+| 0.3 | 0.738 / 0.055 | **0.643 / 0.055** | 0.435 | 0.088 |
+| 1 | 0.731 / 0.047 | 0.639 / 0.044 | 0.436 | 0.087 |
+| 100 (as good as forbidden) | 0.712 / 0.025 | 0.632 / 0.019 | 0.438 | 0.086 |
+| the artists' V, W 0 (6.2) | 0.751 / 0.080 | 0.641 / 0.107 | 0.555 | 0.170 |
+| the artists | / 0.064 | / 0.064 | 0.505 | 0.092 |
+
+A soft weight (0.3) brings the share without a shared colour to the artists' and recovers one point more at 3x, the
+same at 2x, the other border statistics untouched; the hard constraint overshoots (2%) and loses two points at 2x.
+
+**Step 6.2, the artists' V** (`recover K 0 artists`): the transition table, -log(count / expected) clipped at 0 and
+scaled to 0..1 by the pairs' shown sets, in place of the attributes' V (`artists_V`; fitted on the same 100 screens,
+so in-sample). Recovery +1.6 at 2x and +0.9 at 3x, but the borders drift from the artists': the change rate 0.55
+(the artists 0.505, the current 0.44), bright/dim-only switches 0.17 (0.09), the share without a shared colour as
+before. Many adjacencies are free in the table (made more than expected), so it makes more cheap changes, not fewer
+bad ones; the dim/bright switch the user kept on david (18) is what it multiplies.
+
 Findings: `FINDINGS.md`; next steps: `PLAN.md`; the log: `LOG.md`.

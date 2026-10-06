@@ -265,3 +265,9 @@ takes an absolute path for a loose picture. At the eye's blur 82% of cells recov
 at 2x and 3x the blur 74% and 63%, and the converter's changes without a shared colour grow to 10% of borders against
 6.4%, unseen by the seam score (its changes score lower than the artists'). The branch is rebased on `develop` f4d422e
 (#18-#21).
+Step 6.1 (README 19): a shared-colour term on the current selection, W x coherence on a flat seam whose pairs share
+no colour; at W 0.3 the changes without a shared colour fall to the artists' share (10.1 -> 5.5% at 3x), recovery
++1.1 at 3x, +0.3 at 2x, the hard constraint overshoots and loses 2.3 at 2x. Step 6.2: the artists' transition table
+as V (in-sample): recovery +1.6 / +0.9, but the change rate 0.55 and bright/dim switches 0.17, twice the artists'; it
+frees cheap changes rather than removing bad ones. Next: the shared-colour term at 0.3 (and 1) by the user, blind,
+on the training pictures.

@@ -317,15 +317,21 @@ and `rounds/duel` stay as the record; the method and its checks in `LOG.md`.
   the borders, 87% with a shared colour, the border's pixels in it 5x more than chance; what they avoid the score
   tells better than V (rho -0.41 against -0.22). Recovery 82% at the eye's blur, 74% at 2x, 63% at 3x; the converter
   loses the shared colour first (changes without one 6.9 -> 10.1% of borders against 6.4%), unseen by the score.
-- Next (in this order), each by recovery at 2x and 3x the blur (the gate: more cells recovered, the share of changes
-  without a shared colour down to the artists' ~6%, on all 100), then the user blind on the training pictures:
-  1. **A shared-colour term**: a pairwise cost on a change of pair that keeps no colour of the neighbour's, where the
-     target has no edge (the coherence term's edge weight); the simplest prior the artists give. Try as a hard
-     constraint first (the DP's table at infinity), then a weight.
-  2. **The transition table as V**: the 71 x 71 log ratio of the artists' changes (count over expected) in place of
-     the attributes' V, the coherence weight as it is.
+- Each candidate by recovery at 2x and 3x the blur (the gate: more cells recovered, the share of changes without a
+  shared colour down to the artists' ~6%, on all 100), then the user blind on the training pictures:
+  1. **A shared-colour term**, done 2026-10-06 (README 19): W x coherence x the seam's smoothness on a change of pair
+     that keeps no colour of the neighbour's (`select_shared`). W 0.3 passes the gate (no shared colour 10 -> 5.5% at
+     3x, recovery +1.1 at 3x, +0.3 at 2x, nothing else moved); W 100 (a hard constraint) overshoots to 2% and loses
+     2.3 at 2x.
+  2. **The transition table as V**, done (`artists_V`, in-sample): recovery +1.6 / +0.9 but the change rate and the
+     bright/dim switches twice the artists' excess. Not taken; if ever, held out (the table from 50 screens, the test
+     on the other 50) and with the bright/dim switch charged apart.
   3. The recovery's own blind spots: hue ramps the artists make and the score charges (B/M | M/Y), the one-colour cell
      next to its own colour (made 7-8x); whether the selection makes them at 3x.
+- Next: the shared-colour term at W 0.3 and 1 against the current selection, blind, on the six training pictures at
+  their gallery best with DBS (as `selection.py user`); then, if it holds, the term in `SelectionEnergy` on a
+  `feature/*` branch from `develop` (a pairwise cost from the pairs' palette indexes, its weight a fraction of
+  coherence), with tests (zero where a colour is shared, zero across an edge), a PR into `develop`.
 - Caveats: the pictures are drawn to the grid, not photographs; a blur of 2-3x the eye is a stand-in for that. The
   recovery judges the selection against one expert's answer among the good ones (there is no correct colouring,
   `FINDINGS.md`), so a few points of recovery mean nothing, a shift of the shared-colour share does.

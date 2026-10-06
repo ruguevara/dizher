@@ -113,6 +113,11 @@ bottom. How we found it: `LOG.md`.
   score lower than the artists'). (19)
 - Recovery of the artists' cells is a judge with an expert's ground truth and no user time, on art drawn to the grid;
   the pictures are not photographs. (19)
+- **A soft shared-colour term** (0.3 x coherence on a flat seam whose pairs share no colour) brings the converter's
+  share of such changes to the artists' (10% -> 5.5% at 3x the blur) with recovery up one point and the other border
+  statistics untouched; as a hard constraint it overshoots and loses recovery. (19)
+- **The artists' transition table as V** recovers 1-2 points more (in-sample) but doubles the change rate's excess and
+  the bright/dim switches over the artists': it frees cheap changes, it does not remove bad ones. (19)
 
 ## Against the competitors
 

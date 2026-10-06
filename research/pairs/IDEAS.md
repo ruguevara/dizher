@@ -9,8 +9,8 @@ tested, the result is in `LOG.md` and `FINDINGS.md`. The cost is the user's time
   `PLAN.md` step 6): the artists change pairs on half the borders but keep a shared colour on 87% and put it on the
   border's pixels; the current selection recovers 82% of their cells through the user's eye and loses the shared colour
   first as the blur grows, unseen by the seam score. The recovery test is a judge with an expert's ground truth and
-  no user time. Next: a shared-colour term (or constraint) in the selection, and the transition table as V, each by
-  recovery at 2-3x the blur, then the user blind.
+  no user time. A soft shared-colour term (0.3 x coherence) passes the recovery gate; the transition table as V frees
+  cheap changes instead. Next: the term by the user, blind, on the training pictures.
 - **Seams by the pixels** (the user, 2026-10-06), in progress: a seam score from the user's painted seams, rated
   patches and a sorting replaces the coherence term in a prototype; better on 5 of 6 training pictures, 1-1 held out
   (README 14-18). Next, before the app (`PLAN.md`, step 5 "Next"): a brightness switch as a tone (david), a fair

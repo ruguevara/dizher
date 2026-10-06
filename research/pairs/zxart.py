@@ -9,11 +9,18 @@ the real border over it says how much the artist hides at the border itself.
     python research/pairs/zxart.py stats    the priors: the pairs used, the borders (same set, a shared colour, none)
                                             by lightness, the seam terms on the changed borders against the null,
                                             the bright/dim switches; the per-border table to data/zxart/seams.npz
-    python research/pairs/zxart.py recover [K]   the recovery test: each screen through the user's eye (views.seen2
+    python research/pairs/zxart.py recover [K [W [artists]]]   the recovery test: each screen through the user's eye (views.seen2
                                             at 1x; K times its sigmas, 1) as a new project's source, Select pairs at the defaults without DBS; per
                                             cell the shown set against the artist's, per border the change rate, the
                                             shared colour, E and the score, the converter against the artist on the
-                                            same borders; data/zxart/recover[-xK]/ID.png, the table ID.npz
+                                            same borders; data/zxart/recover[-xK[-sharedW]]/ID.png, the table ID.npz.
+                                            W: a shared-colour term (step 6.1) added to the selection: a change of
+                                            pair that keeps no colour of the neighbour's costs W x coherence x the
+                                            seam's smoothness weight (0 across the target's edges); 100: as good as
+                                            forbidden on flat seams. artists (step 6.2): the coherence term's V
+                                            replaced by the artists' transition table (stats: data/zxart/transitions.npz),
+                                            -log(count / expected) clipped at 0, scaled to 0..1, by the pairs' shown
+                                            sets (both colours shown); W then 0 for the term alone
 """
 import json
 import sys
@@ -34,7 +41,7 @@ from acuity import EYE   # noqa: E402
 from common import DATA, Project   # noqa: E402
 from views import seen2   # noqa: E402
 from metrics import SRGB2XYZ, linear, xyz2lab   # noqa: E402
-from dizher.converter.energy import pair_dissimilarity   # noqa: E402
+from dizher.converter.energy import GROUPS, OFFSETS, optimise, pair_dissimilarity, surface_binding   # noqa: E402
 from dizher.platforms.zxspectrum import ZXPalette   # noqa: E402
 from dizher.platforms.zxspectrum.scr import _row_offsets, to_scr   # noqa: E402
 
@@ -202,6 +209,10 @@ def transitions(t, key, u, cnt, sc, pair):
     v = np.array([V[at[k // 256], at[k % 256]] for k in u])
     mean = np.array([sc[ch & (key == k)].mean() for k in u])
     lr = np.log((cnt + 1) / (exp + 1))
+    full = np.zeros((len(codes), len(codes)))
+    full[[at[k // 256] for k in u], [at[k % 256] for k in u]] = lr
+    full = np.maximum(full, full.T)
+    np.savez(OUT / 'transitions.npz', codes=codes, lr=full)   # the table for artists_V
     w = cnt >= 30
     print(f'\ntransitions: {len(u)} kinds, {w.sum()} with 30+ counts; log(observed / expected) against V rho '
           f'{spearmanr(lr[w], v[w]).statistic:.2f}, against the score {spearmanr(lr[w], mean[w]).statistic:.2f}; '
@@ -214,16 +225,16 @@ def transitions(t, key, u, cnt, sc, pair):
 
 def recover_job(job) -> dict:
     """The artist's and the converter's border tables and shown sets for one screen, (file, K, folder)."""
-    f, K, folder = job
+    f, K, W, V, folder = job
     bitmap, idx = decode(f.read_bytes())
     X = np.where(bitmap[..., None], ZX[idx[..., 1]].repeat(8, 0).repeat(8, 1), ZX[idx[..., 0]].repeat(8, 0).repeat(8, 1))
     png = folder / f'{f.stem}.png'
     cv2.imwrite(str(png), cv2.cvtColor(seen2((X * 255).round().astype(np.uint8), *(s * K for s in EYE), k=1),
                                        cv2.COLOR_RGB2BGR))
     p = Project(str(png), optimise={'enabled': False})
-    labels = p.selection.best_attr_indexes
+    labels = p.selection.best_attr_indexes if not (W or V) else select_shared(p, W, V)
     idx2 = p.pairs[labels]
-    X2 = p.convert()
+    X2 = p.convert() if not (W or V) else p.render(labels)
     bitmap2 = np.abs(X2 - ZX[idx2[..., 1]].repeat(8, 0).repeat(8, 1)).sum(-1) < 1e-3
     cv2.imwrite(str(png.with_name(f'{f.stem}-converter.png')), cv2.cvtColor((X2 * 255).round().astype(np.uint8),
                                                                            cv2.COLOR_RGB2BGR))
@@ -234,13 +245,49 @@ def recover_job(job) -> dict:
     return out
 
 
+def artists_V(pairs: np.ndarray) -> np.ndarray:
+    """(P, P) the artists' transition table as the coherence term's V: -log(count / expected) of two shown sets
+    side by side, clipped at 0 (made more than expected: free), scaled to 0..1; a set the artists never show costs
+    the most. The pairs by their shown sets with both colours shown, black's two indexes one."""
+    z = np.load(OUT / 'transitions.npz')
+    cost = np.clip(-z['lr'], 0, None)
+    cost /= cost.max()
+    at = {int(c): i for i, c in enumerate(z['codes'])}
+    col = np.where(pairs == 8, 0, pairs)
+    code = col.min(1) * 16 + col.max(1)
+    i = np.array([at.get(int(c), -1) for c in code])
+    V = np.where((i[:, None] >= 0) & (i[None] >= 0), cost[i[:, None], i[None]], 1.0)
+    V[code[:, None] == code[None]] = 0
+    return V.astype(np.float32)
+
+
+def select_shared(p: Project, W: float, V: bool = False) -> np.ndarray:
+    """Select pairs' DP at the project's settings (as selection.select) plus the shared-colour term: W x coherence
+    on each flat seam whose two pairs share no colour (black's two indexes one), times the seam's smoothness; V: the
+    artists' table in place of the pairs' attribute distance."""
+    c = p.selection
+    e, w = c.energy, c.energy.weights
+    D = e.unary()
+    if c.surface > 0:
+        D = D + surface_binding(D, c.image_rgb, c.cell, c.surface)
+    S = {off: sum(w[g] * e.S[g][off] for g in GROUPS) for off in OFFSETS}
+    Lh, Lv = e.seam_smoothness()
+    col = np.where(p.pairs == 8, 0, p.pairs)                                        # (P, 2)
+    cost = (W * c.coherence * ~(col[:, None, :, None] == col[None, :, None, :]).any((2, 3))).astype(np.float32)
+    S[(1, 0)] = S[(1, 0)] + Lh[..., None, None] * cost
+    S[(0, 1)] = S[(0, 1)] + Lv[..., None, None] * cost
+    return optimise(D, S, artists_V(p.pairs) if V else c.pair_dissimilarity, Lh, Lv, c.coherence)
+
+
 def recover():
     K = float(sys.argv[2]) if len(sys.argv) > 2 else 1.0
-    folder = OUT / ('recover' if K == 1 else f'recover-x{K:g}')
+    W = float(sys.argv[3]) if len(sys.argv) > 3 else 0.0
+    V = len(sys.argv) > 4 and sys.argv[4] == 'artists'
+    folder = OUT / ('recover' + (f'-x{K:g}' if K != 1 else '') + (f'-shared{W:g}' if W else '') + ('-artists' if V else ''))
     folder.mkdir(parents=True, exist_ok=True)
     with Pool(8) as pool:
-        res = pool.map(recover_job, [(f, K, folder) for f in sorted(OUT.glob('*.scr'))])
-    print(f'blur x{K:g}')
+        res = pool.map(recover_job, [(f, K, W, V, folder) for f in sorted(OUT.glob('*.scr'))])
+    print(f'blur x{K:g}' + (f', shared-colour term {W:g} x coherence' if W else '') + (", the artists' V" if V else ''))
     cells = np.concatenate([r['cells'] for r in res], 1)
     T = {who: {k: np.concatenate([r[who][k] for r in res]) for k in res[0][who]} for who in ('artist', 'converter')}
     print(f"{len(res)} screens; cells with the artist's shown set {np.mean(cells[0] == cells[1]):.3f}")
