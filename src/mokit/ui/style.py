@@ -96,7 +96,7 @@ STATUS_DOT = {"radius": 0.22, "offset": (0.0, 0.0)}   # `widgets.status_dot`: di
 
 # layout constants, in em
 GAP = 0.6            # vertical gap between groups (`widgets.gap()`)
-FIELD_WIDTH = 10     # numeric inputs and combos
+FIELD_WIDTH = 16.5   # numeric inputs, sliders and combos: Dizher's pattern combo, an icon and its longest name
 DIALOG_WIDTH = 40    # text inputs in dialogs
 PROGRESS_WIDTH = 8   # status-bar progress bar
 

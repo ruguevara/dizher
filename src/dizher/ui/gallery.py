@@ -24,6 +24,7 @@ PICKERS = {Ordered.label: ('matrix', MATRIX_GROUPS), ErrorDiffusion.label: ('ker
 EMPTY = {'Custom': 'Patterns drawn in the pattern editor, to come'}   # what an empty section says
 ZOOM = 2        # gallery image px per screen px on a 96 dpi display
 RAMP = 4        # icon width / height
+MIN_WIDTH = 10  # em the pattern combo keeps in a narrow dock
 NAME_GAP = 0.25 # em between a gallery image and its name
 ROW_GAP = 0.5   # em added between gallery rows
 
@@ -149,12 +150,11 @@ class PatternPicker:
         style_ = imgui.get_style()
         spacing, pad = style_.item_spacing.x, style_.frame_padding.x
 
-        # wide enough for the icon and the longest name, as far as the row leaves room for the label and the button
-        longest = max(imgui.calc_text_size(n).x for names in groups.values() for n in names)
-        needed = icon.x + spacing + longest + 2 * pad + imgui.get_frame_height()
+        # every field's width (FIELD_WIDTH fits the icon and the longest name), narrower where the row would push the
+        # label and the button out of a narrow dock
         room = (imgui.get_content_region_avail().x - imgui.calc_text_size(field).x
                 - imgui.calc_text_size('Gallery…').x - 2 * pad - 2 * spacing)
-        imgui.set_next_item_width(max(em_size(style.FIELD_WIDTH), min(needed, room)))
+        imgui.set_next_item_width(min(em_size(style.FIELD_WIDTH), max(room, em_size(MIN_WIDTH))))
         flags = imgui.ComboFlags_.height_largest.value | imgui.internal.ComboFlagsPrivate_.custom_preview.value
         if imgui.begin_combo(field, '', flags):   # a custom preview takes no text
             for group, names in groups.items():
