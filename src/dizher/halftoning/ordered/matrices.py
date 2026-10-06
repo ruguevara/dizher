@@ -1,6 +1,6 @@
 """Ordered dither threshold matrices: (rows, divisor); a pixel is ink where its level > (entry + 0.5) / divisor.
 
-Bayer matrices are generated. The rest are copied from libdither (Copyright (C) 2022-2025 Robert Kist,
+Bayer matrices and the 45 degree line screens are generated. The rest are copied from libdither (Copyright (C) 2022-2025 Robert Kist,
 BSD-style licence in halftoning/libdither-LICENSE.txt, https://github.com/robertkist/libdither,
 dither_ordered_data.h), in img2spec's menu order: dispersed
 dots, line screens (non-rectangular), clustered dots, magic squares; GROUPS sorts them by look for the UI.
@@ -13,6 +13,26 @@ def bayer(n: int) -> np.ndarray:
     while m.shape[0] < n:
         m = np.block([[4 * m, 4 * m + 2], [4 * m + 3, 4 * m + 1]])
     return m
+
+def van_der_corput(n: int) -> np.ndarray:
+    """0..n-1 in the order of their bit-reversed fractions: each next one in the largest gap the earlier ones left."""
+    bits = max(1, (n - 1).bit_length())
+    key = [int(f'{i:0{bits}b}'[::-1], 2) for i in range(n)]
+    return np.argsort(np.argsort(key))
+
+
+def diagonal_lines(n: int) -> np.ndarray:
+    """The n x n index matrix of a 45 degree line screen ('/', a line every n px along a row): the lines grow from
+    their centre outward, a diagonal of pixels on alternate sides at a time, each diagonal filled in a dispersed
+    order along it, so every tone between two widths is the narrower line with dots of the next diagonal."""
+    y, x = np.indices((n, n))
+    d = (x + y) % n                         # the diagonal a pixel is on, 0 the line's centre
+    distance = np.minimum(d, n - d)
+    side = (d > n - d).astype(int)          # the two diagonals at one distance take turns
+    along = van_der_corput(2 * n)[2 * x + side]
+    key = distance * 2 * n + along
+    return np.argsort(np.argsort(key.ravel())).reshape(n, n)
+
 
 MATRICES = {f'Bayer {n}x{n}': (bayer(n), n * n) for n in (2, 4, 8, 16, 32)}
 
@@ -280,6 +300,7 @@ MATRICES['Magic 8x8'] = (np.array([
     [15, 28, 48, 54, 50, 26, 17, 10],
     [ 8, 18, 34, 42, 32, 20,  6,  2],
     [ 5, 13, 25, 39, 24, 12,  3,  1]]), 65)
+MATRICES.update({f'Lines 45deg {n}': (diagonal_lines(n), n * n) for n in (4, 6, 8)})
 MATRICES = {k: (np.asarray(m), d) for k, (m, d) in MATRICES.items()}
 
 GROUPS = {   # the dropdown's sections and the gallery's tabs, in order; Custom: patterns from the editor, to come
@@ -291,6 +312,7 @@ GROUPS = {   # the dropdown's sections and the gallery's tabs, in order; Custom:
               'Clustered dot 5', 'Diagonal', 'Ulichney clustered dot'),
     'Squares': ('Magic 4x4', 'Magic 6x6', 'Ulichney', 'Clustered dot 7', 'Clustered dot 8', 'Central white point',
                 'Balanced centre point'),
-    'Lines': ('Clustered dot 2', 'Clustered dot 10', 'Clustered dot 3', 'Clustered dot 9'),
+    'Lines': ('Clustered dot 2', 'Clustered dot 10', 'Clustered dot 3', 'Clustered dot 9', 'Lines 45deg 4',
+              'Lines 45deg 6', 'Lines 45deg 8'),
     'Custom': (),
 }
