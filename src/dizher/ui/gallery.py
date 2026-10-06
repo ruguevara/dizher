@@ -24,8 +24,8 @@ PICKERS = {Ordered.label: ('matrix', MATRIX_GROUPS), ErrorDiffusion.label: ('ker
 EMPTY = {'Custom': 'Patterns drawn in the pattern editor, to come'}   # what an empty section says
 ZOOM = 2        # gallery image px per screen px on a 96 dpi display
 RAMP = 4        # icon width / height
-NAME_GAP = 0.1  # em between a gallery image and its name
-ROW_GAP = 0.8   # em added between gallery rows
+NAME_GAP = 0.25 # em between a gallery image and its name
+ROW_GAP = 0.5   # em added between gallery rows
 
 
 def halftoner(label: str, name: str, origin=(0, 0)):
