@@ -144,12 +144,17 @@ class PatternPicker:
         px = max(1, round(hello_imgui.dpi_window_size_factor()))   # icon px per screen px, as a 96 dpi screen shows it
         h = max(4, int(imgui.get_text_line_height() / px))
         icon = imgui.ImVec2(RAMP * h * px, h * px)
-        spacing = imgui.get_style().item_spacing.x
+        style_ = imgui.get_style()
+        spacing, pad = style_.item_spacing.x, style_.frame_padding.x
 
-        imgui.image(self.icons.ref((label, current), ramp_pixels(label, current, h), px), icon)
-        imgui.same_line(0, spacing / 2)
-        imgui.set_next_item_width(em_size(style.FIELD_WIDTH) - icon.x - spacing / 2)
-        if imgui.begin_combo(field, current, imgui.ComboFlags_.height_largest.value):
+        # wide enough for the icon and the longest name, as far as the row leaves room for the label and the button
+        longest = max(imgui.calc_text_size(n).x for names in groups.values() for n in names)
+        needed = icon.x + spacing + longest + 2 * pad + imgui.get_frame_height()
+        room = (imgui.get_content_region_avail().x - imgui.calc_text_size(field).x
+                - imgui.calc_text_size('Gallery…').x - 2 * pad - 2 * spacing)
+        imgui.set_next_item_width(max(em_size(style.FIELD_WIDTH), min(needed, room)))
+        flags = imgui.ComboFlags_.height_largest.value | imgui.internal.ComboFlagsPrivate_.custom_preview.value
+        if imgui.begin_combo(field, '', flags):   # a custom preview takes no text
             for group, names in groups.items():
                 imgui.separator_text(group)
                 if not names:
@@ -165,6 +170,11 @@ class PatternPicker:
                     imgui.same_line()
                     imgui.text(name)
             imgui.end_combo()
+        if imgui.internal.begin_combo_preview():   # the current one's icon and name in the closed combo
+            imgui.image(self.icons.ref((label, current), ramp_pixels(label, current, h), px), icon)
+            imgui.same_line()
+            imgui.text(current)
+            imgui.internal.end_combo_preview()
         imgui.same_line()
         if imgui.button('Gallery…'):
             self._open, self.tab = True, None
