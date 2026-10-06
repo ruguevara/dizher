@@ -129,6 +129,10 @@ bottom. How we found it: `LOG.md`.
   98.6% of the alternatives as the artists do; the fit 98.5%. (19)
 - **Both sources put the solidity step first**: the artists' score terms, fitted without the user, rank the user's
   painted seams at 0.70 against the user's own 0.72, and need Y for the dark end. (19)
+- **Artists change the pair where the picture changes colour**: 8% of flat borders (under 5 dE between the cells'
+  means), 89% over 40 dE. **The masking is one number**: the border column holds the shared colour at twice the
+  cell's odds (logit +0.69; a colour +0.87, black +0.53), both sides closed together (25% of shared changes have
+  both border columns wholly in it). A prior for the dots at a pair change, not for the pair. (19)
 - A shared-colour binary on the attributes (dropped: not a visibility measure, its weight a sweep) and the artists'
   transition table as V (in-sample; it frees cheap changes, doubling the bright/dim switches) are not the way. (19)
 

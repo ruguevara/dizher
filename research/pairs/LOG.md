@@ -288,3 +288,7 @@ imply coherence ~4-5 (the presets 2 and 6), eye seams 2-4 (chroma more), and a s
 user's 16, all on the solidity step; E and M nothing. The current energy at coherence 2 is at the artists' optimum
 (x1 0.986 against the fit's 0.985); the artists' score terms on the user's data nearly match SEAM (renders 0.70
 against 0.72). Both sources put the solidity step first. The user's part 2, a simple model of the artists' seams, next.
+Step 6.6 (the user's part 2, a simple model; `zxart.py model`, README 19): P(change | the cells' colour step, Y),
+0.08 under 5 dE to 0.89 over 40: artists change the pair where the picture changes colour; the masking as one logit
+shift, +0.69 (odds x2; a colour +0.87, black +0.53), both border columns closed together (correlation +0.40, 25% both
+wholly the shared colour). A prior for the dots at a pair change, and the range for a selection's changes.

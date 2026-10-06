@@ -339,9 +339,10 @@ and `rounds/duel` stay as the record; the method and its checks in `LOG.md`.
      loss. The artists imply coherence 4-5, eye seams 2-4 (chroma above luma), the seam score near 2 (not 16), all
      on the solidity step, E and M nothing; the current energy at coherence 2 is at their optimum. The artists' terms
      rank the user's painted seams at 0.70 against SEAM's 0.72.
-  6. **A simple model of the artists' seams** (the user), next: the probability tables (a change by lightness and
-     the picture's edge; a shared colour given a change; the border's pixels in the shared colour against the cell's
-     density: the masking; the two border columns' densities given the pairs).
+  6. **A simple model of the artists' seams** (the user), done (`zxart.py model`, README 19, `rounds/zxart/
+     model.json`): P(change | the cells' colour step, Y) from 0.08 on flat borders to 0.89 over 40 dE; P(shared |
+     change, Y); the masking one logit shift, +0.69 (odds x2), both border columns closed together; the joint table
+     of the two columns' shares. The dots' prior at a pair change; the selection's range.
 - What step 6 leaves: the artists' fingerprint (README 19) as a check on any selection, that its borders stay in
   the artists' range (the change rate ~0.5, bright/dim-only ~0.09, E = 0 ~0.22, the changes' score ~4); the hint that
   the score's weight on photographs may be nearer 1-4 than 16 (the held-out 1-1-3 at 16, README 18); and the border

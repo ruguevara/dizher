@@ -951,4 +951,30 @@ rho): x1 0.70 and 0.39, v3 0.76, v4 0.81, v5 0.65, the sorting 0.82, against SEA
 0.61: the user's dark end needs Y. Both sources put the solidity step first (the user's shares E x Y : M : S x Y =
 0.07 : 0.03 : 0.90).
 
+**Step 6.6, a simple model of the artists' borders** (`zxart.py model`, the tables in `rounds/zxart/model.json`),
+the per-border table with each side's share of the shared colour in the cell and in its border column:
+
+| P(the pair changes) by the cells' mean colour step | Y 0-0.25 | 0.25-0.5 | 0.5-0.75 | 0.75-1 | all | share of borders |
+|---|---|---|---|---|---|---|
+| step < 5 dE | 0.02 | 0.08 | 0.08 | 0.15 | **0.08** | 0.21 |
+| 5-10 | 0.22 | 0.17 | 0.15 | 0.30 | 0.21 | 0.10 |
+| 10-20 | 0.32 | 0.23 | 0.31 | 0.40 | 0.32 | 0.15 |
+| 20-40 | 0.50 | 0.51 | 0.60 | 0.60 | 0.55 | 0.20 |
+| > 40 | 0.85 | 0.92 | 0.89 | 0.85 | **0.89** | 0.35 |
+
+**Artists change the pair where the picture changes colour**: on a flat border (under 5 dE between the cells' means,
+a fifth of all) 8%, over 40 dE (a third of all: art drawn to the grid) 89%. The half of all borders that change is
+the content, not a style. P(a shared colour | a change) by Y: 1.00, 0.91, 0.77, 0.89.
+
+**The masking as one number**: on the two-colour sides of changed borders with a shared colour (118,004 sides), the
+cell holds the shared colour on 0.66 of its pixels, its border column on 0.77: a logit shift of **+0.69 (the odds x
+2)**; +0.53 when the shared colour is black, +0.87 when it is a colour; by Y +0.67, +0.71, +0.60, +0.91. The two
+border columns jointly (65,344 changed borders with a shared colour): both wholly the shared colour on 25%, both at
+7/8 or more 42%, one 30%, neither 28%; their shares correlate at +0.40 (the cells' own shares +0.26): the artist
+closes the border from both sides together. The joint table of the two columns' shares in eighths is in the json.
+
+What the model is for: the change table is the range a selection should stay in (a change on a flat border is rare;
+over 20 dE it is the rule); the masking is a prior for the dots, not the pair: at a pair change the halftone's
+border columns should favour the shared colour at twice the cell's odds, from both sides.
+
 Findings: `FINDINGS.md`; next steps: `PLAN.md`; the log: `LOG.md`.

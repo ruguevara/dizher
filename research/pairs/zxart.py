@@ -91,12 +91,14 @@ def decode(data: bytes):
     return bitmap, np.stack([(a >> 3 & 7) | bright, (a & 7) | bright], -1)
 
 
+merge = lambda i: np.where(i == 8, 0, i)   # black's two indexes one
+
+
 def shown(bitmap, idx):
     """(24, 32) a code of the set of colours each cell shows: black's two indexes one, a colour with no pixel out,
     the two sorted (a single colour twice)."""
     cells = bitmap.reshape(24, 8, 32, 8)
     has_ink, has_paper = cells.any((1, 3)), ~cells.all((1, 3))
-    merge = lambda i: np.where(i == 8, 0, i)
     paper, ink = merge(idx[..., 0]), merge(idx[..., 1])
     a = np.where(has_paper, paper, ink)
     b = np.where(has_ink, ink, paper)
@@ -120,7 +122,14 @@ def borders(bitmap, idx):
         far = cells[:, 0, :, :].mean(-1) if axis == 0 else cells[:, :, :, 0].mean(1)
         dLi, dLp = (np.abs(ends[a][..., k] - ends[b][..., k]) for k in (1, 0))
         E = lambda na, fb: ((na + fb) / 2 * dLi + (1 - (na + fb) / 2) * dLp)   # the switch's lightness change
+        pa, pb, ia, ib = code[a] // 16, code[b] // 16, code[a] % 16, code[b] % 16   # the shown sets' two colours
+        common = np.where(pa == pb, pa, np.where(pa == ib, pa, np.where(ia == pb, ia, np.where(ia == ib, ia, -1))))
+        share = lambda c, ink, lvl: np.where(c < 0, np.nan, np.where(ink == c, lvl, 1 - lvl))
+        mi, mp = merge(idx[..., 1]), merge(idx[..., 0])
         cols = dict(
+            common=common, cell_a=share(common, mi[a], level[a]), cell_b=share(common, mi[b], level[b]),
+            edge_a=share(common, mi[a], near[a]), edge_b=share(common, mi[b], far[b]),
+            dL=np.abs(lab_mean[a][..., 0] - lab_mean[b][..., 0]),
             changed=code[a] != code[b],
             shared=(code[a] // 16 == code[b] // 16) | (code[a] // 16 == code[b] % 16) | (code[a] % 16 == code[b] // 16)
             | (code[a] % 16 == code[b] % 16),
@@ -323,6 +332,61 @@ def recover():
               f"{sc[b & c['changed']].mean():.2f}")
 
 
+def model():
+    """The probability tables of the artists' borders (the docstring), printed and saved."""
+    from scipy.optimize import minimize_scalar
+    from scipy.special import expit, logit
+    t = dict(np.load(OUT / 'seams.npz'))
+    ch, sh, Y = t['changed'], t['shared'], t['Y']
+    out = {}
+    step = np.sqrt(t['dL'] ** 2 + t['M'] ** 2)   # the cells' mean colour difference, dE
+    SBINS = (0, 5, 10, 20, 40, 1e9)
+    print('P(the pair changes | the cells\' mean colour step dE, Y):')
+    print('  dE \\ Y     ' + ' '.join(f'{lo:.2f}-{min(hi, 1):.2f}' for lo, hi in zip(YBINS, YBINS[1:])) + '   all   share of borders')
+    out['change'] = {}
+    for lo, hi in zip(SBINS, SBINS[1:]):
+        b = (step >= lo) & (step < hi)
+        row = [ch[b & (Y >= y0) & (Y < y1)].mean() for y0, y1 in zip(YBINS, YBINS[1:])]
+        out['change'][f'{lo:g}-{hi:g}'] = row
+        print(f'  {lo:3g}-{min(hi, 999):<4g}   ' + ' '.join(f'{v:9.2f}' for v in row) + f'   {ch[b].mean():.2f}   {b.mean():.2f}')
+    out['shared'] = [float(sh[ch & (Y >= y0) & (Y < y1)].mean()) for y0, y1 in zip(YBINS, YBINS[1:])]
+    print('P(a shared colour | a change, Y): ' + ' '.join(f'{v:.2f}' for v in out['shared']))
+    # the masking: the border column's share of the shared colour against the cell's, both sides as rows
+    cell = np.concatenate([t['cell_a'], t['cell_b']])
+    edge = np.concatenate([t['edge_a'], t['edge_b']])
+    keep = np.concatenate([ch & sh] * 2) & ~np.isnan(cell) & (cell > 0) & (cell < 1)   # two-colour cells only
+    y2, black = np.concatenate([Y] * 2), np.concatenate([t['common'] == 0] * 2)
+    p = np.clip(cell, 1 / 64, 63 / 64)
+    k = np.round(edge * 8)
+    def beta(m):
+        nll = lambda b: -(k[m] * np.log(expit(logit(p[m]) + b)) + (8 - k[m]) * np.log(1 - expit(logit(p[m]) + b))).sum()
+        return float(minimize_scalar(nll, bounds=(-5, 5), method='bounded').x)
+    print(f'the masking: the border column\'s share of the shared colour against the cell\'s, on {keep.sum()} sides '
+          f'of changed borders with a shared colour (two-colour cells): cell {cell[keep].mean():.2f}, border '
+          f'{edge[keep].mean():.2f}; the logit shift beta {beta(keep):+.2f}')
+    out['masking'] = {'all': beta(keep)}
+    for name, m in (('black shared', keep & black), ('a colour shared', keep & ~black)):
+        out['masking'][name] = beta(m)
+        print(f'  {name}: cell {cell[m].mean():.2f}, border {edge[m].mean():.2f}, beta {beta(m):+.2f}')
+    for y0, y1 in zip(YBINS, YBINS[1:]):
+        m = keep & (y2 >= y0) & (y2 < y1)
+        out['masking'][f'Y {y0:g}-{min(y1, 1):g}'] = beta(m)
+        print(f'  Y {y0:.2f}-{min(y1, 1):.2f}: cell {cell[m].mean():.2f}, border {edge[m].mean():.2f}, beta {beta(m):+.2f}')
+    # the two border columns' shares of the shared colour, jointly
+    m = ch & sh & ~np.isnan(t['cell_a']) & ~np.isnan(t['cell_b'])
+    ea, eb = t['edge_a'][m], t['edge_b'][m]
+    print(f'the two border columns\' shares of the shared colour on {m.sum()} changed borders: both >= 7/8 '
+          f'{((ea >= 7 / 8) & (eb >= 7 / 8)).mean():.2f}, one {((ea >= 7 / 8) ^ (eb >= 7 / 8)).mean():.2f}, '
+          f'neither {((ea < 7 / 8) & (eb < 7 / 8)).mean():.2f}; correlation {np.corrcoef(ea, eb)[0, 1]:+.2f}; '
+          f'the cells\' shares correlation {np.corrcoef(t["cell_a"][m], t["cell_b"][m])[0, 1]:+.2f}')
+    H, _, _ = np.histogram2d(ea, eb, bins=(np.arange(10) - 0.5) / 8)
+    out['joint'] = (H / H.sum()).round(4).tolist()
+    print('  joint P(share a, share b) in eighths, rows a 0..8, columns b 0..8 (percent):')
+    for r in H / H.sum() * 100:
+        print('   ' + ' '.join(f'{v:5.1f}' for v in r))
+    (ROUND / 'model.json').write_text(json.dumps(out, indent=1))
+
+
 def extra():
     """At K times the blur: the converter's own changes (the artist keeps the pair), the artist's own (the converter
     keeps), and the changes both make, by the seam score and its terms, and the share without a shared colour."""
@@ -365,4 +429,4 @@ def check():
 
 
 if __name__ == '__main__':
-    {'fetch': fetch, 'stats': stats, 'recover': recover, 'extra': extra, 'check': check}[sys.argv[1]]()
+    {'fetch': fetch, 'stats': stats, 'recover': recover, 'model': model, 'extra': extra, 'check': check}[sys.argv[1]]()
