@@ -608,7 +608,8 @@ def test_pattern_gallery(ctx):
          'the section halftoned')
     ctx.capture_set_filename('/tmp/dizher_gallery.png')
     ctx.capture_screenshot(CaptureFlags_.hide_mouse_cursor.value)
-    ctx.item_click('**/Magic 4x4')
+    ctx.set_ref(ctx.window_info('//$FOCUSED/images').window)   # the images scroll in a child window, out of ** reach
+    ctx.item_click('Magic 4x4')
     ctx.yield_(2)
     assert params('halftoner').matrix == 'Magic 4x4' and not picker.visible, (params('halftoner'), picker.visible)
     ctx.set_ref('//Convert')
