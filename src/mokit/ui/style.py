@@ -48,6 +48,7 @@ METRICS = {
 COLORS = {
     "separator": (1, 1, 1, 0.18),
 }
+OPAQUE = ("popup_bg",)   # the theme's colour at full alpha: dialogs, combos and tooltips are not see-through
 
 # Node editor (mokit.ui.nodes). NODES are imgui-node-editor style vars, NODE_COLORS its colours (names as in
 # `ed.StyleVar` / `ed.StyleColor`); LINKS the wires, PORTS and NODE_LAYOUT our own port disks and auto-placement. All lengths in em.
@@ -156,6 +157,9 @@ def sync() -> None:
         setattr(style, name, em_to_vec2(*value) if isinstance(value, tuple) else em_size(value))
     for name, rgba in COLORS.items():
         style.set_color_(getattr(imgui.Col_, name).value, imgui.ImVec4(*rgba))
+    for name in OPAQUE:
+        c = style.color_(getattr(imgui.Col_, name).value)
+        style.set_color_(getattr(imgui.Col_, name).value, imgui.ImVec4(c.x, c.y, c.z, 1))
 
 
 # ----- classes (local overrides) -------------------------------------------------------------------

@@ -171,8 +171,10 @@ class PatternPicker:
                     imgui.text(name)
             imgui.end_combo()
         if imgui.internal.begin_combo_preview():   # the current one's icon and name in the closed combo
-            imgui.image(self.icons.ref((label, current), ramp_pixels(label, current, h), px), icon)
-            imgui.same_line()
+            at = imgui.get_cursor_screen_pos()   # same_line does not lay out in a combo preview: placed by hand
+            imgui.get_window_draw_list().add_image(self.icons.ref((label, current), ramp_pixels(label, current, h), px),
+                                                   at, imgui.ImVec2(at.x + icon.x, at.y + icon.y))
+            imgui.set_cursor_screen_pos(imgui.ImVec2(at.x + icon.x + spacing, at.y))
             imgui.text(current)
             imgui.internal.end_combo_preview()
         imgui.same_line()
