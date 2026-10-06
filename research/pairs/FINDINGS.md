@@ -67,6 +67,38 @@ bottom. How we found it: `LOG.md`.
   is smaller, but the accents are still lost. (11)
 - Untuned pictures (a new project without Tune) give almost no visible alternatives (median 3–6 ΔE). (10)
 
+## Seams
+
+- **The seams the user sees are where the pair changes** (1338 of 1342 marks): the selection's pairwise term is
+  the place for a seam cost. (14)
+- **The coherence term does not see them**: its attributes (V) rank the marked seams at 0.62, with its edge weight
+  at 0.51, a coin toss. The edge weight excuses the seams on the source's outlines, and the user marks those more
+  (0.22 against 0.15): the render makes a staircase of cell borders there. (14)
+- **The colour of the pixels on the two sides of the border** decides: their step beyond the source's, raw, ranks
+  the marks at 0.79, above the attributes on 11 of 12 renders. Black on both sides, no seam (the user). Lightness
+  adds nothing on the renders. Through an eye blur every measure is worse: at a seam the user sees pixels. (14)
+- Still far from the user's own agreement (top k 0.42 against 0.48–0.75). (14)
+- **Without picture content** (synthetic patches, the same mean luminance on both sides): a change of hue shows
+  (~2 of 3, red-green 3), brightness alone is faint (1), and a step of lightness alone of up to 0.12 of the dot level
+  hides in a surface's slow variation (0). (15)
+- **One seam score from all of it**: the lightness change of the border's pixels when the pair switches (the dots
+  the same) plus the colour difference of the cells' mean colours, 0.075 and 0.055 per dE: lightness at the pixels,
+  colour averaged. Held out: renders 0.68 against the coherence term's 0.51; the rounds 0.79-0.88. (16)
+- **A solid-looking cell next to dotted ones is a seam where it is light** (the user): a dim pair near in lightness
+  (yellow/white; cyan, green) against any bright pair. Dim and bright pairs with black, blue or magenta mix. In the
+  dark the user hardly marks seams at all (1% below L* 30, 36% above 75). (17)
+- **The score now**: 0.054 x the cells' mean colour difference + 0.126 x Y x the border pixels' lightness change +
+  1.68 x Y x the solidity step, Y the cells' mean L* / 100. Held out: renders 0.72, rounds 0.78-0.87, the sorting
+  0.85. (17)
+- **The score in the selection** (its weight fixed, the coherence aside): blind, better on 5 of 6 training pictures
+  and none worse; held out better on burning-hand, worse on david (greyscale: a dim/bright white switch is a tone
+  there, which the user keeps), both bad on three at their old settings. It helps where seams are the trouble; it can
+  cost a tone that a brightness switch gives. (18)
+- The dots breaking at the border makes no seam (15). The same mean colour from other dots shows partly (1-2 of 3):
+  the eye averages part of the dots. (15)
+- The pixel step that leads on the renders (0.79) fails on the patches (0.01-0.20): it sees busy dots, and among
+  busy dots a change does show more, but its fit does not carry over. (14, 16)
+
 ## Against the competitors
 
 - **Not worse anywhere**: img2spec and Image to ZX Spec at their best settings by the Claude judges, ZX-Paintbrush at

@@ -62,10 +62,14 @@ The code is in `research/pairs/` (pytest does not collect it). The commands are 
 | `gallery.py` | a gallery per picture (`defaults`: new defaults per method): a 4×4 grid of renders (`--side N`, the same span; the first round mixes the Metric methods, the pick sets it) on a plane through the best point in 13 knobs (10 without DBS); the user's discards and picks go to `rounds/gallery/NAME.json`; `report`, what they say (plan step 3) |
 | `duel.py` | a pairwise search per picture: the best so far against the point of the most expected improvement, by a GP with a probit likelihood on the comparisons, the gallery's too; each answer to `rounds/duel/NAME.json`; `check` against a simulated user (plan step 3b, skipped) |
 | `methods.py` | the Metric method, Exact mixture against Halftoned at their presets, without DBS, one blind sheet per training picture; `tally` (before more galleries, plan step 4) |
+| `seams.py` | which seams the user sees: 12 renders with DBS (`make`), the page where the user paints the seams (`paint`, to `rounds/seams/marks.json`), the user's own cases against the measures (`check`), the measures' AUC on the painted seams, the repeats, the painted segments (`report`) (plan step 5) |
+| `patches.py` | seam visibility on synthetic patches: two pairs on one threshold map, the colour changes at one luminance; the user sets the right side's lightness where the seam is least visible and rates it 0-3 (`make`, `rate` to `rounds/seams/patches.json`, `report`: by group with the lightness set, the repeats, each measure's rank correlation) (plan step 5b) |
+| `seamfit.py` | one seam score: the seam measures' weights fitted at once to the painted renders and the patch rounds, each picture or round left out; `ranked`, per global lightness every two pairs ranked by the score, 16 on a sheet; `sort`, the page where the user drags them into the order seen, to `rounds/seams/ranked.json` (plan step 5c) |
+| `selection.py` | the seam score in the selection in place of the coherence term: the per-border table from each pair's halftone, the six training pictures rendered both ways (`make`), blind sheets (`user`) (plan step 5d) |
 | `vote.html` | the old vote page (an Artifact with a db, round cal1); `dp.py vote` replaces it |
 
 The data in git are in `rounds/`: `pilot1`, `cal1`, `opt1`, `opt3`, `opt4`, `aopt`, `c1`, `acuity`, `curve`, `e1`,
-`surface/r1`, `surface/r2`, `rivals`, `gallery`, `duel`, `methods` (the keys, the verdicts of the judges and of the user). The renders in
+`surface/r1`, `surface/r2`, `rivals`, `gallery`, `duel`, `methods`, `seams` (the keys, the verdicts of the judges and of the user). The renders in
 `data/` are not in git; the scripts make them again:
 
 - `build.py` ~15 min on 9 processes;
@@ -73,6 +77,7 @@ The data in git are in `rounds/`: `pilot1`, `cal1`, `opt1`, `opt3`, `opt4`, `aop
 - `optimum.py N` ~25 min (the full judge on the GPU ~1.5 h);
 - `dp.py make` ~10 min with no other tasks on the machine (~900 renders, ~6 s each, on 12 processes);
 - `surface.py make` some minutes;
+- `seams.py make` ~30 s (12 renders with DBS, data/seams/);
 - `rivals.py make` ~30 s, after `surface.py make`. The competitors: the build `../img2spec_video/build-macos`; the
   Image to ZX Spec jar and ZX-Paintbrush in its own Wine prefix, both in `data/rivals/bin/`; the user's SCR files in
   `rounds/rivals/paintbrush/`.

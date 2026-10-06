@@ -1,0 +1,1580 @@
+[
+ {
+  "group": "level step kw",
+  "change": "+0.25",
+  "left": "kw",
+  "right": "kw",
+  "level": [
+   0.375,
+   0.625
+  ],
+  "halftone": "bayer",
+  "file": "p085.png",
+  "origin": [
+   18,
+   47
+  ],
+  "id": "q000",
+  "stimulus": 85
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "ky",
+  "right": "KW",
+  "level": 0.25,
+  "halftone": "blue",
+  "file": "p058.png",
+  "origin": [
+   45,
+   14
+  ],
+  "id": "q001",
+  "stimulus": 58
+ },
+ {
+  "group": "level step ry",
+  "change": "+0.25",
+  "left": "ry",
+  "right": "ry",
+  "level": [
+   0.375,
+   0.625
+  ],
+  "halftone": "blue",
+  "file": "p090.png",
+  "origin": [
+   62,
+   59
+  ],
+  "id": "q002",
+  "stimulus": 90
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "kg",
+  "right": "kc",
+  "level": 1.0,
+  "halftone": null,
+  "file": "p007.png",
+  "origin": [
+   62,
+   46
+  ],
+  "id": "q003",
+  "stimulus": 7
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "ky",
+  "right": "kw",
+  "level": 0.5,
+  "halftone": "blue",
+  "file": "p018.png",
+  "origin": [
+   5,
+   19
+  ],
+  "id": "q004",
+  "stimulus": 18
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "kg",
+  "right": "KG",
+  "level": 0.5,
+  "halftone": "blue",
+  "file": "p032.png",
+  "origin": [
+   56,
+   8
+  ],
+  "id": "q005",
+  "stimulus": 32
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "kg",
+  "right": "KG",
+  "level": 0.5,
+  "halftone": "bayer",
+  "file": "p031.png",
+  "origin": [
+   45,
+   24
+  ],
+  "id": "q006",
+  "stimulus": 31
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "ky",
+  "right": "KY",
+  "level": 0.5,
+  "halftone": "bayer",
+  "file": "p038.png",
+  "origin": [
+   4,
+   59
+  ],
+  "id": "q007",
+  "stimulus": 38
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "ky",
+  "right": "KW",
+  "level": 1.0,
+  "halftone": null,
+  "file": "p056.png",
+  "origin": [
+   55,
+   28
+  ],
+  "id": "q008",
+  "stimulus": 56
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "ky",
+  "right": "kw",
+  "level": 0.75,
+  "halftone": "blue",
+  "file": "p020.png",
+  "origin": [
+   25,
+   1
+  ],
+  "id": "q009",
+  "stimulus": 20
+ },
+ {
+  "group": "ramp ry",
+  "change": "none",
+  "left": "ry",
+  "right": "ry",
+  "level": "ramp",
+  "halftone": "bayer",
+  "file": "p075.png",
+  "origin": [
+   3,
+   27
+  ],
+  "id": "q010",
+  "stimulus": 75
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "ky",
+  "right": "KY",
+  "level": 0.5,
+  "halftone": "blue",
+  "file": "p039.png",
+  "origin": [
+   34,
+   22
+  ],
+  "id": "q011",
+  "stimulus": 39
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "kg",
+  "right": "kc",
+  "level": 0.75,
+  "halftone": "blue",
+  "file": "p013.png",
+  "origin": [
+   35,
+   2
+  ],
+  "id": "q012",
+  "stimulus": 13
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "kg",
+  "right": "KC",
+  "level": 0.75,
+  "halftone": "bayer",
+  "file": "p054.png",
+  "origin": [
+   42,
+   21
+  ],
+  "id": "q013",
+  "stimulus": 54
+ },
+ {
+  "group": "ink on black",
+  "change": "none",
+  "left": "kr",
+  "right": "kr",
+  "level": 0.5,
+  "halftone": "blue",
+  "file": "p064.png",
+  "origin": [
+   57,
+   19
+  ],
+  "id": "q014",
+  "stimulus": 64
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "kr",
+  "right": "km",
+  "level": 1.0,
+  "halftone": null,
+  "file": "p000.png",
+  "origin": [
+   54,
+   40
+  ],
+  "id": "q015",
+  "stimulus": 0
+ },
+ {
+  "group": "level step kw",
+  "change": "+0.25",
+  "left": "kw",
+  "right": "kw",
+  "level": [
+   0.375,
+   0.625
+  ],
+  "halftone": "blue",
+  "file": "p086.png",
+  "origin": [
+   47,
+   45
+  ],
+  "id": "q016",
+  "stimulus": 86
+ },
+ {
+  "group": "ramp kw",
+  "change": "hue: ink",
+  "left": "kw",
+  "right": "kc",
+  "level": "ramp",
+  "halftone": "bayer",
+  "file": "p073.png",
+  "origin": [
+   30,
+   61
+  ],
+  "id": "q017",
+  "stimulus": 73
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "ky",
+  "right": "kw",
+  "level": 0.75,
+  "halftone": "bayer",
+  "file": "p019.png",
+  "origin": [
+   30,
+   27
+  ],
+  "id": "q018",
+  "stimulus": 19
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "kr",
+  "right": "KR",
+  "level": 0.25,
+  "halftone": "bayer",
+  "file": "p022.png",
+  "origin": [
+   0,
+   42
+  ],
+  "id": "q019",
+  "stimulus": 22
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "kr",
+  "right": "KM",
+  "level": 1.0,
+  "halftone": null,
+  "file": "p042.png",
+  "origin": [
+   46,
+   38
+  ],
+  "id": "q020",
+  "stimulus": 42
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "ky",
+  "right": "KY",
+  "level": 0.25,
+  "halftone": "bayer",
+  "file": "p036.png",
+  "origin": [
+   27,
+   31
+  ],
+  "id": "q021",
+  "stimulus": 36
+ },
+ {
+  "group": "ramp kw",
+  "change": "hue: ink",
+  "left": "kw",
+  "right": "kc",
+  "level": "ramp",
+  "halftone": "blue",
+  "file": "p074.png",
+  "origin": [
+   12,
+   31
+  ],
+  "id": "q022",
+  "stimulus": 74
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "kr",
+  "right": "KR",
+  "level": 0.5,
+  "halftone": "blue",
+  "file": "p025.png",
+  "origin": [
+   48,
+   24
+  ],
+  "id": "q023",
+  "stimulus": 25
+ },
+ {
+  "group": "ramp kw",
+  "change": "bright",
+  "left": "kw",
+  "right": "KW",
+  "level": "ramp",
+  "halftone": "blue",
+  "file": "p072.png",
+  "origin": [
+   26,
+   28
+  ],
+  "id": "q024",
+  "stimulus": 72
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "ky",
+  "right": "kw",
+  "level": 0.25,
+  "halftone": "blue",
+  "file": "p016.png",
+  "origin": [
+   5,
+   55
+  ],
+  "id": "q025",
+  "stimulus": 16
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "kr",
+  "right": "km",
+  "level": 0.25,
+  "halftone": "bayer",
+  "file": "p001.png",
+  "origin": [
+   32,
+   17
+  ],
+  "id": "q026",
+  "stimulus": 1
+ },
+ {
+  "group": "ramp ry",
+  "change": "hue: paper",
+  "left": "ry",
+  "right": "my",
+  "level": "ramp",
+  "halftone": "blue",
+  "file": "p080.png",
+  "origin": [
+   53,
+   48
+  ],
+  "id": "q027",
+  "stimulus": 80
+ },
+ {
+  "group": "level step kw",
+  "change": "+0.1",
+  "left": "kw",
+  "right": "kw",
+  "level": [
+   0.45,
+   0.55
+  ],
+  "halftone": "blue",
+  "file": "p084.png",
+  "origin": [
+   4,
+   26
+  ],
+  "id": "q028",
+  "stimulus": 84
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "kg",
+  "right": "KG",
+  "level": 0.25,
+  "halftone": "bayer",
+  "file": "p029.png",
+  "origin": [
+   60,
+   41
+  ],
+  "id": "q029",
+  "stimulus": 29
+ },
+ {
+  "group": "ramp kw",
+  "change": "bright",
+  "left": "kw",
+  "right": "KW",
+  "level": "ramp",
+  "halftone": "blue",
+  "file": "p072.png",
+  "origin": [
+   26,
+   28
+  ],
+  "id": "q030",
+  "stimulus": 72
+ },
+ {
+  "group": "ramp kw",
+  "change": "none",
+  "left": "kw",
+  "right": "kw",
+  "level": "ramp",
+  "halftone": "blue",
+  "file": "p070.png",
+  "origin": [
+   32,
+   40
+  ],
+  "id": "q031",
+  "stimulus": 70
+ },
+ {
+  "group": "ramp kw",
+  "change": "hue: ink",
+  "left": "kw",
+  "right": "kc",
+  "level": "ramp",
+  "halftone": "bayer",
+  "file": "p073.png",
+  "origin": [
+   30,
+   61
+  ],
+  "id": "q032",
+  "stimulus": 73
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "kr",
+  "right": "km",
+  "level": 0.75,
+  "halftone": "blue",
+  "file": "p006.png",
+  "origin": [
+   32,
+   38
+  ],
+  "id": "q033",
+  "stimulus": 6
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "kr",
+  "right": "KM",
+  "level": 0.75,
+  "halftone": "bayer",
+  "file": "p047.png",
+  "origin": [
+   45,
+   39
+  ],
+  "id": "q034",
+  "stimulus": 47
+ },
+ {
+  "group": "ink on black",
+  "change": "none",
+  "left": "ky",
+  "right": "ky",
+  "level": 0.5,
+  "halftone": "blue",
+  "file": "p068.png",
+  "origin": [
+   3,
+   23
+  ],
+  "id": "q035",
+  "stimulus": 68
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "kr",
+  "right": "KR",
+  "level": 0.75,
+  "halftone": "bayer",
+  "file": "p026.png",
+  "origin": [
+   29,
+   63
+  ],
+  "id": "q036",
+  "stimulus": 26
+ },
+ {
+  "group": "level step kw",
+  "change": "+0.25",
+  "left": "kw",
+  "right": "kw",
+  "level": [
+   0.375,
+   0.625
+  ],
+  "halftone": "bayer",
+  "file": "p085.png",
+  "origin": [
+   18,
+   47
+  ],
+  "id": "q037",
+  "stimulus": 85
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "ky",
+  "right": "kw",
+  "level": 0.5,
+  "halftone": "bayer",
+  "file": "p017.png",
+  "origin": [
+   1,
+   34
+  ],
+  "id": "q038",
+  "stimulus": 17
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "ky",
+  "right": "KY",
+  "level": 0.75,
+  "halftone": "blue",
+  "file": "p041.png",
+  "origin": [
+   16,
+   20
+  ],
+  "id": "q039",
+  "stimulus": 41
+ },
+ {
+  "group": "level step ry",
+  "change": "+0.1",
+  "left": "ry",
+  "right": "ry",
+  "level": [
+   0.45,
+   0.55
+  ],
+  "halftone": "blue",
+  "file": "p088.png",
+  "origin": [
+   11,
+   7
+  ],
+  "id": "q040",
+  "stimulus": 88
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "kg",
+  "right": "KC",
+  "level": 0.5,
+  "halftone": "blue",
+  "file": "p053.png",
+  "origin": [
+   5,
+   3
+  ],
+  "id": "q041",
+  "stimulus": 53
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "ky",
+  "right": "KW",
+  "level": 0.75,
+  "halftone": "bayer",
+  "file": "p061.png",
+  "origin": [
+   63,
+   12
+  ],
+  "id": "q042",
+  "stimulus": 61
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "kg",
+  "right": "KG",
+  "level": 0.75,
+  "halftone": "bayer",
+  "file": "p033.png",
+  "origin": [
+   37,
+   46
+  ],
+  "id": "q043",
+  "stimulus": 33
+ },
+ {
+  "group": "level step ry",
+  "change": "+0.1",
+  "left": "ry",
+  "right": "ry",
+  "level": [
+   0.45,
+   0.55
+  ],
+  "halftone": "bayer",
+  "file": "p087.png",
+  "origin": [
+   59,
+   59
+  ],
+  "id": "q044",
+  "stimulus": 87
+ },
+ {
+  "group": "ramp ry",
+  "change": "bright",
+  "left": "ry",
+  "right": "RY",
+  "level": "ramp",
+  "halftone": "blue",
+  "file": "p078.png",
+  "origin": [
+   38,
+   60
+  ],
+  "id": "q045",
+  "stimulus": 78
+ },
+ {
+  "group": "ramp ry",
+  "change": "none",
+  "left": "ry",
+  "right": "ry",
+  "level": "ramp",
+  "halftone": "blue",
+  "file": "p076.png",
+  "origin": [
+   60,
+   39
+  ],
+  "id": "q046",
+  "stimulus": 76
+ },
+ {
+  "group": "ink on black",
+  "change": "none",
+  "left": "kg",
+  "right": "kg",
+  "level": 0.5,
+  "halftone": "bayer",
+  "file": "p065.png",
+  "origin": [
+   57,
+   43
+  ],
+  "id": "q047",
+  "stimulus": 65
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "kg",
+  "right": "KG",
+  "level": 0.25,
+  "halftone": "blue",
+  "file": "p030.png",
+  "origin": [
+   53,
+   44
+  ],
+  "id": "q048",
+  "stimulus": 30
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "kr",
+  "right": "KM",
+  "level": 0.5,
+  "halftone": "bayer",
+  "file": "p045.png",
+  "origin": [
+   21,
+   56
+  ],
+  "id": "q049",
+  "stimulus": 45
+ },
+ {
+  "group": "ramp kw",
+  "change": "bright",
+  "left": "kw",
+  "right": "KW",
+  "level": "ramp",
+  "halftone": "bayer",
+  "file": "p071.png",
+  "origin": [
+   48,
+   59
+  ],
+  "id": "q050",
+  "stimulus": 71
+ },
+ {
+  "group": "border",
+  "change": "dots on",
+  "left": "kr",
+  "right": "km",
+  "level": "on",
+  "halftone": null,
+  "file": "p092.png",
+  "origin": [
+   55,
+   0
+  ],
+  "id": "q051",
+  "stimulus": 92
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "kr",
+  "right": "km",
+  "level": 0.75,
+  "halftone": "bayer",
+  "file": "p005.png",
+  "origin": [
+   41,
+   58
+  ],
+  "id": "q052",
+  "stimulus": 5
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "kr",
+  "right": "km",
+  "level": 0.25,
+  "halftone": "blue",
+  "file": "p002.png",
+  "origin": [
+   19,
+   2
+  ],
+  "id": "q053",
+  "stimulus": 2
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "kg",
+  "right": "kc",
+  "level": 0.25,
+  "halftone": "bayer",
+  "file": "p008.png",
+  "origin": [
+   40,
+   34
+  ],
+  "id": "q054",
+  "stimulus": 8
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "kg",
+  "right": "KG",
+  "level": 0.75,
+  "halftone": "blue",
+  "file": "p034.png",
+  "origin": [
+   54,
+   33
+  ],
+  "id": "q055",
+  "stimulus": 34
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "kg",
+  "right": "KG",
+  "level": 0.5,
+  "halftone": "blue",
+  "file": "p032.png",
+  "origin": [
+   56,
+   8
+  ],
+  "id": "q056",
+  "stimulus": 32
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "kg",
+  "right": "kc",
+  "level": 0.75,
+  "halftone": "bayer",
+  "file": "p012.png",
+  "origin": [
+   25,
+   54
+  ],
+  "id": "q057",
+  "stimulus": 12
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "kr",
+  "right": "km",
+  "level": 0.5,
+  "halftone": "bayer",
+  "file": "p003.png",
+  "origin": [
+   4,
+   1
+  ],
+  "id": "q058",
+  "stimulus": 3
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "ky",
+  "right": "KY",
+  "level": 0.25,
+  "halftone": "blue",
+  "file": "p037.png",
+  "origin": [
+   46,
+   56
+  ],
+  "id": "q059",
+  "stimulus": 37
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "kg",
+  "right": "kc",
+  "level": 1.0,
+  "halftone": null,
+  "file": "p007.png",
+  "origin": [
+   62,
+   46
+  ],
+  "id": "q060",
+  "stimulus": 7
+ },
+ {
+  "group": "ink on black",
+  "change": "none",
+  "left": "kr",
+  "right": "kr",
+  "level": 0.5,
+  "halftone": "bayer",
+  "file": "p063.png",
+  "origin": [
+   39,
+   37
+  ],
+  "id": "q061",
+  "stimulus": 63
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "kr",
+  "right": "KR",
+  "level": 1.0,
+  "halftone": null,
+  "file": "p021.png",
+  "origin": [
+   0,
+   7
+  ],
+  "id": "q062",
+  "stimulus": 21
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "kg",
+  "right": "kc",
+  "level": 0.75,
+  "halftone": "blue",
+  "file": "p013.png",
+  "origin": [
+   35,
+   2
+  ],
+  "id": "q063",
+  "stimulus": 13
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "kg",
+  "right": "kc",
+  "level": 0.25,
+  "halftone": "blue",
+  "file": "p009.png",
+  "origin": [
+   35,
+   59
+  ],
+  "id": "q064",
+  "stimulus": 9
+ },
+ {
+  "group": "ink on black",
+  "change": "none",
+  "left": "kg",
+  "right": "kg",
+  "level": 0.5,
+  "halftone": "blue",
+  "file": "p066.png",
+  "origin": [
+   56,
+   12
+  ],
+  "id": "q065",
+  "stimulus": 66
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "kr",
+  "right": "km",
+  "level": 0.5,
+  "halftone": "blue",
+  "file": "p004.png",
+  "origin": [
+   11,
+   52
+  ],
+  "id": "q066",
+  "stimulus": 4
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "kg",
+  "right": "KC",
+  "level": 0.5,
+  "halftone": "bayer",
+  "file": "p052.png",
+  "origin": [
+   50,
+   56
+  ],
+  "id": "q067",
+  "stimulus": 52
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "kr",
+  "right": "KM",
+  "level": 0.75,
+  "halftone": "blue",
+  "file": "p048.png",
+  "origin": [
+   3,
+   5
+  ],
+  "id": "q068",
+  "stimulus": 48
+ },
+ {
+  "group": "ramp ry",
+  "change": "hue: paper",
+  "left": "ry",
+  "right": "my",
+  "level": "ramp",
+  "halftone": "bayer",
+  "file": "p079.png",
+  "origin": [
+   1,
+   29
+  ],
+  "id": "q069",
+  "stimulus": 79
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "ky",
+  "right": "KY",
+  "level": 0.75,
+  "halftone": "bayer",
+  "file": "p040.png",
+  "origin": [
+   43,
+   36
+  ],
+  "id": "q070",
+  "stimulus": 40
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "kg",
+  "right": "KC",
+  "level": 1.0,
+  "halftone": null,
+  "file": "p049.png",
+  "origin": [
+   24,
+   53
+  ],
+  "id": "q071",
+  "stimulus": 49
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "ky",
+  "right": "KW",
+  "level": 0.5,
+  "halftone": "blue",
+  "file": "p060.png",
+  "origin": [
+   36,
+   25
+  ],
+  "id": "q072",
+  "stimulus": 60
+ },
+ {
+  "group": "level step ry",
+  "change": "+0.25",
+  "left": "ry",
+  "right": "ry",
+  "level": [
+   0.375,
+   0.625
+  ],
+  "halftone": "blue",
+  "file": "p090.png",
+  "origin": [
+   62,
+   59
+  ],
+  "id": "q073",
+  "stimulus": 90
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "kg",
+  "right": "kc",
+  "level": 0.5,
+  "halftone": "bayer",
+  "file": "p010.png",
+  "origin": [
+   17,
+   52
+  ],
+  "id": "q074",
+  "stimulus": 10
+ },
+ {
+  "group": "level step kw",
+  "change": "+0.1",
+  "left": "kw",
+  "right": "kw",
+  "level": [
+   0.45,
+   0.55
+  ],
+  "halftone": "bayer",
+  "file": "p083.png",
+  "origin": [
+   14,
+   50
+  ],
+  "id": "q075",
+  "stimulus": 83
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "ky",
+  "right": "KW",
+  "level": 0.75,
+  "halftone": "blue",
+  "file": "p062.png",
+  "origin": [
+   60,
+   5
+  ],
+  "id": "q076",
+  "stimulus": 62
+ },
+ {
+  "group": "ramp kw",
+  "change": "none",
+  "left": "kw",
+  "right": "kw",
+  "level": "ramp",
+  "halftone": "bayer",
+  "file": "p069.png",
+  "origin": [
+   40,
+   6
+  ],
+  "id": "q077",
+  "stimulus": 69
+ },
+ {
+  "group": "ink on black",
+  "change": "none",
+  "left": "ky",
+  "right": "ky",
+  "level": 0.5,
+  "halftone": "bayer",
+  "file": "p067.png",
+  "origin": [
+   48,
+   60
+  ],
+  "id": "q078",
+  "stimulus": 67
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "kr",
+  "right": "KM",
+  "level": 0.5,
+  "halftone": "blue",
+  "file": "p046.png",
+  "origin": [
+   16,
+   14
+  ],
+  "id": "q079",
+  "stimulus": 46
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "ky",
+  "right": "KW",
+  "level": 0.25,
+  "halftone": "bayer",
+  "file": "p057.png",
+  "origin": [
+   57,
+   50
+  ],
+  "id": "q080",
+  "stimulus": 57
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "kg",
+  "right": "KC",
+  "level": 0.75,
+  "halftone": "blue",
+  "file": "p055.png",
+  "origin": [
+   36,
+   9
+  ],
+  "id": "q081",
+  "stimulus": 55
+ },
+ {
+  "group": "ramp ry",
+  "change": "hue: ink",
+  "left": "ry",
+  "right": "rw",
+  "level": "ramp",
+  "halftone": "blue",
+  "file": "p082.png",
+  "origin": [
+   26,
+   33
+  ],
+  "id": "q082",
+  "stimulus": 82
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "kg",
+  "right": "KC",
+  "level": 0.25,
+  "halftone": "bayer",
+  "file": "p050.png",
+  "origin": [
+   25,
+   50
+  ],
+  "id": "q083",
+  "stimulus": 50
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "kg",
+  "right": "kc",
+  "level": 0.5,
+  "halftone": "bayer",
+  "file": "p010.png",
+  "origin": [
+   17,
+   52
+  ],
+  "id": "q084",
+  "stimulus": 10
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "ky",
+  "right": "KW",
+  "level": 0.5,
+  "halftone": "bayer",
+  "file": "p059.png",
+  "origin": [
+   49,
+   3
+  ],
+  "id": "q085",
+  "stimulus": 59
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "kr",
+  "right": "KM",
+  "level": 0.75,
+  "halftone": "bayer",
+  "file": "p047.png",
+  "origin": [
+   45,
+   39
+  ],
+  "id": "q086",
+  "stimulus": 47
+ },
+ {
+  "group": "ramp ry",
+  "change": "bright",
+  "left": "ry",
+  "right": "RY",
+  "level": "ramp",
+  "halftone": "bayer",
+  "file": "p077.png",
+  "origin": [
+   22,
+   63
+  ],
+  "id": "q087",
+  "stimulus": 77
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "kg",
+  "right": "KC",
+  "level": 0.25,
+  "halftone": "blue",
+  "file": "p051.png",
+  "origin": [
+   20,
+   15
+  ],
+  "id": "q088",
+  "stimulus": 51
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "ky",
+  "right": "KY",
+  "level": 1.0,
+  "halftone": null,
+  "file": "p035.png",
+  "origin": [
+   24,
+   19
+  ],
+  "id": "q089",
+  "stimulus": 35
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "kr",
+  "right": "KR",
+  "level": 0.75,
+  "halftone": "blue",
+  "file": "p027.png",
+  "origin": [
+   51,
+   62
+  ],
+  "id": "q090",
+  "stimulus": 27
+ },
+ {
+  "group": "border",
+  "change": "dots away",
+  "left": "kr",
+  "right": "km",
+  "level": "away",
+  "halftone": null,
+  "file": "p091.png",
+  "origin": [
+   42,
+   61
+  ],
+  "id": "q091",
+  "stimulus": 91
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "kr",
+  "right": "KR",
+  "level": 0.5,
+  "halftone": "bayer",
+  "file": "p024.png",
+  "origin": [
+   16,
+   39
+  ],
+  "id": "q092",
+  "stimulus": 24
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "kr",
+  "right": "KM",
+  "level": 0.25,
+  "halftone": "bayer",
+  "file": "p043.png",
+  "origin": [
+   32,
+   21
+  ],
+  "id": "q093",
+  "stimulus": 43
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "ky",
+  "right": "kw",
+  "level": 1.0,
+  "halftone": null,
+  "file": "p014.png",
+  "origin": [
+   48,
+   46
+  ],
+  "id": "q094",
+  "stimulus": 14
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "kr",
+  "right": "KR",
+  "level": 0.25,
+  "halftone": "blue",
+  "file": "p023.png",
+  "origin": [
+   33,
+   41
+  ],
+  "id": "q095",
+  "stimulus": 23
+ },
+ {
+  "group": "ramp ry",
+  "change": "hue: ink",
+  "left": "ry",
+  "right": "rw",
+  "level": "ramp",
+  "halftone": "bayer",
+  "file": "p081.png",
+  "origin": [
+   26,
+   31
+  ],
+  "id": "q096",
+  "stimulus": 81
+ },
+ {
+  "group": "ink on black",
+  "change": "bright",
+  "left": "kg",
+  "right": "KG",
+  "level": 1.0,
+  "halftone": null,
+  "file": "p028.png",
+  "origin": [
+   24,
+   43
+  ],
+  "id": "q097",
+  "stimulus": 28
+ },
+ {
+  "group": "level step ry",
+  "change": "+0.1",
+  "left": "ry",
+  "right": "ry",
+  "level": [
+   0.45,
+   0.55
+  ],
+  "halftone": "blue",
+  "file": "p088.png",
+  "origin": [
+   11,
+   7
+  ],
+  "id": "q098",
+  "stimulus": 88
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "kg",
+  "right": "kc",
+  "level": 0.5,
+  "halftone": "blue",
+  "file": "p011.png",
+  "origin": [
+   42,
+   0
+  ],
+  "id": "q099",
+  "stimulus": 11
+ },
+ {
+  "group": "ink on black",
+  "change": "hue",
+  "left": "ky",
+  "right": "kw",
+  "level": 0.25,
+  "halftone": "bayer",
+  "file": "p015.png",
+  "origin": [
+   54,
+   11
+  ],
+  "id": "q100",
+  "stimulus": 15
+ },
+ {
+  "group": "level step ry",
+  "change": "+0.25",
+  "left": "ry",
+  "right": "ry",
+  "level": [
+   0.375,
+   0.625
+  ],
+  "halftone": "bayer",
+  "file": "p089.png",
+  "origin": [
+   8,
+   46
+  ],
+  "id": "q101",
+  "stimulus": 89
+ },
+ {
+  "group": "ink on black",
+  "change": "hue+bright",
+  "left": "kr",
+  "right": "KM",
+  "level": 0.25,
+  "halftone": "blue",
+  "file": "p044.png",
+  "origin": [
+   48,
+   25
+  ],
+  "id": "q102",
+  "stimulus": 44
+ }
+]

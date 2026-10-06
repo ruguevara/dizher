@@ -1,0 +1,74 @@
+[
+ {
+  "id": "s00",
+  "name": "jojo",
+  "variant": "best"
+ },
+ {
+  "id": "s01",
+  "name": "anubis",
+  "variant": "coherence0"
+ },
+ {
+  "id": "s02",
+  "name": "autumn",
+  "variant": "coherence0"
+ },
+ {
+  "id": "s03",
+  "name": "RC1",
+  "variant": "coherence0"
+ },
+ {
+  "id": "s04",
+  "name": "diver-sunset",
+  "variant": "best"
+ },
+ {
+  "id": "s05",
+  "name": "rocket-rackoon",
+  "variant": "best"
+ },
+ {
+  "id": "s06",
+  "name": "diver-sunset",
+  "variant": "coherence0"
+ },
+ {
+  "id": "s07",
+  "name": "autumn",
+  "variant": "best"
+ },
+ {
+  "id": "s08",
+  "name": "RC1",
+  "variant": "best"
+ },
+ {
+  "id": "s09",
+  "name": "rocket-rackoon",
+  "variant": "coherence0"
+ },
+ {
+  "id": "s10",
+  "name": "jojo",
+  "variant": "coherence0"
+ },
+ {
+  "id": "s11",
+  "name": "anubis",
+  "variant": "best"
+ },
+ {
+  "id": "s12",
+  "name": "anubis",
+  "variant": "coherence0",
+  "repeat_of": "s01"
+ },
+ {
+  "id": "s13",
+  "name": "rocket-rackoon",
+  "variant": "best",
+  "repeat_of": "s05"
+ }
+]
