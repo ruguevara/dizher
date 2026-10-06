@@ -281,3 +281,10 @@ changes 3.4-3.6 against 3.96), at 1-4 it stays in range. `extra`: the converter'
 ones by the score (2.27 against the artist's own 1.81 at x1); at 3x the artist's own changes are the blur's lost
 edges. The shared-colour term (6.1) is dropped: an attribute binary, its weight a sweep. The valid test of a seam
 cost stays the user's blind vote on photographs.
+Step 6.4 (the user: fit the score's weights on the artists with the pixels; `zxfit.py`, README 19): the energy's
+weights by inverse optimisation, the artist's pair against the 16 colour-nearest alternatives at the converter's own
+tables, a bounded ranking loss (the logistic one let the artist's content choices drag coherence to 54). The artists
+imply coherence ~4-5 (the presets 2 and 6), eye seams 2-4 (chroma more), and a seam-score weight near 2 against the
+user's 16, all on the solidity step; E and M nothing. The current energy at coherence 2 is at the artists' optimum
+(x1 0.986 against the fit's 0.985); the artists' score terms on the user's data nearly match SEAM (renders 0.70
+against 0.72). Both sources put the solidity step first. The user's part 2, a simple model of the artists' seams, next.

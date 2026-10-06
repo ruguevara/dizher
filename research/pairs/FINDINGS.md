@@ -123,6 +123,12 @@ bottom. How we found it: `LOG.md`.
   artists' (its changes 3.4-3.6), at weight 1-4 it stays in range. (19)
 - By the user's measure, the changes the converter makes and the artist does not are the less visible ones (2.3
   against the artist's own 1.8 at the eye's blur). (19)
+- **The artists' implied energy** (the artist's pair against the colour-nearest alternatives, the converter's own
+  tables, the unary 1): coherence 4-5, eye seams 2-4 with chroma above luma, and the seam score near weight 2 (the
+  user's pick 16), all of it on the solidity step; E and M nothing. The current energy at coherence 2 already ranks
+  98.6% of the alternatives as the artists do; the fit 98.5%. (19)
+- **Both sources put the solidity step first**: the artists' score terms, fitted without the user, rank the user's
+  painted seams at 0.70 against the user's own 0.72, and need Y for the dark end. (19)
 - A shared-colour binary on the attributes (dropped: not a visibility measure, its weight a sweep) and the artists'
   transition table as V (in-sample; it frees cheap changes, doubling the bright/dim switches) are not the way. (19)
 

@@ -919,4 +919,36 @@ does not are the less visible ones, and at 3x the artist's own changes are where
 not seam handling. The artists' pictures have no clash for a seam cost to fix; the unary reproduces them. A seam cost
 is for photographs, and the recovery test cannot stand in for the user's votes there.
 
+**Step 6.4, the energy's weights fitted to the artists** (`zxfit.py`; the user, 2026-10-06: fit the seam score's
+weights on the artists' data with the pixels, not the attributes alone). The target is the artist's screen through
+the user's eye (x1, and x2); for every cell the converter's own tables give, for every pair it could take, the unary
+(the eye-model colour error), the eye-model seam terms (Luma, Chroma), the coherence term (SEAM_COST x V x the
+smoothness) and the seam score's terms from each pair's halftone (`selection.table`'s E at the border's pixels, M,
+the solidity step S, each plain and times Y), summed over the cell's neighbours at the artist's pairs. The artist's
+pair against the 16 alternatives lowest by the unary: 1,228,800 rows; a bounded ranking loss (a sigmoid at a
+temperature of 0.02 x the median unary difference; the logistic loss let the rows no energy can rank, the artist's
+content choices, drag the rest to coherence 54), w >= 0, the unary's weight 1. Pairwise accuracy: the share of
+alternatives the energy puts above the artist's pair.
+
+| energy | x1 all | x1 half out | x2 all | x2 half out |
+|---|---|---|---|---|
+| the unary alone | 0.903 | | 0.894 | |
+| the current at coherence 0 / 2 / 6 | 0.904 / **0.986** / 0.983 | | 0.898 / 0.976 / 0.975 | |
+| the current with the seam score at 16 | 0.974 | | 0.960 | |
+| the fit | 0.985 | 0.983, 0.986 | **0.977** | 0.976, 0.978 |
+
+The fitted weights in the energy's units (the unary 1): x1: eye seams Luma 2.2, Chroma 4.3, **coherence 4.1**, the
+score's terms E 0.0006, M 0.0001, S 0.009, M x Y 0.0015, S x Y 0.014, E x Y 0; x2: eye seams 1.6 and 3.9, coherence
+4.7, S 0.015, the rest 0. The seam score at the user's weight 16 is, in the same units, E x Y 0.0097, M 0.0042, S x Y
+0.129: **the artists imply a seam-score weight near 2, not 16, and all of it on the solidity step**; E, the
+border's pixels, and M get nothing once the unary, the eye-model seams and the coherence are there. The artists'
+pixel masking (E = 0 five times chance, above) lives in their dots; the selection's alternatives carry the
+converter's halftone, so E cannot earn it here. The current energy at coherence 2 is at the artists' optimum at x1
+(0.986 against the fit's 0.985); at x2 the fit is a hair above (0.977 against 0.976), with more coherence and
+chroma seam weight. The artists' terms on the user's own data (`seamfit`, the renders AUC and top k, the rounds'
+rho): x1 0.70 and 0.39, v3 0.76, v4 0.81, v5 0.65, the sorting 0.82, against SEAM's 0.72 and 0.39, 0.78, 0.87, 0.83,
+0.85: nearly the user's own fit, from a source that never saw the user (S x Y carries both); x2 (plain S alone)
+0.61: the user's dark end needs Y. Both sources put the solidity step first (the user's shares E x Y : M : S x Y =
+0.07 : 0.03 : 0.90).
+
 Findings: `FINDINGS.md`; next steps: `PLAN.md`; the log: `LOG.md`.

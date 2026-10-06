@@ -334,6 +334,14 @@ and `rounds/duel` stay as the record; the method and its checks in `LOG.md`.
      render holds no clash. The borders' statistics are the prior: the current selection is nearest the artists' on
      all; the score at 16 over-smooths against them, at 1-4 it stays in range. The shared-colour term (1) is dropped:
      an attribute binary, not a measure, its weight a sweep.
+  5. **The energy's weights fitted to the artists** (the user, 2026-10-06: the score's weights from the artists with
+     the pixels), done (`zxfit.py`, README 19): inverse optimisation at the converter's tables, a bounded ranking
+     loss. The artists imply coherence 4-5, eye seams 2-4 (chroma above luma), the seam score near 2 (not 16), all
+     on the solidity step, E and M nothing; the current energy at coherence 2 is at their optimum. The artists' terms
+     rank the user's painted seams at 0.70 against SEAM's 0.72.
+  6. **A simple model of the artists' seams** (the user), next: the probability tables (a change by lightness and
+     the picture's edge; a shared colour given a change; the border's pixels in the shared colour against the cell's
+     density: the masking; the two border columns' densities given the pairs).
 - What step 6 leaves: the artists' fingerprint (README 19) as a check on any selection, that its borders stay in
   the artists' range (the change rate ~0.5, bright/dim-only ~0.09, E = 0 ~0.22, the changes' score ~4); the hint that
   the score's weight on photographs may be nearer 1-4 than 16 (the held-out 1-1-3 at 16, README 18); and the border
