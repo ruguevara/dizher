@@ -57,8 +57,9 @@ tag is on `main` and matches the version in the code.
 ## By hand before a release
 
 - Each platform, from the downloaded archive: it launches; About shows the version; open an image through the dialog,
-  convert, export SCR and PNG, open the SCR in an emulator (Fuse or ZEsarUX; VICE for C64); the project autosaves and
-  reopens; recent images; undo and redo; Paint mode.
+  convert, export PNG and the native file (SCR for the ZX Spectrum, ART for the C64 hires mode), open the SCR in Fuse
+  or ZEsarUX and the ART in Art Studio under VICE; the project autosaves and reopens; recent images; undo and redo;
+  Paint mode.
 - Windows on a real GPU: DBS speed in the window (best on a 120 Hz or faster monitor), the UI while stages run, the
   save dialog opening in the project's build folder, Cyrillic and very long image names, SmartScreen on first launch.
 - macOS: the quarantine warning on first launch, the save dialog taking focus, Retina scaling.
