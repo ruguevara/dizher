@@ -19,13 +19,16 @@ converters (ZX-Paintbrush, image2zx, img2spec) on three reference pictures, in a
 
 ## The state (2026-10-06)
 
-Step 5, the seams (below; README 14-18): a seam score from the user's own data (painted seams, rated patches, a
-sorting) replaces the coherence term's attributes in a research prototype of the selection. Better blind on 5 of 6
-training pictures, 1-1 held out (3 both bad at old settings). The user: more research before the app (step 5's
-"Next").
+Step 6, the artists (below; README 19): the zxart.ee top 100 as priors, measured as step 5 measures seams. The
+artists keep a shared colour on 87% of pair changes and hide it at the border's pixels; the current selection
+recovers 82% of their cells through the user's eye and loses the shared colour first as the blur grows, which the
+seam score does not see. Step 5, the seams (README 14-18): a seam score from the user's own data (painted seams,
+rated patches, a sorting) replaces the coherence term's attributes in a research prototype of the selection. Better
+blind on 5 of 6 training pictures, 1-1 held out (3 both bad at old settings). The user: more research before the app
+(step 5's "Next").
 
-The branch is `feature/gallant-wright-6dtgj6`, rebased on `develop` 06b84bf; it has no changes of its own outside
-`research/pairs` but the unused `tests/images/pairs` removed. Sessions A, B, C, E and steps 1 and 2 are closed
+The branch is `research/zxart-top-100`, from `feature/gallant-wright-6dtgj6` rebased on `develop` f4d422e; it has no
+changes of its own outside `research/pairs` but the unused `tests/images/pairs` removed. Sessions A, B, C, E and steps 1 and 2 are closed
 (`LOG.md`); step 3, the galleries, done. In the app: Select pairs: surface dE, one pair per surface, off by default
 (PR #14); the selection energy's seam terms by matmul, a conversion without DBS ~2.4x faster (PR #15); new defaults per
 method (PR #16); the dots' own weights, chroma on Halftone, noise on Optimise (step 2, PR #17).
@@ -302,6 +305,30 @@ and `rounds/duel` stay as the record; the method and its checks in `LOG.md`.
 - Then the app: the term in `SelectionEnergy` on a `feature/*` branch from `develop`, its weight fixed (the method
   presets' coherence 2 and 6 would scale it apart), tests (zero for the same pair; the user's cases from `seams.py
   check`), as an option off by default or the default, by the user.
+
+## Step 6: prior pairs from artists, the zxart.ee top 100 (`zxart.py`, no user time)
+
+- Why (the user, 2026-10-06): priors for a new, simpler pair selection that prevents clash, from the only taste
+  other than the user's; measured as step 5 measures a seam, so the two speak one language.
+- Done 2026-10-06 (README 19): `fetch` (the 100 best-voted standard screens; `rounds/zxart/top100.json`, the screens
+  in `data/zxart/`), `stats` (the pairs, the borders by lightness, E against the null E0 at the cell's level, the
+  transition prior against V and the seam score), `recover [K]` (the screen through the user's eye at K times its
+  sigmas as a new project, Select pairs at the defaults, no DBS; 0.5 s a screen). The artists change pairs on half
+  the borders, 87% with a shared colour, the border's pixels in it 5x more than chance; what they avoid the score
+  tells better than V (rho -0.41 against -0.22). Recovery 82% at the eye's blur, 74% at 2x, 63% at 3x; the converter
+  loses the shared colour first (changes without one 6.9 -> 10.1% of borders against 6.4%), unseen by the score.
+- Next (in this order), each by recovery at 2x and 3x the blur (the gate: more cells recovered, the share of changes
+  without a shared colour down to the artists' ~6%, on all 100), then the user blind on the training pictures:
+  1. **A shared-colour term**: a pairwise cost on a change of pair that keeps no colour of the neighbour's, where the
+     target has no edge (the coherence term's edge weight); the simplest prior the artists give. Try as a hard
+     constraint first (the DP's table at infinity), then a weight.
+  2. **The transition table as V**: the 71 x 71 log ratio of the artists' changes (count over expected) in place of
+     the attributes' V, the coherence weight as it is.
+  3. The recovery's own blind spots: hue ramps the artists make and the score charges (B/M | M/Y), the one-colour cell
+     next to its own colour (made 7-8x); whether the selection makes them at 3x.
+- Caveats: the pictures are drawn to the grid, not photographs; a blur of 2-3x the eye is a stand-in for that. The
+  recovery judges the selection against one expert's answer among the good ones (there is no correct colouring,
+  `FINDINGS.md`), so a few points of recovery mean nothing, a shift of the shared-colour share does.
 
 ## After the gallery
 

@@ -33,7 +33,7 @@ def project_graph(name: str):
     tests/images, without a project, gets a new project's graph, as the app opens it."""
     graph = ops.make_graph()
     if not (IMAGES / name / 'project.json').exists():
-        path, = IMAGES.glob(f'{name}.*')
+        path = Path(name) if Path(name).is_absolute() else next(IMAGES.glob(f'{name}.*'))   # or a picture anywhere
         return graph.with_params('source', replace(graph['source'].params, path=path))
     project = load_project(IMAGES / name)
     for nid in graph.ids():

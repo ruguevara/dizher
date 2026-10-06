@@ -71,6 +71,7 @@ over its cells grown by two cells (`common.window`).
     python research/pairs/seams.py make|paint|check|report     # PLAN step 5: which seams the user sees
     python research/pairs/patches.py make|rate|report [vN]     # step 5b: seam visibility on synthetic patches
     python research/pairs/seamfit.py                           # step 5c: one seam score from all the seam data
+    python research/pairs/zxart.py fetch|stats|recover [K]     # step 6: priors from the zxart.ee top 100 (section 19)
 
 ## Results
 
@@ -814,5 +815,56 @@ pictures 5 better, 1 both fine, 0 worse (fitted partly on them); held out 1 bett
 greyscale: switching dim and bright white gives it one more tone, and the score charges the switch as a seam (by the
 patches rightly, brightness alone ~1 against a hue's ~2); there the user wants the tone. The three both bad are their
 projects' old settings (no gallery): the conversions as a whole.
+
+### 19. Prior pairs from artists: the zxart.ee top 100 (2026-10-06)
+
+`zxart.py`, branch `research/zxart-top-100`. The 100 best-voted standard (6912) screens by the site's API
+(`export:zxPicture/filter:zxPictureType=standard/limit:100/start:N/order:votes,desc`; `limit` must come before
+`start`); the index in `rounds/zxart/top100.json`, the screens in `data/zxart/` (not in git; `fetch` takes ~1 min).
+The measures are the seam research's (14-17), on the artist's own pixels: a cell's shown set (as `common.shown`, from
+the attributes: black's two indexes one, a colour with no pixel left out); per 4-neighbour border whether the set
+changes, whether the two sets share a colour, Y, M_ab (no source to subtract), the solidity step, and E, the switch's
+lightness change at the border's pixels (`selection.table`'s form, from the border columns' ink counts), with a null
+E0: the same at the cell's mean ink level, so E against E0 says what the artist does at the border itself.
+
+**The artists** (76,800 cells, 148,000 borders): 14% of cells show one colour, 48% are bright; the pairs most shown
+k/b, k/W, k/B, k/r, k/w, k/c (5-7% each). **The pair changes on 50% of borders; 87% of the changes keep a shared
+colour**, 9% switch bright/dim only. **The border hides**: on shared-colour changes E 12.8 against E0 15.7, and E = 0
+(the border's pixels all the shared colour) on 25% against 5% at the cell's level. By lightness:
+
+| Y (the cells' mean L*/100) | share of borders | change rate | shared | E / E0 | M | S | score / null |
+|---|---|---|---|---|---|---|---|
+| 0-0.25 | 0.24 | 0.38 | 1.00 | 3.7 / 5.0 | 45 | 0.49 | 2.61 / 2.64 |
+| 0.25-0.5 | 0.25 | 0.59 | 0.91 | 15.2 / 18.5 | 59 | 0.11 | 4.03 / 4.19 |
+| 0.5-0.75 | 0.30 | 0.57 | 0.77 | 20.4 / 23.1 | 53 | 0.08 | 4.53 / 4.75 |
+| 0.75-1 | 0.21 | 0.44 | 0.89 | 16.6 / 19.8 | 34 | 0.34 | 4.12 / 4.46 |
+
+Changes without a shared colour: 6.4% of borders, score 5.95 against the shared ones' 3.67.
+
+**The transition prior**: 1281 kinds of change (two shown sets), 384 with 30+ counts; each one's count over the count
+expected if a picture's cells changed at random (the picture's shown-set frequencies and change rate). The log ratio
+against the coherence term's V (the sets as pairs, dark to bright): rho -0.22; against the seam score: **-0.41**; V
+against the score 0.53. The most made (7-8x expected): a one-colour cell next to a pair that holds its colour (b/b |
+b/w, k/r | r/r, k/M | M/M), and hue ramps (R/G | G/Y; B/M | M/Y 7x though the score gives it 7.5). The most avoided
+(0.17-0.3x): no shared colour and far hues (k/R | B/C, k/y | B/C, k/r | b/c, k/k | r/y).
+
+**The recovery test** (`recover [K]`): the artist's screen through the user's eye (`views.seen2` at 1x, K times its
+sigmas) as a new project's source, Select pairs at the defaults, no DBS, 0.5 s a screen; the converter's shown sets
+against the artist's, and its borders by the same measures:
+
+| | cells recovered | change rate | shared | E = 0 | no shared colour (of borders) | score of changes | changed by the converter alone (its score; no shared) | by the artist alone |
+|---|---|---|---|---|---|---|---|---|
+| the artist | | 0.505 | 0.874 | 0.22 | 0.064 | 3.96 | | |
+| the eye, x1 | **0.824** | 0.471 | 0.853 | 0.19 | 0.069 | 3.85 | 0.036 (2.27; 0.01) | 0.071 |
+| x2 | 0.735 | 0.454 | 0.823 | 0.15 | 0.080 | 3.68 | 0.052 (2.07; 0.05) | 0.103 |
+| x3 | 0.632 | 0.436 | 0.769 | 0.13 | **0.101** | 3.41 | 0.071 (2.11; 0.13) | 0.140 |
+
+At x3 by lightness, shared on the changes: 0.64 against the artist's 0.77 at Y 0.5-0.75, 0.75 against 0.89 at
+0.75-1, 0.99 against 1.00 in the dark. Through the user's eye the selection is nearly the artist: 82% of cells, the
+borders alike, its own changes cheap and shared. As the blur grows (the picture less fitted to the grid, as a
+photograph), it first loses the **shared colour**: changes without one grow from 6.9% to 10.1% of borders against the
+artists' 6.4%, at mid and high lightness; and the seam score does not see it, the converter's changes score lower than
+the artists' (the blurred target's cell means are nearer). A judge with an expert's ground truth that costs the user
+no time, on art drawn to the grid; the pictures are not photographs.
 
 Findings: `FINDINGS.md`; next steps: `PLAN.md`; the log: `LOG.md`.

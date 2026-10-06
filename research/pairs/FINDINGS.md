@@ -99,6 +99,21 @@ bottom. How we found it: `LOG.md`.
 - The pixel step that leads on the renders (0.79) fails on the patches (0.01-0.20): it sees busy dots, and among
   busy dots a change does show more, but its fit does not carry over. (14, 16)
 
+## Artists (the zxart.ee top 100)
+
+- **Artists change the pair on half the borders.** Smoothness is not few changes: 87% of their changes keep a shared
+  colour (100% in the dark), and the border's pixels carry it: the switch's lightness change at the border is 0 on
+  25% of the shared-colour changes against 5% at the cell's own level. (19)
+- **What artists avoid, the seam score tells better than the coherence term's V** (rho -0.41 against -0.22 on the
+  transition prior); yet they make hue ramps the score charges high (B/M | M/Y 7x expected). The most made change is
+  a one-colour cell next to a pair that holds its colour. (19)
+- **Through the user's eye the current selection is nearly the artist**: 82% of cells, the borders alike. As the blur
+  grows (less fitted to the grid) it loses the **shared colour** first: changes without one 6.9% -> 10.1% of borders
+  against the artists' 6.4%, at mid and high lightness, and the seam score does not see it (the converter's changes
+  score lower than the artists'). (19)
+- Recovery of the artists' cells is a judge with an expert's ground truth and no user time, on art drawn to the grid;
+  the pictures are not photographs. (19)
+
 ## Against the competitors
 
 - **Not worse anywhere**: img2spec and Image to ZX Spec at their best settings by the Claude judges, ZX-Paintbrush at

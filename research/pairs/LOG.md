@@ -251,3 +251,17 @@ the coherence aside; the held-out check again at it (`held-fixed`).
 Held out at the fixed weight (README 18): burning-hand the score better, david the current, three both bad; every
 repeat the same. In all: training 5-0-1, held out 1-1-3.
 
+## 2026-10-06 — PLAN step 6: prior pairs from artists, the zxart.ee top 100 (`zxart.py`, branch `research/zxart-top-100`)
+
+The question (the user): priors from the artists' screens for a new, simpler pair selection that prevents clash,
+measured as the seam research measures (step 5). `fetch`: the 100 best-voted standard screens by the API
+(`filter:zxPictureType=standard`, `limit` before `start`, Cyrillic file names quoted; hobeta headers stripped, none
+skipped). `stats` (README 19): the pair changes on half the borders, 87% with a shared colour (all in the dark), the
+border's pixels in the shared colour 5x more than the cell's level gives (E = 0 on 25% against 5%). The transition
+prior (count over the expected at random, per picture): what artists avoid, the seam score tells better than V (rho
+-0.41 against -0.22); hue ramps (B/M | M/Y) are made 7x though the score charges them. `recover`: the screen through
+the user's eye as a new project, Select pairs at the defaults without DBS, 0.5 s a screen; `common.project_graph`
+takes an absolute path for a loose picture. At the eye's blur 82% of cells recovered, the borders like the artists';
+at 2x and 3x the blur 74% and 63%, and the converter's changes without a shared colour grow to 10% of borders against
+6.4%, unseen by the seam score (its changes score lower than the artists'). The branch is rebased on `develop` f4d422e
+(#18-#21).

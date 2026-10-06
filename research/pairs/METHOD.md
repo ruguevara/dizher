@@ -66,6 +66,7 @@ The code is in `research/pairs/` (pytest does not collect it). The commands are 
 | `patches.py` | seam visibility on synthetic patches: two pairs on one threshold map, the colour changes at one luminance; the user sets the right side's lightness where the seam is least visible and rates it 0-3 (`make`, `rate` to `rounds/seams/patches.json`, `report`: by group with the lightness set, the repeats, each measure's rank correlation) (plan step 5b) |
 | `seamfit.py` | one seam score: the seam measures' weights fitted at once to the painted renders and the patch rounds, each picture or round left out; `ranked`, per global lightness every two pairs ranked by the score, 16 on a sheet; `sort`, the page where the user drags them into the order seen, to `rounds/seams/ranked.json` (plan step 5c) |
 | `selection.py` | the seam score in the selection in place of the coherence term: the per-border table from each pair's halftone, the six training pictures rendered both ways (`make`), blind sheets (`user`) (plan step 5d) |
+| `zxart.py` | prior pairs from artists: `fetch`, the zxart.ee top 100 standard screens by votes (`rounds/zxart/top100.json`, the screens in `data/zxart/`); `stats`, the pairs, the borders by lightness in the seam measures against a null at the cell's level, the transition prior against V and the seam score; `recover [K]`, each screen through the user's eye (K times its sigmas) as a new project, Select pairs at the defaults without DBS, the converter's cells and borders against the artist's (plan step 6) |
 | `vote.html` | the old vote page (an Artifact with a db, round cal1); `dp.py vote` replaces it |
 
 The data in git are in `rounds/`: `pilot1`, `cal1`, `opt1`, `opt3`, `opt4`, `aopt`, `c1`, `acuity`, `curve`, `e1`,
@@ -78,6 +79,7 @@ The data in git are in `rounds/`: `pilot1`, `cal1`, `opt1`, `opt3`, `opt4`, `aop
 - `dp.py make` ~10 min with no other tasks on the machine (~900 renders, ~6 s each, on 12 processes);
 - `surface.py make` some minutes;
 - `seams.py make` ~30 s (12 renders with DBS, data/seams/);
+- `zxart.py fetch` ~1 min (100 screens, 0.5 s between requests), `recover` ~50 s on 8 processes;
 - `rivals.py make` ~30 s, after `surface.py make`. The competitors: the build `../img2spec_video/build-macos`; the
   Image to ZX Spec jar and ZX-Paintbrush in its own Wine prefix, both in `data/rivals/bin/`; the user's SCR files in
   `rounds/rivals/paintbrush/`.
