@@ -14,12 +14,12 @@
         "fit": "Fill",
         "scale": 1.0,
         "rotation": 0.0,
-        "shift_x": 0,
+        "shift_x": -4,
         "shift_y": 0,
         "left": 0,
         "top": 0,
         "right": 0,
-        "bottom": 0
+        "bottom": 6
       },
       "inputs": [
         "source",
@@ -140,7 +140,7 @@
     "detail": {
       "op": "dizher.ops:detail",
       "params": {
-        "texture": 0.0,
+        "texture": 71.54299926757812,
         "sharpen": 150.0,
         "radius": 0.6079999804496765
       },
@@ -239,8 +239,8 @@
     "halftone": {
       "op": "dizher.ops:halftone",
       "params": {
-        "chroma": 1.7716084779022072,
-        "dithering": 1.0,
+        "chroma": 0.16699999570846558,
+        "dithering": 0.5080000162124634,
         "checker": false
       },
       "inputs": [
