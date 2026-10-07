@@ -308,6 +308,11 @@ Done:
 * [x] Undo/Redo (Edit menu, Cmd+Z / Shift+Cmd+Z): a slider drag is one step, and opening an image
   starts the history over. The History panel lists every step, newest on top, named after the
   params it changed; a click goes back or forward to it.
+* [x] Snapshots, the Lightroom way: the Snapshots panel under Tune keeps named copies of every
+  setting, overpaint included, as `snapshots/<name>.json` beside `project.json`, each with a PNG of
+  its conversion. Save snapshot (Shift+Cmd+S) names one by the time, ready to rename; a click brings
+  one back as one undo step, asking first only when no snapshot has the current settings; hovering
+  one shows its conversion in the Preview. Right click: update, rename, delete.
 * [x] Overpaint: attributes and brightness painted by hand; Freeze all keeps the whole field as shown, so it
   no longer follows Select pairs; Hide shows the conversion without the painted cells. On the
   Spectrum ink and paper share a brightness, and the B1 and B0 brushes make a cell bright or not
@@ -328,7 +333,7 @@ Critical:
 * [ ] A better loss function for pair selection, tuned on real artists' overpaint data
 * [ ] .dmg for macOS
 * [ ] Palette snapping prototype
-* [ ] A panel of starred or named snapshots to compare and choose from
+* [ ] Snapshots: the knobs a snapshot changes highlighted in the panels
 * [ ] Global presets of selected stages and params
 
 ### Future versions
