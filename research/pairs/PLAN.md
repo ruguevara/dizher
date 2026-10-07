@@ -352,6 +352,25 @@ and `rounds/duel` stay as the record; the method and its checks in `LOG.md`.
   recovery judges the selection against one expert's answer among the good ones (there is no correct colouring,
   `FINDINGS.md`), so a few points of recovery mean nothing, a shift of the shared-colour share does.
 
+## Step 7: the paintings as the oracle, a simpler pairwise rule (`paintfit.py`, 2026-10-07)
+
+- Why (the user, 2026-10-07): the clash that matters most is pale islands and banding in bright smooth surfaces,
+  where no dark colour hides the switch; colorimetry may go there. Fewer knobs, a rule stated in a paragraph, less
+  code; renders shown early, one blind round at the end. The user's own paintings are the data, not votes.
+- The data: the gallery-best projects (`tests/images/NAME-paint`, PLAN step 3's last pick; andy and golden-axe at
+  the Exact mixture preset), overrides cleared; the user corrects clash only (a seam, an island, a dim/bright block),
+  in the app's Paint mode, and saves. The old paintings in `tests/images/NAME` stay as they are: old settings, style
+  and clash mixed (recovery 11-46% on four of them under any energy).
+- The energy under test: the current unary unchanged (cell-mean unaries rank the painted pair worse, LOG); the
+  eye-seam tables and the coherence term off; one pairwise cost per border, times the source's smoothness:
+  a V + b [no shared colour] + c [dim/bright switch], optionally times the border's lightness. Fitted by recovery of
+  the corrected cells under the DP (`paintfit.py search`, 0.2 s a picture), leave-one-picture-out; never by a
+  ranking loss with the neighbours fixed (it gives coherence ~94 and loses recovery).
+- Gate: held-out recovery of the corrected cells above the current energy's, and the borders within the artists'
+  fingerprint (step 6); then renders for the user (not blind), then one blind round on the held-out pictures.
+- Then the app: the pairwise rule in `SelectionEnergy`, the coherence, edge, noise and surface knobs and the two
+  method presets deleted or reduced to what the fit keeps; on a `feature/*` branch from `develop`, with tests.
+
 ## After the gallery
 
 ### Seams in the algorithm: if the gallery does not fix autumn and diver-sunset

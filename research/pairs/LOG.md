@@ -292,3 +292,27 @@ Step 6.6 (the user's part 2, a simple model; `zxart.py model`, README 19): P(cha
 0.08 under 5 dE to 0.89 over 40: artists change the pair where the picture changes colour; the masking as one logit
 shift, +0.69 (odds x2; a colour +0.87, black +0.53), both border columns closed together (correlation +0.40, 25% both
 wholly the shared colour). A prior for the dots at a pair change, and the range for a selection's changes.
+
+## 2026-10-07 — the advisor's review: the paintings as the oracle (PLAN step 7; `paintfit.py`)
+
+The user's question: why the process and the metrics stopped suiting them, and a simpler selection against the
+clash. The user (interview): the worst clash is pale islands and banding in a bright smooth surface or gradient,
+where no dark colour hides the switch; colorimetry may be sacrificed there; the rounds cost too much per bit, nothing
+reached the app, the energy grew and was never replaced; fewer knobs, a method stated in a paragraph; renders shown
+early, blind votes only at the end. The data not yet used directly: the 9 painted projects. Against them the current
+energy rates the painting 2-12x worse than its own choice, nearly all in the unary (diver-sunset own 216 against
+2487, andy 465 against 2104), so no pairwise weight reaches them; through the eye (CIELAB cell means) andy's
+painting is nearer the target than the selection at L* 30-75 and farther only above 75. Cell-mean unaries (opponent
+or Lab) rank the painted pair worse than the current unary (top-1 0.38 against 0.50): the unary stays. Where the
+painted pair is not the unary's best, it has a lower V to the painted neighbours in 85%, shares at least as many
+colours in 95%, at most as many dim/bright switches in 98%: the coherence attribute is the right direction, the
+shared colour and the dim/bright switch near-constraints. Smoothness is not fewer changes: andy's painting changes
+more borders (739 against 626) with a shared colour on 75% (53%) and half the dim/bright switches (95 against 205).
+`paintfit.py fit` (the ranking loss of zxfit with the neighbours at the painting): accuracy up (LOO 0.96-0.99) but
+coherence 94 and DP recovery down on 8 of 9: a pseudo-likelihood fit over-smooths; `paintfit.py search` (a 3-term
+pairwise a V + b noshared + c dimbright times the smoothness, the eye seams and the coherence term off, fitted by
+recovery under the DP, 0.2 s a picture): mean LOO 0.520 against the current 0.539, a at the grid's edge. The old
+paintings recover only 11-46% on anubis, RC1, andy, diver-sunset under any energy: they were made at old settings and
+mix style with clash fixes (the user: autumn's gallery best beats the painting). So the oracle is rebuilt: the
+gallery-best projects as `tests/images/NAME-paint` (RC1, anubis, autumn, diver-sunset, jojo, rocket-rackoon; andy and
+golden-axe at the Exact mixture preset), overrides cleared, the user corrects clash only; then `search` again.

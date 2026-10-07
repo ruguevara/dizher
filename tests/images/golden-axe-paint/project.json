@@ -1,0 +1,264 @@
+{
+  "format": "mokit-graph/1",
+  "nodes": {
+    "source": {
+      "op": "mokit.ops:load_media",
+      "params": {
+        "path": "../golden-axe.jpg"
+      },
+      "inputs": []
+    },
+    "framing": {
+      "op": "dizher.ops:framing",
+      "params": {
+        "fit": "Fit",
+        "scale": 1.2589999437332153,
+        "rotation": 0.0,
+        "shift_x": 2,
+        "shift_y": 0,
+        "left": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "inputs": [
+        "source",
+        "target"
+      ]
+    },
+    "light": {
+      "op": "dizher.ops:light",
+      "params": {
+        "exposure": 0.2759999930858612,
+        "temperature": -100.0,
+        "tint": 0.0
+      },
+      "inputs": [
+        "framing"
+      ]
+    },
+    "levels": {
+      "op": "dizher.ops:levels",
+      "params": {
+        "mode": "Levels",
+        "in_black": 0,
+        "in_white": 217,
+        "gamma": 1.15,
+        "out_black": 0,
+        "out_white": 255,
+        "channels": [
+          [
+            0.0,
+            255.0,
+            1.0,
+            0.0,
+            255.0
+          ],
+          [
+            0.0,
+            255.0,
+            1.0,
+            0.0,
+            255.0
+          ],
+          [
+            0.0,
+            255.0,
+            1.0,
+            0.0,
+            255.0
+          ]
+        ],
+        "curves": [
+          [
+            0.0,
+            0.0,
+            255.0,
+            255.0
+          ],
+          [
+            0.0,
+            0.0,
+            255.0,
+            255.0
+          ],
+          [
+            0.0,
+            0.0,
+            255.0,
+            255.0
+          ],
+          [
+            0.0,
+            0.0,
+            255.0,
+            255.0
+          ]
+        ],
+        "picks": [],
+        "targets": [
+          -1,
+          -1,
+          -1
+        ]
+      },
+      "inputs": [
+        "light"
+      ]
+    },
+    "local": {
+      "op": "dizher.ops:local_tone",
+      "params": {
+        "local_contrast": -54.41899871826172,
+        "shadows": 95.85700225830078,
+        "highlights": 39.50299835205078,
+        "clarity": -100.0
+      },
+      "inputs": [
+        "levels"
+      ]
+    },
+    "contrast": {
+      "op": "dizher.ops:contrast",
+      "params": {
+        "contrast": -2.2100000381469727
+      },
+      "inputs": [
+        "local"
+      ]
+    },
+    "color": {
+      "op": "dizher.ops:color",
+      "params": {
+        "vibrance": 100.0,
+        "saturation": 87.56900024414062
+      },
+      "inputs": [
+        "contrast"
+      ]
+    },
+    "detail": {
+      "op": "dizher.ops:detail",
+      "params": {
+        "texture": 100.0,
+        "sharpen": 141.71299743652344,
+        "radius": 0.8140000104904175
+      },
+      "inputs": [
+        "color"
+      ]
+    },
+    "target": {
+      "op": "dizher.ops:target",
+      "params": {
+        "mode": "ZX Spectrum standard",
+        "colours": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ]
+      },
+      "inputs": []
+    },
+    "metric": {
+      "op": "dizher.ops:metric",
+      "params": {
+        "method": "Exact mixture",
+        "chroma": 2.0,
+        "flare": 0.1
+      },
+      "inputs": []
+    },
+    "eye": {
+      "op": "dizher.ops:eye",
+      "params": {
+        "luma_alpha": 2.0,
+        "luma_scale": 0.9,
+        "chroma_alpha": 2.0,
+        "chroma_scale": 1.4
+      },
+      "inputs": []
+    },
+    "halftoner": {
+      "op": "dizher.ops:halftoner",
+      "params": {
+        "halftoner": "Stohastic",
+        "matrix": "Void dispersed dots",
+        "kernel": "Shiau-Fan 3",
+        "noise_x": 101,
+        "noise_y": 68
+      },
+      "inputs": []
+    },
+    "prepare": {
+      "op": "dizher.ops:prepare",
+      "params": null,
+      "inputs": [
+        "detail",
+        "target",
+        "metric",
+        "eye",
+        "halftoner"
+      ]
+    },
+    "select": {
+      "op": "dizher.ops:select_pairs",
+      "params": {
+        "coherence": 6.0,
+        "edge": 0.1,
+        "luma_noise": 0.0,
+        "chroma_noise": 0.0,
+        "surface": 0.0
+      },
+      "inputs": [
+        "prepare"
+      ]
+    },
+    "overpaint": {
+      "op": "dizher.ops:overpaint",
+      "params": {
+        "overrides": []
+      },
+      "inputs": [
+        "select"
+      ]
+    },
+    "halftone": {
+      "op": "dizher.ops:halftone",
+      "params": {
+        "chroma": 2.0,
+        "dithering": 1.0,
+        "checker": false
+      },
+      "inputs": [
+        "overpaint"
+      ]
+    },
+    "optimise": {
+      "op": "dizher.ops:optimise",
+      "params": {
+        "enabled": true,
+        "structure": 0.06,
+        "luma_noise": 0.0,
+        "chroma_noise": 0.0
+      },
+      "inputs": [
+        "halftone"
+      ]
+    }
+  },
+  "view": {}
+}
