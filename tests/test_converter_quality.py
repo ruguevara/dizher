@@ -269,7 +269,7 @@ def test_error_diffusion_kernels_spread_error():
 
 def test_candidates_follow_the_halftoner():
     """Pair candidates are painted by the converter's ditherer; the batched scalar diffusion matches the colour
-    one pair by pair, so 72 candidates cost one raster pass."""
+    one pair by pair, so 71 candidates cost one raster pass."""
     from dizher.halftoning.error_distribution import ed_dither_duo, ed_dither_levels
     rng = np.random.default_rng(5)
     levels = rng.random((3, 16, 24), dtype=np.float32)

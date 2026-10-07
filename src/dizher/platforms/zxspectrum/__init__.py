@@ -33,9 +33,10 @@ class ZXPalette(Palette):
         return i | 8 if on else i & 7
 
     def iter_idxs_pairs(self):
-        """Both colours of a cell share the bright bit."""
+        """Both colours of a cell share the bright bit. Black on black once: the bright one is the same pair, kept
+        only when not-bright black is not enabled."""
         for i1, i2 in super().iter_idxs_pairs():
-            if (i1 >= 8) == (i2 >= 8):
+            if (i1 >= 8) == (i2 >= 8) and not (i1 == i2 == 8 and 0 in self.enabled):
                 yield i1, i2
 
 

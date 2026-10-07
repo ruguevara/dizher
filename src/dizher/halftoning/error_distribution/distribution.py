@@ -41,7 +41,7 @@ def ed_dither_duo(luma, paper, ink, kernel='Stucki'):
 
 def ed_dither_levels(levels, kernel='Stucki'):
     """Binary error diffusion of levels in 0..1 with a named kernel, batched over leading axes: the raster
-    loop runs once for every pair's candidate at a time (Converter.set_image), so 72 pairs cost one pass."""
+    loop runs once for every pair's candidate at a time (Converter.set_image), so 71 pairs cost one pass."""
     positions, weights, divisor = KERNELS[kernel]
     positions = np.asarray(positions)
     down, side = positions[:, 0].max(), np.abs(positions[:, 1]).max()

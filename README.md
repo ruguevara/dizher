@@ -179,7 +179,7 @@ deliberately truncated.
 
 ### Colour selection
 
-For every block and every allowed pair of palette colours (72 pairs on the Spectrum), a candidate
+For every block and every allowed pair of palette colours (71 pairs on the Spectrum), a candidate
 block is made by projecting the source onto the paper/ink segment in weighted linear opponent
 colour space: the mixture of the two colours each pixel asks for, taken exactly or halftoned
 depending on the selection method (below). The whole screen is then
