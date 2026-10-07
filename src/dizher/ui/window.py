@@ -1,7 +1,7 @@
 """imgui_bundle window over the pipeline host, in AmaZX's layout: the Tune dock on the left and the Convert dock
 on the right, each with one collapsible block per stage in pipeline order (mokit's params editor inside, or a
 custom one), the Preview dock between them with the tuned image and the conversion, and the History dock under
-Convert's with every undo step. A block header shows its
+Convert's with every undo step, the Snapshots dock under Tune's with named copies of every setting. A block header shows its
 stage's state: plain when done, tinted while it runs or after it failed, muted while waiting to run. hello_imgui's
 ini keeps the dock layout, its user prefs which blocks are open and the session: the project folder and its unsaved
 edits, restored on the next start when no path is given; with none the project opens as it is on disk.
@@ -36,9 +36,9 @@ from mokit.ui.style import Palette
 
 from .. import ops, tone, version
 from ..converter.converter import os_path
-from .app import Pipeline, project_folder
+from .app import Pipeline, merged, project_folder
 from .levels import LevelsEditor
-from . import gallery, views
+from . import gallery, snapshots, views
 
 HEADER_TINT = dict(running=Palette.warn, error=Palette.error)   # header background of a running or failed stage
 LABELS = {nid: label for nid, label, _, _ in ops.PIPELINE}
@@ -72,6 +72,7 @@ SPECIAL = {TRANSPARENT: (0.0, 0.0, 0.0, 0.0), AUTO: (0.3, 0.3, 0.3, 1.0), BRIGHT
 LABEL = {AUTO: 'A', BRIGHT: 'B1', DIM: 'B0'}   # on a special's swatch while no mark takes its place
 COUNTED = {'overrides': 'cells', 'picks': 'grey points'}   # params the history counts
 UNDO, REDO = imgui.Key.mod_ctrl | imgui.Key.z, imgui.Key.mod_ctrl | imgui.Key.mod_shift | imgui.Key.z   # Cmd on macOS
+SNAPSHOT = imgui.Key.mod_ctrl | imgui.Key.mod_shift | imgui.Key.s
 
 
 @lru_cache(maxsize=1024)
@@ -343,6 +344,15 @@ class Window:
         self.saved = self.app.graph        # the graph as last saved or opened: another one is unsaved
         self.autosave = False              # the user pref, on by default, comes with the prefs: tests never write
         self.recent = []                   # images opened, the latest first; a user pref
+        self.origin = None                 # the snapshot the settings came from: restored, saved or updated last
+        self.snaps = {}                    # snapshot name -> its graph on the pipeline with this image, newest first
+        self._pictures = {}                # snapshot name -> its conversion's picture, read on its first hover
+        self._matched = None, None         # (the graph, the snapshot it is or None): _match's last answer
+        self._peek = None, -1              # (the snapshot hovered, the frame): the Preview shows its picture
+        self._picture_due = None           # (name, graph) of a snapshot saved mid-conversion: its picture once done
+        self._renaming = None              # [snapshot name, the text typed, focus the field]: renamed in place
+        self._asking = None                # the snapshot a restore waits with, asking about the current settings
+        self._deleting = None              # the snapshot waiting for Delete's confirmation
         self.restore_session = path is None
         if path and exists(Path(path) / project.PROJECT_FILE):
             self._open_project(path)
@@ -390,12 +400,14 @@ class Window:
         p.docking_params.docking_splits = [
             hello_imgui.DockingSplit('MainDockSpace', 'TuneSpace', imgui.Dir.left, 0.22),
             hello_imgui.DockingSplit('MainDockSpace', 'ConvertSpace', imgui.Dir.right, 0.28),
-            hello_imgui.DockingSplit('ConvertSpace', 'HistorySpace', imgui.Dir.down, 0.25)]
+            hello_imgui.DockingSplit('ConvertSpace', 'HistorySpace', imgui.Dir.down, 0.25),
+            hello_imgui.DockingSplit('TuneSpace', 'SnapshotsSpace', imgui.Dir.down, 0.25)]
         p.docking_params.dockable_windows = [
             hello_imgui.DockableWindow('Tune', 'TuneSpace', lambda: self._column(ops.TUNE[1:])),   # the source: File menu
             hello_imgui.DockableWindow('Convert', 'ConvertSpace', lambda: (self._column(ops.CONVERT), self._export())),
             hello_imgui.DockableWindow('Preview', 'MainDockSpace', self._preview),
-            hello_imgui.DockableWindow('History', 'HistorySpace', self._history)]
+            hello_imgui.DockableWindow('History', 'HistorySpace', self._history),
+            hello_imgui.DockableWindow('Snapshots', 'SnapshotsSpace', self._snapshots)]
         if not persist:   # tests: the default layout in an ini of their own, the user's stays untouched
             p.app_window_params.window_geometry.size = (1100, 1000)   # narrow: C64 fits at a smaller zoom than ZX
             p.app_window_params.restore_previous_geometry = False
@@ -468,9 +480,13 @@ class Window:
             self.app.undo()
         if imgui.shortcut(REDO, imgui.InputFlags_.route_global.value):
             self.app.redo()
+        if imgui.shortcut(SNAPSHOT, imgui.InputFlags_.route_global.value) and self.project:
+            self._new_snapshot()
         if self.autosave and self.project and self.app.graph != self.saved and not held:
             self._save_project()   # once a drag is let go, not every frame of it
+        self._due_picture()
         self._unsaved_dialog()
+        self._snapshot_dialogs()
         self._about_dialog()
         self.app.update()
         fps = hello_imgui.get_runner_params().fps_idling
@@ -626,7 +642,8 @@ class Window:
         self._view_bar()
         tuned = (self._debug_image('eye target', self.app.shown('prepare'), lambda c: c.eye_view(c.image_rgb)) if self.view == 'Eye'
                  else self.app.shown(ops.TUNED))
-        converted = self._converted()
+        converted, peek = self._converted(), self._peeked()
+        converted = converted if peek is None else peek
         shown = [(key, image) for key, image in (('tuned', tuned), ('converted', converted)) if image is not None]
         if not shown:
             return
@@ -652,6 +669,8 @@ class Window:
                 hovered = min(int(m.y - lo.y) // zoom, ih - 1), min(int(m.x - lo.x) // zoom, iw - 1)
             if self.grid:
                 self._cell_grid(cell, zoom)
+            if key == 'converted' and peek is not None:
+                self._badge(f'Snapshot {self._peek[0]}')
             if painting:
                 self._painted_cells(cell, zoom, (ih // cell[0], iw // cell[1]))
             if side >= stacked:
@@ -910,6 +929,9 @@ class Window:
             imgui.separator()
             if imgui.menu_item_simple('Save conversion…', enabled=self.result is not None):
                 self._save()
+            if imgui.menu_item_simple('Save snapshot', 'Shift+Cmd+S' if sys.platform == 'darwin' else 'Ctrl+Shift+S',
+                                      enabled=self.project is not None):
+                self._new_snapshot()
             imgui.separator()
             if imgui.menu_item_simple('Quit'):
                 hello_imgui.get_runner_params().app_shall_exit = True
@@ -946,6 +968,185 @@ class Window:
         else:
             imgui.text('pending' if self.app.busy else 'ready')
 
+    # ----- snapshots -------------------------------------------------------------------------------
+
+    def _snapshots(self) -> None:
+        """Lightroom's snapshots: named copies of every setting, overpaint included, in the project's snapshots/.
+        Save keeps the settings as a new one named by the time, its name in a field to type another; a click brings
+        one back as an edit, one undo step, after asking about the settings when no snapshot has them; hovering one
+        shows its conversion in the Preview. The one the settings are is selected, the one they came from and left
+        is marked *; a right click updates, renames or deletes one."""
+        if self.project is None:
+            widgets.hint('Open an image to keep snapshots of its settings')
+            return
+        if imgui.button('Save snapshot'):
+            self._new_snapshot()
+        imgui.set_item_tooltip('Keep every setting, overpaint included, as a snapshot of this image\'s project '
+                               f"({'Shift+Cmd+S' if sys.platform == 'darwin' else 'Ctrl+Shift+S'})")
+        match = self._match()
+        for name, graph in list(self.snaps.items()):
+            if self._renaming and self._renaming[0] == name:
+                self._rename_field()
+                continue
+            label = name + (' *' if name == self.origin and match is None else '')
+            if imgui.selectable(f'{label}###{name}', name == match)[0]:
+                self._restore(name)
+            if imgui.is_item_hovered():
+                self._peek = name, imgui.get_frame_count()
+            imgui.set_item_tooltip(f'Differs in {change(graph, self.app.graph)}' if name != match else 'The current settings')
+            if imgui.begin_popup_context_item(f'menu {name}'):
+                if imgui.menu_item_simple('Update with current settings', enabled=name != match):
+                    self._write_snapshot(name)
+                if imgui.menu_item_simple('Rename'):
+                    self._renaming = [name, name, True]
+                if imgui.menu_item_simple('Delete…'):
+                    self._deleting = name
+                imgui.end_popup()
+
+    def _rename_field(self) -> None:
+        """The renamed snapshot's row: Enter or a click away renames it, Esc keeps its name."""
+        name, text, focus = self._renaming
+        if focus:
+            imgui.set_keyboard_focus_here()
+            self._renaming[2] = False
+        imgui.set_next_item_width(-1)
+        flags = imgui.InputTextFlags_.enter_returns_true.value | imgui.InputTextFlags_.auto_select_all.value
+        entered, self._renaming[1] = imgui.input_text(f'##rename {name}', text, flags)
+        if not (entered or imgui.is_item_deactivated()):
+            return
+        self._renaming, new = None, snapshots.clean(self._renaming[1])
+        if not new or new == name or imgui.is_key_pressed(imgui.Key.escape):
+            return
+        new = snapshots.free_name(self.project, new)
+        try:
+            snapshots.rename(self.project, name, new)
+        except OSError as e:
+            self.app.errors['snapshot'] = f'cannot rename {name}: {e}'
+            return
+        if self.origin == name:
+            self._set_origin(new)
+        self._read_snapshots()
+
+    def _new_snapshot(self) -> None:
+        """The settings as a new snapshot named by the time, its name in a field to type another."""
+        name = snapshots.free_name(self.project, time.strftime('%Y-%m-%d %H.%M'))
+        if self._write_snapshot(name):
+            self._renaming = [name, name, True]
+
+    def _write_snapshot(self, name: str) -> bool:
+        """The settings as snapshot name, new or updated, with the conversion's picture when it is done; else the
+        picture follows once it is (_due_picture). The project is written first: snapshots live in it. False when
+        nothing could be written."""
+        if not exists(self.project / project.PROJECT_FILE):
+            self._save_project()
+            if not exists(self.project / project.PROJECT_FILE):
+                return False
+        graph, done = self.app.graph, None if self.app.unpainted else self.app.result('optimise')
+        try:
+            snapshots.save(self.project, name, graph, None if done is None else done.dithered_result)
+        except OSError as e:
+            self.app.errors['snapshot'] = f'cannot save snapshot {name}: {e}'
+            return False
+        self._picture_due = None if done is not None else (name, graph)
+        self._read_snapshots()
+        self._set_origin(name)
+        return True
+
+    def _due_picture(self) -> None:
+        """A snapshot saved mid-conversion gets its picture once the conversion is done, if the settings stayed."""
+        if self._picture_due is None:
+            return
+        name, graph = self._picture_due
+        done = self.app.result('optimise')
+        if self.app.graph != graph or name not in self.snaps:
+            self._picture_due = None
+        elif done is not None and not self.app.unpainted:
+            self._picture_due = None
+            try:
+                snapshots.save(self.project, name, graph, done.dithered_result)
+            except OSError as e:
+                self.app.errors['snapshot'] = f'cannot save the picture of {name}: {e}'
+            self._pictures.pop(name, None)
+
+    def _restore(self, name: str, ask: bool = True) -> None:
+        """Snapshot name's settings, one undo step; first a question when no snapshot has the current ones."""
+        if ask and self._match() is None:
+            self._asking = name
+            return
+        self.app.set_graph(self.snaps[name])
+        self._set_origin(name)
+
+    def _set_origin(self, name) -> None:
+        """The snapshot the settings came from, kept in project.json's view; autosave writes it at once, as an edit."""
+        self.origin = name
+        if self.autosave and exists(self.project / project.PROJECT_FILE):
+            self._save_project()
+
+    def _snapshot_dialogs(self) -> None:
+        if self._asking is not None:
+            name, update = self._asking, self.origin if self.origin in self.snaps else None
+            labels = ((f'Update {update}',) if update else ()) + ('Save as new', "Don't save", 'Cancel')
+            choice = self._modal('Keep the current settings?',
+                                 f'No snapshot has the current settings. Keep them before going to {name}?', labels)
+            if choice == 'Save as new':
+                self._write_snapshot(snapshots.free_name(self.project, time.strftime('%Y-%m-%d %H.%M')))
+            elif choice and choice.startswith('Update'):
+                self._write_snapshot(update)
+            if choice and choice != 'Cancel' and name in self.snaps:
+                self._restore(name, ask=False)
+            if choice:
+                self._asking = None
+        if self._deleting is not None:
+            name = self._deleting
+            choice = self._modal('Delete snapshot', f'Delete the snapshot {name}? This cannot be undone.', ('Delete', 'Cancel'))
+            if choice == 'Delete':
+                try:
+                    snapshots.delete(self.project, name)
+                except OSError as e:
+                    self.app.errors['snapshot'] = f'cannot delete {name}: {e}'
+                if self.origin == name:
+                    self._set_origin(None)
+                self._read_snapshots()
+            if choice:
+                self._deleting = None
+
+    def _read_snapshots(self) -> None:
+        """The project's snapshots on the pipeline, each with this image as its source; an unreadable one is left out."""
+        self.snaps, self._pictures, self._matched, self._renaming = {}, {}, (None, None), None
+        if self.project is None:
+            return
+        source = self.app.graph['source'].params
+        for name in snapshots.names(self.project):
+            try:
+                self.snaps[name] = merged(snapshots.load(self.project, name)).with_params('source', source)
+            except (OSError, ValueError, GraphError):
+                continue
+
+    def _match(self):
+        """The snapshot the settings are, None when none has them; asked again only once they change."""
+        graph, name = self._matched
+        if graph is not self.app.graph:
+            name = next((n for n, g in self.snaps.items() if g == self.app.graph), None)
+            self._matched = self.app.graph, name
+        return name
+
+    def _peeked(self):
+        """The hovered snapshot's picture, None when none is hovered (this frame or the last) or it has none."""
+        name, frame = self._peek
+        if frame < imgui.get_frame_count() - 1 or name not in self.snaps:
+            return None
+        if name not in self._pictures:
+            self._pictures[name] = snapshots.picture(self.project, name)
+        return self._pictures[name]
+
+    @staticmethod
+    def _badge(text: str) -> None:
+        """text on a dark plate at the top-left of the image just drawn."""
+        lo, pad = imgui.get_item_rect_min(), imgui.get_style().frame_padding
+        size, draw = imgui.calc_text_size(text), imgui.get_window_draw_list()
+        draw.add_rect_filled(lo, imgui.ImVec2(lo.x + size.x + 2 * pad.x, lo.y + size.y + 2 * pad.y), imgui.IM_COL32(0, 0, 0, 200))
+        draw.add_text(imgui.ImVec2(lo.x + pad.x, lo.y + pad.y), imgui.IM_COL32(255, 255, 255, 255), text)
+
     # ----- files -----------------------------------------------------------------------------------
 
     @property
@@ -970,25 +1171,36 @@ class Window:
         else:
             then()
 
-    def _unsaved_dialog(self) -> None:
-        if self._after_close is None:
-            return
-        imgui.open_popup('Unsaved changes')   # imgui keeps it open when asked again
-        if not imgui.begin_popup_modal('Unsaved changes', None, imgui.WindowFlags_.always_auto_resize.value)[0]:
-            return
-        imgui.text(f'Save the changes to {self.project.name}?')
-        then, choice = self._after_close, None
-        for label in ('Save', "Don't save", 'Cancel'):
+    @staticmethod
+    def _modal(title: str, text: str, labels) -> str:
+        """A modal with text and a button per label, open as long as it is drawn each frame: the label clicked, the
+        last one on Esc, else None."""
+        imgui.open_popup(title)   # imgui keeps it open when asked again
+        if not imgui.begin_popup_modal(title, None, imgui.WindowFlags_.always_auto_resize.value)[0]:
+            return None
+        imgui.text(text)
+        choice = None
+        for label in labels:
             if imgui.button(label):
                 choice = label
             imgui.same_line()
         imgui.new_line()
+        if choice is None and imgui.is_key_pressed(imgui.Key.escape):
+            choice = labels[-1]
+        if choice:
+            imgui.close_current_popup()
+        imgui.end_popup()
+        return choice
+
+    def _unsaved_dialog(self) -> None:
+        if self._after_close is None:
+            return
+        then = self._after_close
+        choice = self._modal('Unsaved changes', f'Save the changes to {self.project.name}?', ('Save', "Don't save", 'Cancel'))
         if choice == 'Save':
             self._save_project()
         if choice:
             self._after_close = None
-            imgui.close_current_popup()
-        imgui.end_popup()
         if choice == "Don't save" or choice == 'Save' and self.app.graph == self.saved:   # not when the save failed
             then()
 
@@ -1054,7 +1266,8 @@ class Window:
             self._open_project(folder)
         else:
             self.app.open(path)
-            self.project, self.saved = folder, self.app.graph   # nothing to ask about until an edit
+            self.project, self.saved, self.origin = folder, self.app.graph, None   # nothing to ask about until an edit
+            self._read_snapshots()
             if self.autosave:
                 self._save_project()
             self._remember()
@@ -1089,16 +1302,17 @@ class Window:
             self.app.errors['project'] = f'cannot open {folder}: {e}'
             return
         self.app.restore(p.graph)
-        self.project, self.saved = p.folder, self.app.graph
+        self.project, self.saved, self.origin = p.folder, self.app.graph, p.view.get('snapshot')
+        self._read_snapshots()
         self._remember()
 
     def _save_project(self) -> None:
-        graph = self.app.graph
+        graph, view = self.app.graph, {'snapshot': self.origin} if self.origin else {}
         try:
             if exists(self.project / project.PROJECT_FILE):
-                project.save_project(self.project, graph)
+                project.save_project(self.project, graph, view)
             else:
-                project.create_project(self.project, graph)
+                project.create_project(self.project, graph, view)
         except OSError as e:
             self.app.errors['project'] = f'cannot save {self.project}: {e}; autosave is off'
             self.autosave = False   # not a retry every frame

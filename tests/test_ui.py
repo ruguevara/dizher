@@ -47,7 +47,9 @@ def drag(ctx, a: imgui.ImVec2, b: imgui.ImVec2):
 
 
 def rect(ctx, window, item):
+    """The item's rect, scrolled into view first: Tune is taller than its dock."""
     ctx.set_ref(window)
+    ctx.scroll_to_item_y(item)
     return ctx.item_info(item).rect_full
 
 
@@ -659,6 +661,56 @@ def test_pattern_gallery(ctx):
     ui.app.set_params('halftoner', replace(type(params('halftoner'))(), halftoner=Ordered.label))
 
 
+def test_snapshots(ctx):
+    """Save names one by the time and focuses its field; a click on another asks about unsaved settings, and restores
+    as one undo step; a right click deletes."""
+    import tempfile
+    from dizher.ui import snapshots
+    folder = ui.project
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the conversion to settle')
+    with tempfile.TemporaryDirectory() as tmp:
+        ui.project, ui.autosave = Path(tmp) / 'goldhill', False
+        ui._read_snapshots()
+        ctx.item_click('//Snapshots/Save snapshot')
+        ctx.yield_(2)
+        ctx.key_chars('soft')
+        ctx.key_press(imgui.Key.enter)
+        ctx.yield_(2)
+        assert snapshots.names(ui.project) == ['soft'] and (ui.project / 'snapshots' / 'soft.json').exists()
+        wait(ctx, lambda: (ui.project / 'snapshots' / 'soft.png').exists(), 'the picture of soft')
+        soft = ui.snaps['soft']
+        ui.app.set_params('contrast', replace(params('contrast'), contrast=15.0))
+        changed, steps = ui.app.graph, len(ui.app.past)
+        ctx.item_click('//Snapshots/**/###soft')
+        ctx.yield_(2)
+        assert ui._match() is None and ui._asking == 'soft'
+        for button in ('Update soft', 'Save as new', "Don't save", 'Cancel'):
+            assert ctx.item_exists(f'//Keep the current settings?/{button}'), button
+        ctx.item_click('//Keep the current settings?/Cancel')
+        ctx.yield_(2)
+        assert ui._asking is None and ui.app.graph == changed and len(ui.app.past) == steps
+        ctx.item_click('//Snapshots/**/###soft')
+        ctx.yield_(2)
+        ctx.item_click('//Keep the current settings?/Save as new')
+        ctx.yield_(2)
+        assert len(snapshots.names(ui.project)) == 2 and ui.app.graph == soft == ui.snaps['soft']
+        assert len(ui.app.past) == steps + 1, 'not one undo step'
+        ui.app.undo()
+        other = next(n for n in ui.snaps if n != 'soft')
+        assert ui.app.graph == changed and ui._match() == other
+        ctx.item_click('//Snapshots/**/###soft', imgui.MouseButton_.right)
+        ctx.item_click('//$FOCUSED/Delete…')
+        ctx.yield_(2)
+        ctx.item_click('//Delete snapshot/Delete')
+        ctx.yield_(2)
+        assert snapshots.names(ui.project) == [other], snapshots.names(ui.project)
+        wait(ctx, lambda: not ui.app.busy, 'the pipeline to settle')
+        ui.project = folder
+        ui._read_snapshots()
+        ui.origin = None
+    reset('contrast')
+
+
 def test_capture_layout(ctx):   # keep last: a picture of the default layout for review
     from imgui_bundle.imgui.test_engine import CaptureFlags_
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the conversion to settle')
@@ -695,6 +747,7 @@ TESTS = [
     ('ui', 'paint', test_paint),
     ('ui', 'pattern_combo', test_pattern_combo),
     ('ui', 'pattern_gallery', test_pattern_gallery),
+    ('ui', 'snapshots', test_snapshots),
     ('ui', 'capture_layout', test_capture_layout),
 ]
 
