@@ -51,6 +51,12 @@ def rect(ctx, window, item):
     return ctx.item_info(item).rect_full
 
 
+def inspecting():
+    """The hover inspector is up, not some item's tooltip."""
+    tooltip = imgui.internal.find_window_by_name('##Tooltip_00')
+    return tooltip is not None and tooltip.active and tooltip.size.y > 300
+
+
 def test_conversion_lands(ctx):
     wait(ctx, lambda: ui.app.result('optimise') is not None, 'the first conversion')
     assert not ui.app.errors, ui.app.errors
@@ -424,9 +430,9 @@ def test_hover_inspector(ctx):
     ui.view = 'Screen'
     r = rect(ctx, '//Preview', '**/Screen')   # the display-only images have no item id: the first is under the bar
     ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x + 100, r.max.y + 100))
-    ctx.yield_(4)
-    tooltip = imgui.internal.find_window_by_name('##Tooltip_00')
-    assert tooltip is not None and tooltip.active and tooltip.size.y > 300, 'no inspector tooltip'
+    ctx.yield_()
+    assert not inspecting(), 'the inspector shows before its delay'
+    wait(ctx, inspecting, 'the inspector after its delay')
     ctx.capture_set_filename('/tmp/dizher_inspect.png')
     ctx.capture_screenshot(CaptureFlags_.hide_mouse_cursor.value)
     ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x - 50, r.min.y - 50))
@@ -442,7 +448,7 @@ def test_cell_popup(ctx):
     ui.view = 'Screen'
     r = rect(ctx, '//Preview', '**/Screen')
     ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x + 100, r.max.y + 100))
-    ctx.yield_(2)
+    wait(ctx, inspecting, 'the inspector')
     tip = imgui.internal.find_window_by_name('##Tooltip_00').pos
     tip = tip.x, tip.y
     ctx.mouse_click(1)
@@ -483,7 +489,7 @@ def test_cell_popup(ctx):
     reset('overpaint')
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the conversion again')
     ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x + 180, r.max.y + 180))   # another block, the tooltip's crop
-    ctx.yield_(2)
+    wait(ctx, inspecting, 'the inspector on another block')
     ctx.mouse_click(1)
     ctx.yield_(2)
     block = lambda row, col: (max(0, min(row - 1, R - 3)), max(0, min(col - 1, C - 3)))   # the zoom's top-left cell

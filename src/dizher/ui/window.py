@@ -64,6 +64,7 @@ MAX_PATH = 260   # Windows' path limit, the NUL included
 # for it at every numpy or OpenCV call, so at a high refresh rate or with no vsync the frames starve the stage
 BUSY_FPS = 30.0
 INSPECT_CELLS, INSPECT_ZOOM, INSPECT_PAIRS = 3, 10, 8   # the hover tooltip: cells a side, its zoom, pairs listed
+INSPECT_DELAY = 1.0   # s over the previews before the hover tooltip shows; then it follows the pointer
 # the brush's specials: keep the cell's colour, give it back to Select pairs, keep its colours made bright or not
 TRANSPARENT, AUTO, BRIGHT, DIM = -1, -2, -3, -4
 SPECIAL = {TRANSPARENT: (0.0, 0.0, 0.0, 0.0), AUTO: (0.3, 0.3, 0.3, 1.0), BRIGHT: (0.3, 0.3, 0.3, 1.0),
@@ -358,6 +359,7 @@ class Window:
         self._about = False        # Help > About was chosen: the dialog opens next frame, outside the menu
         self._cell = None          # (row, column) the cell popup shows
         self._tip = None           # the hover tooltip's top-left less the pointer, and its size: the cell popup opens there
+        self._hover = None         # imgui time the pointer came over a preview, None while it is off them
         self._popup = None, None   # the cell popup's top-left, and its size when last shown
         self._held = None          # (the last live snapshot, the finished conversion it stands in for): see _live
         self._stroke = None        # a paint stroke's cells so far: pressed over a preview in Paint mode, not let go yet
@@ -655,6 +657,10 @@ class Window:
             if side >= stacked:
                 imgui.same_line()
         same = all(i.shape == shown[0][1].shape for _, i in shown)   # not mid mode switch
+        if hovered is None:
+            self._hover = None
+        elif self._hover is None:
+            self._hover = imgui.get_time()
         if hovered is not None and same:
             at = hovered[0] // cell[0], hovered[1] // cell[1]
             if picking:
@@ -665,7 +671,7 @@ class Window:
                 self._cell = at
                 self._popup = None if self._tip is None else imgui.get_mouse_pos() + self._tip[0], self._popup[1]
                 imgui.open_popup('cell')
-            elif not popup:
+            elif not popup and imgui.get_time() - self._hover >= INSPECT_DELAY:
                 imgui.begin_tooltip()
                 self._tip = imgui.get_window_pos() - imgui.get_mouse_pos(), imgui.get_window_size()
                 self._zoom(at, cell, shown, 'tip')
