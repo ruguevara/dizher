@@ -64,6 +64,7 @@ MAX_PATH = 260   # Windows' path limit, the NUL included
 # for it at every numpy or OpenCV call, so at a high refresh rate or with no vsync the frames starve the stage
 BUSY_FPS = 30.0
 INSPECT_CELLS, INSPECT_ZOOM, INSPECT_PAIRS = 3, 10, 8   # the hover tooltip: cells a side, its zoom, pairs listed
+INSPECT_DELAY = 1.0   # s over the previews before the hover tooltip shows; then it follows the pointer
 # the brush's specials: keep the cell's colour, give it back to Select pairs, keep its colours made bright or not
 TRANSPARENT, AUTO, BRIGHT, DIM = -1, -2, -3, -4
 SPECIAL = {TRANSPARENT: (0.0, 0.0, 0.0, 0.0), AUTO: (0.3, 0.3, 0.3, 1.0), BRIGHT: (0.3, 0.3, 0.3, 1.0),
@@ -272,8 +273,9 @@ class OverpaintEditor:
     paper share a brightness: a colour picked for one brings the other along (black takes the other's), and BRIGHT or
     DIM, as both, keeps a cell's colours and sets their brightness. A left click on a swatch picks the ink, a right click the paper (Multipaint's and MS
     Paint's buttons), and turns Paint mode on. In the preview a left drag paints cells with the brush, a right click
-    picks up a cell's colours as the brush, the eyedropper (Window._paint). Clear gives every painted cell back to
-    Select pairs; Fix paints every cell with the colours it shows, so the whole field no longer follows Select pairs.
+    picks up a cell's colours as the brush, the eyedropper (Window._paint). The block's Reset gives every painted cell
+    back to Select pairs; Freeze all paints every cell with the colours it shows, so the whole field no longer follows
+    Select pairs.
     Hide shows the conversion without the painted cells, which stay (Pipeline.set_unpainted); Paint shows them again."""
 
     def __init__(self, app) -> None:
@@ -307,15 +309,9 @@ class OverpaintEditor:
         imgui.end_disabled()
         imgui.set_item_tooltip('Show the conversion without the painted cells; they stay in the project')
         imgui.same_line()
-        imgui.begin_disabled(not params.overrides)
-        if imgui.small_button('Clear'):
-            on_change(replace(params, overrides=()))
-        imgui.end_disabled()
-        imgui.set_item_tooltip('Give every painted cell back to Select pairs')
-        imgui.same_line()
         fixed = self.fixed(params.overrides, selection)
         imgui.begin_disabled(fixed == params.overrides)
-        if imgui.small_button('Fix'):
+        if imgui.small_button('Freeze all'):
             on_change(replace(params, overrides=fixed))
         imgui.end_disabled()
         imgui.set_item_tooltip('Paint every cell with the colours it shows: the whole field stops following Select '
@@ -362,6 +358,9 @@ class Window:
         self._after_close = None   # what waits for the unsaved changes dialog: opening another image
         self._about = False        # Help > About was chosen: the dialog opens next frame, outside the menu
         self._cell = None          # (row, column) the cell popup shows
+        self._tip = None           # the hover tooltip's top-left less the pointer, and its size: the cell popup opens there
+        self._hover = None         # imgui time the pointer came over a preview, None while it is off them
+        self._popup = None, None   # the cell popup's top-left, and its size when last shown
         self._held = None          # (the last live snapshot, the finished conversion it stands in for): see _live
         self._stroke = None        # a paint stroke's cells so far: pressed over a preview in Paint mode, not let go yet
         self._tools = (False, None)   # Paint mode and the armed eyedropper last frame: the one turned on last wins
@@ -642,11 +641,13 @@ class Window:
         picking = (self.editors['levels'].armed is not None and picture is not None
                    and all(i.shape[:2] == picture.shape[:2] for _, i in shown))
         painting = self.editors['overpaint'].on and not picking
+        popup = imgui.is_popup_open('cell')   # the previews stay hoverable under it: a right click moves it to that cell
+        hover = imgui.HoveredFlags_.allow_when_blocked_by_popup.value if popup else 0
         for key, image in shown:
             ih, iw = image.shape[:2]
             pixels = as_ubyte(image)
             immvision.image(f'##{key}', pixels, widgets.image_params(self.images, key, (iw * zoom, ih * zoom), (iw, ih), pixels))
-            if imgui.is_item_hovered():
+            if imgui.is_item_hovered(hover):
                 m, lo = imgui.get_mouse_pos(), imgui.get_item_rect_min()
                 hovered = min(int(m.y - lo.y) // zoom, ih - 1), min(int(m.x - lo.x) // zoom, iw - 1)
             if self.grid:
@@ -656,6 +657,10 @@ class Window:
             if side >= stacked:
                 imgui.same_line()
         same = all(i.shape == shown[0][1].shape for _, i in shown)   # not mid mode switch
+        if hovered is None:
+            self._hover = None
+        elif self._hover is None:
+            self._hover = imgui.get_time()
         if hovered is not None and same:
             at = hovered[0] // cell[0], hovered[1] // cell[1]
             if picking:
@@ -664,15 +669,24 @@ class Window:
                 self._paint(at, lo, cell, zoom)
             elif imgui.is_mouse_clicked(imgui.MouseButton_.right):
                 self._cell = at
+                self._popup = None if self._tip is None else imgui.get_mouse_pos() + self._tip[0], self._popup[1]
                 imgui.open_popup('cell')
-            else:
+            elif not popup and imgui.get_time() - self._hover >= INSPECT_DELAY:
                 imgui.begin_tooltip()
-                self._zoom(at, cell, shown)
+                self._tip = imgui.get_window_pos() - imgui.get_mouse_pos(), imgui.get_window_size()
+                self._zoom(at, cell, shown, 'tip')
                 self._candidates(*at)
                 imgui.end_tooltip()
+        pos, size = self._popup
+        if pos is not None and imgui.is_popup_open('cell'):   # where the tooltip was, so nothing jumps; on the screen
+            view, size = imgui.get_main_viewport(), size or self._tip[1]
+            lo, hi = view.work_pos, view.work_pos + view.work_size - size
+            imgui.set_next_window_pos(imgui.ImVec2(max(lo.x, min(pos.x, hi.x)), max(lo.y, min(pos.y, hi.y))))
         if imgui.begin_popup('cell'):
+            if not imgui.is_window_appearing():   # its first frame is hidden, measuring it
+                self._popup = pos, imgui.get_window_size()
             (H, W), (h, w) = shown[0][1].shape[:2], cell
-            if same and self._cell[0] < H // h and self._cell[1] < W // w:
+            if same and self._cell[0] < H // h and self._cell[1] < W // w and not imgui.is_key_pressed(imgui.Key.escape):
                 self._cell_popup(cell, shown)
             else:
                 imgui.close_current_popup()
@@ -780,9 +794,10 @@ class Window:
                 a = imgui.ImVec2(lo.x + c * w * zoom, lo.y + r * h * zoom)
                 imgui.get_window_draw_list().add_rect(a, imgui.ImVec2(a.x + w * zoom, a.y + h * zoom), col)
 
-    def _zoom(self, at, cell, shown):
+    def _zoom(self, at, cell, shown, name: str):
         """The inspector's zoom: the cells around at in every preview, that cell outlined. The cell clicked in it,
-        else None."""
+        else None. name keeps the tooltip's images and the popup's apart: immvision keeps a texture per widget, and
+        image_params uploads only what differs from the image last drawn under its key."""
         (h, w), (H, W), z = cell, shown[0][1].shape[:2], INSPECT_ZOOM
         r, c = at
         # the block of cells centred on this one, moved inside at the image's edges
@@ -792,8 +807,8 @@ class Window:
         for key, image in shown:
             crop = image[r0 * h:r0 * h + size[1], c0 * w:c0 * w + size[0]]
             pixels = as_ubyte(crop)
-            immvision.image(f'##inspect {key}', pixels,
-                            widgets.image_params(self.images, f'inspect {key}', (size[0] * z, size[1] * z), size, pixels))
+            immvision.image(f'##{name} {key}', pixels,
+                            widgets.image_params(self.images, f'{name} {key}', (size[0] * z, size[1] * z), size, pixels))
             self._cell_grid(cell, z)
             lo = imgui.get_item_rect_min()
             a = imgui.ImVec2(lo.x + (c - c0) * w * z, lo.y + (r - r0) * h * z)
@@ -807,10 +822,11 @@ class Window:
         return clicked
 
     def _cell_popup(self, cell, shown) -> None:
-        """The right-click popup: the hover inspector, live. A click on a cell in the zoom moves to it; a pair in the
-        table paints the cell (the Overpaint block), and so does the palette as Paint mode's brush does: a left click
-        the ink, a right click the paper, Auto the selection's. The Auto button gives the whole cell back."""
-        self._cell = self._zoom(self._cell, cell, shown) or self._cell
+        """The right-click popup: the hover inspector, live, till Esc or a click outside it. A right click on another
+        cell in a preview moves it there, and so does a click on a cell in the zoom; a pair in the table paints the cell
+        (the Overpaint block), and so does the palette as Paint mode's brush does: a left click the ink, a right click
+        the paper, Auto the selection's. Clear overpaint gives the whole cell back."""
+        self._cell = self._zoom(self._cell, cell, shown, 'popup') or self._cell
         (r, c), painted = self._cell, self._painted(*self._cell)
         conv = self._candidates(r, c, lambda pair: self._set_cell(r, c, pair))
         if conv is None:
@@ -825,10 +841,13 @@ class Window:
                 paper, ink = same_bright(conv.palette, i, painted[1])
             self._set_cell(r, c, (paper, ink))
 
+        imgui.begin_group()   # one item, so Clear overpaint goes right of both rows
         palette_grid(conv.palette, pick, lambda i: f'{colour_name(i, conv.palette)}: left click for the ink, right for the paper',
                      role_marks(paper, ink), ((AUTO,),))
+        imgui.end_group()
+        imgui.same_line()
         imgui.begin_disabled(painted == (-1, -1))
-        if imgui.button('Auto'):
+        if imgui.button('Clear overpaint'):
             self._set_cell(r, c, None)
         imgui.end_disabled()
         imgui.set_item_tooltip('Give the cell back to Select pairs')

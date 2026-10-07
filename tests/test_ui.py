@@ -4,13 +4,14 @@ import sys
 from dataclasses import replace
 from pathlib import Path
 
-from imgui_bundle import imgui
+import numpy as np
+from imgui_bundle import imgui, immvision
 
 from dizher import tone
 from dizher.converter.dither import ErrorDiffusion, Ordered
 from dizher.halftoning.ordered.matrices import GROUPS as MATRIX_GROUPS
 from dizher.ui.levels import CROSS, pick_label
-from dizher.ui.window import REDO, UNDO, Window
+from dizher.ui.window import REDO, UNDO, Window, as_ubyte
 
 IMAGE = Path(__file__).parent / 'images' / 'goldhill.png'
 ui = Window(IMAGE)
@@ -48,6 +49,12 @@ def drag(ctx, a: imgui.ImVec2, b: imgui.ImVec2):
 def rect(ctx, window, item):
     ctx.set_ref(window)
     return ctx.item_info(item).rect_full
+
+
+def inspecting():
+    """The hover inspector is up, not some item's tooltip."""
+    tooltip = imgui.internal.find_window_by_name('##Tooltip_00')
+    return tooltip is not None and tooltip.active and tooltip.size.y > 300
 
 
 def test_conversion_lands(ctx):
@@ -423,25 +430,31 @@ def test_hover_inspector(ctx):
     ui.view = 'Screen'
     r = rect(ctx, '//Preview', '**/Screen')   # the display-only images have no item id: the first is under the bar
     ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x + 100, r.max.y + 100))
-    ctx.yield_(4)
-    tooltip = imgui.internal.find_window_by_name('##Tooltip_00')
-    assert tooltip is not None and tooltip.active and tooltip.size.y > 300, 'no inspector tooltip'
+    ctx.yield_()
+    assert not inspecting(), 'the inspector shows before its delay'
+    wait(ctx, inspecting, 'the inspector after its delay')
     ctx.capture_set_filename('/tmp/dizher_inspect.png')
     ctx.capture_screenshot(CaptureFlags_.hide_mouse_cursor.value)
     ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x - 50, r.min.y - 50))
 
 
 def test_cell_popup(ctx):
-    """Right-click a cell: a row of the pair table paints it, a click in the zoom moves to a neighbour, a right click
-    on a swatch paints that one's paper, Auto gives it back."""
+    """Right-click a cell: the popup opens where the hover tooltip was; a row of the pair table paints the cell, a
+    click in the zoom moves to a neighbour, a right click on a swatch paints that one's paper, Clear overpaint gives it
+    back, Esc closes it. Opened again on another block while immvision still keeps the last popup's texture, it shows
+    that block; a right click on a cell outside it moves it there, where that cell's tooltip would be."""
     from imgui_bundle.imgui.test_engine import CaptureFlags_
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'a conversion to overpaint')
     ui.view = 'Screen'
     r = rect(ctx, '//Preview', '**/Screen')
     ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x + 100, r.max.y + 100))
-    ctx.yield_(2)
+    wait(ctx, inspecting, 'the inspector')
+    tip = imgui.internal.find_window_by_name('##Tooltip_00').pos
+    tip = tip.x, tip.y
     ctx.mouse_click(1)
     ctx.yield_(2)
+    at = ctx.get_window_by_ref('//$FOCUSED').pos
+    assert abs(at.x - tip[0]) <= 1 and abs(at.y - tip[1]) <= 1, ((at.x, at.y), tip)
     row, col = ui._cell
     labels = ui.result.best_attr_indexes
     order = ui.result.energy.cell_candidates(labels, row, col).sum(1).argsort()
@@ -467,20 +480,44 @@ def test_cell_popup(ctx):
     ctx.item_click('##colour2', imgui.MouseButton_.right)
     ctx.yield_(2)
     assert (*corner, 2, -1) in params('overpaint').overrides, params('overpaint')
-    ctx.item_click('**/Auto')
+    ctx.item_click('**/Clear overpaint')
     ctx.yield_(2)
     assert params("overpaint").overrides == ((row, col, *pair),), (params("overpaint"), row, col, pair)
     ctx.key_press(imgui.Key.escape)
     ctx.yield_(2)
+    assert not imgui.internal.find_window_by_name(popup.name).active, 'Esc left the popup open'
     reset('overpaint')
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the conversion again')
+    ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x + 180, r.max.y + 180))   # another block, the tooltip's crop
+    wait(ctx, inspecting, 'the inspector on another block')
+    ctx.mouse_click(1)
+    ctx.yield_(2)
+    block = lambda row, col: (max(0, min(row - 1, R - 3)), max(0, min(col - 1, C - 3)))   # the zoom's top-left cell
+    (r0, c0), last = block(*ui._cell), block(*corner)
+    assert (r0, c0) != last, (r0, c0)
+    imgui.internal.push_override_id(ctx.get_window_by_ref('//$FOCUSED').id_)   # the texture under the popup's id
+    imgui.push_id('##popup converted')   # immvision pushes the label, then hashes it again
+    shown = np.asarray(immvision.get_cached_rgba_image('##popup converted'))
+    imgui.pop_id()
+    imgui.pop_id()
+    np.testing.assert_array_equal(shown, as_ubyte(ui._converted()[r0 * 8:r0 * 8 + 24, c0 * 8:c0 * 8 + 24]))
+    ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x + 100, r.max.y + 100))   # the first cell, left of the popup
+    ctx.yield_(2)
+    ctx.mouse_click(1)
+    ctx.yield_(2)
+    moved = ctx.get_window_by_ref('//$FOCUSED')
+    assert ui._cell == (row, col) and moved.name == popup.name and moved.active, (ui._cell, (row, col), moved.name)
+    assert abs(moved.pos.x - tip[0]) <= 1 and abs(moved.pos.y - tip[1]) <= 1, ((moved.pos.x, moved.pos.y), tip)
+    ctx.key_press(imgui.Key.escape)
+    ctx.yield_(2)
     ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x - 50, r.min.y - 50))
 
 
 def test_paint(ctx):
     """Paint mode: a left click on a swatch picks the ink, a right click the paper, either turns it on; a left drag
     over the preview paints the cells it crosses, one undo step; a right click picks a cell's colours up; Auto as
-    both erases; Esc ends it; Clear drops every cell; Fix paints every cell with the colours it shows; Hide
-    shows the conversion without them, keeping them, and Paint shows them again."""
+    both erases; Esc ends it; the block's Reset drops every cell; Freeze all paints every cell with the colours it
+    shows; Hide shows the conversion without them, keeping them, and Paint shows them again."""
     from imgui_bundle.imgui.test_engine import CaptureFlags_
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'a conversion to paint')
     brush = ui.editors['overpaint']
@@ -549,7 +586,7 @@ def test_paint(ctx):
     ctx.yield_(2)
     assert not brush.on
     ctx.set_ref('//Convert')
-    ctx.item_click('overpaint/Clear')
+    ctx.item_click('**/Reset##overpaint')
     ctx.yield_(2)
     assert params('overpaint').overrides == ()
     ui.app.set_params('overpaint', replace(params('overpaint'), overrides=((2, 3, -1, 2), (4, 5, 7, 1))))   # Auto paper
@@ -563,14 +600,14 @@ def test_paint(ctx):
     ctx.item_click('overpaint/Paint')
     ctx.yield_(2)
     steps = len(ui.app.past)
-    ctx.item_click('overpaint/Fix')
+    ctx.item_click('overpaint/Freeze all')
     ctx.yield_(2)
     fixed = params('overpaint').overrides
     cell = {o[:2]: o[2:] for o in fixed}
     assert len(fixed) == 24 * 32 and all(-1 not in o for o in fixed), 'every cell painted'
-    assert cell[2, 3][1] == 2 and cell[4, 5] == (7, 1) and len(ui.app.past) == steps + 1, 'Fix is one undo step'
-    assert ui.editors['overpaint'].fixed(fixed, ui.app.shown('select')) == fixed, 'nothing left to fix: Fix disabled'
-    ctx.item_click('overpaint/Clear')
+    assert cell[2, 3][1] == 2 and cell[4, 5] == (7, 1) and len(ui.app.past) == steps + 1, 'Freeze all is one undo step'
+    assert ui.editors['overpaint'].fixed(fixed, ui.app.shown('select')) == fixed, 'nothing left to freeze: Freeze all disabled'
+    ctx.item_click('**/Reset##overpaint')
     ctx.yield_(2)
     assert params('overpaint').overrides == ()
     ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x - 50, r.min.y - 50))
