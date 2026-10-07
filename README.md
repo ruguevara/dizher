@@ -308,7 +308,7 @@ Done:
 * [x] Undo/Redo (Edit menu, Cmd+Z / Shift+Cmd+Z): a slider drag is one step, and opening an image
   starts the history over. The History panel lists every step, newest on top, named after the
   params it changed; a click goes back or forward to it.
-* [x] Overpaint: attributes and brightness painted by hand; Fix keeps the whole field as shown, so it
+* [x] Overpaint: attributes and brightness painted by hand; Freeze all keeps the whole field as shown, so it
   no longer follows Select pairs; Hide shows the conversion without the painted cells. On the
   Spectrum ink and paper share a brightness, and the B1 and B0 brushes make a cell bright or not
 * [x] Standalone binary packages with PyInstaller for macOS, Windows and Linux

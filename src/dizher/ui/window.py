@@ -272,8 +272,9 @@ class OverpaintEditor:
     paper share a brightness: a colour picked for one brings the other along (black takes the other's), and BRIGHT or
     DIM, as both, keeps a cell's colours and sets their brightness. A left click on a swatch picks the ink, a right click the paper (Multipaint's and MS
     Paint's buttons), and turns Paint mode on. In the preview a left drag paints cells with the brush, a right click
-    picks up a cell's colours as the brush, the eyedropper (Window._paint). Clear gives every painted cell back to
-    Select pairs; Fix paints every cell with the colours it shows, so the whole field no longer follows Select pairs.
+    picks up a cell's colours as the brush, the eyedropper (Window._paint). The block's Reset gives every painted cell
+    back to Select pairs; Freeze all paints every cell with the colours it shows, so the whole field no longer follows
+    Select pairs.
     Hide shows the conversion without the painted cells, which stay (Pipeline.set_unpainted); Paint shows them again."""
 
     def __init__(self, app) -> None:
@@ -307,15 +308,9 @@ class OverpaintEditor:
         imgui.end_disabled()
         imgui.set_item_tooltip('Show the conversion without the painted cells; they stay in the project')
         imgui.same_line()
-        imgui.begin_disabled(not params.overrides)
-        if imgui.small_button('Clear'):
-            on_change(replace(params, overrides=()))
-        imgui.end_disabled()
-        imgui.set_item_tooltip('Give every painted cell back to Select pairs')
-        imgui.same_line()
         fixed = self.fixed(params.overrides, selection)
         imgui.begin_disabled(fixed == params.overrides)
-        if imgui.small_button('Fix'):
+        if imgui.small_button('Freeze all'):
             on_change(replace(params, overrides=fixed))
         imgui.end_disabled()
         imgui.set_item_tooltip('Paint every cell with the colours it shows: the whole field stops following Select '
@@ -824,7 +819,7 @@ class Window:
         """The right-click popup: the hover inspector, live, till Esc or a click outside it. A right click on another
         cell in a preview moves it there, and so does a click on a cell in the zoom; a pair in the table paints the cell
         (the Overpaint block), and so does the palette as Paint mode's brush does: a left click the ink, a right click
-        the paper, Auto the selection's. The Auto button gives the whole cell back."""
+        the paper, Auto the selection's. Clear overpaint gives the whole cell back."""
         self._cell = self._zoom(self._cell, cell, shown, 'popup') or self._cell
         (r, c), painted = self._cell, self._painted(*self._cell)
         conv = self._candidates(r, c, lambda pair: self._set_cell(r, c, pair))
@@ -840,10 +835,13 @@ class Window:
                 paper, ink = same_bright(conv.palette, i, painted[1])
             self._set_cell(r, c, (paper, ink))
 
+        imgui.begin_group()   # one item, so Clear overpaint goes right of both rows
         palette_grid(conv.palette, pick, lambda i: f'{colour_name(i, conv.palette)}: left click for the ink, right for the paper',
                      role_marks(paper, ink), ((AUTO,),))
+        imgui.end_group()
+        imgui.same_line()
         imgui.begin_disabled(painted == (-1, -1))
-        if imgui.button('Auto'):
+        if imgui.button('Clear overpaint'):
             self._set_cell(r, c, None)
         imgui.end_disabled()
         imgui.set_item_tooltip('Give the cell back to Select pairs')

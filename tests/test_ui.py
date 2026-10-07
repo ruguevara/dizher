@@ -434,9 +434,9 @@ def test_hover_inspector(ctx):
 
 def test_cell_popup(ctx):
     """Right-click a cell: the popup opens where the hover tooltip was; a row of the pair table paints the cell, a
-    click in the zoom moves to a neighbour, a right click on a swatch paints that one's paper, Auto gives it back, Esc
-    closes it. Opened again on another block while immvision still keeps the last popup's texture, it shows that
-    block; a right click on a cell outside it moves it there, where that cell's tooltip would be."""
+    click in the zoom moves to a neighbour, a right click on a swatch paints that one's paper, Clear overpaint gives it
+    back, Esc closes it. Opened again on another block while immvision still keeps the last popup's texture, it shows
+    that block; a right click on a cell outside it moves it there, where that cell's tooltip would be."""
     from imgui_bundle.imgui.test_engine import CaptureFlags_
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'a conversion to overpaint')
     ui.view = 'Screen'
@@ -474,7 +474,7 @@ def test_cell_popup(ctx):
     ctx.item_click('##colour2', imgui.MouseButton_.right)
     ctx.yield_(2)
     assert (*corner, 2, -1) in params('overpaint').overrides, params('overpaint')
-    ctx.item_click('**/Auto')
+    ctx.item_click('**/Clear overpaint')
     ctx.yield_(2)
     assert params("overpaint").overrides == ((row, col, *pair),), (params("overpaint"), row, col, pair)
     ctx.key_press(imgui.Key.escape)
@@ -510,8 +510,8 @@ def test_cell_popup(ctx):
 def test_paint(ctx):
     """Paint mode: a left click on a swatch picks the ink, a right click the paper, either turns it on; a left drag
     over the preview paints the cells it crosses, one undo step; a right click picks a cell's colours up; Auto as
-    both erases; Esc ends it; Clear drops every cell; Fix paints every cell with the colours it shows; Hide
-    shows the conversion without them, keeping them, and Paint shows them again."""
+    both erases; Esc ends it; the block's Reset drops every cell; Freeze all paints every cell with the colours it
+    shows; Hide shows the conversion without them, keeping them, and Paint shows them again."""
     from imgui_bundle.imgui.test_engine import CaptureFlags_
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'a conversion to paint')
     brush = ui.editors['overpaint']
@@ -580,7 +580,7 @@ def test_paint(ctx):
     ctx.yield_(2)
     assert not brush.on
     ctx.set_ref('//Convert')
-    ctx.item_click('overpaint/Clear')
+    ctx.item_click('**/Reset##overpaint')
     ctx.yield_(2)
     assert params('overpaint').overrides == ()
     ui.app.set_params('overpaint', replace(params('overpaint'), overrides=((2, 3, -1, 2), (4, 5, 7, 1))))   # Auto paper
@@ -594,14 +594,14 @@ def test_paint(ctx):
     ctx.item_click('overpaint/Paint')
     ctx.yield_(2)
     steps = len(ui.app.past)
-    ctx.item_click('overpaint/Fix')
+    ctx.item_click('overpaint/Freeze all')
     ctx.yield_(2)
     fixed = params('overpaint').overrides
     cell = {o[:2]: o[2:] for o in fixed}
     assert len(fixed) == 24 * 32 and all(-1 not in o for o in fixed), 'every cell painted'
-    assert cell[2, 3][1] == 2 and cell[4, 5] == (7, 1) and len(ui.app.past) == steps + 1, 'Fix is one undo step'
-    assert ui.editors['overpaint'].fixed(fixed, ui.app.shown('select')) == fixed, 'nothing left to fix: Fix disabled'
-    ctx.item_click('overpaint/Clear')
+    assert cell[2, 3][1] == 2 and cell[4, 5] == (7, 1) and len(ui.app.past) == steps + 1, 'Freeze all is one undo step'
+    assert ui.editors['overpaint'].fixed(fixed, ui.app.shown('select')) == fixed, 'nothing left to freeze: Freeze all disabled'
+    ctx.item_click('**/Reset##overpaint')
     ctx.yield_(2)
     assert params('overpaint').overrides == ()
     ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x - 50, r.min.y - 50))
