@@ -241,7 +241,7 @@
       "params": {
         "coherence": 6.0,
         "edge": 0.1,
-        "luma_noise": 0.0,
+        "luma_noise": 0.06199999898672104,
         "chroma_noise": 0.0,
         "surface": 0.0
       },
