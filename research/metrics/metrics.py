@@ -261,7 +261,8 @@ def tone(ref, test, ppd, factor, sigma=1.0):
 
 METRICS = dict(cvvdp=cvvdp, ssimulacra2=ssimulacra2, butteraugli=butteraugli, butteraugli_max=butteraugli_max,
                scielab=scielab, msssim=msssim, dists=dists, lpips=lpips, eye=eye,
-               tone1=tone, tone2=lambda r, t, p, f: tone(r, t, p, f, 2.0))
+               tone1=tone, tone2=lambda r, t, p, f: tone(r, t, p, f, 2.0),
+               tone3=lambda r, t, p, f: tone(r, t, p, f, 3.0))
 
 
 def score(name: str, ref: np.ndarray, test: np.ndarray, ppd: float = 12.9, factor: int = None):

@@ -95,3 +95,13 @@ original's edge, the staircase), to be agreed with the user before they are made
   Knoll Bayer and blue noise in each space at multipliers 1 and 0.5), the four options the best by tone at sigma 1,
   2, 3, the eye baseline, cvvdp and SSIMULACRA2 in turn; 8 pictures over the six palettes (EGA, CGA 1 and 0 high,
   MSX1, ZX, C64) and a repeat.
+
+## 2026-10-20: B3 pilot 2 (pilot data, set-aside pictures)
+
+- Picks: Floyd-Steinberg linear 4 (andy ZX, landscape ZX, anubis EGA, the burning-hand CGA 0 repeat), Floyd-Steinberg
+  Lab 2 (kotofey EGA, burning-hand CGA 0, which the repeat answered linear), Knoll-Bayer Lab at multiplier 0.5 2
+  (golden-axe C64, rocket-rackoon CGA 1), Knoll-blue Lab at 1 (sunset MSX1). 9-46 s an item, the repeat split:
+  options picked by the metrics' disagreement are close; for B3 proper, mix such items with ones of a clear spread.
+- Agreement (`b3-pilot-2.md`, x2): tone at sigma 1 and the eye baseline 5/9; SSIMULACRA2 3; cvvdp, S-CIELAB, MS-SSIM,
+  DISTS, tone at sigma 2 and 3 2; Butteraugli 1, LPIPS 0 (chance 2.25). Over both pilots: tone sigma 1 and the eye
+  baseline 11/18, every literature metric 5/18 or less. Sigma 1 beats 2 and 3 here.
