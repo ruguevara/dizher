@@ -50,3 +50,13 @@ The user: clash is a conspicuous seam where the pair changes and the original ha
 "clash" check showed cell-scale colour noise. PLAN's Terms define both; the a0h-1 answers on it are kept under the
 noise's name; amendment 2 adds clash checks (a seam on a smooth surface against a larger tone error, a seam off the
 original's edge, the staircase), to be agreed with the user before they are made.
+
+## 2026-10-20: round a0h-2; the clash stimuli
+
+- Dark ramp (a0h-2): the dispersed dots over the empty shadow and the clusters, after 156 s. The expectation holds;
+  every metric fails a check the user confirms.
+- `a0clash.py` (amendment 2), round `a0h-3`: four gradients (sky, sunset, skin, field), each with one straight seam
+  between the two pairs of least error against one pair over the whole surface (mean CIEDE2000 of the exact
+  mixtures: seam 6.4-7.8, one pair 8.2-10.5; the sunset's seam shares red and is faint); an edge 3 px right of a
+  cell border, the pair changing at the border to its left, to its right, or the edge drawn in the inks' pair; a
+  diagonal edge as whole cells against drawn. Pair choice by CIEDE2000 of the linear-light exact mixture.
