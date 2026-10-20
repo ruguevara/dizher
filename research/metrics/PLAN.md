@@ -262,6 +262,17 @@ A0, data that do not depend on research/pairs:
 
 A candidate that fails A0's checks is out.
 
+**Amendment, 2026-10-20, before any human data on it.** The first A0 run (`a0-results.md`) failed every candidate on
+most checks. The checks' expectations are ours, not measured, so they are put to people before any metric is dropped:
+
+- The shift check compared a dither with itself shifted. The halftoning part compares a conversion with the original,
+  where a shift costs nothing to any metric, so the check does not apply there. It applies to the attribute part,
+  where the reference R1 is itself a dither; B4 deals with it.
+- The banding, dark-ramp, grey-50% and clash checks are shown to the user as a pick round (`a0h-1`: the original and
+  the stimuli of each check, 6 items and a repeat). A check is kept as a rule only where the user's pick agrees with
+  its expectation and the repeat agrees; otherwise the expectation is wrong and the check is dropped or reversed.
+  Then each metric is scored on the kept checks.
+
 Then, as a secondary check only, two of research/pairs' data sets, at 26 pixels per degree, where the stimuli can be
 made again exactly. One observer, 6 pictures, so they rank candidates only together with B:
 
