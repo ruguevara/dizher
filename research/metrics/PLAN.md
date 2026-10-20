@@ -14,6 +14,10 @@ the metric. It is in the generator's settings and presets, and the user picks it
 conversions within any one style correctly, so it must not charge a checker for being a different texture from the
 source's gradient (see H4).
 
+The user's priorities (2026-10-02, confirmed 2026-10-20): seams first; then colour and tone, the colour approximate,
+no grey dither everywhere, local contrast and meaningful gradients over the overall tone; then form in the details;
+then texture.
+
 ## The starting point: research/pairs, reviewed
 
 `research/pairs/` (branches `feature/color-pair-selection-research-72ae52` and its earlier snapshot
@@ -23,29 +27,25 @@ it: what does not hold and why, what holds, and the data this plan takes. In sho
 - Not used: the paintings as ground truth, the fitted judges, Claude judges' labels, "the user's eye" (sigma 0.75 and
   1.0 picked by looking at blurred images), the whole-picture verdicts on 4-9 pictures.
 - Kept as a rule: free optimisation against a fitted judge fails; it found a new blind spot in each of four rounds.
-- Kept as hypotheses: seams are seen at the pixel level (every blur made the seam measures worse) while the tone of a
-  surface is judged at a coarser scale, so there are two scales in one judgement; a hue change across a seam shows,
-  brightness alone is faint, a slow lightness step hides; a clean colour of the right family matters (H5); local
-  contrast matters more than the overall tone (H7).
+- Kept as hypotheses: seams are seen at the pixel level while the tone of a surface is judged at a coarser scale; a
+  hue change across a seam shows, brightness alone is faint, a slow lightness step hides; a clean colour of the right
+  family matters (H5); local contrast matters more than the overall tone (H7).
 - Kept as data for stage A's secondary check: the seam marks and the patch ratings.
-
-The change in method: measure the **parts** of one model on controlled stimuli, where a minute of the user's time
-gives a threshold or a match point, take the parts' form from the vision literature, and use whole pictures only to
-validate, on pictures not used before.
+- Its lesson for the method: choosing between two bad conversions is hard, slow and gives "both bad". This plan does
+  not ask people to do it (see "What people are asked to do").
 
 ## Viewing conditions
 
-The main scenario is an emulator on a modern LCD: HP Z27k G3 (27", 3840x2160), at the native resolution, at arm's
-length (taken as 65 cm until measured). The zooms the user finds comfortable, by the width of the 256-pixel screen:
+The main scenario is an emulator on a modern LCD: HP Z27k G3 (27", 3840x2160), at the native resolution, at 65 cm
+(measured). The zooms the user finds comfortable, by the width of the 256-pixel screen:
 
-| zoom | screen width | mm per Spectrum pixel | pixels per degree (65 cm) |
+| zoom | screen width | mm per Spectrum pixel | pixels per degree |
 |---|---|---|---|
 | x2 | 15 cm | 0.59 | 19.4 |
 | x3 | 22.5 cm | 0.88 | 12.9 |
 | x4 | 30 cm | 1.17 | 9.7 |
 
-research/pairs worked at ~26 pixels per degree (21" 2560x1440, 2x-3x, 65 cm; `metrics.PPD`). Its labels, where
-used, are at that value.
+research/pairs worked at ~26 pixels per degree (21" 2560x1440, 2x-3x, 65 cm). Its data, where used, are at that value.
 
 What the numbers mean:
 
@@ -56,23 +56,53 @@ What the numbers mean:
   highest at low frequencies. Colour differences at the cell scale are where the eye sees colour best, and colour
   differences between single dots are where it sees colour worst.
 - Above threshold, perceived contrast hardly depends on frequency (contrast constancy, Georgeson & Sullivan 1975).
-  A threshold CSF used as a filter (classic DBS, S-CIELAB) under-states how visible the luminance texture is in this
-  range.
+  A threshold CSF used as a filter (classic DBS, S-CIELAB) under-states how visible the luminance texture is here.
 
-The eye still forms a tone from the dots: people read a checker as a middle grey at x4 while they see the checker.
-A model with no low-pass at all makes DBS degenerate to the nearest colour per pixel, and says the dither is worse
-than banding. The blur in the model stands for the scale at which the viewer judges the tone and colour of a surface;
-the visibility of the texture, the seams and false contours is a separate quantity at the pixel scale.
+Two scales, then. The eye forms a tone from the dots: a checker or a dense blue noise reads as a grey while the
+pattern is seen. The user (2026-10-20): a viewer used to Spectrum pictures reads tone over a wider area, so the tone
+scale can be wider than the converter's sigma of 1 pixel. At the same time single pixels carry the details, and they
+matter a great deal. The tone scale is a parameter fitted in B3; the details are the model's pixel-scale part.
 
-The second scenario is a CRT over RGB (Sony PVM, JVC, a Trinitron TV). RGB has no PAL chroma blur. The CRT adds a
-beam profile (a blur of about a pixel), scanlines, bloom (a bright pixel on black wider and brighter than its area)
-and its own gamma. The user's expectation, which we share: the ranking does not turn over between the LCD and the
-CRT. The CRT softens the dots, so conversions look more alike, and the clash, 8 pixels across, stays fully visible.
-So the CRT is a display model in front of the same eye model and a robustness check, not a second metric (C6).
+The user's observation on the current energy: with a narrow blur DBS packs the dots in the deepest shadows into
+clusters or moves them out. Our reading: the unblurred dot term, multiplied by the lightness gain (about 7x at
+black against mid grey), charges each lone bright dot on black nearly its whole contrast, so removing or packing the
+dots is cheaper than spreading them. In the model below the pixel scale charges a difference from the source's
+structure (an edge lost, an edge added), not each dot's contrast; the dots in a flat shadow pay at the tone scale
+only. A0 checks it.
+
+The second scenario is a CRT: the user's CRT television (not a Trinitron) on a ZX Spectrum 128 over RGB. RGB has no
+PAL chroma blur. The CRT adds a beam profile (a blur of about a pixel), scanlines, bloom (a bright pixel on black wider
+and brighter than its area) and its own gamma. The user's expectation, which we share: the ranking does not turn over
+between the LCD and the CRT. The CRT softens the dots, so conversions look more alike, and the clash, 8 pixels across,
+stays fully visible. So the CRT is a display model in front of the same eye model and a robustness check (C6), not a
+second metric.
+
+The CRT is set up by the user's chart: brightness and contrast set so that a non-bright grey and bright dots on black
+look the same tone. That makes one dither match one flat colour by construction, so H2 is not tested on the CRT, and
+the setting is written down as part of the display.
 
 The palette is part of the display model. The default is Pulsar's; the converter's own (`ZXPalette`, levels 205 and
 255) is checked against it. Other emulators' palettes and measurements of real machines are options. The rankings
 under different palettes are compared by the metric alone (A5).
+
+## Two references
+
+The user's idea (2026-10-20): a conversion with the Spectrum's pixel and palette but without the attribute
+constraint. Each source picture gets two references:
+
+- **R0, the original**, 256x192 as prepared.
+- **R1, the free conversion**: any of the 15 colours in every pixel, the same pixel grid. The best halftone the
+  palette and the pixel allow, with no clash. Made by a few methods (error diffusion in linear light, ordered dither,
+  palette DBS under two or three eye models); people pick the best (B3), which is an easy choice among good pictures.
+
+The metric splits along them:
+
+- **The halftoning part** (T and the details): how near R1 is to R0. Classic colour halftoning, where the literature
+  applies, judged on good pictures.
+- **The attribute part** (A): what the attribute constraint adds, the Spectrum conversion against R1. The clash
+  stands out against R1 far more clearly than against the original, and the difference is of one kind.
+
+H8 below states the split as a hypothesis; stage C tests the whole metric against R0.
 
 ## The model to test
 
@@ -81,31 +111,52 @@ A display model, then an eye model with two scales, then pooling:
 - **Display**: the palette in linear light, the pixel geometry at the zoom, the LCD as square pixels; for the CRT the
   beam profile, scanlines, bloom and gamma. Units: pixels per degree and cd/m², so the rest does not know about the
   Spectrum.
-- **T, tone and colour of surfaces**: source and render each through a low-pass at the surface scale, mixed in linear
-  light, compared in a uniform colour space (CIELAB with CIEDE2000, or CAM16-UCS). Local differences.
-- **A, visible artefacts**: edges and steps at the pixel scale that the render has and the source does not (seams,
-  the clash, false contours) and edges the source has and the render lost, by their contrast, masked by the local
-  texture activity and by darkness.
+- **T, tone and colour of surfaces**: source and render each through a low-pass at the tone scale, mixed in linear
+  light, compared in a uniform colour space (CIELAB with CIEDE2000, or CAM16-UCS), as local means and local contrasts
+  (H7).
+- **A, structure at the pixel scale**: edges and steps the render has and the source does not (seams, the clash,
+  false contours) and edges and details the source has and the render lost, by their contrast, masked by the local
+  texture activity and by darkness. A dither in a flat area is not an edge.
 - **Pooling**: a Minkowski sum over the picture, its exponent fitted (an artefact in one place weighs more than its
   area).
 
 Hypotheses:
 
-- **H1, zoom**: within x2-x4 people's preferences between two conversions do not depend on the zoom. Then the model's
-  scales are in Spectrum pixels, calibrated at x3. If they do depend, the scales are in degrees.
+- **H1, zoom**: within x2-x4 people see the same artefacts and pick the same R1. Then the model's scales are in
+  Spectrum pixels, calibrated at x3. Otherwise they are in degrees.
 - **H2, mixing**: a dithered patch looks like the linear-light mean of its dots, except for pairs of distant hues
   (blue on yellow), which look like two colours. The exceptions are what `dot_contrast` charges now.
-- **H3, the trade-off**: one weight between T and A explains where along the converter's coherence sweep people put
-  their best conversion, on most pictures.
-- **H4, style**: the same metric ranks conversions within the checker style (Halftone: checkers, dithering 0.25-0.5,
-  no DBS) as well as within the DBS style.
+- **H3, the trade-off**: one weight between T and A makes one threshold on the model's local map separate the cells
+  people mark from the rest, for both kinds of marks (B4).
+- **H4, style**: the same metric works within the checker style (Halftone: checkers, dithering 0.25-0.5, no DBS) as
+  within the DBS style.
 - **H5, colour family**: an error that changes the colour's name (red to pink, the magenta cypress) costs more than
-  its CIEDE2000 says. Tested in B5; added as a term only if it holds.
-- **H7, local contrast**: people forgive a slow shift of tone or colour over a surface more than a loss of local
-  contrast or of a meaningful gradient (the user's priorities, 2026-10-02). If it holds, T compares local means and
-  contrasts (as SSIM's terms do) rather than absolute colour, with its own weight for the slow part.
+  its CIEDE2000 says. Tested in B6; a term only if it holds.
 - **H6, CRT**: through a CRT display model, the metric's ranking of conversions agrees with the LCD ranking (Kendall's
   tau 0.8 or more).
+- **H7, local contrast**: people forgive a slow shift of tone or colour over a surface more than a loss of local
+  contrast or of a meaningful gradient. Tested in B6.
+- **H8, the split**: the halftoning part calibrated on R1 against R0 and the attribute part calibrated on Spectrum
+  conversions against R1, added, rank Spectrum conversions against R0 as people do (C).
+
+## What people are asked to do
+
+Three kinds of task, each easy and each giving many bits a minute. None of them is a choice between two bad
+conversions.
+
+- **Pick the best of a few good pictures** (B3, C): the free conversions R1 of one picture, made by different methods
+  or eye models, side by side with the original; the person picks the one nearest it. The options are good, the
+  differences are of one kind.
+- **Mark what is wrong** (B1, B4): a Spectrum conversion and its R1 side by side at x3; holding a key shows the
+  original in R1's place. The person paints the cells where the conversion looks worse, with two keys: 1, something
+  added (seams, blocks, noise, false contours); 2, something lost or wrong (colour, tone, detail). 2-3 minutes a
+  picture. The paradigm of local visible-difference maps (Wolski et al., "Dataset and metrics for predicting local
+  visible differences", ACM TOG 2018), asked here for what bothers the viewer rather than what is visible. A metric is
+  scored by how well its local map predicts the marks.
+- **Match** (B2): set a flat patch to look like a dithered one.
+
+Whole conversions against the original, forced choice, only in C, and only between conversions that are each the
+best of their method: the question there is which method, not which of two failures.
 
 ## The candidates
 
@@ -113,24 +164,44 @@ Evaluation metrics, existing, each run with the display model in front where it 
 
 - **ColorVideoVDP** (Mantiuk et al., SIGGRAPH 2024): CSF, contrast masking and pooling, colour, the display's
   geometry and luminance as inputs. The main candidate: it is built for supra-threshold differences at a given
-  pixels per degree.
+  pixels per degree, and it gives a local map.
 - **SSIMULACRA2** and **Butteraugli**: made for compression artefacts, block artefacts included; multi-scale, in an
   opponent space. The nearest to the clash among the established metrics, and they carry over to compression.
 - **S-CIELAB** at the scenario's pixels per degree (Zhang & Wandell 1997), the classic baseline.
 - **MS-SSIM** on lightness, **DISTS** (texture-tolerant: two dither textures of one tone are near), **LPIPS** as a
   control.
 - The converter's own energy, the baseline; from research/pairs, its seam score (step 5).
+- **J, a Claude judge**: a multimodal subagent as one more observer, tested in stage J.
 
 Our own model (T + A + pooling) is built in stage A only if no candidate passes, from the parts that work best.
 
+## The pictures
+
+All earlier pictures (`tests/images`, research/pairs' training and held-out sets) are set aside: the user's eye is
+used to them, and not all of them are good test pictures. They stay for the tests and for stage A's secondary data.
+
+A new collection, before any conversion:
+
+1. 40 sources, by the real inputs: artists' illustrations (fantasy, sci-fi, portraits) 15, artistic and processed
+   photo portraits 10, posters, film and game frames, game title screens, AI-made images 8, landscapes 5, plain
+   photographs 2. Licensed for publication (own works, public domain, CC, made for the purpose).
+2. Each tagged by a checklist of what makes conversions hard: smooth gradients (skies), faces, deep shadows, saturated
+   colours, fine detail, text. Each tag on at least 6 pictures; the collection is filled to that, not picked by how
+   the converter does.
+3. Prepared as the user prepares sources: cropped and composed to 256x192, cleaned. Frozen: the files' hashes are
+   committed before anything is converted.
+4. Split at random with a committed seed: 24 for training (B, J), 16 for validation (C). The scripts refuse to convert
+   a validation picture before C.
+
 ## Stage A: existing metrics on data with known answers (no user time)
 
-A0, first, data that do not depend on research/pairs:
+A0, data that do not depend on research/pairs:
 
 - Sanity checks a metric must pass, on synthetic images: monotone in a tone error on grey and colour ramps; a dither
   shifted by one pixel almost free; on a flat 50% grey at x3 the visibility order checkerboard < blue noise < 2x2
   clusters; an attribute clash on a smooth surface charged more than the same mean colour error spread evenly; a
-  false contour (banding) on a ramp charged more than a dither of it.
+  false contour (banding) on a ramp charged more than a dither of it; on a dark ramp, dispersed dots charged less
+  than an empty or a clustered shadow; R1 charged less than any Spectrum conversion of the same picture.
 - Public subjective data sets: TID2013's colour quantisation with dither (type 22) and its block-wise distortions
   (type 15), KADID-10k's quantisation and block types. Another regime (mild distortions, normal viewing), so a check
   that a candidate is sane, not a choice between candidates.
@@ -145,64 +216,85 @@ made again exactly. One observer, 6 pictures, so they rank candidates only toget
 | `rounds/seams/marks.json`, 1342 marked seams on 12 renders | where the clash is seen | AUC of the metric's local map at the marked seams; top-k against the user's own repeat agreement (0.48-0.75) |
 | `rounds/seams/patches-v3..v5`, `ranked-v1` | seam visibility without picture content | rank correlation with the ratings and the sorting |
 
-- A1. The few data files needed are copied into `research/metrics/data-pairs/` with their source commit; nothing
-  imports research/pairs' code. A round whose renders cannot be made again exactly (the pipeline changed since) is
-  dropped, not approximated; the key files tell which.
+- A1. The data files are copied into `research/metrics/data-pairs/` with their source commit (`5810855`); nothing
+  imports research/pairs' code. A round whose renders cannot be made again exactly is dropped, not approximated.
 - A2. The table: metric x data set, with bootstrap intervals over pictures.
 - A3. Where the best candidate fails, which part fails: the seams (A), the tone (T) or the colour family (H5).
-- A4. If no candidate passes A0 and ranks the seam marks better than the converter's energy,
-  build T + A + pooling from the parts that do, with no more than 4 free parameters, fitted on half the pictures and scored on the
-  other half.
+- A4. If no candidate passes A0 and ranks the seam marks better than the converter's energy, build T + A + pooling
+  from the parts that do, with no more than 4 free parameters, fitted on half the pictures and scored on the other.
 - A5. Palettes: the best candidate's rankings of the same render pairs under Pulsar, the converter's palette and one
   more emulator's; tau 0.9 or more means the palette is a setting, not a research question.
 - A6. H6 by the metric alone: the same with the CRT display model.
 
 The outcome: one or two models for stage B, and what they cannot see.
 
-## Stage B: the model's parts on controlled stimuli (~50 minutes of the user's time)
+## Stage B: the model's parts (~60 minutes of the user's time)
 
-The new monitor, at the measured distance, sRGB mode, the brightness fixed and written down, the room light the same.
-Pulsar palette. Sessions of at most 10 minutes. Each task's analysis and decision rule are committed before its data.
+The monitor at 65 cm, sRGB mode, the brightness fixed and written down, the room light the same. Pulsar palette.
+Sessions of at most 10 minutes. The training pictures only. Each task's analysis and decision rule are committed
+before its data.
 
-- **B1, zoom (H1)**, ~2 x 7 minutes on two days: 30 pairs of whole conversions of the training pictures, where the
-  candidates disagree most, forced choice, original on the left, at x2 one day and x4
-  the other, 6 pairs repeated within each session. H1 holds if the agreement between the zooms is not lower than the
-  agreement between repeats at one zoom (a difference under 10 points).
+- **B1, zoom (H1)**, ~2 x 8 minutes on two days: 4 conversions marked (as B4) at x2 one day and at x4 the other, and
+  the R1 picks of 6 pictures at both zooms. H1 holds if the marks agree between the zooms as well as between repeats
+  at one zoom (AUC of one against the other, a difference under 0.05), and the picks agree.
 - **B2, mixing (H2)**, ~10 minutes: 12 patches (6 pairs, 2 dot levels; blue/yellow and red/green among them) at x2
   and x4. The user sets a flat patch beside each to match (lightness, a*, b* by keys), or marks it "cannot match".
   The matches against the linear-light mean; the "cannot match" set against `dot_contrast`.
-- **B3, the trade-off (H3, H4)**, ~2 x 8 minutes: 8 training pictures (5 in the DBS style, 3 in the checker style),
-  each rendered along the coherence sweep (7 points, coherence 0 to the maximum, the rest of the preset fixed). The
-  user's best point by a bisection with forced choices between points, 4-5 choices a picture; repeated on another
-  day. Each candidate's own best point along each sweep is compared with the user's: the error in sweep steps. No
-  fitting in this test. Then the model's one T/A weight is fitted to these points.
-- **B4, seam thresholds**, ~15 minutes, only if A3 finds the A part weak: two surfaces with one mean colour and
+- **B3, the halftoning part**, ~10 minutes: for 12 pictures, 4 free conversions R1 each (the methods and eye models
+  where the candidate metrics disagree most), pick the best against the original, 3 repeated. Each candidate metric
+  is scored by how often its best R1 is the person's; then the tone scale and the detail weight of T are fitted to
+  the picks. The picked R1 is that picture's reference for B4.
+- **B4, the attribute part (H3, H4)**, ~3 x 8 minutes: 9 pictures (6 in the DBS style, 3 in the checker style), each
+  converted at three coherence values (low, the preset's, high), marked against R1 as above; 2 repeated. The
+  candidates' local maps against the marks (AUC per picture); then the T/A weight such that one threshold separates
+  both kinds of marks (H3).
+- **B5, seam thresholds**, ~15 minutes, only if A3 and B4 find the A part weak: two surfaces with one mean colour and
   different pairs, each pair with its own dots as in a render (research/pairs' patches ran one dot pattern across the
-  border, and its measures did not carry over to renders), the step varied by a staircase (QUEST), forced choice "which has a seam"; pair types x 3
-  lightness levels. research/pairs' patch design is a draft for it.
+  border, and its measures did not carry over to renders), the step varied by a staircase (QUEST), forced choice
+  "which has a seam"; pair types x 3 lightness levels.
+- **B6, colour family and local contrast (H5, H7)**, ~8 minutes: on 6 pictures, forced choices between two edits of
+  one R1 with equal mean CIEDE2000 from it: a colour moved within its name against one moved across it (red to pink);
+  a slow shift of tone over a surface against a loss of its local contrast. 24 choices, 4 repeated.
 
-- **B5, colour family and local contrast (H5, H7)**, ~8 minutes: on 6 training pictures, forced choices between two
-  edits of one conversion with equal mean CIEDE2000 from it: a colour moved within its name against one moved across
-  it (red to pink); a slow shift of tone over a surface against a loss of its local contrast. 24 choices, 4 repeated.
+## Stage J: the Claude judge
 
-## Stage C: validation on new pictures
+The question: does a multimodal subagent see conversions as people do, the clash included, and is it better than
+the best metric from the literature? research/pairs used such judges without testing them against people on
+stimuli made for the question. Here J gets exactly B3's, B4's and C's stimuli and is scored as a metric is.
 
-- C1. 16 new pictures, prepared as the user prepares sources (cropped and composed to 256x192, cleaned), in the
-  proportions of the real inputs: artists' illustrations (fantasy, sci-fi, portraits) 6, artistic photo portraits and
-  processed portraits 4, posters and film, game and AI-made images 3, landscapes 2, a plain photograph 1. Licensed for
-  publication (own works, public domain, CC, made for the purpose). Not looked at through the converter before C.
+- Delivery: each picture a separate file, enlarged by whole pixels (x4, 1024x768), the cell coordinates as a ruler in
+  the margin, not over the picture. First a check of what the model actually sees: rows of codes at small sizes, as
+  research/pairs did, and single-pixel and single-cell changes it must find.
+- Tasks: B3, pick the best of 4 R1 against the original; B4, list the cells where the conversion looks worse than R1,
+  with the same two kinds; C, the forced choices. A short prompt, no description of the user's taste. Every item 6
+  times, 3 in each order of sides; a cell's score is the number of runs that list it.
+- Scores, against the same people: B4, AUC of J's cell scores at the people's marks, next to the best metric's AUC
+  and next to the user's repeat ceiling; B3 and C, agreement with the people's picks and choices, next to the
+  metrics' and next to the agreement between people. J against the best metric, too: if they agree with each other
+  and with people, J adds nothing a metric does not give for free. Consistency: the order of sides, the repeats.
+
+What a good J would give: labels with no user time for choosing the informative stimuli (which pairs and pictures to
+show people), a second observer on a larger set of pictures (reported apart, never in place of people), a check of
+the converter's changes during development, and words for what it sees. What it would never give: a target for
+optimisation, labels for a fit, the final decision. If J is below the best metric on B4 and C, it stays a source of
+descriptions only.
+
+## Stage C: validation on the validation pictures
+
+- C1. The 16 validation pictures, converted for the first time now.
 - C2. Per picture: the current converter at its default preset; the converter with the chosen metric (the slow mode:
-  the metric in the selection and in DBS); the best competitor at its best setting (from `rivals`); and on 4 pictures
-  the checker style both ways (H4).
-- C3. Forced choice, the original on the left, the two conversions raw at x3 (the app's view), random sides, `dp.py
-  vote`'s page with the tie keys off. "Both fine" and "both bad" go into a second, optional key after the choice.
-  6 pairs repeated.
+  the metric in the selection and in DBS); the best competitor at its best setting (`rivals.py` scripts them); on 4
+  pictures the checker style both ways (H4); and R1, as an upper anchor.
+- C3. Forced choice between two conversions, the original on the left, raw at x3 (the app's view), random sides, no
+  tie key; "both fine" and "both bad" go into a second, optional key after the choice. 6 pairs repeated.
 - C4. Observers: the user, all pairs (~25 minutes in three sessions); 2-3 others, 15 minutes each on the 30 most
-  informative pairs (where the candidates disagree). The user's results are reported apart from the others'.
+  informative pairs (where the candidates disagree). Spectrum-scene viewers are the product's audience, so experienced
+  viewers are the right observers; the user's results are reported apart from the others'.
 - C5. Analysis: the picture is the unit. Wins of the new metric's conversion over the current, a sign test over
   pictures; a Bradley-Terry scale of the methods (Pérez-Ortiz & Mantiuk's `pwcmp`), bootstrap over pictures; each
-  metric's agreement with the people on C's pairs.
-- C6. CRT, if one is at hand: only the C pairs whose order the CRT display model turns over (A6), shown on the CRT.
+  metric's and J's agreement with the people on C's pairs (H8).
+- C6. CRT: the C pairs whose order the CRT display model turns over (A6), and 6 pairs it does not, shown on the
+  Spectrum 128 and the CRT.
 
 The decision, fixed now: the new metric goes into the converter if its conversions win on at least 10 of the 16
 pictures, the sign test p < 0.05, no category loses the majority, and its agreement with people on C's pairs is not
@@ -220,13 +312,15 @@ metric does; the target, rank agreement 0.9 on the renders of held-out pictures.
   stage C check.
 - Each stage's hypotheses, measures and decision rule are committed before its data (the commit is the
   pre-registration).
-- research/pairs' held-out pictures (andy, sunset, golden-axe, david, burning-hand) were used for its final checks:
-  here they are training pictures. C's pictures are new.
 - The picture is the statistical unit, not the trial.
-- Claude judges only as a prefilter of easy cases, never as labels for a fit.
+- People are not asked to choose between two bad conversions.
+- Claude judges are scored in stage J before any other use; never labels for a fit.
 - The code goes into `research/metrics/` (pytest does not collect it); the renders into `data/`, out of git.
 
 ## Open decisions
 
-- The viewing distance and the monitor's brightness, measured (B0).
-- Whether a CRT is at hand for C6.
+- R1 needs a palette DBS (any of 15 colours a pixel); the converter's DBS takes two colours a pixel. Error diffusion
+  and ordered dither in linear light first; the palette DBS as a research script.
+- How the SCRs reach the Spectrum 128 for C6 (a divMMC/esxDOS card, tape, another loader), with a quick switch
+  between two pictures.
+- The monitor's brightness in sRGB mode, written down at B0.
