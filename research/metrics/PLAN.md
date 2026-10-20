@@ -82,7 +82,10 @@ look the same tone. That makes one dither match one flat colour by construction,
 the setting is written down as part of the display.
 
 The palette is part of the display model. The default is Pulsar's, which is the converter's own (`ZXPalette`, levels
-205 and 255; the user, 2026-10-20). Other emulators' palettes and measurements of real machines are options. The rankings
+205 and 255; the user, 2026-10-20). Real machines and clones differ in their dim and bright levels, so each emulator and
+editor has its own set; Pulsar is the most used (ZX Art and nyuk's online SCR converter default to it), Alone (from
+Unreal) and Orthodox are the other common ones (diver4d et al., "ZX Spectrum Graphics FAQ", hype.retroscene.org,
+2015: https://hype.retroscene.org/blog/graphics/320.html). Other emulators' palettes and measurements of real machines are options. The rankings
 under different palettes are compared by the metric alone (A5).
 
 ## Two references
