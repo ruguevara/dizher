@@ -81,6 +81,7 @@ requests in its GitHub release. The pictures are made by `docs/screenshots.py`.
 
 - An edit while DBS runs keeps the last picture on screen; the preview no longer flashes an older one.
 - Popups and windows are opaque in every theme.
+- PhotoshopStyle is the default theme. An installed app keeps the theme it last ran with; View > Theme picks another.
 
 ## 0.2.4-alpha
 

@@ -413,6 +413,7 @@ class Window:
             p.app_window_params.restore_previous_geometry = False
             p.ini_folder_type = hello_imgui.IniFolderType.temp_folder
             p.docking_params.layout_condition = hello_imgui.DockingLayoutCondition.application_start
+            p.imgui_window_params.remember_theme = False   # the default theme, not the one a run before left in the ini
             p.callbacks.post_init = p.callbacks.before_exit = lambda: None
         return p
 

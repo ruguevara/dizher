@@ -17,7 +17,7 @@ from contextlib import contextmanager
 
 from imgui_bundle import imgui, hello_imgui, em_size, em_to_vec2
 
-THEME = hello_imgui.ImGuiTheme_.so_dark_accent_blue
+THEME = hello_imgui.ImGuiTheme_.photoshop_style
 FONT, FONT_SIZE = "fonts/Roboto/Roboto-Regular.ttf", 16.0   # imgui_bundle asset; hello_imgui scales it for DPI
 FONT_BOLD = "fonts/Roboto/Roboto-Bold.ttf"
 FONT_ICONS = "fonts/Font_Awesome_6_Free-Solid-900.otf"   # merged into both: icons_fontawesome_6.ICON_FA_* in any label
