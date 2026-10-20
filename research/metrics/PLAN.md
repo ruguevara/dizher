@@ -14,37 +14,23 @@ the metric. It is in the generator's settings and presets, and the user picks it
 conversions within any one style correctly, so it must not charge a checker for being a different texture from the
 source's gradient (see H4).
 
-## The starting point: research/pairs, as hypotheses
+## The starting point: research/pairs, reviewed
 
-`research/pairs/` (branch `feature/color-pair-selection-research-72ae52`, kept apart from `develop`) was an
-unsystematic search: many rounds, changing settings, features added as they came. Its findings are not taken as
-facts here. They are hypotheses for this plan to test, and its data are used only where a stimulus can be made again
-exactly. The ones that shape the plan:
+`research/pairs/` (branches `feature/color-pair-selection-research-72ae52` and its earlier snapshot
+`feature/gallant-wright-6dtgj6`, kept apart from `develop`) was an unsystematic search. `PAIRS-REVIEW.md` goes through
+it: what does not hold and why, what holds, and the data this plan takes. In short:
 
-- The user prefers smoothness to colorimetry; colour accuracy against the source picks the user's painting in 31-36%,
-  the seam excess in 65-84%.
-- The seams the user sees are where the pair changes, and the user sees them in pixels: every seam measure is worse
-  through an eye blur. The tone of a surface, on the other hand, is judged through the blur (~1 Spectrum pixel). So
-  there are two scales in one judgement.
-- "A clean colour of the correct family" (red, not a pink dither of red and white) is a third of the user's edits, and
-  no metric measured it.
-- On close alternatives there is no correct answer: "both fine" and "both bad" outnumber a choice of side.
-- Numeric judges fitted to the user's verdicts were exploited by each optimisation against them: every round found a
-  new blind spot. Free optimisation against a judge is a dead end.
-- The user's labels are reliable (18 of 19 for the painting, repeats 4 of 5); the user's time is the limit, 5-15
-  minutes a round.
+- Not used: the paintings as ground truth, the fitted judges, Claude judges' labels, "the user's eye" (sigma 0.75 and
+  1.0 picked by looking at blurred images), the whole-picture verdicts on 4-9 pictures.
+- Kept as a rule: free optimisation against a fitted judge fails; it found a new blind spot in each of four rounds.
+- Kept as hypotheses: seams are seen at the pixel level (every blur made the seam measures worse) while the tone of a
+  surface is judged at a coarser scale, so there are two scales in one judgement; a hue change across a seam shows,
+  brightness alone is faint, a slow lightness step hides; a clean colour of the right family matters (H5); local
+  contrast matters more than the overall tone (H7).
+- Kept as data for stage A's secondary check: the seam marks and the patch ratings.
 
-Why the work there stopped converging, as we read it:
-
-1. The metrics were fitted to whole-picture verdicts. A whole-picture verdict mixes tone, seams, colour family and
-   taste in one bit, and on close pairs it is "both fine" or "both bad". Few bits per minute of the user's time.
-2. The candidate features (~45 metrics, the seam terms) had no common model and free weights, so each fit found the
-   weights that explained the last round, and the next round's counterexample.
-3. The paintings were made at older settings and mix style with clash fixes, so as an oracle they disagree with any
-   fidelity measure (the energy rated them 2-12x worse than its own choice).
-
-What that work did show is a lesson about method. The change here: measure the **parts** of one model on controlled stimuli, where a minute of the user's time gives a
-threshold or a match point, take the parts' form from the vision literature, and use whole-picture verdicts only to
+The change in method: measure the **parts** of one model on controlled stimuli, where a minute of the user's time
+gives a threshold or a match point, take the parts' form from the vision literature, and use whole pictures only to
 validate, on pictures not used before.
 
 ## Viewing conditions
@@ -114,7 +100,10 @@ Hypotheses:
 - **H4, style**: the same metric ranks conversions within the checker style (Halftone: checkers, dithering 0.25-0.5,
   no DBS) as well as within the DBS style.
 - **H5, colour family**: an error that changes the colour's name (red to pink, the magenta cypress) costs more than
-  its CIEDE2000 says. Tested on the data; added as a term only if it holds.
+  its CIEDE2000 says. Tested in B5; added as a term only if it holds.
+- **H7, local contrast**: people forgive a slow shift of tone or colour over a surface more than a loss of local
+  contrast or of a meaningful gradient (the user's priorities, 2026-10-02). If it holds, T compares local means and
+  contrasts (as SSIM's terms do) rather than absolute colour, with its own weight for the slow part.
 - **H6, CRT**: through a CRT display model, the metric's ranking of conversions agrees with the LCD ranking (Kendall's
   tau 0.8 or more).
 
@@ -148,23 +137,20 @@ A0, first, data that do not depend on research/pairs:
 
 A candidate that fails A0's checks is out.
 
-Then, as a secondary check only, research/pairs' labels, at 26 pixels per degree, where the stimuli can be made again
-exactly. They come from one observer in an unsystematic process, so they rank candidates only together with B:
+Then, as a secondary check only, two of research/pairs' data sets, at 26 pixels per degree, where the stimuli can be
+made again exactly. One observer, 6 pictures, so they rank candidates only together with B:
 
 | data | what it measures | score |
 |---|---|---|
 | `rounds/seams/marks.json`, 1342 marked seams on 12 renders | where the clash is seen | AUC of the metric's local map at the marked seams; top-k against the user's own repeat agreement (0.48-0.75) |
 | `rounds/seams/patches-v3..v5`, `ranked-v1` | seam visibility without picture content | rank correlation with the ratings and the sorting |
-| whole-picture verdicts: `curve`, `e1`, `methods`, `surface/r1, r2`, `seams/selection*`, `rivals`, `c1`, `opt*` | the user's preference | agreement on the decided pairs; on "both fine" pairs, a small metric difference (AUC of the difference, decided against tied) |
-| `rounds/zxart/top100.json` | the artists' choice of pair per cell | the artist's pair ranked against the 16 colour-nearest alternatives (as `zxfit.py`) |
-| the 9 painted projects | the user's paintings against the converter | how much worse the metric rates the painting than the converter's own choice (the energy: 2-12x) |
 
 - A1. The few data files needed are copied into `research/metrics/data-pairs/` with their source commit; nothing
   imports research/pairs' code. A round whose renders cannot be made again exactly (the pipeline changed since) is
   dropped, not approximated; the key files tell which.
 - A2. The table: metric x data set, with bootstrap intervals over pictures.
 - A3. Where the best candidate fails, which part fails: the seams (A), the tone (T) or the colour family (H5).
-- A4. If no candidate passes A0 and ranks the seams and the whole-picture verdicts better than the converter's energy,
+- A4. If no candidate passes A0 and ranks the seam marks better than the converter's energy,
   build T + A + pooling from the parts that do, with no more than 4 free parameters, fitted on half the pictures and scored on the
   other half.
 - A5. Palettes: the best candidate's rankings of the same render pairs under Pulsar, the converter's palette and one
@@ -173,7 +159,7 @@ exactly. They come from one observer in an unsystematic process, so they rank ca
 
 The outcome: one or two models for stage B, and what they cannot see.
 
-## Stage B: the model's parts on controlled stimuli (~40 minutes of the user's time)
+## Stage B: the model's parts on controlled stimuli (~50 minutes of the user's time)
 
 The new monitor, at the measured distance, sRGB mode, the brightness fixed and written down, the room light the same.
 Pulsar palette. Sessions of at most 10 minutes. Each task's analysis and decision rule are committed before its data.
@@ -191,8 +177,13 @@ Pulsar palette. Sessions of at most 10 minutes. Each task's analysis and decisio
   day. Each candidate's own best point along each sweep is compared with the user's: the error in sweep steps. No
   fitting in this test. Then the model's one T/A weight is fitted to these points.
 - **B4, seam thresholds**, ~15 minutes, only if A3 finds the A part weak: two surfaces with one mean colour and
-  different pairs, the step varied by a staircase (QUEST), forced choice "which has a seam"; pair types x 3
+  different pairs, each pair with its own dots as in a render (research/pairs' patches ran one dot pattern across the
+  border, and its measures did not carry over to renders), the step varied by a staircase (QUEST), forced choice "which has a seam"; pair types x 3
   lightness levels. research/pairs' patch design is a draft for it.
+
+- **B5, colour family and local contrast (H5, H7)**, ~8 minutes: on 6 training pictures, forced choices between two
+  edits of one conversion with equal mean CIEDE2000 from it: a colour moved within its name against one moved across
+  it (red to pink); a slow shift of tone over a surface against a loss of its local contrast. 24 choices, 4 repeated.
 
 ## Stage C: validation on new pictures
 
