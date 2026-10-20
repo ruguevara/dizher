@@ -71,6 +71,7 @@ def test_slider_drag_moves_param(ctx):
     drag(ctx, imgui.ImVec2((r.min.x + r.max.x) / 2, y), imgui.ImVec2((r.min.x + r.max.x) / 2 + 60, y))
     moved = params('contrast').contrast
     assert moved > 0, f'contrast slider did not move: {moved}'
+    assert abs(moved / 0.2 - round(moved / 0.2)) < 1e-9, f'off the -100..100 step of 0.2: {moved}'
     ctx.yield_(5)
     assert params('contrast').contrast == moved, 'the slider fell back'
     assert len(ui.app.past) == steps + 1, 'a drag is one undo step'
