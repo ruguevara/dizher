@@ -884,8 +884,10 @@ class Window:
 
     def _candidates(self, r: int, c: int, pick=None):
         """The inspector's table: the best pairs at block (r, c) by SelectionEnergy.cell_candidates, and the chosen
-        one (>) when it is not among them: selection stops after a sweep limit, a live snapshot mid-sweep. With pick,
-        a click on a row calls pick((paper, ink)). The Converter it shows, None when there is none."""
+        one (>) when it is not among them: selection stops after a sweep limit, a live snapshot mid-sweep. When it is
+        among them its row stays, empty: the table keeps its height as the selection changes, and the popup's palette
+        and Clear overpaint under it stay under the pointer. With pick, a click on a row calls pick((paper, ink)). The
+        Converter it shows, None when there is none."""
         conv = self._live()
         conv = conv if conv is not None else self.result
         labels = None if conv is None else conv.best_attr_indexes
@@ -894,8 +896,7 @@ class Window:
         costs = conv.energy.cell_candidates(labels, r, c)
         total, chosen = costs.sum(1), labels[r, c]
         order = list(np.argsort(total)[:INSPECT_PAIRS])
-        if chosen not in order:
-            order.append(chosen)
+        order.append(None if chosen in order else chosen)
         idx = list(conv.palette.iter_idxs_pairs())
         imgui.text(f'Cell {c}, {r}: pair scores with the neighbours as they are')
         if not imgui.begin_table('pairs', 6, imgui.TableFlags_.row_bg.value | imgui.TableFlags_.sizing_fixed_fit.value):
@@ -907,6 +908,9 @@ class Window:
         for p in order:
             imgui.table_next_row()
             imgui.table_next_column()
+            if p is None:   # the chosen pair's row, the pair listed above
+                imgui.text('')
+                continue
             if pick is None:
                 imgui.text('>' if p == chosen else '')
             elif imgui.selectable(f"{'>' if p == chosen else ''}###pair{p}", bool(p == chosen),

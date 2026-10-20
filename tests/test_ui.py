@@ -11,7 +11,7 @@ from dizher import tone
 from dizher.converter.dither import ErrorDiffusion, Ordered
 from dizher.halftoning.ordered.matrices import GROUPS as MATRIX_GROUPS
 from dizher.ui.levels import CROSS, pick_label
-from dizher.ui.window import REDO, UNDO, Window, as_ubyte
+from dizher.ui.window import INSPECT_PAIRS, REDO, UNDO, Window, as_ubyte
 
 IMAGE = Path(__file__).parent / 'images' / 'goldhill.png'
 ui = Window(IMAGE)
@@ -462,9 +462,9 @@ def test_hover_inspector(ctx):
 
 def test_cell_popup(ctx):
     """Right-click a cell: the popup opens where the hover tooltip was; a row of the pair table paints the cell, a
-    click in the zoom moves to a neighbour, a right click on a swatch paints that one's paper, Clear overpaint gives it
-    back, Esc closes it. Opened again on another block while immvision still keeps the last popup's texture, it shows
-    that block; a right click on a cell outside it moves it there, where that cell's tooltip would be."""
+    click in the zoom moves to a neighbour, a right click on a swatch paints that one's paper, and Clear overpaint,
+    which stays put as the pair chosen then drops out of the table's best, gives it back; Esc closes it. Opened again
+    on another block while immvision still keeps the last popup's texture, it shows that block; a right click on a cell outside it moves it there, where that cell's tooltip would be."""
     from imgui_bundle.imgui.test_engine import CaptureFlags_
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'a conversion to overpaint')
     ui.view = 'Screen'
@@ -499,9 +499,19 @@ def test_cell_popup(ctx):
     corner = max(0, min(row - 1, R - 3)), max(0, min(col - 1, C - 3))
     assert ui._cell == corner, (ui._cell, corner)
     ctx.set_ref(f'//{popup.name}')
+    clear = ctx.item_info('**/Clear overpaint').rect_full
+    clear = clear.min.x, clear.min.y, clear.max.x, clear.max.y
     ctx.item_click('##colour2', imgui.MouseButton_.right)
     ctx.yield_(2)
     assert (*corner, 2, -1) in params('overpaint').overrides, params('overpaint')
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the conversion with the paper painted')
+    now = ui.result.best_attr_indexes
+    top = ui.result.energy.cell_candidates(now, *corner).sum(1).argsort()[:INSPECT_PAIRS]
+    assert now[corner] not in top, 'the chosen pair is listed: the check below needs a cell whose pair drops out'
+    ctx.yield_(2)
+    moved = ctx.item_info('**/Clear overpaint').rect_full
+    moved = moved.min.x, moved.min.y, moved.max.x, moved.max.y
+    assert moved == clear, ('Clear overpaint moved', clear, moved)
     ctx.item_click('**/Clear overpaint')
     ctx.yield_(2)
     assert params("overpaint").overrides == ((row, col, *pair),), (params("overpaint"), row, col, pair)
