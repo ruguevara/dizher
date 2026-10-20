@@ -74,11 +74,9 @@ def _field(params, f, tp, on_change, help: str = "hint") -> None:
             step, decimals = slider_step(meta["min"], meta["max"])
             changed, new = imgui.slider_float(id, float(value or 0.0), float(meta["min"]), float(meta["max"]),
                                               f"%.{decimals}f")
-            left = imgui.MouseButton_.left
-            if imgui.is_item_hovered() and imgui.is_mouse_double_clicked(left):
+            if imgui.is_item_hovered() and imgui.is_mouse_double_clicked(imgui.MouseButton_.left):
+                imgui.internal.clear_active_id()   # let go: the press still held would drag it off the default
                 changed, new = True, f.default   # a double click resets it
-            elif imgui.is_mouse_down(left) and not imgui.is_mouse_dragging(left, 1.0):
-                changed = False   # a press moves it only once dragged: a double click's first one leaves it be
             new = round(round(new / step) * step, decimals)   # dragged or typed (Ctrl-click), on the step
         else:
             changed, new = imgui.input_float(id, float(value or 0.0))

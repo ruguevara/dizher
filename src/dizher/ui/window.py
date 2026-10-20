@@ -373,6 +373,7 @@ class Window:
         self._popup = None, None   # the cell popup's top-left, and its size when last shown
         self._held = None          # (the last live snapshot, the finished conversion it stands in for): see _live
         self._stroke = None        # a paint stroke's cells so far: pressed over a preview in Paint mode, not let go yet
+        self._pressed = -1.0       # imgui time of the last left press
         self._tools = (False, None)   # Paint mode and the armed eyedropper last frame: the one turned on last wins
 
     def runner_params(self, persist: bool = True) -> hello_imgui.RunnerParams:
@@ -474,7 +475,11 @@ class Window:
         if not (imgui.is_mouse_down(0) or imgui.is_mouse_down(1)):
             self._stroke = None
         held = imgui.is_any_item_active() or self._stroke is not None   # a paint stroke is one undo step, like a dragged slider
-        if not held:
+        if imgui.is_mouse_clicked(imgui.MouseButton_.left):
+            self._pressed = imgui.get_time()
+        # so is a double click: a slider's jump to the first press, then its reset
+        double = imgui.get_time() - self._pressed < imgui.get_io().mouse_double_click_time
+        if not (held or double):
             self.app.release()
         # global routing: a focused text field keeps its own Cmd+Z
         if imgui.shortcut(UNDO, imgui.InputFlags_.route_global.value):

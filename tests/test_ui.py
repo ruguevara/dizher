@@ -85,14 +85,19 @@ def test_slider_drag_moves_param(ctx):
 
 
 def test_slider_double_click_resets(ctx):
-    """A double click puts a slider back to its default, one undo step; its first click does not move it."""
+    """A double click puts a slider back to its default: one undo step with its first click's jump, and none at all
+    where the slider was at its default already."""
     ui.app.set_params('framing', replace(params('framing'), scale=2.0))
     steps = len(ui.app.past)
     ctx.set_ref('//Tune')
-    ctx.item_double_click('**/framing/##scale')   # the middle of 0.25..4, off the default of 1
+    ctx.item_double_click('**/framing/##scale')   # the first click jumps to the middle of 0.25..4, off the default of 1
     ctx.yield_(2)
     assert params('framing').scale == 1.0, params('framing')
     assert len(ui.app.past) == steps + 1, 'a reset is one undo step'
+    ctx.sleep_no_skip(0.5, 0.05)   # past the double-click time: the next is a double click of its own, not a triple
+    ctx.item_double_click('**/framing/##scale')
+    ctx.yield_(2)
+    assert params('framing').scale == 1.0 and len(ui.app.past) == steps + 1, 'a reset at the default is no step'
     ui.app.undo()
     assert params('framing').scale == 2.0, params('framing')
     reset('framing')
