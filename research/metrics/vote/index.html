@@ -75,13 +75,14 @@ const state = { db: null, rounds: {}, votes: {}, roundId: null, mode: 'grid', in
 
 function zoomFor(round) {
   const z = round.zoom || {};
+  if (round.task === 'mark') return z.mark || 3;
   return state.mode === 'flip' ? (z.flip || 3) : (z.grid || 2);
 }
 
 function pixelCheck(round) {
   const dpr = window.devicePixelRatio || 1, z = zoomFor(round);
   const device = z * dpr, exact = Math.abs(device - Math.round(device)) < 1e-6;
-  const need = state.mode === 'flip' ? 2 * 256 * z + 24 : 3 * 256 * z + 24 + 16;
+  const need = round.task === 'mark' || state.mode === 'flip' ? 2 * 256 * z + 24 : 3 * 256 * z + 24 + 16;
   const wide = document.documentElement.clientWidth - 32 >= need;
   $('pixels').textContent = `x${z} · ${round.w || 256}x${round.h || 192} · ${Math.round(device * 100) / 100} device px a pixel`;
   return { exact, wide, need, dpr };
@@ -96,7 +97,9 @@ function render() {
   const answered = round.items.length - itemsLeft(round).length;
   $('progress').textContent = `${answered} / ${round.items.length}`;
   $('mode').textContent = state.mode === 'grid' ? 'Grid' : 'Flip';
-  $('keys').innerHTML = state.mode === 'grid'
+  $('keys').innerHTML = round.task === 'mark'
+    ? '<b>mouse</b> paint cells · <b>1</b> added (seams, blocks, noise) · <b>2</b> lost or wrong · <b>right/Shift</b> erase · <b>Space</b> hold for the original · <b>Enter</b> done · <b>Backspace</b> back'
+    : state.mode === 'grid'
     ? '<b>1-4</b> pick · <b>0</b> none better · <b>Backspace</b> back · <b>Tab</b> flip view'
     : '<b>1-4</b> show · <b>Enter</b> pick shown · <b>0</b> none better · <b>Backspace</b> back · <b>Tab</b> grid view';
   const check = pixelCheck(round);
@@ -105,8 +108,9 @@ function render() {
   const item = round.items[state.index];
   if (!item) { stage.hidden = true; notice.hidden = false; notice.className = 'notice done'; notice.textContent = `Round done: ${answered} answers saved. Backspace goes back to the last one.`; return; }
   const saved = state.votes[`${round.id}__${item.id}`];
-  $('progress').textContent += saved ? ` · answered ${saved.pick || 'none'}, a new answer replaces it` : '';
+  $('progress').textContent += saved ? ` · answered ${saved.cells ? 'marked' : saved.pick || 'none'}, a new answer replaces it` : '';
   notice.hidden = true; notice.className = 'notice'; stage.hidden = false;
+  if (round.task === 'mark') { renderMark(round, item, saved); preloadRound(round); return; }
   const z = zoomFor(round), w = (round.w || 256) * z, h = (round.h || 192) * z;
   const tile = (src, label, cls, n) => `<figure class="${cls}" data-n="${n || ''}"><img class="px" src="${src}" width="${w}" height="${h}" alt="${label}" draggable="false"><figcaption>${label}</figcaption></figure>`;
   const ref = tile(item.original, 'Original', 'ref');
@@ -121,6 +125,93 @@ function render() {
   preloadRound(round);
 }
 
+// Marking (B4): the conversion and its reference R1 side by side; the person paints the cells where the conversion
+// looks worse, kind 1 something added (seams, blocks, noise, false contours), kind 2 something lost or wrong. One
+// answer per item: `cells`, 768 characters '0', '1' or '2', row by row over the 32x24 cells.
+const mark = { cells: null, kind: 1, down: false, erase: false, peeks: 0, item: null };
+const MARK_COLOUR = { 1: '#ff5a4f', 2: '#4fb6ff' };
+
+function renderMark(round, item, saved) {
+  if (mark.item !== `${round.id}__${item.id}`) {
+    mark.item = `${round.id}__${item.id}`;
+    mark.cells = new Uint8Array(768);
+    if (saved && saved.cells) for (let i = 0; i < 768; i++) mark.cells[i] = +saved.cells[i] || 0;
+    mark.peeks = 0;
+  }
+  const z = zoomFor(round), w = 256 * z, h = 192 * z;
+  const kindLabel = mark.kind === 1 ? 'painting: 1 added' : 'painting: 2 lost or wrong';
+  $('stage').innerHTML = `
+    <figure><div style="position:relative;width:${w}px;height:${h}px">
+      <img class="px" src="${item.conversion}" width="${w}" height="${h}" alt="Conversion" draggable="false" style="cursor:crosshair">
+      <canvas id="marks" style="position:absolute;inset:0;width:${w}px;height:${h}px;cursor:crosshair;touch-action:none"></canvas>
+    </div><figcaption id="markcap">Conversion · ${kindLabel} · ${count(1)} added, ${count(2)} lost</figcaption></figure>
+    <figure class="ref"><img class="px" id="refimg" src="${item.reference}" width="${w}" height="${h}" alt="Reference" draggable="false">
+      <figcaption id="refcap">Without attributes (R1) · hold Space for the original</figcaption></figure>`;
+  const cv = $('marks'), dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  const cell = (e) => {
+    const r = cv.getBoundingClientRect();
+    const cx = Math.floor((e.clientX - r.left) / (8 * z)), cy = Math.floor((e.clientY - r.top) / (8 * z));
+    return cx >= 0 && cx < 32 && cy >= 0 && cy < 24 ? cy * 32 + cx : -1;
+  };
+  const paint = (e) => { const i = cell(e); if (i >= 0) { mark.cells[i] = mark.erase ? 0 : mark.kind; drawMarks(); } };
+  cv.addEventListener('contextmenu', (e) => e.preventDefault());
+  cv.addEventListener('pointerdown', (e) => {
+    mark.down = true; mark.erase = e.button === 2 || e.shiftKey; cv.setPointerCapture(e.pointerId); paint(e);
+  });
+  cv.addEventListener('pointermove', (e) => { if (mark.down) paint(e); else drawMarks(cell(e)); });
+  cv.addEventListener('pointerup', () => { mark.down = false; });
+  cv.addEventListener('pointerleave', () => { if (!mark.down) drawMarks(); });
+  drawMarks();
+}
+
+function count(k) { let n = 0; if (mark.cells) for (const c of mark.cells) n += c === k; return n; }
+
+function drawMarks(hover = -1) {
+  const cv = $('marks'); if (!cv) return;
+  const ctx = cv.getContext('2d'), s = cv.width / 32;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.lineWidth = Math.max(2, s / 10);
+  for (let i = 0; i < 768; i++) {
+    const k = mark.cells[i]; if (!k) continue;
+    const x = (i % 32) * s, y = Math.floor(i / 32) * s;
+    ctx.strokeStyle = MARK_COLOUR[k]; ctx.setLineDash(k === 2 ? [s / 6, s / 8] : []);
+    ctx.strokeRect(x + ctx.lineWidth / 2, y + ctx.lineWidth / 2, s - ctx.lineWidth, s - ctx.lineWidth);
+  }
+  if (hover >= 0) {
+    ctx.setLineDash([]); ctx.strokeStyle = 'rgba(232,197,71,.7)'; ctx.lineWidth = 1;
+    ctx.strokeRect((hover % 32) * s + .5, Math.floor(hover / 32) * s + .5, s - 1, s - 1);
+  }
+  const cap = $('markcap');
+  if (cap) cap.textContent = `Conversion · painting: ${mark.kind === 1 ? '1 added' : '2 lost or wrong'} · ${count(1)} added, ${count(2)} lost`;
+}
+
+function markKey(e, round) {
+  const item = round.items[state.index];
+  if (e.key === 'Backspace') { e.preventDefault(); if (state.index > 0) { state.index -= 1; startItem(); } return; }
+  if (!item || $('stage').hidden) return;
+  if (e.key === '1' || e.key === '2') { mark.kind = +e.key; drawMarks(); return; }
+  if (e.key === ' ') {
+    e.preventDefault();
+    if (!e.repeat) { mark.peeks += 1; $('refimg').src = item.original; $('refcap').textContent = 'Original · release Space for R1'; }
+    return;
+  }
+  if (e.key === 'Enter') { e.preventDefault(); submitMarks(round, item); }
+}
+
+document.addEventListener('keyup', (e) => {
+  const round = currentRound(), item = round && round.items[state.index];
+  if (e.key === ' ' && round && round.task === 'mark' && item && $('refimg')) {
+    $('refimg').src = item.reference; $('refcap').textContent = 'Without attributes (R1) · hold Space for the original';
+  }
+});
+
+function submitMarks(round, item) {
+  const extra = { cells: Array.from(mark.cells).join(''), n_added: count(1), n_lost: count(2), peeks: mark.peeks };
+  mark.item = null;
+  answer(null, extra);
+}
+
 function block(text) {
   $('stage').hidden = true; const n = $('notice'); n.hidden = false; n.className = 'notice warn'; n.textContent = text;
 }
@@ -129,7 +220,7 @@ function block(text) {
 const warm = {};
 function preload(item) {
   if (!item) return;
-  [item.original, ...item.options].forEach((s) => {
+  [item.original, ...(item.options || []), item.conversion, item.reference].filter(Boolean).forEach((s) => {
     if (warm[s]) return;
     const i = new Image(); i.src = s; warm[s] = i; i.decode().catch(() => {});
   });
@@ -139,13 +230,13 @@ function preloadRound(round) { if (round) round.items.slice(state.index, state.i
 function startItem() { state.t0 = performance.now(); state.flips = 0; state.shown = 1; render(); }
 
 // The next item shows at once; the write runs behind it. A failed write takes the answer back and says so.
-function answer(pick) {
+function answer(pick, extra) {
   const round = currentRound(), item = round && round.items[state.index];
   if (!item || !state.db || $('stage').hidden) return;
   const vote = {
     round: round.id, item: item.id, pick, ms: Math.round(performance.now() - state.t0), mode: state.mode,
     flips: state.flips, zoom: zoomFor(round), dpr: window.devicePixelRatio || 1,
-    win: [window.innerWidth, window.innerHeight], at: new Date().toISOString(),
+    win: [window.innerWidth, window.innerHeight], at: new Date().toISOString(), ...(extra || {}),
   };
   const id = `${round.id}__${item.id}`;
   state.votes[id] = vote;
@@ -193,6 +284,7 @@ function fillRounds() {
 
 document.addEventListener('keydown', (e) => {
   const round = currentRound(); if (!round) return;
+  if (round.task === 'mark') { markKey(e, round); return; }
   const item = round.items[state.index];
   if (e.key === 'Tab') { e.preventDefault(); state.mode = state.mode === 'grid' ? 'flip' : 'grid'; try { localStorage.setItem('mode', state.mode); } catch (_) {} render(); return; }
   if (e.key === 'Backspace') {

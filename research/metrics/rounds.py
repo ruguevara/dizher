@@ -62,6 +62,28 @@ def make_pick_round(round_id: str, title: str, items, zoom=None, repeats=0.1, se
     return manifest
 
 
+def make_mark_round(round_id: str, title: str, items, zoom=3, repeats=0.0, seed=0, pilot=True):
+    """items: [(item_id, original_path, reference_path, conversion_path), ...]: mark the conversion's cells against
+    the reference (R1). Repeats come later in the round. Returns the manifest; the key holds no secret here (the
+    item ids name the settings), so it is written for symmetry only."""
+    rng = np.random.default_rng(seed)
+    order = [(iid, o, r, c) for iid, o, r, c in items]
+    for k in rng.choice(len(items), size=int(round(repeats * len(items))), replace=False):
+        iid, o, r, c = items[k]
+        order.append((f'{iid}-rep', o, r, c))
+    rng.shuffle(order)
+    manifest_items = [{'id': f'm{n:02d}', 'original': _copy(Path(o), round_id), 'reference': _copy(Path(r), round_id),
+                       'conversion': _copy(Path(c), round_id)} for n, (_, o, r, c) in enumerate(order)]
+    key = {f'm{n:02d}': iid for n, (iid, *_) in enumerate(order)}
+    manifest = {'title': title, 'task': 'mark', 'zoom': {'mark': zoom}, 'w': 256, 'h': 192, 'pilot': pilot,
+                'status': 'open', 'created': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+                'items': manifest_items}
+    OUT.mkdir(parents=True, exist_ok=True)
+    (OUT / f'{round_id}.manifest.json').write_text(json.dumps(manifest, indent=1))
+    (OUT / f'{round_id}.key.json').write_text(json.dumps(key, indent=1))
+    return manifest
+
+
 def tally(round_id: str, votes_path: str):
     """The round's votes by the key: per item the label picked (or None for 0), its time; repeats paired."""
     key = json.loads((OUT / f'{round_id}.key.json').read_text())

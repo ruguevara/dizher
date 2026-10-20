@@ -105,3 +105,15 @@ original's edge, the staircase), to be agreed with the user before they are made
 - Agreement (`b3-pilot-2.md`, x2): tone at sigma 1 and the eye baseline 5/9; SSIMULACRA2 3; cvvdp, S-CIELAB, MS-SSIM,
   DISTS, tone at sigma 2 and 3 2; Butteraugli 1, LPIPS 0 (chance 2.25). Over both pilots: tone sigma 1 and the eye
   baseline 11/18, every literature metric 5/18 or less. Sigma 1 beats 2 and 3 here.
+
+## 2026-10-20: zx.py, the marking page, B4 pilot 1
+
+- `zx.py` (a subagent): the app's own pipeline (`ops.apply_preset(make_graph(), NEWEST)`, Exact mixture) on a
+  prepared source, any node parameter settable; its default render equals the app's PNG and SCR export pixel for
+  pixel. Defaults: coherence 6, DBS on (about 11 s a picture), the checker style = Halftone checker with dithering
+  0.375 and DBS off.
+- The voting page gains the marking task (B4): the conversion and R1 at x3, Space held shows the original, the mouse
+  paints cells, key 1 something added, key 2 something lost or wrong, right button or Shift erases, Enter submits;
+  an answer is the 768 cells as a string of 0/1/2.
+- B4 pilot 1 (set-aside pictures, the default DBS style, R1 = Floyd-Steinberg linear on the ZX palette): jojo at
+  coherence 0, autumn at 6 (the default), diver-sunset at 24.
