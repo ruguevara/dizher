@@ -42,9 +42,14 @@ def make_pick_round(round_id: str, title: str, items, zoom=None, repeats=0.1, se
     rng.shuffle(rest)
     order = first + rest
     manifest_items, key = [], {}
+    shown = {}
     for iid, orig, opts, rep in order:
         labels = list(opts)
         rng.shuffle(labels)
+        base = iid[:-4] if rep else iid
+        if rep and labels == shown.get(base):          # a repeat shows the options in another order
+            labels = labels[1:] + labels[:1]
+        shown[base] = labels
         manifest_items.append({'id': iid, 'original': _copy(Path(orig), round_id),
                                'options': [_copy(Path(opts[l]), round_id) for l in labels]})
         key[iid] = {'options': labels, 'repeat_of': iid[:-4] if rep else None}

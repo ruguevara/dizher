@@ -60,3 +60,24 @@ original's edge, the staircase), to be agreed with the user before they are made
   mixtures: seam 6.4-7.8, one pair 8.2-10.5; the sunset's seam shares red and is faint); an edge 3 px right of a
   cell border, the pair changing at the border to its left, to its right, or the edge drawn in the inks' pair; a
   diagonal edge as whole cells against drawn. Pair choice by CIEDE2000 of the linear-light exact mixture.
+
+## 2026-10-20: round a0h-3 and the metrics against the user's picks
+
+- Seams on gradients: one pair over the seam on all four (2.7-9.7 s), the sunset's faint shared-red seam included,
+  though the seam's pairs are nearer in colour (mean CIEDE2000 of the mixtures 6.4-7.8 against 8.2-10.5). A straight
+  seam the original lacks costs the user more than 2-3 CIEDE2000 over the whole surface.
+- Edge 3 px right of a cell border: the pair changing at the border to its right (the sky 5 px into the sand) over
+  the one to its left and over the drawn column, twice (the repeat had the options in the same order: rounds.py now
+  shows a repeat in another order).
+- Staircase: whole cells over the edge drawn in the inks' solid colours.
+- The dark ramp's first answer was given again validly (Backspace, 2 device px a CSS px): dispersed, as in a0h-2.
+- `a0score.py`, `a0-human.md`: each metric's nearest option against the user's pick on the 15 valid answers, at the
+  user's viewing (x2, 19.4 ppd). Agreement: the eye baseline 7, cvvdp 6, SSIMULACRA2, Butteraugli max, LPIPS 5,
+  S-CIELAB, DISTS 4, Butteraugli, MS-SSIM 3; chance about 6. Every metric picks the empty shadow and, but for the
+  eye baseline, the bands; most pick the seam.
+- A tone term alone, the linear-light blur then CIEDE2000 (sigma 1-4 px): 8/15 at sigma 1, 6/15 above. It gets the
+  dark ramp, the banding, the 50% grey and the staircase right at every sigma, and every seam wrong, as it must:
+  the seam's pairs are nearer in colour. Above sigma 1 it also prefers the cell-scale noise, which averages out.
+- So stage A ends at A4: no candidate passes; our own model is built from a tone term of this kind and a seam term,
+  the seam term's weight bounded below by the four gradients. 15 answers of one observer: a direction for the model,
+  validated in B and C, not a fit.
