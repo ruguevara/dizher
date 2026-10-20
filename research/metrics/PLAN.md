@@ -91,14 +91,14 @@ The user's idea (2026-10-20): a conversion with the Spectrum's pixel and palette
 constraint. Each source picture gets two references:
 
 - **R0, the original**, 256x192 as prepared.
-- **R1, the free conversion**: any of the 15 colours in every pixel, the same pixel grid. The best halftone the
-  palette and the pixel allow, with no clash. Made by a few methods (error diffusion in linear light, ordered dither,
-  palette DBS under two or three eye models); people pick the best (B3), which is an easy choice among good pictures.
+- **R1, the free conversion**: any of the palette's colours in every pixel, the same pixel grid. The best halftone
+  the palette and the pixel allow, with no clash. Made by the methods in "The free conversions"; people pick the best
+  (B3), which is an easy choice among good pictures.
 
 The metric splits along them:
 
 - **The halftoning part** (T and the details): how near R1 is to R0. Classic colour halftoning, where the literature
-  applies, judged on good pictures.
+  applies, judged on good pictures, and on several platforms' palettes, not the Spectrum's alone (H9).
 - **The attribute part** (A): what the attribute constraint adds, the Spectrum conversion against R1. The clash
   stands out against R1 far more clearly than against the original, and the difference is of one kind.
 
@@ -138,6 +138,57 @@ Hypotheses:
   contrast or of a meaningful gradient. Tested in B6.
 - **H8, the split**: the halftoning part calibrated on R1 against R0 and the attribute part calibrated on Spectrum
   conversions against R1, added, rank Spectrum conversions against R0 as people do (C).
+- **H9, palettes**: one set of the halftoning part's parameters ranks the free conversions as people do on every
+  palette below, from CGA's 4 colours to the 16 of the C64 and EGA. A part tuned to one palette would carry its
+  quirks; one that holds across them is the eye's, and carries over to other images.
+- **H10, DBS**: DBS on top of the best positional or error-diffusion conversion brings out the details and does not
+  spoil the tone: people pick it over its start, and mark fewer "lost" cells on it, none more for tone (B3b).
+
+## The free conversions
+
+Palettes and pixels, each on its platform's display geometry (integer device pixels per axis, at the nearest ratio
+to the platform's pixel aspect: 320x200 at 5x6 device pixels for 4:3):
+
+| platform | colours | pixels |
+|---|---|---|
+| ZX Spectrum | 15 (Pulsar) | 256x192, square |
+| Commodore 64 | 16 (Pepto's, `platforms/c64`; Colodore an option) | 320x200 hires; 160x200 multicolour, double-wide |
+| MSX1 (TMS9918) | 15 | 256x192 |
+| EGA | 16, the default of the 64 | 320x200 |
+| CGA | 4: palette 0 (black, green, red, brown) and palette 1 (black, cyan, magenta, white), each in low and high intensity | 320x200 |
+
+The prepared 256x192 sources are resampled to each grid with its aspect, so every platform shows the same 4:3 picture.
+
+The methods, all for an arbitrary palette, first without DBS:
+
+- **Positional dither**: Knoll's pattern dithering (the Adobe method, described with variants in Yliluoma's
+  "Arbitrary-palette positional dithering algorithm"). For each pixel, a list of N palette colours whose mean
+  approaches the target, built by accumulating the error, sorted by luminance; a threshold map picks one. Two maps:
+  **Bayer** 8x8 (regular) and a **blue-noise** mask (stochastic; the repo has blue-noise textures in
+  `halftoning/noise`).
+- **Error diffusion**: Floyd-Steinberg and a wider kernel (Jarvis or Stucki), serpentine, the nearest colour and the
+  error in linear light, the error clamped so that it cannot run away on a small palette (CGA).
+- In each, the colour space of the mixing and the distance (linear RGB, sRGB, CIELAB) is a variant. Which one people
+  prefer is H2 on whole pictures.
+- **Palette DBS**, a separate step (B3b): from the best of the above, toggles among the palette's colours and swaps
+  with neighbours, under the eye model with T's parameters fitted in B3.
+
+The Spectrum's and the C64 hires' attribute constraint is the same (2 colours an 8x8 cell), so the attribute part can
+be checked on the C64 later with no new method.
+
+## How the rounds run
+
+- **A voting page** published as a claude.ai Artifact with a shared store. Each batch's images are published to it,
+  the user opens one link and answers by keys, and the answers reach this session directly: no command line, no files
+  to send. Each answer is saved at once, and the time it took is saved with it.
+- The page draws the images at whole device pixels: it reads the device pixel ratio and refuses to show a round when
+  the browser's zoom breaks the mapping. Picking: the original and a 2x2 grid at x2, or the original and one
+  candidate at x3 with keys 1-4 to switch it in place. Marking: the conversion and R1 at x3, Space held shows the
+  original, the mouse paints cells, keys 1 and 2 set the kind.
+- **Small batches first**, 5-10 items, 2-3 minutes. After each, the spread of the variants is adjusted: picks that are
+  all obvious and fast mean the variants are too far apart; repeats that disagree and slow answers mean too near.
+  These batches are pilots, marked so and left out of the confirmatory data. When the spread is right, the stage's
+  analysis and decision rule are committed, and its confirmatory batches follow.
 
 ## What people are asked to do
 
@@ -228,7 +279,7 @@ made again exactly. One observer, 6 pictures, so they rank candidates only toget
 
 The outcome: one or two models for stage B, and what they cannot see.
 
-## Stage B: the model's parts (~60 minutes of the user's time)
+## Stage B: the model's parts (~80 minutes of the user's time, in batches)
 
 The monitor at 65 cm, sRGB mode, the brightness fixed and written down, the room light the same. Pulsar palette.
 Sessions of at most 10 minutes. The training pictures only. Each task's analysis and decision rule are committed
@@ -240,10 +291,14 @@ before its data.
 - **B2, mixing (H2)**, ~10 minutes: 12 patches (6 pairs, 2 dot levels; blue/yellow and red/green among them) at x2
   and x4. The user sets a flat patch beside each to match (lightness, a*, b* by keys), or marks it "cannot match".
   The matches against the linear-light mean; the "cannot match" set against `dot_contrast`.
-- **B3, the halftoning part**, ~10 minutes: for 12 pictures, 4 free conversions R1 each (the methods and eye models
-  where the candidate metrics disagree most), pick the best against the original, 3 repeated. Each candidate metric
-  is scored by how often its best R1 is the person's; then the tone scale and the detail weight of T are fitted to
-  the picks. The picked R1 is that picture's reference for B4.
+- **B3, the halftoning part (H2, H9)**, ~20 minutes in batches: 12 pictures x the 6 palettes (ZX, C64 hires, MSX1,
+  EGA, CGA 0, CGA 1), 4 free conversions each, without DBS, chosen where the candidate metrics disagree most; pick the
+  best against the original, 10% repeated. Each candidate metric is scored by how often its best is the person's,
+  per palette and over all; then the tone scale and the detail weight of T are fitted to the picks, once for all
+  palettes and once per palette (H9 holds if the shared fit is within the per-palette fits' intervals).
+- **B3b, DBS (H10)**, ~10 minutes: on the same pictures and palettes, the best non-DBS conversion against palette DBS
+  started from it, under T as fitted; pick the better, then mark the "lost" and tone cells on both for 6 of them. The
+  ZX pick of B3 or B3b is that picture's R1 for B4.
 - **B4, the attribute part (H3, H4)**, ~3 x 8 minutes: 9 pictures (6 in the DBS style, 3 in the checker style), each
   converted at three coherence values (low, the preset's, high), marked against R1 as above; 2 repeated. The
   candidates' local maps against the marks (AUC per picture); then the T/A weight such that one threshold separates
@@ -294,7 +349,10 @@ descriptions only.
   pictures; a Bradley-Terry scale of the methods (Pérez-Ortiz & Mantiuk's `pwcmp`), bootstrap over pictures; each
   metric's and J's agreement with the people on C's pairs (H8).
 - C6. CRT: the C pairs whose order the CRT display model turns over (A6), and 6 pairs it does not, shown on the
-  Spectrum 128 and the CRT.
+  Spectrum 128 and the CRT, the original on the computer beside it. A script writes a 128K snapshot (.sna, to the
+  divMMC's SD card) with a small Z80 viewer: the pairs' screens in the free banks, each pair copied into banks 5 and 7,
+  a key switches the shown screen (bit 3 of port 0x7FFD), keys 1 and 2 answer, and at the end the answers are printed
+  on the screen to be typed into the voting page. Six pairs a snapshot (two screens in each free 16K bank).
 
 The decision, fixed now: the new metric goes into the converter if its conversions win on at least 10 of the 16
 pictures, the sign test p < 0.05, no category loses the majority, and its agreement with people on C's pairs is not
@@ -319,8 +377,7 @@ metric does; the target, rank agreement 0.9 on the renders of held-out pictures.
 
 ## Open decisions
 
-- R1 needs a palette DBS (any of 15 colours a pixel); the converter's DBS takes two colours a pixel. Error diffusion
-  and ordered dither in linear light first; the palette DBS as a research script.
-- How the SCRs reach the Spectrum 128 for C6 (a divMMC/esxDOS card, tape, another loader), with a quick switch
-  between two pictures.
+- The palette DBS (any palette colour a pixel) is new code; the converter's DBS takes two colours a pixel. A research
+  script first, for B3b.
+- Display geometry of each platform (the pixel aspect, the border), and whether the C64 multicolour mode joins B3.
 - The monitor's brightness in sRGB mode, written down at B0.
