@@ -18,6 +18,15 @@ The user's priorities (2026-10-02, confirmed 2026-10-20): seams first; then colo
 no grey dither everywhere, local contrast and meaningful gradients over the overall tone; then form in the details;
 then texture.
 
+## Terms
+
+- **Clash** (the user's sense, 2026-10-20): a seam between cells where the colour pair changes, conspicuous, that
+  does not follow the structure of the original: a new edge across a smooth surface or gradient, a pair change one
+  cell off the original's edge, a staircase of cell borders where the original has a smooth or diagonal edge. A pair
+  change along an edge the original has is not clash.
+- **Cell-scale colour noise**: cells of one surface in different pairs that average to the same colour, scattered
+  rather than forming a seam. A different artefact; the first A0 "clash" check measured this one.
+
 ## The starting point: research/pairs, reviewed
 
 `research/pairs/` (branches `feature/color-pair-selection-research-72ae52` and its earlier snapshot
@@ -52,7 +61,7 @@ What the numbers mean:
 - A checkerboard is at 7-14 cycles per degree, a 2-pixel line pattern at 5-10. The eye's luminance sensitivity is
   near its peak there, and black/white dots are far above threshold: the dither is seen as texture at every
   comfortable zoom.
-- A blob of 8x8 cells alternating, the clash's scale, is at 0.6-1.2 cycles per degree. Chromatic sensitivity is
+- The cell grid (8 pixels, a seam every 8 at most) is at 0.6-1.2 cycles per degree. Chromatic sensitivity is
   highest at low frequencies. Colour differences at the cell scale are where the eye sees colour best, and colour
   differences between single dots are where it sees colour worst.
 - Above threshold, perceived contrast hardly depends on frequency (contrast constancy, Georgeson & Sullivan 1975).
@@ -256,7 +265,8 @@ A0, data that do not depend on research/pairs:
 
 - Sanity checks a metric must pass, on synthetic images: monotone in a tone error on grey and colour ramps; a dither
   shifted by one pixel almost free; on a flat 50% grey at x3 the visibility order checkerboard < blue noise < 2x2
-  clusters; an attribute clash on a smooth surface charged more than the same mean colour error spread evenly; a
+  clusters; cell-scale colour noise on a smooth surface charged more than either of its pairs alone (this is the
+  check first named "clash"; see Terms); a
   false contour (banding) on a ramp charged more than a dither of it; on a dark ramp, dispersed dots charged less
   than an empty or a clustered shadow; R1 charged less than any Spectrum conversion of the same picture.
 - Public subjective data sets: TID2013's colour quantisation with dither (type 22) and its block-wise distortions
@@ -275,6 +285,18 @@ most checks. The checks' expectations are ours, not measured, so they are put to
   the stimuli of each check, 6 items and a repeat). A check is kept as a rule only where the user's pick agrees with
   its expectation and the repeat agrees; otherwise the expectation is wrong and the check is dropped or reversed.
   Then each metric is scored on the kept checks.
+
+**Amendment 2, 2026-10-20.** The user: the first "clash" check showed cell-scale colour noise, not clash (Terms).
+Its answers in `a0h-1` stay, under that name. Clash gets its own checks, put to the user the same way:
+
+- **Seam on a smooth surface**: a gradient on which one pair switches to another along a row of cells, a straight
+  seam the original does not have, against the same gradient in one pair with a larger tone error (about 5-8
+  CIEDE2000). Expected: the seam is worse. Two or three error sizes find where the user's preference turns.
+- **Seam off the edge**: an original with a straight edge on a cell border; the render's pair change on the edge
+  against one cell off it. Expected: on the edge is nearer. For metrics also: the same seam costs less where the
+  original has the edge than on a smooth surface.
+- **Staircase** (exploratory, no expectation): a diagonal edge rendered as whole cells against a row of mixed cells
+  along it.
 
 Then, as a secondary check only, two of research/pairs' data sets, at 26 pixels per degree, where the stimuli can be
 made again exactly. One observer, 6 pictures, so they rank candidates only together with B:

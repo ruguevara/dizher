@@ -43,3 +43,10 @@ generators and the voting page; the user collects the 40 pictures meanwhile.
   answer while a warning hides the pictures); the item asked again as round `a0h-2`.
 - The page waited for the write before showing the next item; now it shows it at once and writes behind it.
 - The user: Pulsar's palette is the 205/255 levels the converter already uses.
+
+## 2026-10-20: what clash means
+
+The user: clash is a conspicuous seam where the pair changes and the original has no such structure; the first A0
+"clash" check showed cell-scale colour noise. PLAN's Terms define both; the a0h-1 answers on it are kept under the
+noise's name; amendment 2 adds clash checks (a seam on a smooth surface against a larger tone error, a seam off the
+original's edge, the staircase), to be agreed with the user before they are made.
