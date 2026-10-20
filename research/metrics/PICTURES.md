@@ -41,3 +41,18 @@ p01,p01.png,illus,gradient face hue,https://commons.wikimedia.org/...,CC BY-SA 4
 - `publish`: `yes` if the licence allows showing it in the article (own work, public domain, CC); `no` for film and
   game frames and anything else used for research only. The article's figures use only `yes` pictures.
 - The files themselves stay out of git (`data/pictures/`); git holds the manifest and the hashes.
+
+## Search notes (2026-10-20, a trial of the queries)
+
+Tried from the research container: Wikimedia (rate-limited for the shared address) and Openverse (timed out) did
+not answer; Pexels found through web search and downloaded by photo id worked. 12 photos for three queries, prepared
+(centre crop to 4:3) and converted at the defaults without DBS:
+
+- The queries find what they name: chiaroscuro portraits, gradient skies over the sea, neon and gel portraits.
+- "Black background", "low key" and "chiaroscuro" bring photos too dark for the palette: 3 of 7 convert to an
+  almost black screen. For `shadow`, prefer "dramatic side light portrait", "rim light portrait", and pictures with
+  detail in the shadows; the user's own tone preparation also matters here.
+- Gradient skies and sunsets give strong seams at once: good for `gradient`.
+- Neon and gel portraits give saturated, colourful conversions: good for `saturated` and `hue`.
+- Portrait-orientation photos lose the head in a centre crop to 4:3: prefer wide pictures (Bing's Layout: Wide), or
+  crop by hand as the user does anyway.
