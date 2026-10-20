@@ -46,7 +46,9 @@ tag is on `main` and matches the version in the code.
 - PATCH for fixes, MINOR for features, MAJOR from 1.0.
 - Right after a release, `develop` takes the next version, so dev builds show the version they lead to.
 - A release:
-  1. `develop` green, its build tested by hand (below), the README's changes updated.
+  1. `develop` green, its build tested by hand (below), the README's changes updated, and `CHANGELOG.md` given the
+     release's section, `## 0.2.4-alpha` (the tag without its `v`), with pictures of new panels from
+     `docs/screenshots.py` in `docs/images`. The release job puts that section above the generated list of PRs.
   2. A PR from `develop` into `main`, merged with a merge commit once its tests and builds pass.
   3. The tag on `main`, matching the code: `v` + `__version__` + `-` + `CHANNEL` (no suffix when `CHANNEL` is empty),
      annotated: `git tag -a v0.2.4-alpha -m 0.2.4-alpha && git push origin v0.2.4-alpha`. The tag builds and publishes
