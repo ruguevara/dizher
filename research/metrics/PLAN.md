@@ -146,18 +146,17 @@ Hypotheses:
 
 ## The free conversions
 
-Palettes and pixels, each on its platform's display geometry (integer device pixels per axis, at the nearest ratio
-to the platform's pixel aspect: 320x200 at 5x6 device pixels for 4:3):
+The palettes, all on one grid: 256x192 square pixels, the prepared source itself (the user, 2026-10-20: pixels are
+square). The platforms' own resolutions are left out on purpose: H9 is about the palette, and one grid keeps
+everything else the same.
 
-| platform | colours | pixels |
-|---|---|---|
-| ZX Spectrum | 15 (Pulsar) | 256x192, square |
-| Commodore 64 | 16 (Pepto's, `platforms/c64`; Colodore an option) | 320x200 hires; 160x200 multicolour, double-wide |
-| MSX1 (TMS9918) | 15 | 256x192 |
-| EGA | 16, the default of the 64 | 320x200 |
-| CGA | 4: palette 0 (black, green, red, brown) and palette 1 (black, cyan, magenta, white), each in low and high intensity | 320x200 |
-
-The prepared 256x192 sources are resampled to each grid with its aspect, so every platform shows the same 4:3 picture.
+| platform | colours |
+|---|---|
+| ZX Spectrum | 15 (Pulsar) |
+| Commodore 64 | 16 (Pepto's, `platforms/c64`) |
+| MSX1 (TMS9918) | 15 |
+| EGA | 16, the default of the 64 |
+| CGA | 4: palette 0 (black, green, red, brown) and palette 1 (black, cyan, magenta, white), each in low and high intensity |
 
 The methods, all for an arbitrary palette, first without DBS:
 
@@ -178,6 +177,10 @@ be checked on the C64 later with no new method.
 
 ## How the rounds run
 
+- **Where**: in the cloud session, which publishes the voting page and reads the answers; renders are small
+  (256x192) and run on its 4 CPUs. A batch that needs more (palette DBS sweeps) can run on the user's machine.
+- **The surround**: the page's background around the images is black, fixed for every round and written down. The
+  surround changes how light and how contrasty a picture looks, so it is held constant, not studied.
 - **A voting page** published as a claude.ai Artifact with a shared store. Each batch's images are published to it,
   the user opens one link and answers by keys, and the answers reach this session directly: no command line, no files
   to send. Each answer is saved at once, and the time it took is saved with it.
@@ -291,7 +294,7 @@ before its data.
 - **B2, mixing (H2)**, ~10 minutes: 12 patches (6 pairs, 2 dot levels; blue/yellow and red/green among them) at x2
   and x4. The user sets a flat patch beside each to match (lightness, a*, b* by keys), or marks it "cannot match".
   The matches against the linear-light mean; the "cannot match" set against `dot_contrast`.
-- **B3, the halftoning part (H2, H9)**, ~20 minutes in batches: 12 pictures x the 6 palettes (ZX, C64 hires, MSX1,
+- **B3, the halftoning part (H2, H9)**, ~20 minutes in batches: 12 pictures x the 6 palettes (ZX, C64, MSX1,
   EGA, CGA 0, CGA 1), 4 free conversions each, without DBS, chosen where the candidate metrics disagree most; pick the
   best against the original, 10% repeated. Each candidate metric is scored by how often its best is the person's,
   per palette and over all; then the tone scale and the detail weight of T are fitted to the picks, once for all
@@ -352,7 +355,9 @@ descriptions only.
   Spectrum 128 and the CRT, the original on the computer beside it. A script writes a 128K snapshot (.sna, to the
   divMMC's SD card) with a small Z80 viewer: the pairs' screens in the free banks, each pair copied into banks 5 and 7,
   a key switches the shown screen (bit 3 of port 0x7FFD), keys 1 and 2 answer, and at the end the answers are printed
-  on the screen to be typed into the voting page. Six pairs a snapshot (two screens in each free 16K bank).
+  on the screen to be typed into the voting page. The screens packed with ZX0 (Saukas), unpacked into the
+  banks by its small Z80 decompressor: about 10-12 pairs a snapshot; dithered screens pack worse, so the script fills
+  the free banks and counts.
 
 The decision, fixed now: the new metric goes into the converter if its conversions win on at least 10 of the 16
 pictures, the sign test p < 0.05, no category loses the majority, and its agreement with people on C's pairs is not
@@ -379,5 +384,4 @@ metric does; the target, rank agreement 0.9 on the renders of held-out pictures.
 
 - The palette DBS (any palette colour a pixel) is new code; the converter's DBS takes two colours a pixel. A research
   script first, for B3b.
-- Display geometry of each platform (the pixel aspect, the border), and whether the C64 multicolour mode joins B3.
 - The monitor's brightness in sRGB mode, written down at B0.
