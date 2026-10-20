@@ -2,12 +2,13 @@
 
     params_editor(params, on_change, id="params", help="hint")   # on_change(new_params) after any edit
 
-int -> input_int (clamped to min/max, -/+ buttons with `step`), float -> slider when min and max are set else input_float,
-bool -> checkbox, str -> combo when `choices` else input_text, Path -> text + Browse (meta editor "file"/"folder",
-output paths pick folders), Optional[X] -> X with an empty value meaning None. Tuples and other types are shown
+int -> input_int (clamped to min/max, -/+ buttons with `step`), float -> slider on `slider_step` when min and max are
+set (a double click resets it) else input_float, bool -> checkbox, str -> combo when `choices` else input_text, Path ->
+text + Browse (meta editor "file"/"folder", output paths pick folders), Optional[X] -> X with an empty value meaning None. Tuples and other types are shown
 read-only. Label = meta(label) or the field name with spaces; meta(help) draws a hint under the widget, or with
 help="tooltip" shows on hovering it.
 """
+import math
 from dataclasses import fields, replace
 from pathlib import Path
 from typing import Callable, Optional
@@ -20,6 +21,17 @@ from . import widgets
 
 def field_label(f) -> str:
     return f.metadata.get("label") or f.name.replace("_", " ")
+
+
+SLIDER_STEPS = 500   # a float slider's step splits its range in at least this many
+
+
+def slider_step(lo: float, hi: float) -> tuple:
+    """(step, decimals) a float slider over lo..hi snaps to and shows: the largest 1, 2 or 5 x 10^n that splits the
+    range in at least SLIDER_STEPS, so round values (0.5, 0.25, 0.1, 0.05 on 0..1) are on it."""
+    most = (hi - lo) / SLIDER_STEPS * (1 + 1e-9)   # float slack: 1 / 500 is 0.002 itself
+    n = math.floor(math.log10(most))
+    return max(m * 10.0 ** n for m in (1, 2, 5) if m * 10.0 ** n <= most), max(0, -n)
 
 
 def _clamp(value, meta):
@@ -59,7 +71,15 @@ def _field(params, f, tp, on_change, help: str = "hint") -> None:
     elif tp is float:
         id = widgets.field(label)
         if meta.get("min") is not None and meta.get("max") is not None:
-            changed, new = imgui.slider_float(id, float(value or 0.0), float(meta["min"]), float(meta["max"]))
+            step, decimals = slider_step(meta["min"], meta["max"])
+            changed, new = imgui.slider_float(id, float(value or 0.0), float(meta["min"]), float(meta["max"]),
+                                              f"%.{decimals}f")
+            left = imgui.MouseButton_.left
+            if imgui.is_item_hovered() and imgui.is_mouse_double_clicked(left):
+                changed, new = True, f.default   # a double click resets it
+            elif imgui.is_mouse_down(left) and not imgui.is_mouse_dragging(left, 1.0):
+                changed = False   # a press moves it only once dragged: a double click's first one leaves it be
+            new = round(round(new / step) * step, decimals)   # dragged or typed (Ctrl-click), on the step
         else:
             changed, new = imgui.input_float(id, float(value or 0.0))
         if changed:
