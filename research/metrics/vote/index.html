@@ -1,0 +1,210 @@
+<title>Dizher Eye Rounds</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* A dark viewing room: the pictures sit on a black surround (fixed by the protocol), the controls in one quiet bar. */
+:root {
+  --surround: #000000;
+  --bar: #101113;
+  --line: #24262b;
+  --fg: #c9ccd2;
+  --dim: #7d828c;
+  --accent: #e8c547;      /* the ZX bright yellow, used only for the current choice and the progress */
+  --warn: #ff6b5e;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--surround); color: var(--fg); font-family: var(--mono); font-size: 13px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bar); }
+header {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bar); border-bottom: 1px solid var(--line);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; padding-block: 8px; margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+  padding-inline: max(16px, env(safe-area-inset-left, 0px));
+}
+header h1 { font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; margin: 0; color: var(--fg); }
+select, button {
+  font: inherit; color: var(--fg); background: #18191c; border: 1px solid var(--line); border-radius: 3px; padding: 3px 8px;
+}
+button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.meta { color: var(--dim); font-variant-numeric: tabular-nums; }
+.progress { color: var(--accent); font-variant-numeric: tabular-nums; }
+.keys { color: var(--dim); }
+.keys b { color: var(--fg); font-weight: 600; }
+main { padding-block: 20px 40px; }
+.notice { max-width: 64ch; line-height: 1.6; color: var(--fg); padding-block: 24px; }
+.notice.warn { color: var(--warn); }
+.stage { display: flex; gap: 24px; align-items: flex-start; }
+.grid { display: grid; grid-template-columns: auto auto; gap: 16px 16px; }
+figure { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+figcaption { color: var(--dim); font-size: 12px; letter-spacing: .04em; }
+figure.on figcaption { color: var(--accent); }
+img.px { display: block; image-rendering: pixelated; image-rendering: crisp-edges; max-width: none; cursor: pointer; }
+figure.ref img.px { cursor: default; }
+.done { color: var(--accent); }
+@media (prefers-reduced-motion: no-preference) { figure.flash img.px { transition: opacity .08s; } }
+</style>
+
+<header>
+  <h1>Dizher eye rounds</h1>
+  <label class="meta" for="round">Round</label>
+  <select id="round" aria-label="Round"></select>
+  <span class="progress" id="progress"></span>
+  <button id="mode" type="button" title="Tab switches the layout">Grid</button>
+  <span class="meta" id="pixels"></span>
+  <span class="keys" id="keys"></span>
+</header>
+<main>
+  <div class="notice" id="notice">Loading the rounds…</div>
+  <div class="stage" id="stage" hidden></div>
+</main>
+
+<script>
+// Rounds live in the db (`rounds/<id>`, written by the research session); each answer is one document
+// `votes/<round>__<item>`. Images are files published beside the page. Nothing here reveals which method made
+// which picture: the options come shuffled under random names, and the key stays with the session.
+const $ = (id) => document.getElementById(id);
+const state = { db: null, rounds: {}, votes: {}, roundId: null, mode: 'grid', index: 0, shown: 1, flips: 0, t0: 0, busy: false };
+
+function zoomFor(round) {
+  const z = round.zoom || {};
+  return state.mode === 'flip' ? (z.flip || 3) : (z.grid || 2);
+}
+
+function pixelCheck(round) {
+  const dpr = window.devicePixelRatio || 1, z = zoomFor(round);
+  const device = z * dpr, exact = Math.abs(device - Math.round(device)) < 1e-6;
+  const need = state.mode === 'flip' ? 2 * 256 * z + 24 : 3 * 256 * z + 24 + 16;
+  const wide = document.documentElement.clientWidth - 32 >= need;
+  $('pixels').textContent = `x${z} · ${round.w || 256}x${round.h || 192} · ${Math.round(device * 100) / 100} device px a pixel`;
+  return { exact, wide, need, dpr };
+}
+
+function currentRound() { return state.rounds[state.roundId]; }
+function itemsLeft(round) { return round.items.filter((it) => !state.votes[`${round.id}__${it.id}`]); }
+
+function render() {
+  const round = currentRound(), stage = $('stage'), notice = $('notice');
+  if (!round) { stage.hidden = true; notice.hidden = false; notice.textContent = 'No open round yet. The next batch appears here as soon as it is published.'; return; }
+  const answered = round.items.length - itemsLeft(round).length;
+  $('progress').textContent = `${answered} / ${round.items.length}`;
+  $('mode').textContent = state.mode === 'grid' ? 'Grid' : 'Flip';
+  $('keys').innerHTML = state.mode === 'grid'
+    ? '<b>1-4</b> pick · <b>0</b> none better · <b>Backspace</b> back · <b>Tab</b> flip view'
+    : '<b>1-4</b> show · <b>Enter</b> pick shown · <b>0</b> none better · <b>Backspace</b> back · <b>Tab</b> grid view';
+  const check = pixelCheck(round);
+  if (!check.exact) { return block(`The browser's zoom makes the pixels uneven (${check.dpr} device pixels per CSS pixel). Set the browser zoom to 100% (Cmd/Ctrl+0) and keep the display scaling as in the emulator.`); }
+  if (!check.wide) { return block(`This layout needs ${check.need} px of width; the window has ${document.documentElement.clientWidth}. Open the page full width (its own tab) or press Tab for the narrower view.`); }
+  const item = round.items[state.index];
+  if (!item) { stage.hidden = true; notice.hidden = false; notice.className = 'notice done'; notice.textContent = `Round done: ${answered} answers saved. Backspace goes back to the last one.`; return; }
+  const saved = state.votes[`${round.id}__${item.id}`];
+  $('progress').textContent += saved ? ` · answered ${saved.pick || 'none'}, a new answer replaces it` : '';
+  notice.hidden = true; notice.className = 'notice'; stage.hidden = false;
+  const z = zoomFor(round), w = (round.w || 256) * z, h = (round.h || 192) * z;
+  const tile = (src, label, cls, n) => `<figure class="${cls}" data-n="${n || ''}"><img class="px" src="${src}" width="${w}" height="${h}" alt="${label}" draggable="false"><figcaption>${label}</figcaption></figure>`;
+  const ref = tile(item.original, 'Original', 'ref');
+  if (state.mode === 'grid') {
+    stage.innerHTML = ref + `<div class="grid">${item.options.map((src, i) => tile(src, String(i + 1), '', i + 1)).join('')}</div>`;
+  } else {
+    stage.innerHTML = ref + tile(item.options[state.shown - 1], `${state.shown} of ${item.options.length}`, 'on flash', state.shown);
+  }
+  stage.querySelectorAll('figure[data-n]').forEach((f) => {
+    if (f.dataset.n) f.addEventListener('click', () => (state.mode === 'grid' ? answer(+f.dataset.n) : answer(state.shown)));
+  });
+  preload(round.items[state.index + 1]);
+}
+
+function block(text) {
+  $('stage').hidden = true; const n = $('notice'); n.hidden = false; n.className = 'notice warn'; n.textContent = text;
+}
+
+function preload(item) { if (item) [item.original, ...item.options].forEach((s) => { const i = new Image(); i.src = s; }); }
+
+function startItem() { state.t0 = performance.now(); state.flips = 0; state.shown = 1; render(); }
+
+async function answer(pick) {
+  const round = currentRound(), item = round && round.items[state.index];
+  if (!item || state.busy || !state.db) return;
+  state.busy = true;
+  const vote = {
+    round: round.id, item: item.id, pick, ms: Math.round(performance.now() - state.t0), mode: state.mode,
+    flips: state.flips, zoom: zoomFor(round), dpr: window.devicePixelRatio || 1,
+    win: [window.innerWidth, window.innerHeight], at: new Date().toISOString(),
+  };
+  try {
+    await state.db.collection('votes').doc(`${round.id}__${item.id}`).set(vote);
+    state.votes[`${round.id}__${item.id}`] = vote;
+    state.index = nextIndex(round, state.index + 1);
+    startItem();
+  } catch (e) {
+    block(`The answer was not saved (${e && e.code ? e.code : 'error'}). Reload the page; answers already saved are kept.`);
+  } finally { state.busy = false; }
+}
+
+function nextIndex(round, from) {
+  for (let i = from; i < round.items.length; i++) if (!state.votes[`${round.id}__${round.items[i].id}`]) return i;
+  return round.items.length;
+}
+
+function selectRound(id) {
+  state.roundId = id; const round = currentRound();
+  state.index = round ? nextIndex(round, 0) : 0; startItem();
+}
+
+function fillRounds() {
+  const sel = $('round'), ids = Object.keys(state.rounds).sort((a, b) => (state.rounds[b].created || '').localeCompare(state.rounds[a].created || ''));
+  sel.innerHTML = ids.map((id) => {
+    const r = state.rounds[id], left = itemsLeft(r).length;
+    return `<option value="${id}">${r.title || id}${left ? ` (${left} left)` : ' (done)'}</option>`;
+  }).join('');
+  if (!state.roundId || !state.rounds[state.roundId]) {
+    const open = ids.find((id) => itemsLeft(state.rounds[id]).length) || ids[0];
+    if (open) selectRound(open); else render();
+  }
+  if (state.roundId) sel.value = state.roundId;
+}
+
+document.addEventListener('keydown', (e) => {
+  const round = currentRound(); if (!round) return;
+  const item = round.items[state.index];
+  if (e.key === 'Tab') { e.preventDefault(); state.mode = state.mode === 'grid' ? 'flip' : 'grid'; try { localStorage.setItem('mode', state.mode); } catch (_) {} render(); return; }
+  if (e.key === 'Backspace') {
+    e.preventDefault();
+    if (state.index > 0) { state.index -= 1; startItem(); }   // shows the last item again; a new answer replaces the saved one
+    return;
+  }
+  if (!item) return;
+  if (e.key === '0') { answer(0); return; }
+  const n = Number(e.key);
+  if (n >= 1 && n <= item.options.length) {
+    if (state.mode === 'grid') answer(n);
+    else if (n !== state.shown) { state.shown = n; state.flips += 1; render(); }
+    return;
+  }
+  if (e.key === 'Enter' && state.mode === 'flip') answer(state.shown);
+});
+$('mode').addEventListener('click', () => { state.mode = state.mode === 'grid' ? 'flip' : 'grid'; render(); });
+$('round').addEventListener('change', (e) => selectRound(e.target.value));
+window.addEventListener('resize', () => render());
+try { if (localStorage.getItem('mode') === 'flip') state.mode = 'flip'; } catch (_) {}
+
+(async () => {
+  const db = await window.claude?.use?.('db');
+  if (!db) { $('notice').textContent = 'Answers cannot be saved in this view. Open the page signed in to claude.ai.'; return; }
+  state.db = db;
+  db.collection('rounds').onSnapshot((snap) => {
+    state.rounds = {};
+    snap.docs.forEach((d) => { const r = d.data(); if (r && r.status !== 'hidden') state.rounds[d.id] = { ...r, id: d.id }; });
+    fillRounds();
+  }, () => { $('notice').textContent = 'The rounds could not be loaded. Reload the page.'; });
+  db.collection('votes').onSnapshot((snap) => {
+    snap.docs.forEach((d) => { state.votes[d.id] = d.data(); });
+    fillRounds();
+    const round = currentRound(); if (round && !round.items[state.index]) render();
+  }, () => {});
+})();
+</script>
