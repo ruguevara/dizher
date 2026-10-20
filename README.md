@@ -58,6 +58,9 @@ on most machines, and the UI tests on Linux under Xvfb.
 
 * `src/dizher`: the converter (colour selection, halftoning, eye model), the platforms and the GUI.
 * `src/mokit`: the node graph, project files and UI widgets the GUI is built on.
+* `docs/images`: the pictures of the UI in this README and [CHANGELOG.md](CHANGELOG.md), made by
+  `docs/screenshots.py` (on Linux without a display: `xvfb-run -a -s '-screen 0 4200x2600x24' python
+  docs/screenshots.py`).
 
 ## How it works
 
@@ -161,6 +164,8 @@ click, so several colours can be pulled to the palette. The points are listed wi
 target; a point whose order in some channel disagrees with the others' is marked as a conflict, and
 one within 4 levels of another's input replaces it in that channel.
 
+<img src="docs/images/levels-curves.png" width="429" alt="Levels & Curves with two eyedropper points">
+
 ### Eye model
 
 Seen from a normal distance, a screen is blurred by the eye, so a fine mix of two colours reads
@@ -222,6 +227,8 @@ picks over galleries of renders, a gallery per test picture.
 | Exact mixture (new projects) | its exact mixture, plus a cost for dots of clashing hues (chroma noise) | chroma 2, coherence 6, chroma noise 0, luma blur 0.9 px |
 | Halftoned (0.2.4) | one halftone of its mixture, by the chosen halftoner | chroma 1, coherence 2, chroma noise 0, chroma blur 1.6 px |
 
+<img src="docs/images/metric-method.png" width="436" alt="Metric's method combo">
+
 A project saved before there was a choice opens as Halftoned, so it converts as it did. Methods
 live in `src/dizher/converter/energy.py` (`METHODS`); a new one is a class with a `candidates`
 method and its `preset`. `python tests/pair_bench.py compare` scores every method against the
@@ -232,13 +239,20 @@ hand-painted references in `tests/images/*/reference.scr`.
 With paper and ink fixed per block, each pixel is set to one of them so that the blurred result
 matches the blurred image. All halftoners take the same colour-aware inputs:
 
-* ordered, with a choice of 39 threshold matrices: Bayer, dispersed and clustered dots, line
+* ordered, with a choice of 42 threshold matrices: Bayer, dispersed and clustered dots, line
   screens and magic squares (void-and-cluster dispersed dots by default);
 * error diffusion, with 19 kernels from Floyd-Steinberg to Stevenson-Arce;
 * stochastic, with blue noise.
 
 The Halftoner block shows only the controls of the chosen method, and the same method paints the
-pair candidates of the live preview while colours are being selected.
+pair candidates of the live preview while colours are being selected. Its matrix and kernel combos
+list the patterns in sections (Bayer, Non-rect, Dots, Rombs, Squares, Lines; Classic, Shiau-Fan,
+Lossy, Wide, Simple), each after a ramp drawn by it. Gallery shows the conversion halftoned by every
+pattern of a section, with the pairs kept and no Optimise; a click picks one.
+
+<img src="docs/images/pattern-combo.png" width="295" alt="The matrix combo in sections">
+
+<img src="docs/images/gallery.png" width="710" alt="The gallery of the Bayer section">
 
 Two Halftone controls change the target itself, so every halftoner and DBS follow them. Dithering
 (1 by default) is the share of the lightness range between a block's paper and ink that is mixed
@@ -281,6 +295,8 @@ Done:
   `tests/pair_bench.py` scores them against hand-painted references
 * [x] Surface dE in Select pairs: the blocks of a smooth surface take one pair (off by default)
 * [x] Selectable dithering methods
+* [x] Pattern picker: the matrices and kernels in sections, each with a ramp drawn by it, and a Gallery of
+  the conversion halftoned by every pattern of a section
 * [x] Halftone's Dithering (the share of each pair's lightness range left as dots, the rest solid)
   and Checker (a 50% checkerboard of paper and ink as a third level)
 * [x] The dots' own weights: Halftone's chroma and Optimise's luma and chroma noise, tuned without
@@ -316,6 +332,8 @@ Done:
 * [x] Overpaint: attributes and brightness painted by hand; Freeze all keeps the whole field as shown, so it
   no longer follows Select pairs; Hide shows the conversion without the painted cells. On the
   Spectrum ink and paper share a brightness, and the B1 and B0 brushes make a cell bright or not
+* [x] Cell inspector: hovering a preview for a second shows the cell, its neighbours and the pairs'
+  scores; a right click keeps it as a popup that paints the cell
 * [x] Standalone binary packages with PyInstaller for macOS, Windows and Linux
 * [x] Versioning, and Help → About with the version, links and greetings
 * [x] CI: the tests on Windows, macOS and Linux and the UI tests on every push; builds of

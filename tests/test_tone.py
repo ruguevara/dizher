@@ -18,7 +18,7 @@ LSB = 1 / 255
 
 
 def old_levels(rgb, in_black=0, in_white=255, gamma=1.0, out_black=0, out_white=255):
-    """Levels as 0.2.5 had them: one set over all channels."""
+    """Levels as 0.2.4 had them: one set over all channels."""
     if (in_black, in_white, gamma, out_black, out_white) == (0, 255, 1.0, 0, 255):
         return rgb
     t = np.clip((rgb * 255 - in_black) / (in_white - in_black), 0, 1) ** (1 / gamma)

@@ -84,8 +84,13 @@ jobs:
         with:
           merge-multiple: true
           skip-decompress: true   # else the .zip archives are unpacked
-      - run: |   # v0.2.1-alpha and the like are pre-releases
+      - name: The notes, the tag's section of CHANGELOG.md
+        run: |   # its pictures by their address at the tag: a release page has no repository paths
+          awk -v head="## ${GITHUB_REF_NAME#v}" '$0 == head {on = 1; next} /^## / {on = 0} on' CHANGELOG.md |
+            sed "s#src=\"docs/#src=\"$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/raw/$GITHUB_REF_NAME/docs/#g" > "$RUNNER_TEMP/notes.md"
+          [ -s "$RUNNER_TEMP/notes.md" ] || echo "::warning::CHANGELOG.md has no section ## ${GITHUB_REF_NAME#v}"
+      - run: |   # v0.2.1-alpha and the like are pre-releases; the notes go above the generated list of PRs
           gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --generate-notes \
-            $([[ "$GITHUB_REF_NAME" == *-* ]] && echo --prerelease) Dizher-*
+            --notes-file "$RUNNER_TEMP/notes.md" $([[ "$GITHUB_REF_NAME" == *-* ]] && echo --prerelease) Dizher-*
         env:
           GH_TOKEN: ${{ github.token }}
