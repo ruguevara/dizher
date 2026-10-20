@@ -124,6 +124,9 @@ class Pipeline:
                 self.past = (self.past + [self.graph])[-HISTORY:]
             self.future.clear()
             self._held = held   # not on a no-op: a press that moves nothing yet must not fold into the last step
+            if self.past and graph == self.past[-1]:   # held edits back where they started (a reset at the default)
+                self.past.pop()
+                self._held = False
         self._apply(graph)
 
     def set_unpainted(self, on: bool) -> None:
@@ -139,11 +142,13 @@ class Pipeline:
         self._held = False
 
     def undo(self) -> None:
+        self._held = False   # the next edit is a step of its own
         if self.past:
             self.future.append(self.graph)
             self._apply(self.past.pop())
 
     def redo(self) -> None:
+        self._held = False
         if self.future:
             self.past.append(self.graph)
             self._apply(self.future.pop())
