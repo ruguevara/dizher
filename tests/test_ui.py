@@ -84,6 +84,20 @@ def test_slider_drag_moves_param(ctx):
     reset('contrast')
 
 
+def test_slider_double_click_resets(ctx):
+    """A double click puts a slider back to its default, one undo step; its first click does not move it."""
+    ui.app.set_params('framing', replace(params('framing'), scale=2.0))
+    steps = len(ui.app.past)
+    ctx.set_ref('//Tune')
+    ctx.item_double_click('**/framing/##scale')   # the middle of 0.25..4, off the default of 1
+    ctx.yield_(2)
+    assert params('framing').scale == 1.0, params('framing')
+    assert len(ui.app.past) == steps + 1, 'a reset is one undo step'
+    ui.app.undo()
+    assert params('framing').scale == 2.0, params('framing')
+    reset('framing')
+
+
 def test_levels_handles_drag(ctx):
     wait(ctx, lambda: ui.app.result('light') is not None, 'the levels input')
     r = rect(ctx, '//Tune', '**/##in')
@@ -725,6 +739,7 @@ def test_capture_layout(ctx):   # keep last: a picture of the default layout for
 TESTS = [
     ('ui', 'conversion_lands', test_conversion_lands),
     ('ui', 'slider_drag_moves_param', test_slider_drag_moves_param),
+    ('ui', 'slider_double_click_resets', test_slider_double_click_resets),
     ('ui', 'levels_handles_drag', test_levels_handles_drag),
     ('ui', 'levels_auto', test_levels_auto),
     ('ui', 'levels_channel', test_levels_channel),

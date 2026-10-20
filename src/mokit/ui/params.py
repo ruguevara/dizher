@@ -3,8 +3,8 @@
     params_editor(params, on_change, id="params", help="hint")   # on_change(new_params) after any edit
 
 int -> input_int (clamped to min/max, -/+ buttons with `step`), float -> slider on `slider_step` when min and max are
-set else input_float, bool -> checkbox, str -> combo when `choices` else input_text, Path -> text + Browse (meta editor
-"file"/"folder", output paths pick folders), Optional[X] -> X with an empty value meaning None. Tuples and other types are shown
+set (a double click resets it) else input_float, bool -> checkbox, str -> combo when `choices` else input_text, Path ->
+text + Browse (meta editor "file"/"folder", output paths pick folders), Optional[X] -> X with an empty value meaning None. Tuples and other types are shown
 read-only. Label = meta(label) or the field name with spaces; meta(help) draws a hint under the widget, or with
 help="tooltip" shows on hovering it.
 """
@@ -74,6 +74,11 @@ def _field(params, f, tp, on_change, help: str = "hint") -> None:
             step, decimals = slider_step(meta["min"], meta["max"])
             changed, new = imgui.slider_float(id, float(value or 0.0), float(meta["min"]), float(meta["max"]),
                                               f"%.{decimals}f")
+            left = imgui.MouseButton_.left
+            if imgui.is_item_hovered() and imgui.is_mouse_double_clicked(left):
+                changed, new = True, f.default   # a double click resets it
+            elif imgui.is_mouse_down(left) and not imgui.is_mouse_dragging(left, 1.0):
+                changed = False   # a press moves it only once dragged: a double click's first one leaves it be
             new = round(round(new / step) * step, decimals)   # dragged or typed (Ctrl-click), on the step
         else:
             changed, new = imgui.input_float(id, float(value or 0.0))
