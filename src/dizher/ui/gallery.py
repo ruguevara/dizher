@@ -24,7 +24,7 @@ PICKERS = {Ordered.label: ('matrix', MATRIX_GROUPS), ErrorDiffusion.label: ('ker
 EMPTY = {'Custom': 'Patterns drawn in the pattern editor, to come'}   # what an empty section says
 ZOOM = 2        # gallery image px per screen px on a 96 dpi display
 RAMP = 4        # icon width / height
-MIN_WIDTH = 10  # em the pattern combo keeps in a narrow dock
+MIN_WIDTH = 10  # em the pattern combo keeps beside its Gallery button, else the button goes under it
 NAME_GAP = 0.25 # em between a gallery image and its name
 ROW_GAP = 0.5   # em added between gallery rows
 
@@ -150,13 +150,13 @@ class PatternPicker:
         style_ = imgui.get_style()
         spacing, pad = style_.item_spacing.x, style_.frame_padding.x
 
-        # every field's width (FIELD_WIDTH fits the icon and the longest name), narrower where the row would push the
-        # label and the button out of a narrow dock
-        room = (imgui.get_content_region_avail().x - imgui.calc_text_size(field).x
-                - imgui.calc_text_size('Gallery…').x - 2 * pad - 2 * spacing)
-        imgui.set_next_item_width(min(em_size(style.FIELD_WIDTH), max(room, em_size(MIN_WIDTH))))
         flags = imgui.ComboFlags_.height_largest.value | imgui.internal.ComboFlagsPrivate_.custom_preview.value
-        if imgui.begin_combo(field, '', flags):   # a custom preview takes no text
+        # the Gallery button after the combo, or under it where the combo would be narrower than MIN_WIDTH beside it
+        id, x = widgets.field(field, imgui.calc_text_size('Gallery…').x + 2 * pad + spacing), imgui.get_cursor_pos_x()
+        beside = imgui.calc_item_width() >= em_size(MIN_WIDTH)
+        if not beside:
+            imgui.set_next_item_width(-imgui.FLT_MIN)
+        if imgui.begin_combo(id, '', flags):   # a custom preview takes no text
             for group, names in groups.items():
                 imgui.separator_text(group)
                 if not names:
@@ -179,7 +179,10 @@ class PatternPicker:
             imgui.set_cursor_screen_pos(imgui.ImVec2(at.x + icon.x + spacing, at.y))
             imgui.text(current)
             imgui.internal.end_combo_preview()
-        imgui.same_line()
+        if beside:
+            imgui.same_line()
+        else:
+            imgui.set_cursor_pos_x(x)
         if imgui.button('Gallery…'):
             self._open, self.tab = True, None
         imgui.set_item_tooltip(f'Every {field} of a section on the conversion, to pick one')

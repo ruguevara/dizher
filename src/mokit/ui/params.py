@@ -12,10 +12,10 @@ from dataclasses import fields, replace
 from pathlib import Path
 from typing import Callable, Optional
 
-from imgui_bundle import imgui, em_size
+from imgui_bundle import imgui
 
 from ..graph import _strip_annotated, _type_hints
-from . import style, widgets
+from . import widgets
 
 
 def field_label(f) -> str:
@@ -50,17 +50,18 @@ def _field(params, f, tp, on_change, help: str = "hint") -> None:
     label = field_label(f)
     set_value = lambda v: on_change(replace(params, **{f.name: v}))
     if tp is bool:
+        widgets.field('')   # the box in the fields' column, its name after it (Blender's)
         changed, new = imgui.checkbox(label, bool(value))
         if changed:
             set_value(new)
     elif tp is int:
         widgets.input_int(label, int(value or 0), lambda v: set_value(_clamp(v, meta)), step=meta.get("step", 0))
     elif tp is float:
-        imgui.set_next_item_width(em_size(style.FIELD_WIDTH))
+        id = widgets.field(label)
         if meta.get("min") is not None and meta.get("max") is not None:
-            changed, new = imgui.slider_float(label, float(value or 0.0), float(meta["min"]), float(meta["max"]))
+            changed, new = imgui.slider_float(id, float(value or 0.0), float(meta["min"]), float(meta["max"]))
         else:
-            changed, new = imgui.input_float(label, float(value or 0.0))
+            changed, new = imgui.input_float(id, float(value or 0.0))
         if changed:
             set_value(_clamp(new, meta))
     elif tp is str:

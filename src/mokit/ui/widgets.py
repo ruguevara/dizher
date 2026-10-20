@@ -7,7 +7,9 @@ files; containers such as rows, panes and splitters live in layout.py):
   header(title)          titled separator without the gap (top of a panel or child)
   gap()                  vertical breathing room between groups
   hint(text)             muted, wrapped helper text under a control
-  input_int / input_text / combo / path_input   width-managed inputs that call `on_change(value)`
+  field(label)           a field row's label column; the next item fills the rest of the row
+  input_int / input_text / combo   field rows that call `on_change(value)`
+  path_input             text input plus Browse, the whole line
   toggle_button(label, active) -> clicked
 """
 import subprocess
@@ -49,6 +51,38 @@ def fits_on_line(width: float) -> bool:
     return imgui.get_item_rect_max().x + imgui.get_style().item_spacing.x + width <= right
 
 
+def text_ellipsis(text: str, at: imgui.ImVec2, right: float) -> bool:
+    """`text` drawn from `at`, cut with … where it would pass `right`; True when cut. (imgui's RenderTextEllipsis
+    takes text_end as a pointer, which a Python string cannot be.)"""
+    fits = lambda t: at.x + imgui.calc_text_size(t).x <= right + 0.5   # a right-aligned text lands a hair past it
+    cut = bool(text) and not fits(text)
+    if cut:
+        n = len(text) - 1
+        while n and not fits(text[:n] + '…'):
+            n -= 1
+        text = text[:n].rstrip() + '…'
+    imgui.get_window_draw_list().add_text(at, imgui.get_color_u32(imgui.Col_.text), text)
+    return cut
+
+
+def field(label: str, reserve: float = 0) -> str:
+    """
+    A field row's label column, Lightroom's: `label` right-aligned in min(LABEL_WIDTH, LABEL_SHARE of the row), cut
+    with … where longer (the whole of it in a tooltip). The next item fills the rest of the row, short of `reserve` px
+    for buttons after it. Returns that item's label: `##label`. An empty label leaves the column empty (a checkbox).
+    """
+    pos, column = imgui.get_cursor_screen_pos(), min(em_size(style.LABEL_WIDTH),
+                                                       style.LABEL_SHARE * imgui.get_content_region_avail().x)
+    imgui.dummy(imgui.ImVec2(column, imgui.get_frame_height()))
+    right = pos.x + column
+    at = imgui.ImVec2(max(pos.x, right - imgui.calc_text_size(label).x), pos.y + imgui.get_style().frame_padding.y)
+    if text_ellipsis(label, at, right):
+        imgui.set_item_tooltip(label)
+    imgui.same_line(0, imgui.get_style().item_inner_spacing.x)
+    imgui.set_next_item_width(-(reserve or imgui.FLT_MIN))
+    return f'##{label}'
+
+
 def checkbox_width(label: str) -> float:
     return imgui.get_frame_height() + imgui.get_style().item_inner_spacing.x + imgui.calc_text_size(label).x
 
@@ -63,26 +97,26 @@ def status_dot(col: imgui.ImVec4) -> None:
 
 # ----- inputs --------------------------------------------------------------------------------------
 
-def input_int(label: str, value: int, on_change: Callable[[int], None], width_em: float = style.FIELD_WIDTH,
-              step: int = 0) -> None:
-    """With a step, -/+ buttons; Ctrl-click on them steps 10 times as far."""
-    imgui.set_next_item_width(em_size(width_em))
-    changed, new = imgui.input_int(label, value, step=step, step_fast=10 * step)
+def input_int(label: str, value: int, on_change: Callable[[int], None], step: int = 0) -> None:
+    """With a step, -/+ buttons, left out where they would leave the number narrower than NUMBER_MIN; Ctrl-click on
+    them steps 10 times as far."""
+    id = field(label)
+    buttons = 2 * (imgui.get_frame_height() + imgui.get_style().item_inner_spacing.x)
+    if imgui.calc_item_width() - buttons < em_size(style.NUMBER_MIN):
+        step = 0
+    changed, new = imgui.input_int(id, value, step=step, step_fast=10 * step)
     if changed:
         on_change(new)
 
 
-def input_text(label: str, value: str, on_change: Callable[[str], None], width_em: float = style.FIELD_WIDTH) -> None:
-    imgui.set_next_item_width(em_size(width_em))
-    changed, new = imgui.input_text(label, value)
+def input_text(label: str, value: str, on_change: Callable[[str], None]) -> None:
+    changed, new = imgui.input_text(field(label), value)
     if changed:
         on_change(new)
 
 
-def combo(label: str, current: str, choices: Iterable[str], on_change: Callable[[str], None],
-          width_em: float = style.FIELD_WIDTH) -> None:
-    imgui.set_next_item_width(em_size(width_em))
-    if imgui.begin_combo(label, current, imgui.ComboFlags_.height_largest):   # the popup shows as many rows as fit the screen
+def combo(label: str, current: str, choices: Iterable[str], on_change: Callable[[str], None]) -> None:
+    if imgui.begin_combo(field(label), current, imgui.ComboFlags_.height_largest):   # the popup shows as many rows as fit the screen
         for key in choices:
             if imgui.selectable(key, key == current)[0]:
                 on_change(key)
