@@ -68,8 +68,8 @@ _full = []   # the font size outside smaller(), for tooltips inside it
 def smaller():
     """Items at SCALE: the font and the paddings and spacings, so frame-high swatches and buttons shrink along."""
     st = imgui.get_style()
-    _full.append(em_size(1.0))
-    imgui.push_font(None, em_size(SCALE))
+    _full.append(style.font_size(1.0))
+    imgui.push_font(None, style.font_size(SCALE))
     for var, v in ((imgui.StyleVar_.frame_padding, st.frame_padding), (imgui.StyleVar_.item_spacing, st.item_spacing),
                    (imgui.StyleVar_.item_inner_spacing, st.item_inner_spacing)):
         imgui.push_style_var(var, imgui.ImVec2(v.x * SCALE, v.y * SCALE))
@@ -84,7 +84,7 @@ def smaller():
 def tip(*lines: str) -> None:
     """The last item's tooltip, at full size inside smaller(), wrapping at TIP_WIDTH."""
     if imgui.begin_item_tooltip():
-        imgui.push_font(None, _full[-1] if _full else em_size(1.0))
+        imgui.push_font(None, _full[-1] if _full else style.font_size(1.0))
         imgui.push_text_wrap_pos(em_size(TIP_WIDTH))
         for line in lines:
             imgui.text(line)

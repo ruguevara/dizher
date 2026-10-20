@@ -136,10 +136,17 @@ def _load_fonts() -> None:
         hello_imgui.load_font(FONT_ICONS, FONT_SIZE, hello_imgui.FontLoadingParams(merge_to_last_font=True))
 
 
+def font_size(size_em: float) -> float:
+    """size_em as push_font takes it, unscaled: em_size has the style's main and DPI scales in it, which push_font
+    applies again (a field twice its size on a screen at 200%)."""
+    st = imgui.get_style()
+    return em_size(size_em) / (st.font_scale_main * st.font_scale_dpi)
+
+
 @contextmanager
 def font(key: str, size_em: float = 1.0):
     """`with font("bold", 1.2): imgui.text(...)`. Unknown key or fonts not loaded yet: the current font."""
-    imgui.push_font(FONTS.get(key), em_size(size_em))
+    imgui.push_font(FONTS.get(key), font_size(size_em))
     try:
         yield
     finally:
