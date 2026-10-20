@@ -98,7 +98,7 @@ function render() {
   $('progress').textContent = `${answered} / ${round.items.length}`;
   $('mode').textContent = state.mode === 'grid' ? 'Grid' : 'Flip';
   $('keys').innerHTML = round.task === 'mark'
-    ? '<b>mouse</b> paint cells · <b>1</b> added (seams, blocks, noise) · <b>2</b> lost or wrong · <b>right/Shift</b> erase · <b>Space</b> hold for the original · <b>Enter</b> done · <b>Backspace</b> back'
+    ? '<b>drag along a cell border</b> seam · <b>drag inside cells</b> paint them: <b>1</b> added (blocks, noise, contours), <b>2</b> lost or wrong · <b>right/Shift</b> erase · <b>Space</b> hold for the original · <b>Enter</b> done · <b>Backspace</b> back'
     : state.mode === 'grid'
     ? '<b>1-4</b> pick · <b>0</b> none better · <b>Backspace</b> back · <b>Tab</b> flip view'
     : '<b>1-4</b> show · <b>Enter</b> pick shown · <b>0</b> none better · <b>Backspace</b> back · <b>Tab</b> grid view';
@@ -125,65 +125,94 @@ function render() {
   preloadRound(round);
 }
 
-// Marking (B4): the conversion and its reference R1 side by side; the person paints the cells where the conversion
-// looks worse, kind 1 something added (seams, blocks, noise, false contours), kind 2 something lost or wrong. One
-// answer per item: `cells`, 768 characters '0', '1' or '2', row by row over the 32x24 cells.
-const mark = { cells: null, kind: 1, down: false, erase: false, peeks: 0, item: null };
-const MARK_COLOUR = { 1: '#ff5a4f', 2: '#4fb6ff' };
+// Marking (B4): the conversion and its reference R1 side by side. A stroke that starts on a cell border marks seams:
+// the border segments it runs along, wherever a pair change shows where the original has none. A stroke that starts
+// inside a cell paints cells: 1 something added inside them (blocks, noise, false contours), 2 something lost or
+// wrong (colour, tone, detail). Answer: `cells`, 768 characters 0/1/2 row by row; `seams_v`, 24 x 31 characters 0/1
+// for the vertical borders (row by row, the border right of column c); `seams_h`, 23 x 32 for the horizontal ones
+// (the border below row r).
+const mark = { cells: null, sv: null, sh: null, kind: 1, down: false, erase: false, border: false, peeks: 0, item: null };
+const MARK_COLOUR = { 1: '#ff5a4f', 2: '#4fb6ff', seam: '#ff4fd8' };
+const BORDER_TOL = 0.22;            // a stroke starts on a border within this share of a cell from it
 
 function renderMark(round, item, saved) {
   if (mark.item !== `${round.id}__${item.id}`) {
     mark.item = `${round.id}__${item.id}`;
-    mark.cells = new Uint8Array(768);
-    if (saved && saved.cells) for (let i = 0; i < 768; i++) mark.cells[i] = +saved.cells[i] || 0;
+    mark.cells = new Uint8Array(768); mark.sv = new Uint8Array(24 * 31); mark.sh = new Uint8Array(23 * 32);
+    const load = (str, arr) => { if (str) for (let i = 0; i < arr.length; i++) arr[i] = +str[i] || 0; };
+    if (saved) { load(saved.cells, mark.cells); load(saved.seams_v, mark.sv); load(saved.seams_h, mark.sh); }
     mark.peeks = 0;
   }
   const z = zoomFor(round), w = 256 * z, h = 192 * z;
-  const kindLabel = mark.kind === 1 ? 'painting: 1 added' : 'painting: 2 lost or wrong';
   $('stage').innerHTML = `
     <figure><div style="position:relative;width:${w}px;height:${h}px">
-      <img class="px" src="${item.conversion}" width="${w}" height="${h}" alt="Conversion" draggable="false" style="cursor:crosshair">
+      <img class="px" src="${item.conversion}" width="${w}" height="${h}" alt="Conversion" draggable="false">
       <canvas id="marks" style="position:absolute;inset:0;width:${w}px;height:${h}px;cursor:crosshair;touch-action:none"></canvas>
-    </div><figcaption id="markcap">Conversion · ${kindLabel} · ${count(1)} added, ${count(2)} lost</figcaption></figure>
+    </div><figcaption id="markcap"></figcaption></figure>
     <figure class="ref"><img class="px" id="refimg" src="${item.reference}" width="${w}" height="${h}" alt="Reference" draggable="false">
       <figcaption id="refcap">Without attributes (R1) · hold Space for the original</figcaption></figure>`;
   const cv = $('marks'), dpr = window.devicePixelRatio || 1;
   cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
-  const cell = (e) => {
+  // where the pointer is, in cells: the cell, and the nearest border segment if it is within BORDER_TOL
+  const at = (e) => {
     const r = cv.getBoundingClientRect();
-    const cx = Math.floor((e.clientX - r.left) / (8 * z)), cy = Math.floor((e.clientY - r.top) / (8 * z));
-    return cx >= 0 && cx < 32 && cy >= 0 && cy < 24 ? cy * 32 + cx : -1;
+    const fx = (e.clientX - r.left) / (8 * z), fy = (e.clientY - r.top) / (8 * z);
+    const cx = Math.floor(fx), cy = Math.floor(fy);
+    const inside = cx >= 0 && cx < 32 && cy >= 0 && cy < 24;
+    const bx = Math.round(fx), by = Math.round(fy), dx = Math.abs(fx - bx), dy = Math.abs(fy - by);
+    let border = null;
+    if (inside && dx <= dy && dx < BORDER_TOL && bx > 0 && bx < 32) border = { v: true, i: cy * 31 + bx - 1 };
+    else if (inside && dy < dx && dy < BORDER_TOL && by > 0 && by < 24) border = { v: false, i: (by - 1) * 32 + cx };
+    return { cell: inside ? cy * 32 + cx : -1, border };
   };
-  const paint = (e) => { const i = cell(e); if (i >= 0) { mark.cells[i] = mark.erase ? 0 : mark.kind; drawMarks(); } };
+  const paint = (e) => {
+    const p = at(e);
+    if (mark.border) { if (p.border) (p.border.v ? mark.sv : mark.sh)[p.border.i] = mark.erase ? 0 : 1; }
+    else if (p.cell >= 0) mark.cells[p.cell] = mark.erase ? 0 : mark.kind;
+    drawMarks(p);
+  };
   cv.addEventListener('contextmenu', (e) => e.preventDefault());
   cv.addEventListener('pointerdown', (e) => {
-    mark.down = true; mark.erase = e.button === 2 || e.shiftKey; cv.setPointerCapture(e.pointerId); paint(e);
+    const p = at(e);
+    mark.down = true; mark.erase = e.button === 2 || e.shiftKey; mark.border = !!p.border;
+    cv.setPointerCapture(e.pointerId); paint(e);
   });
-  cv.addEventListener('pointermove', (e) => { if (mark.down) paint(e); else drawMarks(cell(e)); });
+  cv.addEventListener('pointermove', (e) => { if (mark.down) paint(e); else drawMarks(at(e)); });
   cv.addEventListener('pointerup', () => { mark.down = false; });
   cv.addEventListener('pointerleave', () => { if (!mark.down) drawMarks(); });
   drawMarks();
 }
 
 function count(k) { let n = 0; if (mark.cells) for (const c of mark.cells) n += c === k; return n; }
+function seams() { let n = 0; for (const a of [mark.sv, mark.sh]) if (a) for (const c of a) n += c; return n; }
 
-function drawMarks(hover = -1) {
+function drawMarks(hover = null) {
   const cv = $('marks'); if (!cv) return;
   const ctx = cv.getContext('2d'), s = cv.width / 32;
   ctx.clearRect(0, 0, cv.width, cv.height);
-  ctx.lineWidth = Math.max(2, s / 10);
+  const lw = Math.max(2, s / 10);
   for (let i = 0; i < 768; i++) {
     const k = mark.cells[i]; if (!k) continue;
     const x = (i % 32) * s, y = Math.floor(i / 32) * s;
-    ctx.strokeStyle = MARK_COLOUR[k]; ctx.setLineDash(k === 2 ? [s / 6, s / 8] : []);
-    ctx.strokeRect(x + ctx.lineWidth / 2, y + ctx.lineWidth / 2, s - ctx.lineWidth, s - ctx.lineWidth);
+    ctx.lineWidth = lw; ctx.strokeStyle = MARK_COLOUR[k]; ctx.setLineDash(k === 2 ? [s / 6, s / 8] : []);
+    ctx.strokeRect(x + lw / 2, y + lw / 2, s - lw, s - lw);
   }
-  if (hover >= 0) {
-    ctx.setLineDash([]); ctx.strokeStyle = 'rgba(232,197,71,.7)'; ctx.lineWidth = 1;
-    ctx.strokeRect((hover % 32) * s + .5, Math.floor(hover / 32) * s + .5, s - 1, s - 1);
+  ctx.setLineDash([]); ctx.lineCap = 'round'; ctx.strokeStyle = MARK_COLOUR.seam; ctx.lineWidth = Math.max(3, s / 6);
+  const seg = (x0, y0, x1, y1) => { ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke(); };
+  for (let i = 0; i < mark.sv.length; i++) if (mark.sv[i]) { const r = Math.floor(i / 31), c = i % 31 + 1; seg(c * s, r * s + 2, c * s, (r + 1) * s - 2); }
+  for (let i = 0; i < mark.sh.length; i++) if (mark.sh[i]) { const r = Math.floor(i / 32) + 1, c = i % 32; seg(c * s + 2, r * s, (c + 1) * s - 2, r * s); }
+  if (hover && !mark.down) {
+    ctx.strokeStyle = 'rgba(232,197,71,.8)'; ctx.lineWidth = Math.max(2, s / 12);
+    if (hover.border) {
+      const b = hover.border;
+      if (b.v) { const r = Math.floor(b.i / 31), c = b.i % 31 + 1; seg(c * s, r * s, c * s, (r + 1) * s); }
+      else { const r = Math.floor(b.i / 32) + 1, c = b.i % 32; seg(c * s, r * s, (c + 1) * s, r * s); }
+    } else if (hover.cell >= 0) {
+      ctx.lineWidth = 1; ctx.strokeRect((hover.cell % 32) * s + .5, Math.floor(hover.cell / 32) * s + .5, s - 1, s - 1);
+    }
   }
   const cap = $('markcap');
-  if (cap) cap.textContent = `Conversion · painting: ${mark.kind === 1 ? '1 added' : '2 lost or wrong'} · ${count(1)} added, ${count(2)} lost`;
+  if (cap) cap.textContent = `Conversion · cells: ${mark.kind === 1 ? '1 added' : '2 lost or wrong'} · ${seams()} seam segments, ${count(1)} added, ${count(2)} lost`;
 }
 
 function markKey(e, round) {
@@ -207,7 +236,8 @@ document.addEventListener('keyup', (e) => {
 });
 
 function submitMarks(round, item) {
-  const extra = { cells: Array.from(mark.cells).join(''), n_added: count(1), n_lost: count(2), peeks: mark.peeks };
+  const extra = { cells: Array.from(mark.cells).join(''), seams_v: Array.from(mark.sv).join(''),
+    seams_h: Array.from(mark.sh).join(''), n_seams: seams(), n_added: count(1), n_lost: count(2), peeks: mark.peeks };
   mark.item = null;
   answer(null, extra);
 }

@@ -122,3 +122,11 @@ original's edge, the staircase), to be agreed with the user before they are made
 
 `PICTURES.md`: the categories, ten difficulty tags, the manifest `pictures.csv`. A change to PLAN before any picture
 is collected: film and game frames may be used for the research but not shown in the article (a `publish` field).
+
+## 2026-10-20: seams marked on borders
+
+The user asked which side of a seam to paint. Cells cannot hold a seam, which lies between them, so the marking page
+now marks seams on the cell borders: a stroke that starts within 0.22 of a cell from a border marks the border
+segments it runs along (`seams_v`, `seams_h`); a stroke that starts inside a cell paints cells (1 added inside them,
+2 lost or wrong). A half of a gradient in the wrong colour is its cells, kind 2; a seam between two halves each fine
+on its own is the border. B4 pilot 1's first two answers (m00 7.4 min, m01 2.1 min) have cells only.
