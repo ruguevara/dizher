@@ -4,13 +4,16 @@ import sys
 from dataclasses import replace
 from pathlib import Path
 
-from imgui_bundle import imgui
+import numpy as np
+from imgui_bundle import imgui, immvision
 
 from dizher import tone
-from dizher.converter.dither import Ordered
-from dizher.ui.window import REDO, UNDO, Window
+from dizher.converter.dither import ErrorDiffusion, Ordered
+from dizher.halftoning.ordered.matrices import GROUPS as MATRIX_GROUPS
+from dizher.ui.levels import CROSS, pick_label
+from dizher.ui.window import INSPECT_PAIRS, REDO, UNDO, Window, as_ubyte
 
-IMAGE = Path(__file__).parent / 'images' / 'goldhill-256.png'
+IMAGE = Path(__file__).parent / 'images' / 'goldhill.png'
 ui = Window(IMAGE)
 ui.app.set_params('halftoner', replace(ui.app.graph['halftoner'].params, halftoner=Ordered.label))  # fast
 ui.app.set_params('optimise', replace(ui.app.graph['optimise'].params, enabled=False))
@@ -44,8 +47,16 @@ def drag(ctx, a: imgui.ImVec2, b: imgui.ImVec2):
 
 
 def rect(ctx, window, item):
+    """The item's rect, scrolled into view first: Tune is taller than its dock."""
     ctx.set_ref(window)
+    ctx.scroll_to_item_y(item)
     return ctx.item_info(item).rect_full
+
+
+def inspecting():
+    """The hover inspector is up, not some item's tooltip."""
+    tooltip = imgui.internal.find_window_by_name('##Tooltip_00')
+    return tooltip is not None and tooltip.active and tooltip.size.y > 300
 
 
 def test_conversion_lands(ctx):
@@ -54,12 +65,13 @@ def test_conversion_lands(ctx):
 
 
 def test_slider_drag_moves_param(ctx):
-    r = rect(ctx, '//Tune', '**/contrast/contrast')   # the slider, under params_editor's push_id; '**/contrast' is the header
+    r = rect(ctx, '//Tune', '**/contrast/##contrast')   # the slider, under params_editor's push_id, its label in the column before it
     y = (r.min.y + r.max.y) / 2
     steps = len(ui.app.past)
     drag(ctx, imgui.ImVec2((r.min.x + r.max.x) / 2, y), imgui.ImVec2((r.min.x + r.max.x) / 2 + 60, y))
     moved = params('contrast').contrast
     assert moved > 0, f'contrast slider did not move: {moved}'
+    assert abs(moved / 0.2 - round(moved / 0.2)) < 1e-9, f'off the -100..100 step of 0.2: {moved}'
     ctx.yield_(5)
     assert params('contrast').contrast == moved, 'the slider fell back'
     assert len(ui.app.past) == steps + 1, 'a drag is one undo step'
@@ -70,6 +82,25 @@ def test_slider_drag_moves_param(ctx):
     ctx.yield_(2)
     assert params('contrast').contrast == moved, 'redo'
     reset('contrast')
+
+
+def test_slider_double_click_resets(ctx):
+    """A double click puts a slider back to its default: one undo step with its first click's jump, and none at all
+    where the slider was at its default already."""
+    ui.app.set_params('framing', replace(params('framing'), scale=2.0))
+    steps = len(ui.app.past)
+    ctx.set_ref('//Tune')
+    ctx.item_double_click('**/framing/##scale')   # the first click jumps to the middle of 0.25..4, off the default of 1
+    ctx.yield_(2)
+    assert params('framing').scale == 1.0, params('framing')
+    assert len(ui.app.past) == steps + 1, 'a reset is one undo step'
+    ctx.sleep_no_skip(0.5, 0.05)   # past the double-click time: the next is a double click of its own, not a triple
+    ctx.item_double_click('**/framing/##scale')
+    ctx.yield_(2)
+    assert params('framing').scale == 1.0 and len(ui.app.past) == steps + 1, 'a reset at the default is no step'
+    ui.app.undo()
+    assert params('framing').scale == 2.0, params('framing')
+    reset('framing')
 
 
 def test_levels_handles_drag(ctx):
@@ -98,6 +129,163 @@ def test_levels_auto(ctx):
 
 
 
+def test_levels_channel(ctx):
+    """R shows the red channel: its black handle moves the red levels only, the composite stays."""
+    editor = ui.editors['levels']
+    ctx.set_ref('//Tune')
+    ctx.item_click('**/R##channel')
+    ctx.yield_(2)
+    assert editor.channel == 1
+    r = rect(ctx, '//Tune', '**/##in')
+    pad, y = (r.max.y - r.min.y) / 4, r.max.y - 3
+    drag(ctx, imgui.ImVec2(r.min.x + pad, y), imgui.ImVec2(r.min.x + pad + 50, y))
+    p = params('levels')
+    assert p.channels[0][0] > 0 and p.channels[1:] == type(p)().channels[1:] and p.in_black == 0, p
+    ctx.item_click('**/RGB##channel')
+    ctx.yield_(2)
+    assert editor.channel == 0
+
+
+def test_tone_mode_switch(ctx):
+    """Curves brings the levels along as curves; a click on the graph adds a point; Levels keeps its own values."""
+    levels = params('levels')
+    ctx.set_ref('//Tune')
+    ctx.item_click('**/Curves')
+    ctx.yield_(2)
+    p = params('levels')
+    assert p.mode == 'Curves' and p.curves == tone.levels_to_curves(
+        (p.in_black, p.in_white, p.gamma, p.out_black, p.out_white), p.channels), p
+    assert p.curves[1] != tone.IDENTITY, 'the red levels became a red curve'
+    ctx.item_click('**/G##channel')
+    r = rect(ctx, '//Tune', '**/##curve')
+    ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x + (r.max.x - r.min.x) * 0.3, r.min.y + (r.max.y - r.min.y) * 0.3))
+    ctx.mouse_click(0)
+    ctx.yield_(2)
+    assert len(tone.points(params('levels').curves[2])) == 3, params('levels').curves
+    ctx.item_click('**/Levels')
+    ctx.yield_(2)
+    assert params('levels') == replace(levels, curves=params('levels').curves), 'Levels keeps its own values'
+    ctx.item_click('**/Curves')   # the curves are edited now: it asks, and Keep the curves keeps them
+    ctx.yield_(2)
+    ctx.item_click('//$FOCUSED/Keep the curves')
+    ctx.yield_(2)
+    assert params('levels').mode == 'Curves' and len(tone.points(params('levels').curves[2])) == 3
+    ctx.item_click('**/RGB##channel')
+    reset('levels')
+
+
+def preview_point(ctx, dx, dy):
+    r = rect(ctx, '//Preview', '**/Screen')   # the tuned image is under the view bar
+    return imgui.ImVec2(r.min.x + dx, r.max.y + dy)
+
+
+def test_eyedroppers(ctx):
+    """The grey target is picked from the palette; the armed grey eyedropper takes clicks in the preview, off Paint
+    mode: in Levels it sets the channels' gamma so the sample lands on the target, in Curves every click adds a point
+    group, listed with a delete button; Esc disarms."""
+    from imgui_bundle.imgui.test_engine import CaptureFlags_, TestRef
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('light') is not None, 'the tone input')
+    editor, brush = ui.editors['levels'], ui.editors['overpaint']
+    ctx.set_ref('//Tune')
+    # a **/ wildcard never ends on a label that is only ##id: the swatch is found beside its eyedropper
+    ctx.set_ref(TestRef(ctx.item_info('**/' + pick_label('grey')).parent_id))
+    ctx.item_click('##target grey')
+    ctx.yield_(2)
+    ctx.item_click('//$FOCUSED/##colour5')   # non-bright cyan
+    ctx.yield_(2)
+    assert params('levels').targets == (-1, 5, -1), params('levels')
+    brush.on = True
+    ctx.yield_(2)
+    ctx.set_ref('//Tune')
+    ctx.item_click('**/' + pick_label('grey'))
+    ctx.yield_(2)
+    assert editor.armed == 'grey' and not brush.on, 'arming ends Paint mode'
+    ctx.mouse_move_to_pos(preview_point(ctx, 60, 60))
+    ctx.yield_(2)
+    ctx.capture_set_filename('/tmp/dizher_eyedropper.png')
+    ctx.capture_screenshot(CaptureFlags_.none.value)
+    ctx.mouse_click(0)
+    ctx.yield_(2)
+    p = params('levels')
+    s = editor.last['Levels', 'grey']
+    got, cyan = editor.result(p, s), ui._palette().as_float()[5]
+    assert p.channels != type(p)().channels and abs(got[1:] - cyan[1:]).max() <= 1 / 255, (p.channels, got, cyan)
+    assert not params('overpaint').overrides, 'the click painted'
+    ctx.set_ref('//Tune')
+    ctx.set_ref(TestRef(ctx.item_info('**/' + pick_label('grey')).parent_id))
+    ctx.item_click(f'{CROSS}##clear grey')   # puts the gammas back; the next click sets them again
+    ctx.yield_(2)
+    assert params('levels').channels == type(p)().channels and ('Levels', 'grey') not in editor.last
+    ctx.mouse_move_to_pos(preview_point(ctx, 60, 60))
+    ctx.mouse_click(0)
+    ctx.yield_(2)
+    assert params('levels') == p
+    ctx.set_ref('//Tune')
+    ctx.item_click('**/Curves')   # the curves are as new: the levels come along without asking
+    ctx.yield_(2)
+    assert params('levels').mode == 'Curves' and params('levels').curves[1] != tone.IDENTITY and editor.armed == 'grey'
+    for dx in (40, 120):
+        ctx.mouse_move_to_pos(preview_point(ctx, dx, 60))
+        ctx.mouse_click(0)
+        ctx.yield_(2)
+    assert len(params('levels').picks) == 2, params('levels').picks
+    ctx.set_ref('//Tune')
+    ctx.set_ref(TestRef(ctx.item_info('**/' + pick_label('grey')).parent_id))
+    ctx.item_click(f'{CROSS}##drop0')
+    ctx.yield_(2)
+    assert len(params('levels').picks) == 1
+    ctx.key_press(imgui.Key.escape)
+    ctx.yield_(2)
+    assert editor.armed is None
+    ctx.capture_set_filename('/tmp/dizher_curves.png')
+    ctx.capture_screenshot(CaptureFlags_.hide_mouse_cursor.value)
+    ctx.mouse_move_to_pos(preview_point(ctx, -50, -500))
+    reset('levels')
+def test_edit_keeps_the_live_snapshot(ctx):
+    """An edit while the optimiser runs cancels it; till the next stage sends a snapshot the last one stays on screen,
+    not the older finished conversion."""
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the conversion to settle')
+    before = ui.result
+    ui.app.set_params('optimise', replace(params('optimise'), enabled=True))
+    running = lambda: ui.app.job is not None and ui.app.job.node_id == 'optimise' and ui.app.job.image is not None
+    wait(ctx, running, 'an optimiser snapshot')
+    ctx.yield_()
+    snapshot = ui._live()
+    assert snapshot is not None
+    ui.app.set_params('overpaint', replace(params('overpaint'), overrides=((0, 0, 1, 7),)))
+    for _ in range(3000):
+        ctx.yield_()
+        live = ui._live()
+        shown = live if live is not None else ui.result   # what _converted draws
+        assert shown is not None and shown is not before, 'the preview fell back to the older conversion'
+        if shown is not snapshot:   # the next stage's snapshot, or its finished conversion
+            break
+    else:
+        raise AssertionError('no newer conversion came')
+    reset('overpaint')
+    ui.app.set_params('optimise', replace(params('optimise'), enabled=False))
+    wait(ctx, lambda: not ui.app.busy, 'the pipeline to settle')
+
+
+def test_hide_off_shows_the_painted_result(ctx):
+    """Hide off while the unpainted optimiser runs: the painted result, still in RAM, is shown at once, not the
+    unpainted run's last snapshot."""
+    ui.app.set_params('optimise', replace(params('optimise'), enabled=True))
+    ui.app.set_params('overpaint', replace(params('overpaint'), overrides=((0, 0, 1, 7),)))
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the painted conversion', 20000)
+    painted = ui.app.result('optimise')
+    ui.app.set_unpainted(True)
+    running = lambda: ui.app.job is not None and ui.app.job.node_id == 'optimise' and ui.app.job.image is not None
+    wait(ctx, running, 'an unpainted optimiser snapshot', 20000)
+    ctx.yield_()
+    ui.app.set_unpainted(False)
+    ctx.yield_(2)
+    assert ui.app.result('optimise') is painted and ui._live() is None, 'the unpainted snapshot stayed on screen'
+    reset('overpaint')
+    ui.app.set_params('optimise', replace(params('optimise'), enabled=False))
+    wait(ctx, lambda: not ui.app.busy, 'the pipeline to settle')
+
+
 def test_history_panel(ctx):
     ui.app.set_params('contrast', replace(params('contrast'), contrast=10.0))
     ui.app.set_params('contrast', replace(params('contrast'), contrast=20.0))
@@ -112,9 +300,9 @@ def test_history_panel(ctx):
 def test_autosave(ctx):
     import json, tempfile
     folder = ui.project
-    assert folder == IMAGE.with_name('goldhill-256') and not folder.exists() and not ui.autosave   # tests never write it
+    assert folder == IMAGE.with_name('goldhill') and not folder.exists() and not ui.autosave   # tests never write it
     with tempfile.TemporaryDirectory() as tmp:
-        ui.project, ui.autosave = Path(tmp) / 'goldhill-256', True
+        ui.project, ui.autosave = Path(tmp) / 'goldhill', True
         ui.app.set_params('contrast', replace(params('contrast'), contrast=15.0))
         ctx.yield_(2)
         stored = json.loads((ui.project / 'project.json').read_text())['nodes']['contrast']['params']
@@ -145,7 +333,7 @@ def test_recent_images(ctx):
     for image in images * 2:                           # more than fit, each twice
         ui._open_image(image)
     assert ui.recent == [p.resolve() for p in images[::-1]][:20]   # the latest first, no repeats
-    ctx.menu_click('//##MainMenuBar/File/Open recent/goldhill-256.png##' + str(ui.recent.index(IMAGE.resolve())))
+    ctx.menu_click('//##MainMenuBar/File/Open recent/goldhill.png##' + str(ui.recent.index(IMAGE.resolve())))
     ctx.yield_(2)
     assert ui._source() == IMAGE.resolve() and ui.recent[0] == IMAGE.resolve()
     ui.app.set_params('halftoner', replace(params('halftoner'), halftoner=Ordered.label))
@@ -230,14 +418,32 @@ def test_custom_palette(ctx):
     ctx.yield_(2)
     assert params('target').colours == (0, *range(2, 16))
     assert ops.MODES[params('target').mode].palette.subset_name(params('target').colours) == 'Custom'
-    pick(ctx, 'target/palette', 'Grayscale')
+    pick(ctx, 'target/##palette', 'Grayscale')
     ctx.yield_(2)
     assert params('target').colours == (0, 7, 8, 15), params('target')
-    pick(ctx, 'target/mode', ops.c64.HIRES.name)
+    pick(ctx, 'target/##mode', ops.c64.HIRES.name)
     ctx.yield_(2)
     assert params('target') == replace(params('target'), mode=ops.c64.HIRES.name, colours=(0, 1, 11, 12, 15)), params('target')
     reset('target')
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the Spectrum conversion again')
+
+
+def test_method_switch_brings_its_values(ctx):
+    """Picking another selection method sets the Metric, Select pairs and Eye values it was tuned with, as one undo
+    step."""
+    from dizher.converter.energy import METHODS
+    before = ui.app.graph
+    ctx.set_ref('//Convert')
+    pick(ctx, 'metric/##method', 'Halftoned')
+    ctx.yield_(2)
+    preset = METHODS['Halftoned'].preset
+    assert params('metric').method == 'Halftoned' and params('metric').chroma == preset['chroma'], params('metric')
+    assert (params('select').coherence, params('select').chroma_noise) == (preset['coherence'], preset['chroma_noise'])
+    assert (params('eye').luma_scale, params('eye').chroma_scale) == (preset['luma_scale'], preset['chroma_scale'])
+    ui.app.undo()
+    ctx.yield_(2)
+    assert ui.app.graph == before
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the conversion again')
 
 
 def test_hover_inspector(ctx):
@@ -246,25 +452,31 @@ def test_hover_inspector(ctx):
     ui.view = 'Screen'
     r = rect(ctx, '//Preview', '**/Screen')   # the display-only images have no item id: the first is under the bar
     ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x + 100, r.max.y + 100))
-    ctx.yield_(4)
-    tooltip = imgui.internal.find_window_by_name('##Tooltip_00')
-    assert tooltip is not None and tooltip.active and tooltip.size.y > 300, 'no inspector tooltip'
+    ctx.yield_()
+    assert not inspecting(), 'the inspector shows before its delay'
+    wait(ctx, inspecting, 'the inspector after its delay')
     ctx.capture_set_filename('/tmp/dizher_inspect.png')
     ctx.capture_screenshot(CaptureFlags_.hide_mouse_cursor.value)
     ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x - 50, r.min.y - 50))
 
 
 def test_cell_popup(ctx):
-    """Right-click a cell: a row of the pair table paints it, a click in the zoom moves to a neighbour, a right click
-    on a swatch paints that one's paper, Auto gives it back."""
+    """Right-click a cell: the popup opens where the hover tooltip was; a row of the pair table paints the cell, a
+    click in the zoom moves to a neighbour, a right click on a swatch paints that one's paper, and Clear overpaint,
+    which stays put as the pair chosen then drops out of the table's best, gives it back; Esc closes it. Opened again
+    on another block while immvision still keeps the last popup's texture, it shows that block; a right click on a cell outside it moves it there, where that cell's tooltip would be."""
     from imgui_bundle.imgui.test_engine import CaptureFlags_
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'a conversion to overpaint')
     ui.view = 'Screen'
     r = rect(ctx, '//Preview', '**/Screen')
     ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x + 100, r.max.y + 100))
-    ctx.yield_(2)
+    wait(ctx, inspecting, 'the inspector')
+    tip = imgui.internal.find_window_by_name('##Tooltip_00').pos
+    tip = tip.x, tip.y
     ctx.mouse_click(1)
     ctx.yield_(2)
+    at = ctx.get_window_by_ref('//$FOCUSED').pos
+    assert abs(at.x - tip[0]) <= 1 and abs(at.y - tip[1]) <= 1, ((at.x, at.y), tip)
     row, col = ui._cell
     labels = ui.result.best_attr_indexes
     order = ui.result.energy.cell_candidates(labels, row, col).sum(1).argsort()
@@ -287,22 +499,57 @@ def test_cell_popup(ctx):
     corner = max(0, min(row - 1, R - 3)), max(0, min(col - 1, C - 3))
     assert ui._cell == corner, (ui._cell, corner)
     ctx.set_ref(f'//{popup.name}')
+    clear = ctx.item_info('**/Clear overpaint').rect_full
+    clear = clear.min.x, clear.min.y, clear.max.x, clear.max.y
     ctx.item_click('##colour2', imgui.MouseButton_.right)
     ctx.yield_(2)
     assert (*corner, 2, -1) in params('overpaint').overrides, params('overpaint')
-    ctx.item_click('**/Auto')
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the conversion with the paper painted')
+    now = ui.result.best_attr_indexes
+    top = ui.result.energy.cell_candidates(now, *corner).sum(1).argsort()[:INSPECT_PAIRS]
+    assert now[corner] not in top, 'the chosen pair is listed: the check below needs a cell whose pair drops out'
+    ctx.yield_(2)
+    moved = ctx.item_info('**/Clear overpaint').rect_full
+    moved = moved.min.x, moved.min.y, moved.max.x, moved.max.y
+    assert moved == clear, ('Clear overpaint moved', clear, moved)
+    ctx.item_click('**/Clear overpaint')
     ctx.yield_(2)
     assert params("overpaint").overrides == ((row, col, *pair),), (params("overpaint"), row, col, pair)
     ctx.key_press(imgui.Key.escape)
     ctx.yield_(2)
+    assert not imgui.internal.find_window_by_name(popup.name).active, 'Esc left the popup open'
     reset('overpaint')
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the conversion again')
+    ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x + 180, r.max.y + 180))   # another block, the tooltip's crop
+    wait(ctx, inspecting, 'the inspector on another block')
+    ctx.mouse_click(1)
+    ctx.yield_(2)
+    block = lambda row, col: (max(0, min(row - 1, R - 3)), max(0, min(col - 1, C - 3)))   # the zoom's top-left cell
+    (r0, c0), last = block(*ui._cell), block(*corner)
+    assert (r0, c0) != last, (r0, c0)
+    imgui.internal.push_override_id(ctx.get_window_by_ref('//$FOCUSED').id_)   # the texture under the popup's id
+    imgui.push_id('##popup converted')   # immvision pushes the label, then hashes it again
+    shown = np.asarray(immvision.get_cached_rgba_image('##popup converted'))
+    imgui.pop_id()
+    imgui.pop_id()
+    np.testing.assert_array_equal(shown, as_ubyte(ui._converted()[r0 * 8:r0 * 8 + 24, c0 * 8:c0 * 8 + 24]))
+    ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x + 100, r.max.y + 100))   # the first cell, left of the popup
+    ctx.yield_(2)
+    ctx.mouse_click(1)
+    ctx.yield_(2)
+    moved = ctx.get_window_by_ref('//$FOCUSED')
+    assert ui._cell == (row, col) and moved.name == popup.name and moved.active, (ui._cell, (row, col), moved.name)
+    assert abs(moved.pos.x - tip[0]) <= 1 and abs(moved.pos.y - tip[1]) <= 1, ((moved.pos.x, moved.pos.y), tip)
+    ctx.key_press(imgui.Key.escape)
+    ctx.yield_(2)
     ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x - 50, r.min.y - 50))
 
 
 def test_paint(ctx):
     """Paint mode: a left click on a swatch picks the ink, a right click the paper, either turns it on; a left drag
     over the preview paints the cells it crosses, one undo step; a right click picks a cell's colours up; Auto as
-    both erases; Esc ends it; Clear drops every cell."""
+    both erases; Esc ends it; the block's Reset drops every cell; Freeze all paints every cell with the colours it
+    shows; Hide shows the conversion without them, keeping them, and Paint shows them again."""
     from imgui_bundle.imgui.test_engine import CaptureFlags_
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'a conversion to paint')
     brush = ui.editors['overpaint']
@@ -312,6 +559,12 @@ def test_paint(ctx):
     ctx.item_click('overpaint/##colour5', imgui.MouseButton_.right)
     ctx.yield_(2)
     assert brush.on and (brush.ink, brush.paper) == (2, 5), vars(brush)
+    ctx.item_click('overpaint/##colour13', imgui.MouseButton_.right)   # a bright paper brightens the ink
+    ctx.yield_(2)
+    assert (brush.ink, brush.paper) == (10, 13), vars(brush)
+    ctx.item_click('overpaint/##colour5', imgui.MouseButton_.right)
+    ctx.yield_(2)
+    assert (brush.ink, brush.paper) == (2, 5), vars(brush)
     r = rect(ctx, '//Preview', '**/Screen')
     a, b = imgui.ImVec2(r.min.x + 100, r.max.y + 100), imgui.ImVec2(r.min.x + 160, r.max.y + 100)
     steps = len(ui.app.past)
@@ -347,14 +600,145 @@ def test_paint(ctx):
     ctx.key_press(UNDO)
     ctx.yield_(2)
     assert params('overpaint').overrides == overrides
+    ctx.set_ref('//Convert')
+    ctx.item_click('overpaint/##colour-3')   # B1 as ink and paper: the cells keep their colours, made bright
+    ctx.yield_(2)
+    assert (brush.ink, brush.paper) == (-3, -3), vars(brush)
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('overpaint') is not None, 'the painted cells again')
+    ctx.mouse_move_to_pos(a)
+    ctx.mouse_down(0)
+    for t in range(1, 7):
+        ctx.mouse_move_to_pos(imgui.ImVec2(a.x + (b.x - a.x) * t / 6, a.y))
+    ctx.mouse_up(0)
+    ctx.yield_(2)
+    assert all(o[2:] == (13, 10) for o in params('overpaint').overrides), params('overpaint')
+    ctx.key_press(UNDO)
+    ctx.yield_(2)
     ctx.key_press(imgui.Key.escape)
     ctx.yield_(2)
     assert not brush.on
     ctx.set_ref('//Convert')
-    ctx.item_click('overpaint/Clear')
+    ctx.item_click('**/Reset##overpaint')
+    ctx.yield_(2)
+    assert params('overpaint').overrides == ()
+    ui.app.set_params('overpaint', replace(params('overpaint'), overrides=((2, 3, -1, 2), (4, 5, 7, 1))))   # Auto paper
+    ctx.item_click('overpaint/Paint')
+    ctx.item_click('overpaint/Hide')
+    ctx.yield_(2)
+    assert ui.app.unpainted and not brush.on and len(params('overpaint').overrides) == 2, 'Hide keeps the cells'
+    ctx.item_click('overpaint/Paint')
+    ctx.yield_(2)
+    assert brush.on and not ui.app.unpainted, 'painting shows the painted cells'
+    ctx.item_click('overpaint/Paint')
+    ctx.yield_(2)
+    steps = len(ui.app.past)
+    ctx.item_click('overpaint/Freeze all')
+    ctx.yield_(2)
+    fixed = params('overpaint').overrides
+    cell = {o[:2]: o[2:] for o in fixed}
+    assert len(fixed) == 24 * 32 and all(-1 not in o for o in fixed), 'every cell painted'
+    assert cell[2, 3][1] == 2 and cell[4, 5] == (7, 1) and len(ui.app.past) == steps + 1, 'Freeze all is one undo step'
+    assert ui.editors['overpaint'].fixed(fixed, ui.app.shown('select')) == fixed, 'nothing left to freeze: Freeze all disabled'
+    ctx.item_click('**/Reset##overpaint')
     ctx.yield_(2)
     assert params('overpaint').overrides == ()
     ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x - 50, r.min.y - 50))
+
+
+def test_pattern_combo(ctx):
+    """The matrix combo in sections, an icon on every entry: a click picks it; Error diffusion's kernel likewise."""
+    ctx.set_ref('//Convert')
+    pick(ctx, 'halftoner/##matrix', '##Bayer 4x4')
+    ctx.yield_(2)
+    assert params('halftoner').matrix == 'Bayer 4x4', params('halftoner')
+    ui.app.set_params('halftoner', replace(params('halftoner'), halftoner=ErrorDiffusion.label))
+    ctx.yield_(2)
+    pick(ctx, 'halftoner/##kernel', '##Atkinson')
+    ctx.yield_(2)
+    assert params('halftoner').kernel == 'Atkinson', params('halftoner')
+    ui.app.set_params('halftoner', replace(type(params('halftoner'))(), halftoner=Ordered.label))
+
+
+def test_pattern_gallery(ctx):
+    """Gallery opens on the current matrix's section, fills in, a tab switches the section, a click picks and closes;
+    Escape closes it unchanged."""
+    from imgui_bundle.imgui.test_engine import CaptureFlags_
+    picker = ui.editors['halftoner'].picker
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('halftone') is not None, 'a halftone to show')
+    ctx.set_ref('//Convert')
+    ctx.item_click('halftoner/Gallery…')
+    ctx.yield_(2)
+    assert picker.visible and picker.tab == 'Bayer', picker.tab   # Void dispersed dots, the default
+    ctx.set_ref('//$FOCUSED')
+    ctx.item_click('**/Squares')
+    ctx.yield_(2)
+    assert picker.tab == 'Squares'
+    wait(ctx, lambda: not picker.thumbs.pending and set(MATRIX_GROUPS['Squares']) <= set(picker.thumbs.images),
+         'the section halftoned')
+    ctx.capture_set_filename('/tmp/dizher_gallery.png')
+    ctx.capture_screenshot(CaptureFlags_.hide_mouse_cursor.value)
+    ctx.set_ref(ctx.window_info('//$FOCUSED/images').window)   # the images scroll in a child window, out of ** reach
+    ctx.item_click('Magic 4x4')
+    ctx.yield_(2)
+    assert params('halftoner').matrix == 'Magic 4x4' and not picker.visible, (params('halftoner'), picker.visible)
+    ctx.set_ref('//Convert')
+    ctx.item_click('halftoner/Gallery…')
+    ctx.yield_(2)
+    assert picker.visible and picker.tab == 'Squares'
+    ctx.key_press(imgui.Key.escape)
+    ctx.yield_(2)
+    assert not picker.visible and params('halftoner').matrix == 'Magic 4x4'
+    ui.app.set_params('halftoner', replace(type(params('halftoner'))(), halftoner=Ordered.label))
+
+
+def test_snapshots(ctx):
+    """Save names one by the time and focuses its field; a click on another asks about unsaved settings, and restores
+    as one undo step; a right click deletes."""
+    import tempfile
+    from dizher.ui import snapshots
+    folder = ui.project
+    wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the conversion to settle')
+    with tempfile.TemporaryDirectory() as tmp:
+        ui.project, ui.autosave = Path(tmp) / 'goldhill', False
+        ui._read_snapshots()
+        ctx.item_click('//Snapshots/Save snapshot')
+        ctx.yield_(2)
+        ctx.key_chars('soft')
+        ctx.key_press(imgui.Key.enter)
+        ctx.yield_(2)
+        assert snapshots.names(ui.project) == ['soft'] and (ui.project / 'snapshots' / 'soft.json').exists()
+        wait(ctx, lambda: (ui.project / 'snapshots' / 'soft.png').exists(), 'the picture of soft')
+        soft = ui.snaps['soft']
+        ui.app.set_params('contrast', replace(params('contrast'), contrast=15.0))
+        changed, steps = ui.app.graph, len(ui.app.past)
+        ctx.item_click('//Snapshots/**/###soft')
+        ctx.yield_(2)
+        assert ui._match() is None and ui._asking == 'soft'
+        for button in ('Update soft', 'Save as new', "Don't save", 'Cancel'):
+            assert ctx.item_exists(f'//Keep the current settings?/{button}'), button
+        ctx.item_click('//Keep the current settings?/Cancel')
+        ctx.yield_(2)
+        assert ui._asking is None and ui.app.graph == changed and len(ui.app.past) == steps
+        ctx.item_click('//Snapshots/**/###soft')
+        ctx.yield_(2)
+        ctx.item_click('//Keep the current settings?/Save as new')
+        ctx.yield_(2)
+        assert len(snapshots.names(ui.project)) == 2 and ui.app.graph == soft == ui.snaps['soft']
+        assert len(ui.app.past) == steps + 1, 'not one undo step'
+        ui.app.undo()
+        other = next(n for n in ui.snaps if n != 'soft')
+        assert ui.app.graph == changed and ui._match() == other
+        ctx.item_click('//Snapshots/**/###soft', imgui.MouseButton_.right)
+        ctx.item_click('//$FOCUSED/Delete…')
+        ctx.yield_(2)
+        ctx.item_click('//Delete snapshot/Delete')
+        ctx.yield_(2)
+        assert snapshots.names(ui.project) == [other], snapshots.names(ui.project)
+        wait(ctx, lambda: not ui.app.busy, 'the pipeline to settle')
+        ui.project = folder
+        ui._read_snapshots()
+        ui.origin = None
+    reset('contrast')
 
 
 def test_capture_layout(ctx):   # keep last: a picture of the default layout for review
@@ -370,8 +754,14 @@ def test_capture_layout(ctx):   # keep last: a picture of the default layout for
 TESTS = [
     ('ui', 'conversion_lands', test_conversion_lands),
     ('ui', 'slider_drag_moves_param', test_slider_drag_moves_param),
+    ('ui', 'slider_double_click_resets', test_slider_double_click_resets),
     ('ui', 'levels_handles_drag', test_levels_handles_drag),
     ('ui', 'levels_auto', test_levels_auto),
+    ('ui', 'levels_channel', test_levels_channel),
+    ('ui', 'tone_mode_switch', test_tone_mode_switch),
+    ('ui', 'eyedroppers', test_eyedroppers),
+    ('ui', 'edit_keeps_the_live_snapshot', test_edit_keeps_the_live_snapshot),
+    ('ui', 'hide_off_shows_the_painted_result', test_hide_off_shows_the_painted_result),
     ('ui', 'history_panel', test_history_panel),
     ('ui', 'autosave', test_autosave),
     ('ui', 'unsaved_dialog', test_unsaved_dialog),
@@ -382,9 +772,13 @@ TESTS = [
     ('ui', 'views_and_grid', test_views_and_grid),
     ('ui', 'mode_switch_refits_previews', test_mode_switch_refits_previews),
     ('ui', 'custom_palette', test_custom_palette),
+    ('ui', 'method_switch_brings_its_values', test_method_switch_brings_its_values),
     ('ui', 'hover_inspector', test_hover_inspector),
     ('ui', 'cell_popup', test_cell_popup),
     ('ui', 'paint', test_paint),
+    ('ui', 'pattern_combo', test_pattern_combo),
+    ('ui', 'pattern_gallery', test_pattern_gallery),
+    ('ui', 'snapshots', test_snapshots),
     ('ui', 'capture_layout', test_capture_layout),
 ]
 

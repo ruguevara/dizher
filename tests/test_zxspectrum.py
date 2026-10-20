@@ -12,8 +12,11 @@ def test_palette():
     assert p.as_ubyte().tolist()[:4] == [[0, 0, 0], [0, 0, 205], [205, 0, 0], [205, 0, 205]]  # black, blue, red, magenta
     assert (p[15] == 255).all() and (p[7] == 205).all()
     pairs = list(p.iter_idxs_pairs())
-    assert len(pairs) == 72 and all((i1 >= 8) == (i2 >= 8) for i1, i2 in pairs)
+    assert len(pairs) == 71 and all((i1 >= 8) == (i2 >= 8) for i1, i2 in pairs)
+    colours = [tuple(map(tuple, c)) for c in p.color_pairs()]
+    assert len(set(colours)) == len(colours) and (0, 0) in pairs   # black on black once, not bright
     assert len(list(p.with_subset('Mono').iter_idxs_pairs())) == 3 and p.enabled == set(range(16))
+    assert (8, 8) in list(p.with_subset('Bright only').iter_idxs_pairs())   # the only black on black there
 
 
 def test_mode():

@@ -17,9 +17,10 @@ from contextlib import contextmanager
 
 from imgui_bundle import imgui, hello_imgui, em_size, em_to_vec2
 
-THEME = hello_imgui.ImGuiTheme_.so_dark_accent_blue
+THEME = hello_imgui.ImGuiTheme_.photoshop_style
 FONT, FONT_SIZE = "fonts/Roboto/Roboto-Regular.ttf", 16.0   # imgui_bundle asset; hello_imgui scales it for DPI
 FONT_BOLD = "fonts/Roboto/Roboto-Bold.ttf"
+FONT_ICONS = "fonts/Font_Awesome_6_Free-Solid-900.otf"   # merged into both: icons_fontawesome_6.ICON_FA_* in any label
 FONTS: dict = {}     # "regular" / "bold" -> ImFont, filled at start-up by `install`; `font("bold")` to push one
 
 # ImGuiStyle metrics, in em (1 em = font height). Applied after the theme, so they win.
@@ -47,6 +48,9 @@ METRICS = {
 COLORS = {
     "separator": (1, 1, 1, 0.18),
 }
+# The theme's colours at full alpha: windows, dialogs, combos and tooltips are not see-through. Several themes
+# (Darcula, Classic, ImGui Dark) make the window, popup and title backgrounds translucent.
+OPAQUE = ("window_bg", "popup_bg", "title_bg", "title_bg_active", "title_bg_collapsed", "menu_bar_bg")
 
 # Node editor (mokit.ui.nodes). NODES are imgui-node-editor style vars, NODE_COLORS its colours (names as in
 # `ed.StyleVar` / `ed.StyleColor`); LINKS the wires, PORTS and NODE_LAYOUT our own port disks and auto-placement. All lengths in em.
@@ -89,10 +93,10 @@ NODE_TITLE = {
 STATUS_DOT = {"radius": 0.22, "offset": (0.0, 0.0)}   # `widgets.status_dot`: disk radius and nudge from the line centre
 
 # layout constants, in em
-
-# layout constants, in em
 GAP = 0.6            # vertical gap between groups (`widgets.gap()`)
-FIELD_WIDTH = 10     # numeric inputs and combos
+LABEL_WIDTH = 6      # label column of a field row (`widgets.field`): the longest label; the field fills the rest
+LABEL_SHARE = 0.4    # ... but at most this share of the row, the label cut with … in a narrow dock
+NUMBER_MIN = 4       # the narrowest number an int field keeps its -/+ buttons for
 DIALOG_WIDTH = 40    # text inputs in dialogs
 PROGRESS_WIDTH = 8   # status-bar progress bar
 
@@ -127,14 +131,22 @@ def install(params: hello_imgui.RunnerParams) -> None:
 
 
 def _load_fonts() -> None:
-    FONTS["regular"] = hello_imgui.load_font(FONT, FONT_SIZE)
-    FONTS["bold"] = hello_imgui.load_font(FONT_BOLD, FONT_SIZE)
+    for key, path in (("regular", FONT), ("bold", FONT_BOLD)):
+        FONTS[key] = hello_imgui.load_font(path, FONT_SIZE)
+        hello_imgui.load_font(FONT_ICONS, FONT_SIZE, hello_imgui.FontLoadingParams(merge_to_last_font=True))
+
+
+def font_size(size_em: float) -> float:
+    """size_em as push_font takes it, unscaled: em_size has the style's main and DPI scales in it, which push_font
+    applies again (a field twice its size on a screen at 200%)."""
+    st = imgui.get_style()
+    return em_size(size_em) / (st.font_scale_main * st.font_scale_dpi)
 
 
 @contextmanager
 def font(key: str, size_em: float = 1.0):
     """`with font("bold", 1.2): imgui.text(...)`. Unknown key or fonts not loaded yet: the current font."""
-    imgui.push_font(FONTS.get(key), em_size(size_em))
+    imgui.push_font(FONTS.get(key), font_size(size_em))
     try:
         yield
     finally:
@@ -154,6 +166,9 @@ def sync() -> None:
         setattr(style, name, em_to_vec2(*value) if isinstance(value, tuple) else em_size(value))
     for name, rgba in COLORS.items():
         style.set_color_(getattr(imgui.Col_, name).value, imgui.ImVec4(*rgba))
+    for name in OPAQUE:
+        c = style.color_(getattr(imgui.Col_, name).value)
+        style.set_color_(getattr(imgui.Col_, name).value, imgui.ImVec4(c.x, c.y, c.z, 1))
 
 
 # ----- classes (local overrides) -------------------------------------------------------------------

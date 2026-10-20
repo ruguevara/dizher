@@ -1,9 +1,9 @@
 """Ordered dither threshold matrices: (rows, divisor); a pixel is ink where its level > (entry + 0.5) / divisor.
 
-Bayer matrices are generated. The rest are copied from libdither (Copyright (C) 2022-2025 Robert Kist,
-BSD-style licence in halftoning/libdither-LICENSE.txt, https://github.com/robertkist/libdither,
-dither_ordered_data.h), in img2spec's menu order: dispersed
-dots, line screens (non-rectangular), clustered dots, magic squares.
+Bayer matrices and the 45 degree line screens are generated. The rest are copied from libdither (Copyright (C)
+2022-2025 Robert Kist, BSD-style licence in halftoning/libdither-LICENSE.txt, https://github.com/robertkist/libdither,
+dither_ordered_data.h), in img2spec's menu order: dispersed dots, line screens (non-rectangular), clustered dots, magic
+squares; img2spec's "Clustered dot 1".."11" renamed by their look (RENAMED). GROUPS sorts them by look for the UI.
 """
 import numpy as np
 
@@ -13,6 +13,26 @@ def bayer(n: int) -> np.ndarray:
     while m.shape[0] < n:
         m = np.block([[4 * m, 4 * m + 2], [4 * m + 3, 4 * m + 1]])
     return m
+
+def van_der_corput(n: int) -> np.ndarray:
+    """0..n-1 in the order of their bit-reversed fractions: each next one in the largest gap the earlier ones left."""
+    bits = max(1, (n - 1).bit_length())
+    key = [int(f'{i:0{bits}b}'[::-1], 2) for i in range(n)]
+    return np.argsort(np.argsort(key))
+
+
+def diagonal_lines(n: int) -> np.ndarray:
+    """The n x n index matrix of a 45 degree line screen ('/', a line every n px along a row): the lines grow from
+    their centre outward, a diagonal of pixels on alternate sides at a time, each diagonal filled in a dispersed
+    order along it, so every tone between two widths is the narrower line with dots of the next diagonal."""
+    y, x = np.indices((n, n))
+    d = (x + y) % n                         # the diagonal a pixel is on, 0 the line's centre
+    distance = np.minimum(d, n - d)
+    side = (d > n - d).astype(int)          # the two diagonals at one distance take turns
+    along = van_der_corput(2 * n)[2 * x + side]
+    key = distance * 2 * n + along
+    return np.argsort(np.argsort(key.ravel())).reshape(n, n)
+
 
 MATRICES = {f'Bayer {n}x{n}': (bayer(n), n * n) for n in (2, 4, 8, 16, 32)}
 
@@ -97,7 +117,7 @@ MATRICES['Ulichney'] = (np.array([
     [ 4,  0,  1,  7],
     [11,  3,  2,  8],
     [15, 10,  9, 14]]), 16)
-MATRICES['Clustered dot 1'] = (np.array([
+MATRICES['Diamond 8x8'] = (np.array([
     [24, 10, 12, 26, 35, 47, 49, 37],
     [ 8,  0,  2, 14, 45, 59, 61, 51],
     [22,  6,  4, 16, 43, 57, 63, 53],
@@ -106,24 +126,24 @@ MATRICES['Clustered dot 1'] = (np.array([
     [44, 58, 60, 50,  9,  1,  3, 15],
     [42, 56, 62, 52, 23,  7,  5, 17],
     [32, 40, 54, 38, 31, 21, 19, 29]]), 64)
-MATRICES['Clustered dot 2'] = (np.array([
+MATRICES['Vertical lines 5'] = (np.array([
     [ 9,  3,  0,  6, 12],
     [10,  4,  1,  7, 13],
     [11,  5,  2,  8, 14]]), 15)
-MATRICES['Clustered dot 3'] = (np.array([
+MATRICES['Horizontal lines 5'] = (np.array([
     [ 9, 10, 11],
     [ 3,  4,  5],
     [ 0,  1,  2],
     [ 6,  7,  8],
     [12, 13, 14]]), 15)
-MATRICES['Clustered dot 4'] = (np.array([
+MATRICES['Diamond 6x6'] = (np.array([
     [ 8,  6,  7,  9, 11, 10],
     [ 5,  0,  1, 12, 17, 16],
     [ 4,  3,  2, 13, 14, 15],
     [ 9, 11, 10,  8,  6,  8],
     [12, 17, 16,  5,  0,  1],
     [13, 14, 15,  4,  3,  2]]), 18)
-MATRICES['Clustered dot 5'] = (np.array([
+MATRICES['Diamond 8x8 coarse'] = (np.array([
     [13, 11, 12, 15, 18, 20, 19, 16],
     [ 4,  3,  2,  9, 27, 28, 29, 22],
     [ 5,  0,  1, 10, 26, 31, 30, 21],
@@ -132,7 +152,7 @@ MATRICES['Clustered dot 5'] = (np.array([
     [27, 28, 29, 22,  4,  3,  2,  9],
     [26, 31, 30, 21,  5,  0,  1, 10],
     [23, 25, 24, 17,  8,  6,  7, 14]]), 32)
-MATRICES['Clustered dot 6'] = (np.array([
+MATRICES['Round dot 45deg 16x16'] = (np.array([
     [ 63,  58,  50,  40,  41,  51,  59,  60,  64,  69,  77,  87,  86,  76,  68,  67],
     [ 57,  33,  27,  18,  19,  28,  34,  52,  70,  94, 100, 109, 108,  99,  93,  75],
     [ 49,  26,  13,  11,  12,  15,  29,  44,  78, 101, 114, 116, 115, 112,  98,  83],
@@ -149,34 +169,34 @@ MATRICES['Clustered dot 6'] = (np.array([
     [ 79, 102, 119, 121, 120, 113,  97,  82,  48,  25,   8,   6,   7,  14,  30,  45],
     [ 71,  95, 103, 104, 105,  96,  92,  74,  56,  32,  24,  23,  22,  31,  35,  53],
     [ 65,  72,  80,  90,  91,  81,  73,  66,  62,  55,  47,  37,  36,  46,  54,  61]]), 128)
-MATRICES['Clustered dot 7'] = (np.array([
+MATRICES['Round dot 6x6'] = (np.array([
     [34, 29, 17, 21, 30, 35],
     [28, 14,  9, 16, 20, 31],
     [13,  8,  4,  5, 15, 19],
     [12,  3,  0,  1, 10, 18],
     [27,  7,  2,  6, 23, 24],
     [33, 26, 11, 22, 25, 32]]), 36)
-MATRICES['Clustered dot 8'] = (np.array([
+MATRICES['Square dot 5x5'] = (np.array([
     [20, 21, 22, 23, 24],
     [19,  6,  7,  8,  9],
     [18,  5,  0,  1, 10],
     [17,  4,  3,  2, 11],
     [16, 15, 14, 13, 12]]), 25)
-MATRICES['Clustered dot 9'] = (np.array([
+MATRICES['Horizontal lines 6'] = (np.array([
     [35, 33, 31, 30, 32, 34],
     [23, 21, 19, 18, 20, 22],
     [11,  9,  7,  6,  8, 10],
     [ 5,  3,  1,  0,  2,  4],
     [17, 15, 13, 12, 14, 16],
     [29, 27, 25, 24, 26, 28]]), 36)
-MATRICES['Clustered dot 10'] = (np.array([
+MATRICES['Vertical lines 6'] = (np.array([
     [35, 23, 11,  5, 17, 29],
     [33, 21,  9,  3, 15, 27],
     [31, 19,  7,  1, 13, 25],
     [30, 18,  6,  0, 12, 24],
     [32, 20,  8,  2, 14, 26],
     [34, 22, 10,  4, 16, 28]]), 36)
-MATRICES['Clustered dot 11'] = (np.array([
+MATRICES['Round dot 8x8'] = (np.array([
     [ 3,  9, 17, 27, 25, 15,  7,  1],
     [11, 29, 38, 46, 44, 36, 23,  5],
     [19, 40, 52, 58, 56, 50, 34, 13],
@@ -280,4 +300,34 @@ MATRICES['Magic 8x8'] = (np.array([
     [15, 28, 48, 54, 50, 26, 17, 10],
     [ 8, 18, 34, 42, 32, 20,  6,  2],
     [ 5, 13, 25, 39, 24, 12,  3,  1]]), 65)
+MATRICES.update({f'Diagonal lines {n}': (diagonal_lines(n), n * n) for n in (4, 6, 8)})
 MATRICES = {k: (np.asarray(m), d) for k, (m, d) in MATRICES.items()}
+
+# img2spec's names, projects saved before the renaming have them: its clustered dots are named by their look
+RENAMED = {
+    'Clustered dot 1': 'Diamond 8x8',
+    'Clustered dot 2': 'Vertical lines 5',
+    'Clustered dot 3': 'Horizontal lines 5',
+    'Clustered dot 4': 'Diamond 6x6',
+    'Clustered dot 5': 'Diamond 8x8 coarse',
+    'Clustered dot 6': 'Round dot 45deg 16x16',
+    'Clustered dot 7': 'Round dot 6x6',
+    'Clustered dot 8': 'Square dot 5x5',
+    'Clustered dot 9': 'Horizontal lines 6',
+    'Clustered dot 10': 'Vertical lines 6',
+    'Clustered dot 11': 'Round dot 8x8',
+}
+
+GROUPS = {   # the dropdown's sections and the gallery's tabs, in order; Custom: patterns from the editor, to come
+    'Bayer': ('Bayer 2x2', 'Bayer 3x3', 'Bayer 4x4', 'Bayer 8x8', 'Bayer 16x16', 'Bayer 32x32', 'Dispersed dots 1',
+              'Dispersed dots 2', 'Void dispersed dots', 'Ulichney Bayer 5'),
+    'Non-rect': ('Non-rectangular 1', 'Non-rectangular 2', 'Non-rectangular 3', 'Non-rectangular 4'),
+    'Dots': ('Magic circle 5x5', 'Magic circle 6x6', 'Magic circle 7x7', 'Magic 8x8', 'Round dot 6x6', 'Round dot 8x8',
+             'Round dot 45deg 16x16'),
+    'Rombs': ('Magic 45deg 4x4', 'Magic 45deg 6x6', 'Magic 45deg 8x8', 'Diamond 6x6', 'Diamond 8x8',
+              'Diamond 8x8 coarse', 'Diagonal', 'Ulichney clustered dot'),
+    'Squares': ('Magic 4x4', 'Magic 6x6', 'Ulichney', 'Square dot 5x5', 'Central white point', 'Balanced centre point'),
+    'Lines': ('Vertical lines 5', 'Vertical lines 6', 'Horizontal lines 5', 'Horizontal lines 6', 'Diagonal lines 4',
+              'Diagonal lines 6', 'Diagonal lines 8'),
+    'Custom': (),
+}

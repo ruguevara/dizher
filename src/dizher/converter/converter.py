@@ -10,10 +10,10 @@ from mokit.paths import os_path   # also this module's name for it: the UI and t
 
 from .palette import Palette
 from .colors import convert_color, lrgb2luminance, gray2rgb
-from .dither import Ditherer, Stohastic, duo_levels
+from .dither import Ditherer, Stohastic, duo_levels, dither_levels
 from ..halftoning.dbs import dbs_duo
 from .eye import LUMA_ALPHA, LUMA_SCALE, CHROMA_ALPHA, CHROMA_SCALE, eye_kernel
-from .energy import SelectionEnergy, pair_dissimilarity, lightness_gain, LRGB2OPP, EDGE_SIGMA
+from .energy import SelectionEnergy, pair_dissimilarity, lightness_gain, LRGB2OPP, EDGE_SIGMA, METHODS, NEWEST
 from ..progress import report_progress, report_stage
 
 
@@ -26,13 +26,17 @@ class Converter:
             luma_scale: float = LUMA_SCALE,
             chroma_alpha: float = CHROMA_ALPHA,
             chroma_scale: float = CHROMA_SCALE,
-            coherence: float = 2.0,
+            coherence: float = 6.0,
             edge: float = EDGE_SIGMA,
             luma_noise: float = 0.0,
-            chroma_noise: float = 0.05,
+            chroma_noise: float = 0.02,
             structure: float = 0.06,
             ditherer: Ditherer = None,   # halftones the pair candidates and, after selection, the result
             flare: float = 0.1,
+            method: str = NEWEST,       # how a pair is scored on a block, see energy.METHODS
+            surface: float = 0.0,
+            dithering: float = 1.0,
+            checker: bool = False,
     ):
         self.mode = mode
         self.size = mode.size
@@ -42,22 +46,30 @@ class Converter:
         self.luma_scale = luma_scale
         self.chroma_alpha = chroma_alpha
         self.chroma_scale = chroma_scale
-        self.luma_noise = luma_noise      # weights of the unblurred error: dot noise the low-pass eye model would miss, see energy.py
+        self.luma_noise = luma_noise      # weights of the unblurred error: dot contrast the low-pass eye model would miss, see energy.py
         self.chroma_noise = chroma_noise
         self.edge = edge            # step of the original across a seam that counts as a real edge, see energy.py
         self.coherence = coherence  # cost of a pair change between neighbours where the original is smooth, see energy.py
+        self.surface = surface      # dE: cells this near their surface's colour take one pair, 0 off, see energy.surface_binding
         self.structure = structure  # weight of the contrast-weighted SSIM term in the DBS optimiser, see halftoning/dbs.py
         self.ditherer = ditherer or Stohastic()
+        if method not in METHODS:
+            raise ValueError(f'unknown selection method {method!r}')
+        self.method = method
         self.flare = flare          # flattens the per-pixel lightness gain of the error, see energy.lightness_gain
+        self.dithering = dithering  # share of the lightness range between a cell's paper and ink left mixed, see dither_levels
+        self.checker = checker      # a checkerboard of the two as a third level, see dither_levels
         self.energy = SelectionEnergy(self, weights)
         self.image_rgb = None
         self.set_palette(mode.palette)
 
     def copy(self, **attrs) -> 'Converter':
-        """Shallow copy for a later pipeline stage (ops.py): arrays are shared read-only, the energy is rebound to the copy."""
+        """Shallow copy for a later pipeline stage (ops.py): arrays are shared read-only, the energy is rebound to the
+        copy with weights of its own (Halftone reweighs chroma)."""
         c = copy.copy(self)
         c.energy = copy.copy(self.energy)
         c.energy.converter = c
+        c.energy.weights = c.energy.weights.copy()
         for name, value in attrs.items():
             assert hasattr(c, name), name
             setattr(c, name, value)
@@ -99,7 +111,8 @@ class Converter:
         return image_rgb
 
     def set_image(self, image_rgb: np.ndarray) -> None:
-        """The ~1 s setup: every pair fitted per pixel, its candidate halftoned, the selection energy."""
+        """The ~1 s setup: every pair fitted per pixel and halftoned into a candidate (the live preview of pair
+        selection, and what the Halftoned method scores), and the selection energy."""
         image_rgb = self.preprocess_image(image_rgb)
         self.invalidate()
         self.image_rgb = image_rgb
@@ -108,7 +121,6 @@ class Converter:
         self.gain = lightness_gain(self.image_luma, self.flare)
         report_stage(f'fitting {len(self.color_pairs)} pairs')
         self.levels = self.fit_duocolors()
-        # candidates are scored as the halftoner would paint them: the pairs are chosen for the dots they will get
         self.bitmaps = self.ditherer.threshold(self.levels)
         paper = self.color_pairs[:, 0, np.newaxis, np.newaxis, :]
         ink = self.color_pairs[:, 1, np.newaxis, np.newaxis, :]
@@ -183,20 +195,32 @@ class Converter:
         """Run the chosen halftoner once on the final composite, quantising each pixel to its block's paper or ink."""
         paper, ink = self._duo()
         report_stage(self.ditherer.label)
-        self.set_bitmap(self.ditherer(self.halftone_target(paper, ink), paper, ink))
+        levels = self.target_levels(paper, ink)
+        if self.checker:   # as exact 0 and 1, error diffusion has nothing to spread
+            levels = np.where(levels == 0.5, self.checkerboard(), levels)
+        self.set_bitmap(self.ditherer(paper + levels[..., None] * (ink - paper), paper, ink))
         self.halftoned = self.dithered_bitmap
 
     def optimise(self):
         """Direct binary search from the halftone bitmap under the eye model (halftoning/dbs.py); the start
         stays in halftoned. Target and colours are scaled by the lightness gain, so it minimises the selection's
-        metric (its SSIM term then compares gained luma)."""
+        metric under the weights it is given, which ops.halftone and ops.optimise set apart from the selection's (its
+        SSIM term then compares gained luma)."""
         paper, ink = self._duo()
         g = self.gain
         report_stage('DBS')
         self.set_bitmap(dbs_duo(self.halftone_target(paper, ink) * g, paper * g, ink * g, init=self.dithered_bitmap,
             scale=self.luma_scale, alpha=self.luma_alpha, structure=self.structure,
             kernels=self.eye_kernels(), noise=(self.luma_noise, self.chroma_noise, self.chroma_noise),
-            on_step=lambda b: report_progress(lambda: self.snapshot(bitmap=b))))
+            on_step=lambda b: report_progress(lambda: self.snapshot(bitmap=b)),
+            # the checker stays a checker: where the lightness gain varies over it, DBS would break it into dashes
+            fixed=self.target_levels(paper, ink) == 0.5 if self.checker else None))
+
+    def checkerboard(self):
+        """The checker level's pattern (dither_levels): each cell's brighter colour on one parity all over the screen,
+        so neighbouring cells' checkers line up."""
+        paper_y, ink_y = self.luminances()
+        return (np.indices(paper_y.shape).sum(0) % 2 == 1) == (ink_y > paper_y)
 
     def _duo(self):
         return self.opponent(self.best_paper ** self.gamma), self.opponent(self.best_ink ** self.gamma)
@@ -211,13 +235,22 @@ class Converter:
         the attribute grid, plainest in smooth backgrounds. Each pixel is given the reachable projection
         of its target instead, so a cell's residual is zero-mean and there is nothing for the neighbour to
         cancel. The pair optimiser already owns the unreachable part (energy.py)."""
-        target = self.opponent(self.image_lrgb)
-        return paper + duo_levels(target, paper, ink)[..., None] * (ink - paper)
+        return paper + self.target_levels(paper, ink)[..., None] * (ink - paper)
+
+    def target_levels(self, paper, ink):
+        """Each pixel's mix of its cell's paper and ink (opponent space): its target's projection, made solid outside
+        the middle of the lightness range by dithering."""
+        return dither_levels(duo_levels(self.opponent(self.image_lrgb), paper, ink), *self.luminances(),
+                             self.dithering, self.flare, self.checker)
+
+    def luminances(self):
+        """Each pixel's paper and ink luminance."""
+        return lrgb2luminance(self.best_paper ** self.gamma), lrgb2luminance(self.best_ink ** self.gamma)
 
     def projected_target(self):
         """halftone_target in sRGB, for display: the opponent map is linear, so the same mix in linear RGB."""
         paper, ink = self.best_paper ** self.gamma, self.best_ink ** self.gamma
-        t = duo_levels(self.opponent(self.image_lrgb), self.opponent(paper), self.opponent(ink))[..., None]
+        t = self.target_levels(self.opponent(paper), self.opponent(ink))[..., None]
         return (paper + t * (ink - paper)) ** (1 / self.gamma)
 
     def save(self, filename: str) -> None:

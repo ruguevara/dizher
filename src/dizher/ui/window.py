@@ -1,10 +1,10 @@
 """imgui_bundle window over the pipeline host, in AmaZX's layout: the Tune dock on the left and the Convert dock
 on the right, each with one collapsible block per stage in pipeline order (mokit's params editor inside, or a
 custom one), the Preview dock between them with the tuned image and the conversion, and the History dock under
-Convert's with every undo step. A block header shows its
+Convert's with every undo step, the Snapshots dock under Tune's with named copies of every setting. A block header shows its
 stage's state: plain when done, tinted while it runs or after it failed, muted while waiting to run. hello_imgui's
-ini keeps the dock layout, its user prefs which blocks are open and the session: the project folder and the params,
-unsaved edits included, restored on the next start when no path is given.
+ini keeps the dock layout, its user prefs which blocks are open and the session: the project folder and its unsaved
+edits, restored on the next start when no path is given; with none the project opens as it is on disk.
 
 A project is AmaZX's mokit folder: project.json holds every node's params, the source path relative to the folder;
 exports default to its build/. Every image has one, as a sidecar: opening an image opens the project beside it named
@@ -34,19 +34,19 @@ from mokit.ui.params import params_editor
 from mokit.graph import GraphError, Op
 from mokit.ui.style import Palette
 
-from .. import ops, version
+from .. import ops, tone, version
 from ..converter.converter import os_path
-from .app import Pipeline, project_folder
+from .app import Pipeline, merged, project_folder
 from .levels import LevelsEditor
-from . import views
+from . import gallery, snapshots, views
 
 HEADER_TINT = dict(running=Palette.warn, error=Palette.error)   # header background of a running or failed stage
 LABELS = {nid: label for nid, label, _, _ in ops.PIPELINE}
 VIEWS = {'Screen': 'The conversion as the machine shows it', 'Bitmap': 'Ink pixels white, paper black',
          'Attrs': "Each cell's paper with a disc of its ink"}   # ToolZX's screen views
 DEBUG = {   # view -> (tooltip, the stage it needs, its image from that stage's Converter or a running stage's snapshot)
-    'Projected': ("What the halftoner aims at: each pixel moved to the nearest mix of its cell's pair",
-                  'overpaint', lambda c: c.projected_target()),
+    'Projected': ("What the halftoner aims at: each pixel moved to the nearest mix of its cell's pair, by Halftone's "
+                  "chroma weight", 'halftone', lambda c: c.projected_target()),
     'Unoptimised': ("The halftoner's result, what the optimiser started from",   # a Select pairs snapshot has none yet
                     'halftone', lambda c: c.dithered_result if c.halftoned is None else np.where(c.halftoned[..., None] > 0, c.best_ink, c.best_paper)),
     'Eye': ('Both images as the eye model sees them: what the energy compares',
@@ -64,23 +64,32 @@ MAX_PATH = 260   # Windows' path limit, the NUL included
 # for it at every numpy or OpenCV call, so at a high refresh rate or with no vsync the frames starve the stage
 BUSY_FPS = 30.0
 INSPECT_CELLS, INSPECT_ZOOM, INSPECT_PAIRS = 3, 10, 8   # the hover tooltip: cells a side, its zoom, pairs listed
-TRANSPARENT, AUTO = -1, -2   # the brush's specials: keep the cell's colour, give it back to Select pairs
-SPECIAL = {TRANSPARENT: (0.0, 0.0, 0.0, 0.0), AUTO: (0.3, 0.3, 0.3, 1.0)}   # alpha 0 shows imgui's checkerboard
+INSPECT_DELAY = 1.0   # s over the previews before the hover tooltip shows; then it follows the pointer
+# the brush's specials: keep the cell's colour, give it back to Select pairs, keep its colours made bright or not
+TRANSPARENT, AUTO, BRIGHT, DIM = -1, -2, -3, -4
+SPECIAL = {TRANSPARENT: (0.0, 0.0, 0.0, 0.0), AUTO: (0.3, 0.3, 0.3, 1.0), BRIGHT: (0.3, 0.3, 0.3, 1.0),
+           DIM: (0.3, 0.3, 0.3, 1.0)}   # alpha 0 shows imgui's checkerboard
+LABEL = {AUTO: 'A', BRIGHT: 'B1', DIM: 'B0'}   # on a special's swatch while no mark takes its place
+COUNTED = {'overrides': 'cells', 'picks': 'grey points'}   # params the history counts
 UNDO, REDO = imgui.Key.mod_ctrl | imgui.Key.z, imgui.Key.mod_ctrl | imgui.Key.mod_shift | imgui.Key.z   # Cmd on macOS
+SNAPSHOT = imgui.Key.mod_ctrl | imgui.Key.mod_shift | imgui.Key.s
 
 
 @lru_cache(maxsize=1024)
 def change(before, after) -> str:
     """A history step's label: the params that differ between two graphs, with their new values."""
-    def show(v):
-        if isinstance(v, tuple) and v and isinstance(v[0], tuple):   # Overpaint's cells: a count, not a wall of numbers
-            return f'{len(v)} cells'
+    def show(name, v):
+        if name in COUNTED:   # a count, not a wall of numbers
+            return f'{len(v)} {COUNTED[name]}'
+        if isinstance(v, tuple) and v and isinstance(v[0], tuple):   # channels, curves: the name alone
+            return ''
         return f'{v:.3g}' if isinstance(v, float) else v.name if isinstance(v, Path) else str(v)
     parts = []
     for nid, node in after.nodes:
         old, new = before[nid].params, node.params
         if old != new:
-            diff = [f'{f.name} {show(getattr(new, f.name))}' for f in fields(new) if getattr(new, f.name) != getattr(old, f.name)]
+            diff = [f'{f.name} {show(f.name, getattr(new, f.name))}'.rstrip() for f in fields(new)
+                    if getattr(new, f.name) != getattr(old, f.name)]
             parts.append(f"{LABELS[nid]}: {', '.join(diff)}")
     return '; '.join(parts)
 
@@ -152,27 +161,36 @@ def as_ubyte(rgb: np.ndarray) -> np.ndarray:
 
 
 class HalftoneEditor:
-    """The halftoner combo plus only the params that method uses (Ditherer.controls), as a narrowed params view."""
+    """The halftoner combo plus only the params that method uses (Ditherer.controls), as a narrowed params view; a
+    matrix or kernel by the pattern picker (gallery.py)."""
+
+    def __init__(self, app) -> None:
+        self.picker = gallery.PatternPicker(app)
 
     def draw(self, params, picture, on_change, id: str) -> None:
-        names = ('halftoner',) + ops.HALFTONERS[params.halftoner].controls
+        picked = gallery.PICKERS.get(params.halftoner, (None,))[0]
+        names = ('halftoner',) + tuple(n for n in ops.HALFTONERS[params.halftoner].controls if n != picked)
         view = make_dataclass('halftone', [(f.name, f.type, field(default=f.default, metadata=f.metadata))
                                            for f in fields(params) if f.name in names], frozen=True)
         params_editor(view(**{n: getattr(params, n) for n in names}),
                       lambda v: on_change(replace(params, **asdict(v))), id=id, help='tooltip')
+        if picked:
+            imgui.push_id(id)
+            self.picker.draw(params, on_change)
+            imgui.pop_id()
 
 
 def palette_grid(palette, click, tip, marks={}, specials=()) -> None:
     """The palette as 2 rows of 8 swatches edge to edge; click(i, button) on a left or right click, tip(i) the tooltip,
-    marks {i: '✓' for imgui's tick, else a letter or two}. Colours the palette has off are disabled. specials, of
-    TRANSPARENT (checkered) and AUTO (grey, A), end a row each."""
-    width = 8 + bool(specials)
+    marks {i: '✓' for imgui's tick, else a letter or two}. Colours the palette has off are disabled. specials, a tuple
+    per row of TRANSPARENT (checkered), AUTO, BRIGHT and DIM (grey, their LABEL), end the rows."""
+    width = 8 + max(map(len, specials), default=0)
     side = min(1.5 * imgui.get_text_line_height(), imgui.get_content_region_avail().x / width)   # fits a narrow dock
     size = imgui.ImVec2(side, side)
     imgui.push_style_var(imgui.StyleVar_.item_spacing, imgui.ImVec2(0, 0))   # cells edge to edge
     colours = [(i, (*map(float, rgb), 1.0)) for i, rgb in enumerate(palette.as_float())]
     for row in range(2):
-        for n, (i, rgba) in enumerate(colours[8 * row:8 * row + 8] + [(k, SPECIAL[k]) for k in specials[row:row + 1]]):
+        for n, (i, rgba) in enumerate(colours[8 * row:8 * row + 8] + [(k, SPECIAL[k]) for k in (specials[row:row + 1] or [()])[0]]):
             if n:
                 imgui.same_line()
             imgui.begin_disabled(i >= 0 and i not in palette.enabled)
@@ -182,7 +200,7 @@ def palette_grid(palette, click, tip, marks={}, specials=()) -> None:
                 click(i, imgui.MouseButton_.right)
             imgui.end_disabled()
             imgui.set_item_tooltip(tip(i))
-            mark, lo = marks.get(i, 'A' if i == AUTO else None), imgui.get_item_rect_min()
+            mark, lo = marks.get(i, LABEL.get(i)), imgui.get_item_rect_min()
             ink = imgui.IM_COL32(*(3 * (0 if i >= 0 and np.dot(rgba[:3], (0.299, 0.587, 0.114)) > 0.5 else 255,)), 255)
             if mark == '✓':   # imgui's checkbox tick, black on light colours, white on dark
                 pad = side / 5
@@ -193,8 +211,35 @@ def palette_grid(palette, click, tip, marks={}, specials=()) -> None:
     imgui.pop_style_var()
 
 
-def colour_name(i: int) -> str:
-    return {TRANSPARENT: 'Transparent, the cell keeps its own', AUTO: 'Auto, the colour Select pairs chose'}.get(i, f'Colour {i}')
+def colour_name(i: int, palette=None) -> str:
+    special = {TRANSPARENT: 'Transparent, the cell keeps its own', AUTO: 'Auto, the colour Select pairs chose',
+               BRIGHT: 'Bright (BRIGHT 1): the cell keeps its colours, made bright',
+               DIM: 'Not bright (BRIGHT 0): the cell keeps its colours, made not bright'}
+    return special.get(i, f'Colour {i}' + (f', {palette.name(i)}' if palette is not None else ''))
+
+
+def has_bright(palette) -> bool:
+    """A cell's two colours share a brightness (the Spectrum): the brush has BRIGHT and DIM."""
+    return any(palette.bright(i) is not None for i in range(len(palette)))
+
+
+def brightness(palette, i: int):
+    """True, False, or None where a colour or brush special sets none: black, TRANSPARENT, AUTO, the selection's -1."""
+    return {BRIGHT: True, DIM: False}.get(i) if i < 0 else palette.bright(i)
+
+
+def same_bright(palette, chosen: int, other: int) -> tuple:
+    """(chosen, other) for a cell's two colours when one was just chosen, on a palette whose pairs share a brightness:
+    black takes the other's, any other colour gives the other its own (a colour, BRIGHT or DIM; black flips to the
+    matching black)."""
+    mine, theirs = brightness(palette, chosen), brightness(palette, other)
+    if chosen >= 0 and mine is None:
+        return (chosen, other) if theirs is None else (palette.with_bright(chosen, theirs), other)
+    if mine is None:
+        return chosen, other
+    if other >= 0:
+        return chosen, palette.with_bright(other, mine)
+    return chosen, (BRIGHT if mine else DIM) if other in (BRIGHT, DIM) else other
 
 
 class TargetEditor:
@@ -225,36 +270,68 @@ def role_marks(paper: int, ink: int) -> dict:
 
 class OverpaintEditor:
     """Paint mode, Art Studio's attribute brush: an ink and a paper, each a palette index, TRANSPARENT, which keeps
-    the cell's own, or AUTO, which gives it back to Select pairs: an Auto ink and paper erase. A left click on a swatch picks the ink, a right click the paper (Multipaint's and MS
+    the cell's own, or AUTO, which gives it back to Select pairs: an Auto ink and paper erase. On the Spectrum ink and
+    paper share a brightness: a colour picked for one brings the other along (black takes the other's), and BRIGHT or
+    DIM, as both, keeps a cell's colours and sets their brightness. A left click on a swatch picks the ink, a right click the paper (Multipaint's and MS
     Paint's buttons), and turns Paint mode on. In the preview a left drag paints cells with the brush, a right click
-    picks up a cell's colours as the brush, the eyedropper (Window._paint). Clear gives every painted cell back to
-    Select pairs."""
+    picks up a cell's colours as the brush, the eyedropper (Window._paint). The block's Reset gives every painted cell
+    back to Select pairs; Freeze all paints every cell with the colours it shows, so the whole field no longer follows
+    Select pairs.
+    Hide shows the conversion without the painted cells, which stay (Pipeline.set_unpainted); Paint shows them again."""
 
-    def __init__(self) -> None:
+    def __init__(self, app) -> None:
+        self.app = app   # the Pipeline, whose unpainted view Hide switches
         self.on, self.ink, self.paper = False, 15, TRANSPARENT   # bright white on the Spectrum, light grey on the C64
+        self._fixed = (None, None, ())   # (overrides, selection, their fix): kept, as a frame asks for it again
+
+    def fixed(self, overrides: tuple, selection) -> tuple:
+        """ops.fix_overrides, recomputed only when the painted cells or the selection change."""
+        if self._fixed[0] != overrides or self._fixed[1] is not selection:
+            fix = ops.fix_overrides(selection, overrides) if selection is not None and overrides else overrides
+            self._fixed = (overrides, selection, fix)
+        return self._fixed[2]
+
+    def paint(self, on: bool) -> None:
+        """Paint mode on or off; on shows the painted cells, Hide goes off."""
+        self.on = on
+        if on:
+            self.app.set_unpainted(False)
 
     def draw(self, params, selection, on_change, id: str) -> None:
         imgui.push_id(id)
         if widgets.toggle_button('Paint', self.on):
-            self.on = not self.on
+            self.paint(not self.on)
         imgui.set_item_tooltip('Paint cells in the preview; Esc ends')
         imgui.same_line()
-        imgui.begin_disabled(not params.overrides)
-        if imgui.small_button('Clear'):
-            on_change(replace(params, overrides=()))
+        imgui.begin_disabled(not params.overrides and not self.app.unpainted)
+        if widgets.toggle_button('Hide', self.app.unpainted):
+            self.app.set_unpainted(not self.app.unpainted)
+            self.on = self.on and not self.app.unpainted
         imgui.end_disabled()
-        imgui.set_item_tooltip('Give every painted cell back to Select pairs')
+        imgui.set_item_tooltip('Show the conversion without the painted cells; they stay in the project')
         imgui.same_line()
-        imgui.text(f'{len(params.overrides)} cells painted')
+        fixed = self.fixed(params.overrides, selection)
+        imgui.begin_disabled(fixed == params.overrides)
+        if imgui.small_button('Freeze all'):
+            on_change(replace(params, overrides=fixed))
+        imgui.end_disabled()
+        imgui.set_item_tooltip('Paint every cell with the colours it shows: the whole field stops following Select '
+                               'pairs, an Auto ink or paper and a pair the palette cannot show become the ones shown')
+        imgui.text(f'{len(params.overrides)} cells painted' + (', hidden' if self.app.unpainted else ''))
         if selection is not None:
+            palette = selection.palette
             def pick(i, button):   # picking a colour is picking up the brush: Paint mode goes on
-                if button == imgui.MouseButton_.left:
-                    self.ink = i
+                if i in (BRIGHT, DIM):
+                    self.ink = self.paper = i
+                elif button == imgui.MouseButton_.left:
+                    self.ink, self.paper = same_bright(palette, i, self.paper)
                 else:
-                    self.paper = i
-                self.on = True
-            palette_grid(selection.palette, pick, lambda i: f'{colour_name(i)}: left click for the ink, right for the paper',
-                         role_marks(self.paper, self.ink), (TRANSPARENT, AUTO))
+                    self.paper, self.ink = same_bright(palette, i, self.ink)
+                self.paint(True)
+            specials = ((TRANSPARENT, DIM), (AUTO, BRIGHT)) if has_bright(palette) else ((TRANSPARENT,), (AUTO,))
+            palette_grid(palette, pick, lambda i: colour_name(i, palette) + (': a click for the ink and the paper' if i in (BRIGHT, DIM)
+                                                                    else ': left click for the ink, right for the paper'),
+                         role_marks(self.paper, self.ink), specials)
         if self.on:
             widgets.hint("Left drag paints cells, right click picks up a cell's colours; A as ink and paper erases")
         imgui.pop_id()
@@ -267,6 +344,15 @@ class Window:
         self.saved = self.app.graph        # the graph as last saved or opened: another one is unsaved
         self.autosave = False              # the user pref, on by default, comes with the prefs: tests never write
         self.recent = []                   # images opened, the latest first; a user pref
+        self.origin = None                 # the snapshot the settings came from: restored, saved or updated last
+        self.snaps = {}                    # snapshot name -> its graph on the pipeline with this image, newest first
+        self._pictures = {}                # snapshot name -> its conversion's picture, read on its first hover
+        self._matched = None, None         # (the graph, the snapshot it is or None): _match's last answer
+        self._peek = None, -1              # (the snapshot hovered, the frame): the Preview shows its picture
+        self._picture_due = None           # (name, graph) of a snapshot saved mid-conversion: its picture once done
+        self._renaming = None              # [snapshot name, the text typed, focus the field]: renamed in place
+        self._asking = None                # the snapshot a restore waits with, asking about the current settings
+        self._deleting = None              # the snapshot waiting for Delete's confirmation
         self.restore_session = path is None
         if path and exists(Path(path) / project.PROJECT_FILE):
             self._open_project(path)
@@ -274,15 +360,21 @@ class Window:
             self._open_image(path)
         self.images = {}       # immvision params per preview
         self.expanded = {}     # node id -> block open; imgui keeps no header state in its ini
-        self.editors = {'levels': LevelsEditor(), 'halftoner': HalftoneEditor(), 'target': TargetEditor(),
-                        'overpaint': OverpaintEditor()}   # node id -> custom params editor
+        self.editors = {'levels': LevelsEditor(self._palette, palette_grid), 'halftoner': HalftoneEditor(self.app), 'target': TargetEditor(),
+                        'overpaint': OverpaintEditor(self.app)}   # node id -> custom params editor
         self.view, self.grid = 'Screen', False     # the conversion's view and the cell grid; not persisted
         self._debug = {}       # image key -> (the Converter it came from, the image)
         self._steps = 0        # history length last frame: the History list follows a new step
         self._after_close = None   # what waits for the unsaved changes dialog: opening another image
         self._about = False        # Help > About was chosen: the dialog opens next frame, outside the menu
         self._cell = None          # (row, column) the cell popup shows
-        self._stroke = False       # a paint stroke is on: pressed over a preview in Paint mode, not let go yet
+        self._tip = None           # the hover tooltip's top-left less the pointer, and its size: the cell popup opens there
+        self._hover = None         # imgui time the pointer came over a preview, None while it is off them
+        self._popup = None, None   # the cell popup's top-left, and its size when last shown
+        self._held = None          # (the last live snapshot, the finished conversion it stands in for): see _live
+        self._stroke = None        # a paint stroke's cells so far: pressed over a preview in Paint mode, not let go yet
+        self._pressed = -1.0       # imgui time of the last left press
+        self._tools = (False, None)   # Paint mode and the armed eyedropper last frame: the one turned on last wins
 
     def runner_params(self, persist: bool = True) -> hello_imgui.RunnerParams:
         immvision.use_rgb_color_order()
@@ -309,17 +401,20 @@ class Window:
         p.docking_params.docking_splits = [
             hello_imgui.DockingSplit('MainDockSpace', 'TuneSpace', imgui.Dir.left, 0.22),
             hello_imgui.DockingSplit('MainDockSpace', 'ConvertSpace', imgui.Dir.right, 0.28),
-            hello_imgui.DockingSplit('ConvertSpace', 'HistorySpace', imgui.Dir.down, 0.25)]
+            hello_imgui.DockingSplit('ConvertSpace', 'HistorySpace', imgui.Dir.down, 0.25),
+            hello_imgui.DockingSplit('TuneSpace', 'SnapshotsSpace', imgui.Dir.down, 0.25)]
         p.docking_params.dockable_windows = [
             hello_imgui.DockableWindow('Tune', 'TuneSpace', lambda: self._column(ops.TUNE[1:])),   # the source: File menu
             hello_imgui.DockableWindow('Convert', 'ConvertSpace', lambda: (self._column(ops.CONVERT), self._export())),
             hello_imgui.DockableWindow('Preview', 'MainDockSpace', self._preview),
-            hello_imgui.DockableWindow('History', 'HistorySpace', self._history)]
+            hello_imgui.DockableWindow('History', 'HistorySpace', self._history),
+            hello_imgui.DockableWindow('Snapshots', 'SnapshotsSpace', self._snapshots)]
         if not persist:   # tests: the default layout in an ini of their own, the user's stays untouched
             p.app_window_params.window_geometry.size = (1100, 1000)   # narrow: C64 fits at a smaller zoom than ZX
             p.app_window_params.restore_previous_geometry = False
             p.ini_folder_type = hello_imgui.IniFolderType.temp_folder
             p.docking_params.layout_condition = hello_imgui.DockingLayoutCondition.application_start
+            p.imgui_window_params.remember_theme = False   # the default theme, not the one a run before left in the ini
             p.callbacks.post_init = p.callbacks.before_exit = lambda: None
         return p
 
@@ -368,22 +463,36 @@ class Window:
 
     def _frame(self) -> None:
         style.sync()
-        brush = self.editors['overpaint']
-        if brush.on and imgui.is_key_pressed(imgui.Key.escape):
-            brush.on = False
+        brush, tone_ = self.editors['overpaint'], self.editors['levels']
+        if imgui.is_key_pressed(imgui.Key.escape):
+            brush.on, tone_.armed = False, None
+        if brush.on and tone_.armed:   # one tool takes the preview's clicks
+            if not self._tools[0]:
+                tone_.armed = None
+            else:
+                brush.on = False
+        self._tools = (brush.on, tone_.armed)
         if not (imgui.is_mouse_down(0) or imgui.is_mouse_down(1)):
-            self._stroke = False
-        held = imgui.is_any_item_active() or self._stroke   # a paint stroke is one undo step, like a dragged slider
-        if not held:
+            self._stroke = None
+        held = imgui.is_any_item_active() or self._stroke is not None   # a paint stroke is one undo step, like a dragged slider
+        if imgui.is_mouse_clicked(imgui.MouseButton_.left):
+            self._pressed = imgui.get_time()
+        # so is a double click: a slider's jump to the first press, then its reset
+        double = imgui.get_time() - self._pressed < imgui.get_io().mouse_double_click_time
+        if not (held or double):
             self.app.release()
         # global routing: a focused text field keeps its own Cmd+Z
         if imgui.shortcut(UNDO, imgui.InputFlags_.route_global.value):
             self.app.undo()
         if imgui.shortcut(REDO, imgui.InputFlags_.route_global.value):
             self.app.redo()
+        if imgui.shortcut(SNAPSHOT, imgui.InputFlags_.route_global.value) and self.project:
+            self._new_snapshot()
         if self.autosave and self.project and self.app.graph != self.saved and not held:
             self._save_project()   # once a drag is let go, not every frame of it
+        self._due_picture()
         self._unsaved_dialog()
+        self._snapshot_dialogs()
         self._about_dialog()
         self.app.update()
         fps = hello_imgui.get_runner_params().fps_idling
@@ -398,19 +507,29 @@ class Window:
             status, params = app.status(nid), app.graph[nid].params
             title = f'{label} · {app.job.text}' if status == 'running' and app.job.text else label
             x0, width = imgui.get_cursor_pos_x(), imgui.get_content_region_avail().x
+            at, pad = imgui.get_cursor_screen_pos(), imgui.get_style().frame_padding
+            reset = imgui.calc_text_size('Reset').x + 3 * pad.x if params is not None else pad.x
             imgui.set_next_item_open(self.expanded.get(nid, True), imgui.Cond_.once.value)
             imgui.set_next_item_allow_overlap()   # the Reset button sits on the header
             with header_style(status):
-                is_open = self.expanded[nid] = imgui.collapsing_header(f'{title}###{nid}')
-            imgui.set_item_tooltip(app.errors[nid] if status == 'error' else Op.resolve(op_id).fn.__doc__ or '')
+                is_open = self.expanded[nid] = imgui.collapsing_header(f'###{nid}')
+                # the title where imgui puts it (after the arrow), cut with … short of the Reset button
+                cut = widgets.text_ellipsis(title, imgui.ImVec2(at.x + imgui.get_font_size() + 3 * pad.x, at.y + pad.y),
+                                            at.x + width - reset - imgui.get_style().item_spacing.x)
+            tip = app.errors[nid] if status == 'error' else Op.resolve(op_id).fn.__doc__ or ''
+            imgui.set_item_tooltip(f'{title}\n{tip}' if cut else tip)
             if params is not None:
-                self._reset_button(nid, params, x0 + width)
+                self._reset_button(nid, params, x0 + width - reset)
             if status == 'error':
                 with style.text_color(Palette.error):
                     imgui.text_wrapped(app.errors[nid])
             if not is_open:
                 continue
             on_change = lambda p, n=nid: app.set_params(n, p, held=imgui.is_any_item_active())
+            if nid == 'metric':   # another selection method brings the values it was tuned with, one undo step
+                on_change = lambda p, old=params: (app.set_graph(ops.apply_preset(app.graph, p.method))
+                                                   if p.method != old.method else
+                                                   app.set_params('metric', p, held=imgui.is_any_item_active()))
             if nid in self.editors:
                 self.editors[nid].draw(params, app.shown(inputs[0]) if inputs else None, on_change, id=nid)
             elif params is not None:
@@ -460,11 +579,10 @@ class Window:
                 self._save(native)
             imgui.end_disabled()
 
-    def _reset_button(self, nid: str, params, right: float) -> None:
-        """At the right end of the block header; disabled while every param is at its default."""
+    def _reset_button(self, nid: str, params, x: float) -> None:
+        """At x on the block header, its right end; disabled while every param is at its default."""
         default = type(params)()
-        style_ = imgui.get_style()
-        imgui.same_line(right - imgui.calc_text_size('Reset').x - 3 * style_.frame_padding.x)
+        imgui.same_line(x)
         imgui.begin_disabled(params == default)
         if imgui.small_button(f'Reset##{nid}'):
             self.app.set_params(nid, default)
@@ -484,9 +602,18 @@ class Window:
         imgui.pop_id()
 
     def _live(self):
-        """The running pair selection's or optimiser's latest snapshot."""
-        job = self.app.job
-        return job.image if job is not None and job.node_id in ('select', 'optimise') and not job.cancel.is_set() else None
+        """The running pair selection's or optimiser's latest snapshot. An edit cancels the stage, and the next one
+        sends its first snapshot a moment later: till then the last snapshot stays, not the older finished result
+        (or none) flashing in between. A finished result that changes (the stage done, an undo, another image), one
+        already there for the current graph (Hide off before the unpainted run ends), a user's cancel or a stage's
+        error ends that."""
+        job, finished = self.app.job, self.app.shown('optimise')
+        if job is not None and job.node_id in ('select', 'optimise') and not job.cancel.is_set() and job.image is not None:
+            self._held = (job.image, finished)
+        elif self._held is not None and (self._held[1] is not finished or self.app.result('optimise') is not None
+                                         or self.app.cancelled or self.app.errors):
+            self._held = None
+        return None if self._held is None else self._held[0]
 
     def _converted(self):
         """The view of the running stage's live snapshot, else of the last finished result."""
@@ -526,7 +653,8 @@ class Window:
         self._view_bar()
         tuned = (self._debug_image('eye target', self.app.shown('prepare'), lambda c: c.eye_view(c.image_rgb)) if self.view == 'Eye'
                  else self.app.shown(ops.TUNED))
-        converted = self._converted()
+        converted, peek = self._converted(), self._peeked()
+        converted = converted if peek is None else peek
         shown = [(key, image) for key, image in (('tuned', tuned), ('converted', converted)) if image is not None]
         if not shown:
             return
@@ -537,47 +665,67 @@ class Window:
         stacked = min(avail.x / w, (avail.y - spacing.y) / (2 * h))
         zoom = max(1, int(max(side, stacked)))
         cell, hovered = ops.MODES[self.app.graph['target'].params.mode].cell, None
-        painting = self.editors['overpaint'].on
+        picture = self.app.shown('light')   # the tone node's input, what its eyedroppers sample
+        picking = (self.editors['levels'].armed is not None and picture is not None
+                   and all(i.shape[:2] == picture.shape[:2] for _, i in shown))
+        painting = self.editors['overpaint'].on and not picking
+        popup = imgui.is_popup_open('cell')   # the previews stay hoverable under it: a right click moves it to that cell
+        hover = imgui.HoveredFlags_.allow_when_blocked_by_popup.value if popup else 0
         for key, image in shown:
             ih, iw = image.shape[:2]
             pixels = as_ubyte(image)
             immvision.image(f'##{key}', pixels, widgets.image_params(self.images, key, (iw * zoom, ih * zoom), (iw, ih), pixels))
-            if imgui.is_item_hovered():
+            if imgui.is_item_hovered(hover):
                 m, lo = imgui.get_mouse_pos(), imgui.get_item_rect_min()
                 hovered = min(int(m.y - lo.y) // zoom, ih - 1), min(int(m.x - lo.x) // zoom, iw - 1)
             if self.grid:
                 self._cell_grid(cell, zoom)
+            if key == 'converted' and peek is not None:
+                self._badge(f'Snapshot {self._peek[0]}')
             if painting:
                 self._painted_cells(cell, zoom, (ih // cell[0], iw // cell[1]))
             if side >= stacked:
                 imgui.same_line()
         same = all(i.shape == shown[0][1].shape for _, i in shown)   # not mid mode switch
+        if hovered is None:
+            self._hover = None
+        elif self._hover is None:
+            self._hover = imgui.get_time()
         if hovered is not None and same:
             at = hovered[0] // cell[0], hovered[1] // cell[1]
-            if painting:
+            if picking:
+                self._eyedrop(picture, hovered, lo, zoom)
+            elif painting:
                 self._paint(at, lo, cell, zoom)
             elif imgui.is_mouse_clicked(imgui.MouseButton_.right):
                 self._cell = at
+                self._popup = None if self._tip is None else imgui.get_mouse_pos() + self._tip[0], self._popup[1]
                 imgui.open_popup('cell')
-            else:
+            elif not popup and imgui.get_time() - self._hover >= INSPECT_DELAY:
                 imgui.begin_tooltip()
-                self._zoom(at, cell, shown)
+                self._tip = imgui.get_window_pos() - imgui.get_mouse_pos(), imgui.get_window_size()
+                self._zoom(at, cell, shown, 'tip')
                 self._candidates(*at)
                 imgui.end_tooltip()
+        pos, size = self._popup
+        if pos is not None and imgui.is_popup_open('cell'):   # where the tooltip was, so nothing jumps; on the screen
+            view, size = imgui.get_main_viewport(), size or self._tip[1]
+            lo, hi = view.work_pos, view.work_pos + view.work_size - size
+            imgui.set_next_window_pos(imgui.ImVec2(max(lo.x, min(pos.x, hi.x)), max(lo.y, min(pos.y, hi.y))))
         if imgui.begin_popup('cell'):
+            if not imgui.is_window_appearing():   # its first frame is hidden, measuring it
+                self._popup = pos, imgui.get_window_size()
             (H, W), (h, w) = shown[0][1].shape[:2], cell
-            if same and self._cell[0] < H // h and self._cell[1] < W // w:
+            if same and self._cell[0] < H // h and self._cell[1] < W // w and not imgui.is_key_pressed(imgui.Key.escape):
                 self._cell_popup(cell, shown)
             else:
                 imgui.close_current_popup()
             imgui.end_popup()
 
     def _colours(self, conv, r: int, c: int) -> tuple:
-        """The cell's (paper, ink) as conv shows it, a painted colour in its painted role: the pair is unordered, the
-        darker colour its paper."""
-        paper, ink = list(conv.palette.iter_idxs_pairs())[conv.best_attr_indexes[r, c]]
-        painted = self._painted(r, c)
-        return (ink, paper) if paper == painted[1] >= 0 or ink == painted[0] >= 0 else (paper, ink)
+        """The cell's (paper, ink) as conv shows it, a painted colour in its painted role (ops.shown_pairs)."""
+        painted = ops.painted_field(self.app.graph['overpaint'].params.overrides, conv.best_attr_indexes.shape)
+        return tuple(int(x) for x in ops.shown_pairs(conv, painted)[r, c])
 
     def _painted(self, r: int, c: int) -> tuple:
         """The cell's painted (paper, ink), -1 where it keeps the selection's."""
@@ -597,11 +745,23 @@ class Window:
         paints the cells it crosses; a right click makes the cell's colours as shown the brush, the eyedropper."""
         brush, (h, w), (r, c) = self.editors['overpaint'], cell, at
         if imgui.is_mouse_clicked(imgui.MouseButton_.left):
-            self._stroke = True
-        if self._stroke and imgui.is_mouse_down(imgui.MouseButton_.left):
-            put = lambda b, old: old if b == TRANSPARENT else -1 if b == AUTO else b   # -1 stored: the selection's
-            self._set_cell(r, c, tuple(map(put, (brush.paper, brush.ink), self._painted(r, c))), held=True)
+            self._stroke = set()
         painted = self.app.shown('overpaint')   # quick to redo, so it has the latest strokes
+        # a cell once a stroke: till the preview catches up its colours as shown are not yet the ones painted
+        if self._stroke is not None and at not in self._stroke and imgui.is_mouse_down(imgui.MouseButton_.left) \
+                and painted is not None:
+            self._stroke.add(at)
+            palette, shown = painted.palette, self._colours(painted, r, c)
+            level = next((v for v in (brightness(palette, brush.ink), brightness(palette, brush.paper)) if v is not None), None)
+            def put(b, old, now):   # -1 stored: the selection's
+                if b == AUTO:
+                    return -1
+                if b in (BRIGHT, DIM):
+                    return palette.with_bright(now, b == BRIGHT)
+                if b == TRANSPARENT:   # kept, with the brush's brightness when it has one
+                    return palette.with_bright(old, level) if old >= 0 and level is not None else old
+                return b
+            self._set_cell(r, c, tuple(map(put, (brush.paper, brush.ink), self._painted(r, c), shown)), held=True)
         if imgui.is_mouse_clicked(imgui.MouseButton_.right) and painted is not None:
             brush.paper, brush.ink = self._colours(painted, r, c)
         imgui.set_mouse_cursor(imgui.MouseCursor_.none)
@@ -618,14 +778,43 @@ class Window:
             p, q = imgui.ImVec2(m.x + x, m.y + y), imgui.ImVec2(m.x + x + s, m.y + y + s)
             if i >= 0:
                 draw.add_rect_filled(p, q, imgui.IM_COL32(*(int(v * 255) for v in rgb[i]), 255))
-            elif i == AUTO:   # its swatch: grey with an A
-                draw.add_rect_filled(p, q, imgui.IM_COL32(*(int(v * 255) for v in SPECIAL[AUTO])))
-                t = imgui.calc_text_size('A')
-                draw.add_text(imgui.ImVec2(p.x + (s - t.x) / 2, p.y + (s - t.y) / 2), white, 'A')
+            elif i in LABEL:   # its swatch: grey with its label
+                draw.add_rect_filled(p, q, imgui.IM_COL32(*(int(v * 255) for v in SPECIAL[i])))
+                t = imgui.calc_text_size(LABEL[i])
+                draw.add_text(imgui.ImVec2(p.x + (s - t.x) / 2, p.y + (s - t.y) / 2), white, LABEL[i])
             else:
                 draw.add_rect_filled(p, q, imgui.IM_COL32(128, 128, 128, 255))
                 draw.add_line(imgui.ImVec2(p.x, q.y), imgui.ImVec2(q.x, p.y), imgui.IM_COL32(220, 40, 40, 255), 2)
             draw.add_rect(p, q, black)
+
+    def _eyedrop(self, picture, at, lo, zoom: int) -> None:
+        """An armed eyedropper over a preview whose top-left is lo: the cursor is a cross over the 3x3 pixels it
+        averages, with the sample and the target beside it; a left click sends pixel at to the tone node."""
+        editor, (y, x) = self.editors['levels'], at
+        params = self.app.graph['levels'].params
+        if imgui.is_mouse_clicked(imgui.MouseButton_.left):
+            editor.pick(params, picture, y, x, lambda p: self.app.set_params('levels', p))
+        imgui.set_mouse_cursor(imgui.MouseCursor_.none)
+        draw, black, white = imgui.get_foreground_draw_list(), imgui.IM_COL32(0, 0, 0, 255), imgui.IM_COL32(255, 255, 255, 255)
+        a = imgui.ImVec2(lo.x + (x - tone.SAMPLE) * zoom, lo.y + (y - tone.SAMPLE) * zoom)
+        b = imgui.ImVec2(a.x + (2 * tone.SAMPLE + 1) * zoom, a.y + (2 * tone.SAMPLE + 1) * zoom)
+        draw.add_rect(a, b, black, thickness=3)
+        draw.add_rect(a, b, white)
+        m, arm = imgui.get_mouse_pos(), imgui.get_text_line_height() * 0.6
+        for thick, col in ((3, black), (1, white)):
+            draw.add_line(imgui.ImVec2(m.x - arm, m.y), imgui.ImVec2(m.x + arm, m.y), col, thick)
+            draw.add_line(imgui.ImVec2(m.x, m.y - arm), imgui.ImVec2(m.x, m.y + arm), col, thick)
+        s = imgui.get_text_line_height() * 0.8
+        _, target, _ = editor.target(params, editor.armed)
+        for i, rgb in enumerate((tone.sample(picture, y, x), target)):   # sample, then the target it goes to
+            p = imgui.ImVec2(m.x + arm + 2 + i * s, m.y + arm + 2)
+            q = imgui.ImVec2(p.x + s, p.y + s)
+            draw.add_rect_filled(p, q, imgui.IM_COL32(*(int(round(v * 255)) for v in np.clip(rgb, 0, 1)), 255))
+            draw.add_rect(p, q, black)
+
+    def _palette(self):
+        """The target mode's palette, all of it: the eyedroppers' targets."""
+        return ops.MODES[self.app.graph['target'].params.mode].palette
 
     def _painted_cells(self, cell, zoom: int, cells) -> None:
         """Paint mode: the painted cells outlined over the image just drawn, cells its (rows, columns)."""
@@ -635,9 +824,10 @@ class Window:
                 a = imgui.ImVec2(lo.x + c * w * zoom, lo.y + r * h * zoom)
                 imgui.get_window_draw_list().add_rect(a, imgui.ImVec2(a.x + w * zoom, a.y + h * zoom), col)
 
-    def _zoom(self, at, cell, shown):
+    def _zoom(self, at, cell, shown, name: str):
         """The inspector's zoom: the cells around at in every preview, that cell outlined. The cell clicked in it,
-        else None."""
+        else None. name keeps the tooltip's images and the popup's apart: immvision keeps a texture per widget, and
+        image_params uploads only what differs from the image last drawn under its key."""
         (h, w), (H, W), z = cell, shown[0][1].shape[:2], INSPECT_ZOOM
         r, c = at
         # the block of cells centred on this one, moved inside at the image's edges
@@ -647,8 +837,8 @@ class Window:
         for key, image in shown:
             crop = image[r0 * h:r0 * h + size[1], c0 * w:c0 * w + size[0]]
             pixels = as_ubyte(crop)
-            immvision.image(f'##inspect {key}', pixels,
-                            widgets.image_params(self.images, f'inspect {key}', (size[0] * z, size[1] * z), size, pixels))
+            immvision.image(f'##{name} {key}', pixels,
+                            widgets.image_params(self.images, f'{name} {key}', (size[0] * z, size[1] * z), size, pixels))
             self._cell_grid(cell, z)
             lo = imgui.get_item_rect_min()
             a = imgui.ImVec2(lo.x + (c - c0) * w * z, lo.y + (r - r0) * h * z)
@@ -662,32 +852,42 @@ class Window:
         return clicked
 
     def _cell_popup(self, cell, shown) -> None:
-        """The right-click popup: the hover inspector, live. A click on a cell in the zoom moves to it; a pair in the
-        table paints the cell (the Overpaint block), and so does the palette as Paint mode's brush does: a left click
-        the ink, a right click the paper, Auto the selection's. The Auto button gives the whole cell back."""
-        self._cell = self._zoom(self._cell, cell, shown) or self._cell
+        """The right-click popup: the hover inspector, live, till Esc or a click outside it. A right click on another
+        cell in a preview moves it there, and so does a click on a cell in the zoom; a pair in the table paints the cell
+        (the Overpaint block), and so does the palette as Paint mode's brush does: a left click the ink, a right click
+        the paper, Auto the selection's. Clear overpaint gives the whole cell back."""
+        self._cell = self._zoom(self._cell, cell, shown, 'popup') or self._cell
         (r, c), painted = self._cell, self._painted(*self._cell)
         conv = self._candidates(r, c, lambda pair: self._set_cell(r, c, pair))
         if conv is None:
             return
         paper, ink = self._colours(conv, r, c)
 
-        def pick(i, button):
+        def pick(i, button):   # the other colour to this one's brightness, as the brush's
             i = -1 if i == AUTO else i   # -1 stored: the selection's
-            self._set_cell(r, c, (painted[0], i) if button == imgui.MouseButton_.left else (i, painted[1]))
+            if button == imgui.MouseButton_.left:
+                ink, paper = same_bright(conv.palette, i, painted[0])
+            else:
+                paper, ink = same_bright(conv.palette, i, painted[1])
+            self._set_cell(r, c, (paper, ink))
 
-        palette_grid(conv.palette, pick, lambda i: f'{colour_name(i)}: left click for the ink, right for the paper',
-                     role_marks(paper, ink), (AUTO,))
+        imgui.begin_group()   # one item, so Clear overpaint goes right of both rows
+        palette_grid(conv.palette, pick, lambda i: f'{colour_name(i, conv.palette)}: left click for the ink, right for the paper',
+                     role_marks(paper, ink), ((AUTO,),))
+        imgui.end_group()
+        imgui.same_line()
         imgui.begin_disabled(painted == (-1, -1))
-        if imgui.button('Auto'):
+        if imgui.button('Clear overpaint'):
             self._set_cell(r, c, None)
         imgui.end_disabled()
         imgui.set_item_tooltip('Give the cell back to Select pairs')
 
     def _candidates(self, r: int, c: int, pick=None):
         """The inspector's table: the best pairs at block (r, c) by SelectionEnergy.cell_candidates, and the chosen
-        one (>) when it is not among them: selection stops after a sweep limit, a live snapshot mid-sweep. With pick,
-        a click on a row calls pick((paper, ink)). The Converter it shows, None when there is none."""
+        one (>) when it is not among them: selection stops after a sweep limit, a live snapshot mid-sweep. When it is
+        among them its row stays, empty: the table keeps its height as the selection changes, and the popup's palette
+        and Clear overpaint under it stay under the pointer. With pick, a click on a row calls pick((paper, ink)). The
+        Converter it shows, None when there is none."""
         conv = self._live()
         conv = conv if conv is not None else self.result
         labels = None if conv is None else conv.best_attr_indexes
@@ -696,8 +896,7 @@ class Window:
         costs = conv.energy.cell_candidates(labels, r, c)
         total, chosen = costs.sum(1), labels[r, c]
         order = list(np.argsort(total)[:INSPECT_PAIRS])
-        if chosen not in order:
-            order.append(chosen)
+        order.append(None if chosen in order else chosen)
         idx = list(conv.palette.iter_idxs_pairs())
         imgui.text(f'Cell {c}, {r}: pair scores with the neighbours as they are')
         if not imgui.begin_table('pairs', 6, imgui.TableFlags_.row_bg.value | imgui.TableFlags_.sizing_fixed_fit.value):
@@ -709,6 +908,9 @@ class Window:
         for p in order:
             imgui.table_next_row()
             imgui.table_next_column()
+            if p is None:   # the chosen pair's row, the pair listed above
+                imgui.text('')
+                continue
             if pick is None:
                 imgui.text('>' if p == chosen else '')
             elif imgui.selectable(f"{'>' if p == chosen else ''}###pair{p}", bool(p == chosen),
@@ -742,6 +944,9 @@ class Window:
             imgui.separator()
             if imgui.menu_item_simple('Save conversion…', enabled=self.result is not None):
                 self._save()
+            if imgui.menu_item_simple('Save snapshot', 'Shift+Cmd+S' if sys.platform == 'darwin' else 'Ctrl+Shift+S',
+                                      enabled=self.project is not None):
+                self._new_snapshot()
             imgui.separator()
             if imgui.menu_item_simple('Quit'):
                 hello_imgui.get_runner_params().app_shall_exit = True
@@ -778,6 +983,185 @@ class Window:
         else:
             imgui.text('pending' if self.app.busy else 'ready')
 
+    # ----- snapshots -------------------------------------------------------------------------------
+
+    def _snapshots(self) -> None:
+        """Lightroom's snapshots: named copies of every setting, overpaint included, in the project's snapshots/.
+        Save keeps the settings as a new one named by the time, its name in a field to type another; a click brings
+        one back as an edit, one undo step, after asking about the settings when no snapshot has them; hovering one
+        shows its conversion in the Preview. The one the settings are is selected, the one they came from and left
+        is marked *; a right click updates, renames or deletes one."""
+        if self.project is None:
+            widgets.hint('Open an image to keep snapshots of its settings')
+            return
+        if imgui.button('Save snapshot'):
+            self._new_snapshot()
+        imgui.set_item_tooltip('Keep every setting, overpaint included, as a snapshot of this image\'s project '
+                               f"({'Shift+Cmd+S' if sys.platform == 'darwin' else 'Ctrl+Shift+S'})")
+        match = self._match()
+        for name, graph in list(self.snaps.items()):
+            if self._renaming and self._renaming[0] == name:
+                self._rename_field()
+                continue
+            label = name + (' *' if name == self.origin and match is None else '')
+            if imgui.selectable(f'{label}###{name}', name == match)[0]:
+                self._restore(name)
+            if imgui.is_item_hovered():
+                self._peek = name, imgui.get_frame_count()
+            imgui.set_item_tooltip(f'Differs in {change(graph, self.app.graph)}' if name != match else 'The current settings')
+            if imgui.begin_popup_context_item(f'menu {name}'):
+                if imgui.menu_item_simple('Update with current settings', enabled=name != match):
+                    self._write_snapshot(name)
+                if imgui.menu_item_simple('Rename'):
+                    self._renaming = [name, name, True]
+                if imgui.menu_item_simple('Delete…'):
+                    self._deleting = name
+                imgui.end_popup()
+
+    def _rename_field(self) -> None:
+        """The renamed snapshot's row: Enter or a click away renames it, Esc keeps its name."""
+        name, text, focus = self._renaming
+        if focus:
+            imgui.set_keyboard_focus_here()
+            self._renaming[2] = False
+        imgui.set_next_item_width(-1)
+        flags = imgui.InputTextFlags_.enter_returns_true.value | imgui.InputTextFlags_.auto_select_all.value
+        entered, self._renaming[1] = imgui.input_text(f'##rename {name}', text, flags)
+        if not (entered or imgui.is_item_deactivated()):
+            return
+        self._renaming, new = None, snapshots.clean(self._renaming[1])
+        if not new or new == name or imgui.is_key_pressed(imgui.Key.escape):
+            return
+        new = snapshots.free_name(self.project, new)
+        try:
+            snapshots.rename(self.project, name, new)
+        except OSError as e:
+            self.app.errors['snapshot'] = f'cannot rename {name}: {e}'
+            return
+        if self.origin == name:
+            self._set_origin(new)
+        self._read_snapshots()
+
+    def _new_snapshot(self) -> None:
+        """The settings as a new snapshot named by the time, its name in a field to type another."""
+        name = snapshots.free_name(self.project, time.strftime('%Y-%m-%d %H.%M'))
+        if self._write_snapshot(name):
+            self._renaming = [name, name, True]
+
+    def _write_snapshot(self, name: str) -> bool:
+        """The settings as snapshot name, new or updated, with the conversion's picture when it is done; else the
+        picture follows once it is (_due_picture). The project is written first: snapshots live in it. False when
+        nothing could be written."""
+        if not exists(self.project / project.PROJECT_FILE):
+            self._save_project()
+            if not exists(self.project / project.PROJECT_FILE):
+                return False
+        graph, done = self.app.graph, None if self.app.unpainted else self.app.result('optimise')
+        try:
+            snapshots.save(self.project, name, graph, None if done is None else done.dithered_result)
+        except OSError as e:
+            self.app.errors['snapshot'] = f'cannot save snapshot {name}: {e}'
+            return False
+        self._picture_due = None if done is not None else (name, graph)
+        self._read_snapshots()
+        self._set_origin(name)
+        return True
+
+    def _due_picture(self) -> None:
+        """A snapshot saved mid-conversion gets its picture once the conversion is done, if the settings stayed."""
+        if self._picture_due is None:
+            return
+        name, graph = self._picture_due
+        done = self.app.result('optimise')
+        if self.app.graph != graph or name not in self.snaps:
+            self._picture_due = None
+        elif done is not None and not self.app.unpainted:
+            self._picture_due = None
+            try:
+                snapshots.save(self.project, name, graph, done.dithered_result)
+            except OSError as e:
+                self.app.errors['snapshot'] = f'cannot save the picture of {name}: {e}'
+            self._pictures.pop(name, None)
+
+    def _restore(self, name: str, ask: bool = True) -> None:
+        """Snapshot name's settings, one undo step; first a question when no snapshot has the current ones."""
+        if ask and self._match() is None:
+            self._asking = name
+            return
+        self.app.set_graph(self.snaps[name])
+        self._set_origin(name)
+
+    def _set_origin(self, name) -> None:
+        """The snapshot the settings came from, kept in project.json's view; autosave writes it at once, as an edit."""
+        self.origin = name
+        if self.autosave and exists(self.project / project.PROJECT_FILE):
+            self._save_project()
+
+    def _snapshot_dialogs(self) -> None:
+        if self._asking is not None:
+            name, update = self._asking, self.origin if self.origin in self.snaps else None
+            labels = ((f'Update {update}',) if update else ()) + ('Save as new', "Don't save", 'Cancel')
+            choice = self._modal('Keep the current settings?',
+                                 f'No snapshot has the current settings. Keep them before going to {name}?', labels)
+            if choice == 'Save as new':
+                self._write_snapshot(snapshots.free_name(self.project, time.strftime('%Y-%m-%d %H.%M')))
+            elif choice and choice.startswith('Update'):
+                self._write_snapshot(update)
+            if choice and choice != 'Cancel' and name in self.snaps:
+                self._restore(name, ask=False)
+            if choice:
+                self._asking = None
+        if self._deleting is not None:
+            name = self._deleting
+            choice = self._modal('Delete snapshot', f'Delete the snapshot {name}? This cannot be undone.', ('Delete', 'Cancel'))
+            if choice == 'Delete':
+                try:
+                    snapshots.delete(self.project, name)
+                except OSError as e:
+                    self.app.errors['snapshot'] = f'cannot delete {name}: {e}'
+                if self.origin == name:
+                    self._set_origin(None)
+                self._read_snapshots()
+            if choice:
+                self._deleting = None
+
+    def _read_snapshots(self) -> None:
+        """The project's snapshots on the pipeline, each with this image as its source; an unreadable one is left out."""
+        self.snaps, self._pictures, self._matched, self._renaming = {}, {}, (None, None), None
+        if self.project is None:
+            return
+        source = self.app.graph['source'].params
+        for name in snapshots.names(self.project):
+            try:
+                self.snaps[name] = merged(snapshots.load(self.project, name)).with_params('source', source)
+            except (OSError, ValueError, GraphError):
+                continue
+
+    def _match(self):
+        """The snapshot the settings are, None when none has them; asked again only once they change."""
+        graph, name = self._matched
+        if graph is not self.app.graph:
+            name = next((n for n, g in self.snaps.items() if g == self.app.graph), None)
+            self._matched = self.app.graph, name
+        return name
+
+    def _peeked(self):
+        """The hovered snapshot's picture, None when none is hovered (this frame or the last) or it has none."""
+        name, frame = self._peek
+        if frame < imgui.get_frame_count() - 1 or name not in self.snaps:
+            return None
+        if name not in self._pictures:
+            self._pictures[name] = snapshots.picture(self.project, name)
+        return self._pictures[name]
+
+    @staticmethod
+    def _badge(text: str) -> None:
+        """text on a dark plate at the top-left of the image just drawn."""
+        lo, pad = imgui.get_item_rect_min(), imgui.get_style().frame_padding
+        size, draw = imgui.calc_text_size(text), imgui.get_window_draw_list()
+        draw.add_rect_filled(lo, imgui.ImVec2(lo.x + size.x + 2 * pad.x, lo.y + size.y + 2 * pad.y), imgui.IM_COL32(0, 0, 0, 200))
+        draw.add_text(imgui.ImVec2(lo.x + pad.x, lo.y + pad.y), imgui.IM_COL32(255, 255, 255, 255), text)
+
     # ----- files -----------------------------------------------------------------------------------
 
     @property
@@ -802,25 +1186,36 @@ class Window:
         else:
             then()
 
-    def _unsaved_dialog(self) -> None:
-        if self._after_close is None:
-            return
-        imgui.open_popup('Unsaved changes')   # imgui keeps it open when asked again
-        if not imgui.begin_popup_modal('Unsaved changes', None, imgui.WindowFlags_.always_auto_resize.value)[0]:
-            return
-        imgui.text(f'Save the changes to {self.project.name}?')
-        then, choice = self._after_close, None
-        for label in ('Save', "Don't save", 'Cancel'):
+    @staticmethod
+    def _modal(title: str, text: str, labels) -> str:
+        """A modal with text and a button per label, open as long as it is drawn each frame: the label clicked, the
+        last one on Esc, else None."""
+        imgui.open_popup(title)   # imgui keeps it open when asked again
+        if not imgui.begin_popup_modal(title, None, imgui.WindowFlags_.always_auto_resize.value)[0]:
+            return None
+        imgui.text(text)
+        choice = None
+        for label in labels:
             if imgui.button(label):
                 choice = label
             imgui.same_line()
         imgui.new_line()
+        if choice is None and imgui.is_key_pressed(imgui.Key.escape):
+            choice = labels[-1]
+        if choice:
+            imgui.close_current_popup()
+        imgui.end_popup()
+        return choice
+
+    def _unsaved_dialog(self) -> None:
+        if self._after_close is None:
+            return
+        then = self._after_close
+        choice = self._modal('Unsaved changes', f'Save the changes to {self.project.name}?', ('Save', "Don't save", 'Cancel'))
         if choice == 'Save':
             self._save_project()
         if choice:
             self._after_close = None
-            imgui.close_current_popup()
-        imgui.end_popup()
         if choice == "Don't save" or choice == 'Save' and self.app.graph == self.saved:   # not when the save failed
             then()
 
@@ -886,7 +1281,8 @@ class Window:
             self._open_project(folder)
         else:
             self.app.open(path)
-            self.project, self.saved = folder, self.app.graph   # nothing to ask about until an edit
+            self.project, self.saved, self.origin = folder, self.app.graph, None   # nothing to ask about until an edit
+            self._read_snapshots()
             if self.autosave:
                 self._save_project()
             self._remember()
@@ -921,16 +1317,17 @@ class Window:
             self.app.errors['project'] = f'cannot open {folder}: {e}'
             return
         self.app.restore(p.graph)
-        self.project, self.saved = p.folder, self.app.graph
+        self.project, self.saved, self.origin = p.folder, self.app.graph, p.view.get('snapshot')
+        self._read_snapshots()
         self._remember()
 
     def _save_project(self) -> None:
-        graph = self.app.graph
+        graph, view = self.app.graph, {'snapshot': self.origin} if self.origin else {}
         try:
             if exists(self.project / project.PROJECT_FILE):
-                project.save_project(self.project, graph)
+                project.save_project(self.project, graph, view)
             else:
-                project.create_project(self.project, graph)
+                project.create_project(self.project, graph, view)
         except OSError as e:
             self.app.errors['project'] = f'cannot save {self.project}: {e}; autosave is off'
             self.autosave = False   # not a retry every frame
@@ -961,6 +1358,7 @@ class Window:
         hello_imgui.save_user_pref('expanded', json.dumps(self.expanded))
         hello_imgui.save_user_pref('autosave', json.dumps(self.autosave))
         hello_imgui.save_user_pref('recent', json.dumps([str(p) for p in self.recent]))
-        hello_imgui.save_user_pref('session', json.dumps({
-            'project': str(self.project) if self.project else None,
-            'graph': project.graph_to_json(self.app.graph, None, None)}))
+        session = {'project': str(self.project) if self.project else None}
+        if self.app.graph != self.saved:   # unsaved edits only: else the project on disk wins, edited outside or not
+            session['graph'] = project.graph_to_json(self.app.graph, None, None)
+        hello_imgui.save_user_pref('session', json.dumps(session))

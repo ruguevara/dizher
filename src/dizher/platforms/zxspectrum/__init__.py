@@ -15,6 +15,8 @@ class ZXPalette(Palette):
         'Grayscale': frozenset({0, 7, 8, 15}),  # the blacks, gray (not-bright white), white
         'Mono': frozenset({8, 15}),  # black and bright white
     }
+    NAMES = tuple(f'{c} ({b})' for b in ('non-bright', 'bright')
+                  for c in ('black', 'blue', 'red', 'magenta', 'green', 'cyan', 'yellow', 'white'))
 
     def __init__(self, not_bright_level=205, bright_level=255):
         # index bits: 0 blue, 1 red, 2 green; 3 bright
@@ -23,10 +25,18 @@ class ZXPalette(Palette):
         level = np.where(i >= 8, bright_level, not_bright_level)[:, None]
         super().__init__(rgb * level)
 
+    def bright(self, i: int):
+        """The bright bit; None for black, which is both."""
+        return None if i in (0, 8) else i >= 8
+
+    def with_bright(self, i: int, on: bool) -> int:
+        return i | 8 if on else i & 7
+
     def iter_idxs_pairs(self):
-        """Both colours of a cell share the bright bit."""
+        """Both colours of a cell share the bright bit. Black on black once: the bright one is the same pair, kept
+        only when not-bright black is not enabled."""
         for i1, i2 in super().iter_idxs_pairs():
-            if (i1 >= 8) == (i2 >= 8):
+            if (i1 >= 8) == (i2 >= 8) and not (i1 == i2 == 8 and 0 in self.enabled):
                 yield i1, i2
 
 

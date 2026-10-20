@@ -9,8 +9,10 @@ Turn on, tune in, drop out.
 
 * ZX Spectrum
   * Standard mode: 256x192, 15 colours, two colours per 8x8 character block. No flash attribute.
+    Saves a screen file (`.scr`) or PNG.
 * Commodore 64
-  * Hires mode: 320x200, 16 colours, two colours per 8x8 character block. PNG output only for now.
+  * Hires mode: 320x200, 16 colours, two colours per 8x8 character block. Saves an Art Studio hires
+    file (`.art`) or PNG.
 
 ## Installation
 
@@ -56,11 +58,15 @@ on most machines, and the UI tests on Linux under Xvfb.
 
 * `src/dizher`: the converter (colour selection, halftoning, eye model), the platforms and the GUI.
 * `src/mokit`: the node graph, project files and UI widgets the GUI is built on.
+* `docs/images`: the pictures of the UI in this README and [CHANGELOG.md](CHANGELOG.md), made by
+  `docs/screenshots.py` (on Linux without a display: `xvfb-run -a -s '-screen 0 4200x2600x24' python
+  docs/screenshots.py`).
 
 ## How it works
 
 Dizher turns a full-colour picture into a ZX Spectrum screen: 256x192 pixels where every 8x8
-block may use only two colours out of the 15-colour palette. The conversion is one optimisation
+block may use only two colours out of the 15-colour palette. The C64 hires mode works the same way at
+320x200 with 16 colours. The conversion is one optimisation
 problem in two stages, colour selection and halftoning, both judged by the same model of the eye.
 
 ### Pipeline
@@ -69,7 +75,7 @@ Two optimisers in a row, both minimising the same eye-model error, each with its
 The GUI block that owns each control is in brackets.
 
 ```
- source image ──► Tune (framing, light, levels, contrast, colour) ──► sRGB 256x192
+ source image ──► Tune (framing, light, levels/curves, contrast, colour) ──► sRGB 256x192
                                                                         │
                        gamma 2.2 ──► linear RGB ──► opponent O1 O2 O3 (luma, red-green, blue-yellow)
                                                     scaled by sqrt(weights)         [Metric: chroma]
@@ -78,17 +84,20 @@ The GUI block that owns each control is in brackets.
    ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
    │ Stage 1: SELECT PAIRS                one paper/ink pair per 8x8 block                          │
    │                                                                                                │
-   │  candidates: for every allowed pair, project the block onto the paper-ink segment, halftone    │
-   │  it as stage 2 will          [Target: palette subset]  [Halftoner: halftoner, matrix, kernel]  │
+   │  candidates: for every allowed pair, project the block onto the paper-ink segment: the mixture │
+   │  t per pixel, exact or halftoned   [Metric: method]  [Target: palette subset]                  │
    │                                                                                                │
    │  loss(labels) = Σ_ch || h_ch ∗ (composite − target) ||²    eye-blurred error, exact quadratic  │
-   │               + Σ_ch noise_ch · || composite − target ||²  unblurred dot contrast              │
+   │               + Σ_ch noise_ch · (|| composite − target ||² + Σ t(1−t) · dot_ch²)               │
    │               + coherence · Σ_seams V(pair, pair') · exp(−step² / 2 edge²)   Potts prior       │
    │                                                                                                │
    │     h_ch      [Eye model: luma/chroma alpha, blur px]  support capped at 4 px (half a cell)    │
    │     noise_ch  [Select pairs: luma noise, chroma noise]                                         │
+   │     dot_ch    paper-ink contrast: luma, and for chroma the hue difference alone (CIELAB)       │
    │     V         CIELUV distance of papers + inks, fixed by the palette                           │
    │     coherence, edge  [Select pairs: coherence, edge]                                           │
+   │  surface dE  [Select pairs]: the cells within it of their surface's mean colour (k-means of    │
+   │  cells by colour and place, ~24 cells) may take only the pair cheapest over them; 0 off        │
    │                                                                                                │
    │  solver: rows then columns re-solved exactly by dynamic programming, until no label changes    │
    └──────────────────────────────────────────┬─────────────────────────────────────────────────────┘
@@ -102,16 +111,22 @@ The GUI block that owns each control is in brackets.
    │  [Halftoner: halftoner] ordered (matrix; void-and-cluster dispersed dots by default, a fair    │
    │  stand-in for the DBS result), error diffusion (kernel), stochastic (blue noise); the tile     │
    │  is rolled by [Halftoner: noise x, y]                                                          │
+   │  [Halftone: chroma] the dots' chroma weight, DBS's too, in place of Metric's: it places the    │
+   │  target on the pair's mixtures; a method's preset sets both alike                              │
+   │  [Halftone: dithering] the share of each pair's lightness range left as dots, the rest solid;  │
+   │  [Halftone: checker] a 50% checkerboard as a third level between paper and ink                 │
    └──────────────────────────────────────────┬─────────────────────────────────────────────────────┘
                                               │ bitmap
                                               ▼
    ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
    │ Stage 3: OPTIMISE                  [Optimise: enabled]  off passes the halftone through        │
    │                                                                                                │
-   │  loss(bitmap) = Σ_ch || h_ch ∗ (result − target) ||²    same kernels and noise weights         │
+   │  loss(bitmap) = Σ_ch || h_ch ∗ (result − target) ||²    same kernels, the dots' weights        │
    │               + Σ_ch noise_ch · || result − target ||²                                         │
    │               + structure · Σ_p c_p (1 − SSIM_p(result, target))   luma only, 7x7 windows,     │
    │                                                                     c_p = local contrast       │
+   │     noise_ch  [Optimise: luma noise, chroma noise] in place of Select pairs', and Halftone's   │
+   │               chroma; a method's preset sets both alike                                        │
    │     structure  [Optimise: structure]                                                           │
    │                                                                                                │
    │  solver (DBS): from the halftone, every pixel tries a toggle and a swap with each of 8         │
@@ -121,13 +136,35 @@ The GUI block that owns each control is in brackets.
    └──────────────────────────────────────────┬─────────────────────────────────────────────────────┘
                                               │ bitmap + attributes
                                               ▼
-                                  screen file (.scr) or PNG
+                    native file (.scr on the Spectrum, .art on the C64) or PNG
 ```
 
 The views in the Preview tab show what each stage sees: Projected is the stage 2 target,
 Unoptimised is the halftone the optimiser started from, Eye shows the target and the result
 through h, Error is their difference, Energy is the stage 1 loss per block (own, seam,
 coherence), and Seams shows where edges switch the coherence prior off.
+
+### Levels and Curves
+
+The Levels & Curves block of Tune is one node with two modes; only the chosen one is applied and
+both keep their values. Each has a channel selector as in Photoshop: RGB, the composite, is applied
+first, then R, G and B each on its result. Levels are black, grey (gamma) and white input points and
+an output range per channel; Curves are monotone cubic curves (no overshoot) through the points, flat
+beyond the end points. Switching to Curves brings the levels along as curves (it asks first when
+the curves have been edited); switching back finds the levels as they were.
+
+Three eyedroppers, black, grey and white, pull a sampled colour onto a colour of the target palette:
+arm one, click the preview, and the node's input there (the mean of 3x3 pixels) maps onto its target.
+The targets default to the palette's black, white and the grey nearest mid lightness (the
+Spectrum's non-bright white, the C64's middle grey) and follow the mode; the swatch before each
+eyedropper picks any palette colour instead, such as non-bright cyan for a background. Black and
+white set each channel's end points, grey sets each channel's gamma in Levels (a target channel a
+gamma cannot reach is shown next to the target) and in Curves adds a point per channel with every
+click, so several colours can be pulled to the palette. The points are listed with their sample and
+target; a point whose order in some channel disagrees with the others' is marked as a conflict, and
+one within 4 levels of another's input replaces it in that channel.
+
+<img src="docs/images/levels-curves.png" width="429" alt="Levels & Curves with two eyedropper points">
 
 ### Eye model
 
@@ -138,7 +175,7 @@ closer to the measured contrast sensitivity). Colours are compared in an opponen
 S-CIELAB: one luminance channel and two chroma channels (red-green, blue-yellow), each with its
 own blur, because the eye resolves luminance detail much more finely than colour detail. Both
 stages use the squared error after this blur, plus an unblurred error term that penalises
-visible dot noise, with the same kernels and channel weights.
+visible dots, with the same kernels and channel weights.
 
 The converter caps the kernel support at half the smallest cell dimension (radius 4 for an 8x8
 cell) before normalisation, so that nearest-neighbour selection covers every interaction. The
@@ -147,14 +184,21 @@ deliberately truncated.
 
 ### Colour selection
 
-For every block and every allowed pair of palette colours (72 pairs on the Spectrum), a candidate
+For every block and every allowed pair of palette colours (71 pairs on the Spectrum), a candidate
 block is made by projecting the source onto the paper/ink segment in weighted linear opponent
-colour space and then halftoning that mixture with the chosen halftoner, so that pairs are chosen
-for the dots they will actually get (error diffusion is batched over all pairs in one raster
-pass). The whole screen is then the sum of one candidate per block, and the eye-model error of
-that composite is a quadratic function of the block labels: a cost per block, plus a pairwise
-cost for every two neighbouring blocks that measures the visible seam their candidates paint
-across the border. Because the blur is small, only the 8 surrounding blocks interact.
+colour space: the mixture of the two colours each pixel asks for, taken exactly or halftoned
+depending on the selection method (below). The whole screen is then
+the sum of one candidate per block, and the eye-model error of that composite is a quadratic
+function of the block labels: a cost per block, plus a pairwise cost for every two neighbouring
+blocks that measures the visible seam their candidates paint across the border. Because the blur
+is small, only the 8 surrounding blocks interact.
+
+With the exact mixture, the dots are costed apart from it, as t(1 - t) times the squared contrast of paper and
+ink (the mean squared error dots add around the mixture they average to). Lightness contrast has
+weight 0 by default, so bright yellow dots on black cost nothing more than dim ones. Chroma
+contrast counts hue alone: blue dots on yellow, which average to a pale peach, cost the most, and
+black or white dots on any colour cost nothing. These defaults, and the weights below, were fitted
+to hand-corrected attribute maps with `tests/pair_bench.py`.
 
 Blurred error alone is blind to texture: a lone block dithered with green dots among blocks
 dithered with yellow ones is an obvious cell even when the mean colours match. A coherence prior
@@ -164,18 +208,59 @@ has an edge across that seam. Labels are optimised by line-wise dynamic programm
 then each column, is re-solved exactly given the rest, until nothing changes. The palette can be
 restricted to bright colours only, non-bright only, grayscale, black and white, or any custom set.
 
+Each block still picks its own nearest mixture, so the blocks of a smooth surface whose colour lies between two
+pairs (a face between red/yellow and yellow/white) fall on both sides of that border: a patchwork no coherence
+weight undoes. [Select pairs: surface dE], off by default, binds the blocks within that many dE of their surface's
+mean colour to the one pair cheapest over all of them; the surfaces are k-means of the blocks by mean colour and
+position, about 24 blocks each. In a blind test on seven pictures 20 dE made faces and skies clean (jojo, a van
+Gogh) and lost the small accents of dense illustrations, so it is a choice per picture.
+
+#### Selection methods
+
+How a pair is scored on a block is a choice, [Metric: method]; the rest (the solver, coherence,
+Overpaint, halftoning and DBS) is shared. Picking a method also sets the Metric, Select pairs,
+Halftone, Optimise and Eye model values it was tuned with, as one undo step. No chroma noise and the blurs are the author's
+picks over galleries of renders, a gallery per test picture.
+
+| Method | A pair is scored on | Tuned values |
+|---|---|---|
+| Exact mixture (new projects) | its exact mixture, plus a cost for dots of clashing hues (chroma noise) | chroma 2, coherence 6, chroma noise 0, luma blur 0.9 px |
+| Halftoned (0.2.4) | one halftone of its mixture, by the chosen halftoner | chroma 1, coherence 2, chroma noise 0, chroma blur 1.6 px |
+
+<img src="docs/images/metric-method.png" width="436" alt="Metric's method combo">
+
+A project saved before there was a choice opens as Halftoned, so it converts as it did. Methods
+live in `src/dizher/converter/energy.py` (`METHODS`); a new one is a class with a `candidates`
+method and its `preset`. `python tests/pair_bench.py compare` scores every method against the
+hand-painted references in `tests/images/*/reference.scr`.
+
 ### Halftoning
 
 With paper and ink fixed per block, each pixel is set to one of them so that the blurred result
 matches the blurred image. All halftoners take the same colour-aware inputs:
 
-* ordered, with a choice of 39 threshold matrices: Bayer, dispersed and clustered dots, line
+* ordered, with a choice of 42 threshold matrices: Bayer, dispersed and clustered dots, line
   screens and magic squares (void-and-cluster dispersed dots by default);
 * error diffusion, with 19 kernels from Floyd-Steinberg to Stevenson-Arce;
 * stochastic, with blue noise.
 
 The Halftoner block shows only the controls of the chosen method, and the same method paints the
-pair candidates.
+pair candidates of the live preview while colours are being selected. Its matrix and kernel combos
+list the patterns in sections (Bayer, Non-rect, Dots, Rombs, Squares, Lines; Classic, Shiau-Fan,
+Lossy, Wide, Simple), each after a ramp drawn by it. Gallery shows the conversion halftoned by every
+pattern of a section, with the pairs kept and no Optimise; a click picks one.
+
+<img src="docs/images/pattern-combo.png" width="295" alt="The matrix combo in sections">
+
+<img src="docs/images/gallery.png" width="710" alt="The gallery of the Bayer section">
+
+Two Halftone controls change the target itself, so every halftoner and DBS follow them. Dithering
+(1 by default) is the share of the lightness range between a block's paper and ink that is mixed
+with dots; the rest goes solid, and 0 sets each pixel to the colour nearer in lightness. Checker adds
+the half-and-half mix of paper and ink as a level of its own, drawn as a checkerboard with each
+block's brighter colour on the same parity over the whole screen, so neighbouring checkers line up;
+the two halves of the range on either side of it are dithered as pairs of their own. DBS leaves the
+checker's pixels as they are, and skips blocks whose paper and ink are the same colour.
 
 The Optimise stage, on by default, then runs Direct Binary Search (DBS) from that halftone: it
 repeatedly visits every pixel and either flips it or swaps it with one of its 8 neighbours,
@@ -183,7 +268,10 @@ whichever lowers the eye-model error most, until no move helps. A swap moves a d
 changing the local tone; with flips alone the search stalls at about twice the error. The error
 change of a move is computed exactly from a running error image, so a pass costs a few
 convolutions. Pixels farther apart than the kernel do not interact, so a whole lattice of pixels
-moves at once. DBS uses the same per-channel blur and noise terms as colour selection.
+moves at once. DBS uses the same per-channel blur as colour selection, and weights of the dots'
+own: the Halftone stage's chroma, which also places the halftoner's target, and its own luma and
+chroma noise. A selection method's preset sets them with the selection's; apart, they tune the
+dots without moving the pairs.
 
 Plain DBS reproduces tone but blurs faint edges and texture. Following structure-aware
 halftoning (Pang et al. 2008), the energy also includes a structural similarity (SSIM) term
@@ -202,28 +290,54 @@ Done:
   structure-aware (SSIM) term
 * [x] Colour selection as one eye-model energy with a coherence prior
 * [x] Adjustable metric weights (luma, chroma, coherence) and eye-model parameters
+* [x] Pair selection methods: Exact mixture (new projects) and Halftoned (0.2.4's scoring); picking
+  one sets the values it was tuned with, the Eye model's included, as one undo step;
+  `tests/pair_bench.py` scores them against hand-painted references
+* [x] Surface dE in Select pairs: the blocks of a smooth surface take one pair (off by default)
 * [x] Selectable dithering methods
+* [x] Pattern picker: the matrices and kernels in sections, each with a ramp drawn by it, and a Gallery of
+  the conversion halftoned by every pattern of a section
+* [x] Halftone's Dithering (the share of each pair's lightness range left as dots, the rest solid)
+  and Checker (a 50% checkerboard of paper and ink as a third level)
+* [x] The dots' own weights: Halftone's chroma and Optimise's luma and chroma noise, tuned without
+  moving the pairs
 * [x] Tune stages: framing (fill or fit, scale, rotation, pixel shift and per-edge nudges onto
   the cell grid), exposure and white balance (temperature, tint), Photoshop-style Levels with
   Auto and a histogram, local tone (local contrast, shadows, highlights and clarity on an
   edge-preserving base layer), contrast, vibrance and saturation, texture and sharpening (unsharp
   mask at the screen's size)
+* [x] Levels per channel and Curves (R, G, B and the composite, as in Photoshop), with black, grey
+  and white eyedroppers that map a sampled colour onto a chosen palette colour
 * [x] Palette subsets: bright only, non-bright only, grayscale, black and white, or a custom set
   with any colour toggled on or off
 * [x] Python installation package
-* [x] Save as SCR and PNG
+* [x] Save as SCR (ZX Spectrum), Art Studio hires (C64) and PNG
 * [x] Projects: a folder with a `project.json` (every stage's params and the image path relative
   to the folder, in mokit's format, as in AmaZX); exports go to its `build/` by default, and the
-  last session, unsaved edits included, comes back on start. Every image has its own project,
+  last session's unsaved edits come back on start, while a project changed on disk opens as it is.
+  Every image has its own project,
   the Lightroom way: File → Open image opens the project folder next to the image, named after
   it, or starts a new one there. Autosave (File menu, on by default) writes the project after
   every edit; with autosave off, opening another image over unsaved edits asks to save them.
-  File → Open recent lists the last 20 images.
+  File → Open recent lists the last 20 images. The source image is watched: saved over in an
+  editor, it is converted again.
 * [x] Undo/Redo (Edit menu, Cmd+Z / Shift+Cmd+Z): a slider drag is one step, and opening an image
   starts the history over. The History panel lists every step, newest on top, named after the
   params it changed; a click goes back or forward to it.
-* [x] Overpaint: attributes and brightness painted by hand
+* [x] Snapshots, the Lightroom way: the Snapshots panel under Tune keeps named copies of every
+  setting, overpaint included, as `snapshots/<name>.json` beside `project.json`, each with a PNG of
+  its conversion. Save snapshot (Shift+Cmd+S) names one by the time, ready to rename; a click brings
+  one back as one undo step, asking first only when no snapshot has the current settings; hovering
+  one shows its conversion in the Preview. Right click: update, rename, delete.
+* [x] Overpaint: attributes and brightness painted by hand; Freeze all keeps the whole field as shown, so it
+  no longer follows Select pairs; Hide shows the conversion without the painted cells. On the
+  Spectrum ink and paper share a brightness, and the B1 and B0 brushes make a cell bright or not
+* [x] Cell inspector: hovering a preview for a second shows the cell, its neighbours and the pairs'
+  scores; a right click keeps it as a popup that paints the cell
 * [x] Standalone binary packages with PyInstaller for macOS, Windows and Linux
+* [x] Versioning, and Help → About with the version, links and greetings
+* [x] CI: the tests on Windows, macOS and Linux and the UI tests on every push; builds of
+  `develop`, of release PRs and of `v*` tags, a tag on `main` published as a release
 
 ### Alpha
 
@@ -237,10 +351,8 @@ Critical:
 * [ ] A better loss function for pair selection, tuned on real artists' overpaint data
 * [ ] .dmg for macOS
 * [ ] Palette snapping prototype
-* [ ] A panel of starred or named snapshots to compare and choose from
+* [ ] Snapshots: the knobs a snapshot changes highlighted in the panels
 * [ ] Global presets of selected stages and params
-* [ ] Curves (a tone curve editor; subsumes Contrast)
-* [ ] Levels per channel (R, G, B), like Photoshop's channel menu
 
 ### Future versions
 

@@ -65,9 +65,27 @@ class Job:
         self.image = image
 
 
+def unpainted(graph):
+    """The graph with no cell painted: the conversion as Select pairs alone makes it."""
+    params = graph['overpaint'].params
+    return graph.with_params('overpaint', replace(params, overrides=())) if params.overrides else graph
+
+
+def merged(graph):
+    """The params of a saved graph on the current pipeline: a node it lacks keeps its defaults, one the pipeline lacks
+    or has with another op is dropped, so a project or snapshot from before a stage was added or removed still opens;
+    a matrix under an old name takes its new one."""
+    g = ops.make_graph()
+    for nid, node in graph.nodes:
+        if nid in g and node.op == g[nid].op and not isinstance(node.params, Unresolved):
+            g = g.with_params(nid, node.params)
+    return ops.renamed(g)
+
+
 class Pipeline:
     def __init__(self) -> None:
         self.graph = ops.make_graph()
+        self.unpainted = False    # a view (Overpaint's Hide): the stages run without the painted cells, kept in graph
         self.memo = Memo()
         self.digests = Digests()
         self.errors = {}          # node id -> message of its failed run; cleared by the next edit
@@ -82,9 +100,14 @@ class Pipeline:
         self._executor = ThreadPoolExecutor(1)
         self._sync()
 
+    @property
+    def running(self):
+        """The graph the stages run and the previews show: the edited one, without its painted cells while unpainted."""
+        return unpainted(self.graph) if self.unpainted else self.graph
+
     def _sync(self) -> None:
-        cache = {}
-        self.keys = {nid: self.graph.key(nid, self.digests, cache) for nid in self.graph.order()}
+        cache, g = {}, self.running
+        self.keys = {nid: g.key(nid, self.digests, cache) for nid in g.order()}
         if self.job is not None and self.job.key != self.keys[self.job.node_id]:
             self.job.cancel.set()   # its result is stale
 
@@ -101,23 +124,38 @@ class Pipeline:
                 self.past = (self.past + [self.graph])[-HISTORY:]
             self.future.clear()
             self._held = held   # not on a no-op: a press that moves nothing yet must not fold into the last step
+            if self.past and graph == self.past[-1]:   # held edits back where they started (a reset at the default)
+                self.past.pop()
+                self._held = False
         self._apply(graph)
+
+    def set_unpainted(self, on: bool) -> None:
+        """Show the conversion without the painted cells, or with them again: a view, not an edit, so no undo step and
+        nothing unsaved; the other one's results stay in RAM, so switching back shows them at once."""
+        if on != self.unpainted:
+            self.unpainted = on
+            self.errors, self.cancelled = {}, False
+            self._sync()
 
     def release(self) -> None:
         """No widget holds the edit any more: the next one is a new step."""
         self._held = False
 
     def undo(self) -> None:
+        self._held = False   # the next edit is a step of its own
         if self.past:
             self.future.append(self.graph)
             self._apply(self.past.pop())
 
     def redo(self) -> None:
+        self._held = False
         if self.future:
             self.past.append(self.graph)
             self._apply(self.future.pop())
 
     def _apply(self, graph) -> None:
+        if graph['overpaint'].params != self.graph['overpaint'].params:
+            self.unpainted = False   # cells being painted, undone or cleared are shown
         self.graph = graph
         self.errors, self.cancelled = {}, False
         self._deadline = time.monotonic() + DEBOUNCE
@@ -130,15 +168,10 @@ class Pipeline:
         self._latest.clear()
 
     def restore(self, graph) -> None:
-        """The params of a saved graph on the current pipeline: a node it lacks keeps its defaults, one the pipeline
-        lacks or has with another op is dropped, so a project from before a stage was added or removed still opens.
-        The history starts over."""
-        g = ops.make_graph()
-        for nid, node in graph.nodes:
-            if nid in g and node.op == g[nid].op and not isinstance(node.params, Unresolved):
-                g = g.with_params(nid, node.params)
-        self.past, self.future, self._held = [], [], False   # a new document
-        self._apply(g)
+        """A saved graph as a new document (merged): the history starts over."""
+        self.past, self.future, self._held = [], [], False
+        self.unpainted = False
+        self._apply(merged(graph))
 
     def cancel(self) -> None:
         if self.job is not None:
@@ -197,24 +230,25 @@ class Pipeline:
             self._start_next()
 
     def _kept(self) -> set:
-        """Keys of the current graph's results and of the nearest ones in the history."""
+        """Keys of the current graph's results, with and without its painted cells, and of the nearest ones in the
+        history."""
         kept = set(self.keys.values())
-        for g in self.past[-CACHED:] + self.future[-CACHED:]:
+        for g in [self.graph, unpainted(self.graph)] + self.past[-CACHED:] + self.future[-CACHED:]:
             cache = {}
             kept.update(g.key(nid, self.digests, cache) for nid in g.order())
         return kept
 
     def _start_next(self) -> None:
-        nodes = [n for n in self.graph.ids() if n not in self.errors]
+        g = self.running
+        nodes = [n for n in g.ids() if n not in self.errors]
         try:
-            steps = ready_steps(self.graph, self.keys, self.memo, nodes)
+            steps = ready_steps(g, self.keys, self.memo, nodes)
         except GraphError as e:
             self.errors[e.node] = str(e)
             return
-        steps = [s for s in steps if not (s[0] == 'source' and self.graph['source'].params.path is None)]
+        steps = [s for s in steps if not (s[0] == 'source' and g['source'].params.path is None)]
         if not steps:
             return
         node_id, op, inputs = steps[0]
         job = self.job = Job(node_id, self.keys[node_id])
-        job.future = self._executor.submit(run_step, op, job.key, tuple(inputs), self.graph[node_id].params,
-                                           self.memo, job)
+        job.future = self._executor.submit(run_step, op, job.key, tuple(inputs), g[node_id].params, self.memo, job)

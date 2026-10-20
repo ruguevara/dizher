@@ -1,9 +1,9 @@
 """Dizher's conversion stages as mokit ops, one graph node per stage in PIPELINE order.
 
 A node's mokit key covers its params and everything upstream, so an edit reruns only the stages after it:
-the structure weight reruns Optimise, a painted cell from Overpaint, coherence from Select pairs, the halftoner,
-the eye model or the metric from Prepare (the ~1 s candidate and selection-energy setup). Converter results are
-shallow copies sharing the upstream arrays, which no stage mutates.
+the structure and noise weights rerun Optimise, the dots' chroma from Halftone, a painted cell from Overpaint,
+coherence from Select pairs, the halftoner, the eye model or the metric from Prepare (the ~1 s candidate and
+selection-energy setup). Converter results are shallow copies sharing the upstream arrays, which no stage mutates.
 """
 from dataclasses import dataclass, replace
 from typing import Annotated
@@ -12,15 +12,15 @@ import cv2
 import numpy as np
 from skimage import img_as_float
 
-from mokit.graph import Graph, Node, Op, meta
+from mokit.graph import Graph, Like, Node, Op, meta
 from mokit.types import Image
 
 from .converter import eye as eye_model
 from .converter.converter import Converter
-from .converter.energy import EDGE_SIGMA
+from .converter.energy import METHODS, NEWEST, LEGACY
 from .converter.dither import Ditherer, ErrorDiffusion, Ordered, Stohastic
 from .halftoning.noise.noise import BLUE_NOISE_RESOLUTION
-from .halftoning.ordered.matrices import MATRICES
+from .halftoning.ordered.matrices import MATRICES, RENAMED
 from .halftoning.error_distribution.kernels import KERNELS
 from .platforms import Mode, c64, zxspectrum
 from . import tone
@@ -34,6 +34,7 @@ HALFTONERS = {cls.label: cls for cls in (Stohastic, Ordered, ErrorDiffusion)}
 class Metric:
     chroma: float   # weight of the chroma error against luma's 1
     flare: float    # flattens the lightness gain of the error, see converter/energy.py
+    method: str = NEWEST    # how a pair is scored on a block, see converter/energy.METHODS
 
 
 @dataclass(frozen=True)
@@ -98,14 +99,31 @@ def light(picture: np.ndarray,
     return tone.light(picture, exposure, temperature, tint)
 
 
+TONE_MODES = ('Levels', 'Curves')
+
+
 def levels(picture: np.ndarray,
+           mode: Annotated[str, meta(choices=TONE_MODES, help="the one applied; both keep their values")] = 'Levels',
            in_black: Annotated[int, meta(min=0, max=254)] = 0,
            in_white: Annotated[int, meta(min=1, max=255)] = 255,
            gamma: Annotated[float, meta(min=0.1, max=9.99)] = 1.0,
            out_black: Annotated[int, meta(min=0, max=255)] = 0,
-           out_white: Annotated[int, meta(min=0, max=255)] = 255) -> np.ndarray:
-    """Photoshop Levels; the UI draws it with ui/levels.py."""
-    return tone.levels(picture, in_black, in_white, gamma, out_black, out_white)
+           out_white: Annotated[int, meta(min=0, max=255)] = 255,
+           channels: Annotated[tuple[tuple[float, ...], ...],
+                               meta(help="R, G, B levels after the composite, each (in_black, in_white, gamma, "
+                                         "out_black, out_white)")] = (tuple(map(float, tone.NEUTRAL)),) * 3,
+           curves: Annotated[tuple[tuple[float, ...], ...],
+                             meta(help="RGB, R, G, B curves as flat (x, y) points in 0..255")] = (tone.IDENTITY,) * 4,
+           picks: Annotated[tuple[tuple[float, ...], ...], meta(help="the Curves grey eyedropper's point groups, "
+                                                                     "see tone.PICK_X")] = (),
+           targets: Annotated[tuple[int, ...], meta(help="the black, grey and white eyedroppers' palette indexes, "
+                                                        "-1 for the mode's own")] = (-1, -1, -1)) -> np.ndarray:
+    """Photoshop Levels or Curves, per channel, with palette-targeted eyedroppers: the composite (RGB) first, then
+    each channel's on its result. The in_black..out_white fields are the composite levels, as before channels came.
+    The UI draws it with ui/levels.py."""
+    if mode == 'Curves':
+        return tone.curves(picture, curves)
+    return tone.all_levels(picture, (in_black, in_white, gamma, out_black, out_white), channels)
 
 
 def local_tone(picture: np.ndarray,
@@ -140,57 +158,96 @@ def detail(picture: np.ndarray,
     return tone.detail(picture, texture, sharpen, radius)
 
 
-def metric(chroma: Annotated[float, meta(min=0.0, max=4.0, help="weight of chroma error; luma error weighs 1")] = 1.0,
+NEWEST_PRESET = METHODS[NEWEST].preset   # new projects' Metric, Select pairs, Halftone, Optimise and Eye values
+
+
+def metric(method: Annotated[str, meta(choices=tuple(METHODS), legacy=LEGACY,
+                                       help="how a pair is scored on a cell: Exact mixture, its mixture and a cost "
+                                            "for dots of clashing hues; Halftoned, one halftone of it (0.2.4). "
+                                            "Picking one sets the Metric, Select pairs, Halftone, Optimise and Eye "
+                                            "values it was tuned with")] = NEWEST,
+           chroma: Annotated[float, meta(min=0.0, max=4.0, help="weight of chroma error; luma error weighs 1")]
+               = NEWEST_PRESET['chroma'],
            flare: Annotated[float, meta(min=0.0, max=1.0, help="stray light on the screen, in units of white: 0 weighs "
                                         "errors as CIELAB lightness does, ~7x more in black than in mid grey; "
-                                        "higher flattens that towards plain linear light")] = 0.1) -> Metric:
-    """Balance of chroma against luma error in the eye-model energy, and how much more an error counts in the
-    shadows. One chroma weight: scaling both would only duplicate coherence (the seam cost has no weight), shift
-    the edge threshold and the DBS structure term."""
-    return Metric(chroma, flare)
+                                        "higher flattens that towards plain linear light")] = NEWEST_PRESET['flare']
+           ) -> Metric:
+    """The selection method, the balance of chroma against luma error in the eye-model energy, and how much more
+    an error counts in the shadows. One chroma weight: scaling both would only duplicate coherence (the seam cost
+    has no weight) and shift the edge threshold. The dots have weights of their own (halftone, optimise)."""
+    return Metric(chroma, flare, method)
+
+
+def apply_preset(graph: Graph, method: str) -> Graph:
+    """The graph with the selection method and the Metric, Select pairs, Halftone, Optimise and Eye values it was
+    tuned with."""
+    preset = dict(METHODS[method].preset, method=method)
+    for nid in ('metric', 'select', 'halftone', 'optimise', 'eye'):
+        params = graph[nid].params
+        graph = graph.with_params(nid, replace(params, **{k: v for k, v in preset.items() if hasattr(params, k)}))
+    return graph
 
 
 def eye(luma_alpha: Annotated[float, meta(min=0.5, max=2.0)] = eye_model.LUMA_ALPHA,
         # the kernel radius is capped at half a cell (4 px): beyond ~1.9 px at alpha 2 the blur changes nothing
-        luma_scale: Annotated[float, meta(min=0.3, max=1.9, label="luma blur px")] = eye_model.LUMA_SCALE,
+        luma_scale: Annotated[float, meta(min=0.3, max=1.9, label="luma blur px")] = NEWEST_PRESET['luma_scale'],
         chroma_alpha: Annotated[float, meta(min=0.5, max=2.0)] = eye_model.CHROMA_ALPHA,
-        chroma_scale: Annotated[float, meta(min=0.3, max=1.9, label="chroma blur px")] = eye_model.CHROMA_SCALE) -> Eye:
-    """Alpha-stable blur of each channel group, see converter/eye.py."""
+        chroma_scale: Annotated[float, meta(min=0.3, max=1.9, label="chroma blur px")]
+            = NEWEST_PRESET['chroma_scale']) -> Eye:
+    """Alpha-stable blur of each channel group, see converter/eye.py; the blurs are the selection method's (a preset
+    sets them)."""
     return Eye(luma_alpha, luma_scale, chroma_alpha, chroma_scale)
 
 
-NOISE = meta(min=0, max=BLUE_NOISE_RESOLUTION - 1, help="px the tile is rolled: another start for pair selection "
-                                                        "and DBS, which settle in local optima")
+NOISE = meta(min=0, max=BLUE_NOISE_RESOLUTION - 1, help="px the tile is rolled: another start for DBS (and for pair "
+                                                        "selection by the Halftoned method), which settle in local optima")
 
 def halftoner(halftoner: Annotated[str, meta(choices=tuple(HALFTONERS))] = Ordered.label,
               matrix: Annotated[str, meta(choices=tuple(MATRICES))] = 'Void dispersed dots',
               kernel: Annotated[str, meta(choices=tuple(KERNELS))] = 'Shiau-Fan 3',
               noise_x: Annotated[int, NOISE] = 0, noise_y: Annotated[int, NOISE] = 0) -> Ditherer:
-    """The method that paints the pair candidates and then the result (each cell's paper or ink per pixel);
-    each reads its own params (Ditherer.controls): Ordered the threshold matrix, Error diffusion the kernel,
-    the tiled ones their origin."""
+    """The method that paints the result (each cell's paper or ink per pixel) and the pair candidates (the live
+    preview, and what the Halftoned selection method scores); each reads its own params (Ditherer.controls): Ordered
+    the threshold matrix, Error diffusion the kernel, the tiled ones their origin."""
     return HALFTONERS[halftoner](matrix=matrix, kernel=kernel, origin=(noise_y, noise_x))
 
 
+def renamed(graph: Graph) -> Graph:
+    """A saved graph with the halftoner's matrix under its current name: projects from before the renaming."""
+    params = graph['halftoner'].params
+    new = RENAMED.get(getattr(params, 'matrix', None))
+    return graph.with_params('halftoner', replace(params, matrix=new)) if new else graph
+
+
 def prepare(picture: np.ndarray, target: Mode, metric: Metric, eye: Eye, halftoner: Ditherer, progress=None) -> Converter:
-    """Every pair fitted per pixel and halftoned into a candidate, and the selection energy."""
+    """Every pair fitted per pixel and halftoned into a candidate, and the selection energy of the chosen method."""
     c = Converter({'Luma': 1.0, 'Chroma': metric.chroma}, target, luma_alpha=eye.luma_alpha,
                   luma_scale=eye.luma_scale, chroma_alpha=eye.chroma_alpha, chroma_scale=eye.chroma_scale,
-                  ditherer=halftoner, flare=metric.flare)
+                  ditherer=halftoner, flare=metric.flare, method=metric.method)
     with reporting(progress):
         c.set_image(picture)
     return c
 
 
 def select_pairs(prepared: Converter,
-                 coherence: Annotated[float, meta(min=0.0, max=8.0)] = 2.0,
+                 coherence: Annotated[float, meta(min=0.0, max=8.0)] = NEWEST_PRESET['coherence'],
                  edge: Annotated[float, meta(min=0.02, max=0.4, help="step of the original across a seam that "
-                                             "counts as an edge, where a pair change costs no coherence")] = EDGE_SIGMA,
-                 luma_noise: Annotated[float, meta(min=0.0, max=0.5)] = 0.0,
-                 chroma_noise: Annotated[float, meta(min=0.0, max=0.5)] = 0.05,
+                                             "counts as an edge, where a pair change costs no coherence")]
+                     = NEWEST_PRESET['edge'],
+                 luma_noise: Annotated[float, meta(min=0.0, max=0.5, help="cost of dot contrast in lightness")]
+                     = NEWEST_PRESET['luma_noise'],
+                 chroma_noise: Annotated[float, meta(min=0.0, max=0.5, help="cost of dots of clashing hues, "
+                                                     "blue on yellow most, black or white dots none")]
+                     = NEWEST_PRESET['chroma_noise'],
+                 surface: Annotated[float, meta(min=0.0, max=40.0, label="surface dE",
+                                                help="cells within this many dE of their surface's mean colour take "
+                                                     "one pair, the surface's cheapest: a face or a sky in one clean "
+                                                     "pair instead of a patchwork of two; small accents may go. 0 off")]
+                     = 0.0,
                  progress=None) -> Converter:
-    """One (paper, ink) pair per cell; the noise weights also reach the DBS optimiser."""
-    c = prepared.copy(coherence=coherence, edge=edge, luma_noise=luma_noise, chroma_noise=chroma_noise)
+    """One (paper, ink) pair per cell."""
+    c = prepared.copy(coherence=coherence, edge=edge, luma_noise=luma_noise, chroma_noise=chroma_noise,
+                      surface=surface)
     with reporting(progress):
         c.set_labels(c.energy.apply())
     return c
@@ -207,17 +264,16 @@ def overpaint(selection: Converter,
     if not overrides:
         return selection
     labels = selection.best_attr_indexes.copy()
+    paint = painted_field(overrides, labels.shape)
+    rows, cols = np.nonzero((paint >= 0).any(-1))
     pairs = np.array(list(selection.palette.iter_idxs_pairs()))   # (P, 2) paper, ink
     rgb = selection.palette.as_float()
-    R, C = labels.shape
-    for r, c, *paint in overrides:
-        if r >= R or c >= C:
-            continue
-        want = [p if p >= 0 else a for p, a in zip(paint, pairs[labels[r, c]])]
-        weight = [PAINTED if p >= 0 else 1 for p in paint]
-        far = lambda i, j: sum(w * np.linalg.norm(rgb[pairs[:, k]] - rgb[x], axis=-1)
-                               for k, x, w in zip((i, j), want, weight))
-        labels[r, c] = np.minimum(far(0, 1), far(1, 0)).argmin()   # a pair is unordered: paper may be the brighter
+    paint = paint[rows, cols]                                      # (N, 2) painted cells, -1 keeping the selection's
+    want = np.where(paint >= 0, paint, pairs[labels[rows, cols]])
+    weight = np.where(paint >= 0, PAINTED, 1).astype(np.float32)   # float32 as the distances, so ties stay ties
+    to = [np.linalg.norm(rgb[:, None] - rgb[pairs[:, k]][None], axis=-1) for k in (0, 1)]   # colour -> paper, ink
+    far = lambda i, j: weight[:, :1] * to[i][want[:, 0]] + weight[:, 1:] * to[j][want[:, 1]]   # (N, P)
+    labels[rows, cols] = np.minimum(far(0, 1), far(1, 0)).argmin(-1)   # a pair is unordered: paper may be the brighter
     painted = selection.copy()
     painted.set_labels(labels)
     return painted
@@ -226,10 +282,60 @@ def overpaint(selection: Converter,
 PAINTED = 1e3   # a painted colour's distance against a kept one's: the nearest pair keeps the painted colours first
 
 
-def halftone(selection: Converter, progress=None) -> Converter:
+def painted_field(overrides: tuple, shape) -> np.ndarray:
+    """(R, C, 2) every cell's painted (paper, ink), -1 where it keeps the selection's; cells off the screen dropped."""
+    field = np.full((*shape, 2), -1, dtype=np.int64)
+    o = np.array(overrides, dtype=np.int64).reshape(-1, 4)
+    o = o[(o[:, 0] < shape[0]) & (o[:, 1] < shape[1])]
+    field[o[:, 0], o[:, 1]] = o[:, 2:]
+    return field
+
+
+def shown_pairs(conv: Converter, painted: np.ndarray) -> np.ndarray:
+    """(R, C, 2) every cell's (paper, ink) as conv shows it, a painted colour (painted_field) in its painted role,
+    matched by colour as Overpaint matches it, so either black reads as the painted one; the pair is unordered, the
+    darker colour its paper where nothing is painted."""
+    pairs = np.array(list(conv.palette.iter_idxs_pairs()))[conv.best_attr_indexes]   # (R, C, 2) the darker first
+    rgb = conv.palette.as_float()
+    off = lambda shown: sum(np.where(painted[..., k] >= 0, np.linalg.norm(rgb[shown[..., k]] - rgb[painted[..., k]],
+                                                                         axis=-1), 0) for k in (0, 1))
+    return np.where((off(pairs[..., ::-1]) < off(pairs))[..., None], pairs[..., ::-1], pairs)
+
+
+def fix_overrides(selection: Converter, overrides: tuple) -> tuple:
+    """Every cell of the screen painted with the colours it shows, so the whole field no longer follows Select pairs
+    and Overpaint's result stays the same: an unpainted cell takes the pair Select pairs gave it, a -1 (Auto) colour
+    the one Select pairs gave, a pair the palette cannot show the one Overpaint shows for it. A painted colour shown as
+    itself keeps its index (either black), so a fixed field fixes to itself. Cells off the screen are kept as
+    painted."""
+    shape = selection.best_attr_indexes.shape
+    painted = painted_field(overrides, shape)
+    shown = shown_pairs(overpaint(selection, overrides), painted)
+    rgb = selection.palette.as_ubyte()
+    field = np.where((painted >= 0) & (rgb[painted] == rgb[shown]).all(-1), painted, shown)
+    off = [o for o in overrides if o[0] >= shape[0] or o[1] >= shape[1]]
+    return tuple(sorted([(r, c, int(p), int(i)) for (r, c), (p, i) in zip(np.ndindex(*shape), field.reshape(-1, 2))]
+                        + off))
+
+
+def halftone(selection: Converter,
+             chroma: Annotated[float, meta(min=0.0, max=4.0, legacy=Like('metric', 'chroma'),
+                                           help="weight of chroma error in the dots, the optimiser's too; luma "
+                                                "error weighs 1. Metric's chroma weighs the pairs")]
+                 = NEWEST_PRESET['chroma'],
+             dithering: Annotated[float, meta(min=0.0, max=1.0, help="share of the lightness range between a cell's "
+                                              "paper and ink that is mixed with dots, the rest solid: 0 thresholds each "
+                                              "pixel to the nearer colour, 1 dithers every tone")] = 1.0,
+             checker: Annotated[bool, meta(help="a checkerboard of paper and ink as a third level between them, "
+                                                "dithered towards each as Dithering says: at 0 each pixel is paper, "
+                                                "checker or ink")] = False,
+             progress=None) -> Converter:
     """Each pixel quantised to its cell's paper or ink by the Halftoner: the start of the optimiser, or the result
-    when it is off."""
-    c = selection.copy()
+    when it is off. The chroma weight is the dots' own, so they can be tuned without moving the pairs: it places each
+    pixel's target on its pair's mixtures here and weighs the optimiser's error. Dithering also sets the tones the
+    optimiser aims at."""
+    c = selection.copy(dithering=dithering, checker=checker)
+    c.energy.update(Chroma=chroma)
     with reporting(progress):
         c.halftone()
     return c
@@ -238,12 +344,19 @@ def halftone(selection: Converter, progress=None) -> Converter:
 def optimise(halftone: Converter,
              enabled: Annotated[bool, meta(help="Direct binary search from the halftone")] = True,
              structure: Annotated[float, meta(min=0.0, max=0.5, help="weight of the SSIM term")] = 0.06,
+             luma_noise: Annotated[float, meta(min=0.0, max=0.5, legacy=Like('select', 'luma_noise'),
+                                               help="cost of dot contrast in lightness")] = NEWEST_PRESET['luma_noise'],
+             chroma_noise: Annotated[float, meta(min=0.0, max=0.5, legacy=Like('select', 'chroma_noise'),
+                                                 help="cost of dots of clashing hues, blue on yellow most, black or "
+                                                      "white dots none")] = NEWEST_PRESET['chroma_noise'],
              progress=None) -> Converter:
     """Every pixel toggled or swapped with a neighbour while the eye-model error drops (halftoning/dbs.py),
-    from the halftone as the start. Off passes the halftone through."""
+    from the halftone as the start, weighing chroma as Halftone does. Its noise weights are its own, so the dots can
+    be tuned without moving the pairs; a preset sets them and Halftone's chroma as Metric's and Select pairs', a
+    project saved before they were apart takes those. Off passes the halftone through."""
     if not enabled:
         return halftone
-    c = halftone.copy(structure=structure)
+    c = halftone.copy(structure=structure, luma_noise=luma_noise, chroma_noise=chroma_noise)
     with reporting(progress):
         c.optimise()
     return c
@@ -253,7 +366,7 @@ TUNE = (   # (node id, block label, op, inputs): the left column's blocks, top t
     ('source', 'Source', 'mokit.ops:load_media', ()),
     ('framing', 'Framing', 'dizher.ops:framing', ('source', 'target')),
     ('light', 'Light', 'dizher.ops:light', ('framing',)),
-    ('levels', 'Levels', 'dizher.ops:levels', ('light',)),
+    ('levels', 'Levels & Curves', 'dizher.ops:levels', ('light',)),
     ('local', 'Local tone', 'dizher.ops:local_tone', ('levels',)),
     ('contrast', 'Contrast', 'dizher.ops:contrast', ('local',)),
     ('color', 'Color', 'dizher.ops:color', ('contrast',)),

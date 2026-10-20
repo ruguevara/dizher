@@ -11,15 +11,16 @@ from mokit.graph import Memo, evaluate
 from dizher import ops
 from dizher.converter.dither import Ordered
 
-IMAGE = Path(__file__).parent / 'images' / 'goldhill-256.png'
+IMAGE = Path(__file__).parent / 'images' / 'goldhill.png'
+COLOUR = Path(__file__).parent / 'images' / 'sunset.png'   # goldhill is grey: no chroma error to weigh
 
 
-def pipeline(**optimise):
-    """Ordered halftone, the optimiser off: fast."""
+def pipeline(image=IMAGE, **optimise):
+    """Ordered halftone, the optimiser off unless asked: fast."""
     graph = ops.make_graph()
-    graph = graph.with_params('source', replace(graph['source'].params, path=IMAGE))
+    graph = graph.with_params('source', replace(graph['source'].params, path=image))
     graph = graph.with_params('halftoner', replace(graph['halftoner'].params, halftoner=Ordered.label))
-    return graph.with_params('optimise', replace(graph['optimise'].params, enabled=False, **optimise))
+    return graph.with_params('optimise', replace(graph['optimise'].params, **{'enabled': False, **optimise}))
 
 
 def test_pipeline_converts_and_reuses_upstream():
@@ -45,6 +46,47 @@ def test_pipeline_matches_single_converter():
     np.testing.assert_array_equal(direct.dither(Ordered('Void dispersed dots')), result.dithered_result)
 
 
+def test_dot_weights_move_the_dots_not_the_pairs():
+    """The dots' weights (Halftone's chroma, Optimise's noise) are their own: at the preset's values DBS gives the
+    one-shot Converter's result, where they were one setting; changed, they move the dots, the halftone's alone too,
+    keep the pairs and leave upstream alone."""
+    memo = Memo()
+    graph = pipeline(COLOUR, enabled=True)
+    result = evaluate(graph, 'optimise', memo)
+    select = graph['select'].params   # the one-shot Converter at Select pairs' values, not at its own defaults
+    direct = evaluate(graph, 'prepare', memo).copy(coherence=select.coherence, edge=select.edge,
+                                                  luma_noise=select.luma_noise, chroma_noise=select.chroma_noise)
+    np.testing.assert_array_equal(direct.dither(Ordered('Void dispersed dots'), optimise=True), result.dithered_result)
+    changed = pipeline(COLOUR, enabled=True, chroma_noise=0.3)
+    changed = changed.with_params('halftone', replace(changed['halftone'].params, chroma=0.5))
+    halftone = lambda g: evaluate(g, 'halftone', memo).dithered_bitmap
+    assert (halftone(changed) != halftone(graph)).any()
+    projected = lambda g: evaluate(g, 'halftone', memo).projected_target()   # the Projected view's
+    assert not np.array_equal(projected(changed), projected(graph))
+    moved = evaluate(changed, 'optimise', memo)
+    assert moved.best_attr_indexes is result.best_attr_indexes
+    assert (moved.dithered_bitmap != result.dithered_bitmap).any()
+    assert evaluate(graph, 'overpaint', memo).energy.weights['Chroma'] == ops.NEWEST_PRESET['chroma']
+
+
+def test_dot_weights_of_older_projects():
+    """A project saved before the dots had weights of their own opens with Metric's and Select pairs', so it renders
+    as it did; a saved one keeps its own."""
+    import json
+    from mokit import project
+    graph = ops.make_graph()
+    graph = graph.with_params('metric', replace(graph['metric'].params, chroma=1.5))
+    graph = graph.with_params('select', replace(graph['select'].params, luma_noise=0.1, chroma_noise=0.3))
+    data = json.loads(project.dumps(graph, {}))
+    data['nodes']['halftone']['params'] = None   # as saved when Halftone had no params
+    for k in ('luma_noise', 'chroma_noise'):
+        del data['nodes']['optimise']['params'][k]
+    loaded, _, diagnostics = project.loads(json.dumps(data))
+    o = loaded['optimise'].params
+    assert (loaded['halftone'].params.chroma, o.luma_noise, o.chroma_noise) == (1.5, 0.1, 0.3) and not diagnostics
+    assert project.loads(project.dumps(graph, {}))[0] == graph
+
+
 def settle(host):
     """Drive the host like the UI's frame loop; the stages it started, in order."""
     started = []
@@ -56,6 +98,26 @@ def settle(host):
         if not started or started[-1] != host.job.node_id:
             started.append(host.job.node_id)
         host.job.future.exception()
+
+
+def test_surface_binding():
+    """Surface dE: the cells near their surface's mean colour share one pair, the cheapest over them by the pairs' own
+    costs; the rest stay free; 0, the default, selects as before."""
+    from dizher.converter.energy import surfaces
+    memo, graph = Memo(), pipeline()
+    free = evaluate(graph, 'select', memo)
+    off = evaluate(graph.with_params('select', replace(graph['select'].params, surface=0.0)), 'select', memo)
+    np.testing.assert_array_equal(off.best_attr_indexes, free.best_attr_indexes)
+    bound = evaluate(graph.with_params('select', replace(graph['select'].params, surface=20.0)), 'select', memo)
+    labels, D = bound.best_attr_indexes, free.energy.unary()
+    seg, lab = surfaces(free.image_rgb, free.cell)
+    n = 0
+    for s in np.unique(seg):
+        cells = (seg == s) & (np.linalg.norm(lab - lab[seg == s].mean(axis=0), axis=-1) < 20.0)
+        if cells.any():
+            assert set(labels[cells]) == {D[:, cells].sum(axis=1).argmin()}
+            n += cells.sum()
+    assert 0 < n < labels.size and (labels != free.best_attr_indexes).any()
 
 
 def test_overpaint():
@@ -83,6 +145,50 @@ def test_overpaint():
         assert project.load_project(Path(tmp) / 'p').graph['overpaint'].params.overrides == cells
 
 
+def test_brush_brightness():
+    """On the Spectrum a colour picked for the ink or the paper brings the other to its brightness, BRIGHT and DIM
+    included; black takes the other's; the specials without one and the C64 change nothing."""
+    from dizher.platforms import c64, zxspectrum
+    from dizher.ui.window import AUTO, BRIGHT, DIM, TRANSPARENT, has_bright, same_bright
+    zx = zxspectrum.STANDARD.palette
+    assert same_bright(zx, 10, 1) == (10, 9) and same_bright(zx, 2, 9) == (2, 1)       # bright red / dim red
+    assert same_bright(zx, 0, 9) == (8, 9) and same_bright(zx, 8, 1) == (0, 1)         # black follows
+    assert same_bright(zx, 10, 0) == (10, 8)                                           # the other black flips too
+    assert same_bright(zx, 10, DIM) == (10, BRIGHT) and same_bright(zx, 2, BRIGHT) == (2, DIM)
+    for other in (TRANSPARENT, AUTO, -1):
+        assert same_bright(zx, 10, other) == (10, other)
+    assert has_bright(zx) and not has_bright(c64.HIRES.palette)
+    assert same_bright(c64.HIRES.palette, 1, 9) == (1, 9)
+
+
+def test_fix_overrides():
+    """Fix paints every cell with the colours it shows: an unpainted cell its selected pair, no -1 left, a pair the
+    Spectrum cannot show the one shown, each painted colour in its role; the result keeps its colours and a fixed field
+    fixes to itself; a cell off the screen is kept as painted."""
+    memo = Memo()
+    graph = pipeline()
+    selection = evaluate(graph, 'select', memo)
+    R, C = selection.best_attr_indexes.shape
+    pairs = list(selection.palette.iter_idxs_pairs())
+    colours = lambda conv: selection.color_pairs[conv.best_attr_indexes]   # (R, C, 2, 3): the two blacks alike
+    painted = lambda cells: evaluate(
+        graph.with_params('overpaint', replace(graph['overpaint'].params, overrides=cells)), 'overpaint', memo)
+    cells = ((0, 0, 7, 1), (0, 1, 2, 14), (3, 5, -1, 14), (4, 4, 2, -1), (5, 5, -1, 8), (99, 0, 0, 7))   # 14 bright Y
+    fixed = ops.fix_overrides(selection, cells)
+    cell = {o[:2]: o[2:] for o in fixed}
+    assert len(fixed) == R * C + 1 and cell[99, 0] == (0, 7) and list(fixed) == sorted(fixed)
+    assert all(-1 not in o for o in fixed), fixed
+    assert cell[0, 0] == (7, 1)                         # a pair the Spectrum shows stays as painted
+    assert cell[0, 1] == (10, 14)                       # r/Y: the paper brightened, as Overpaint shows it
+    assert cell[3, 5][1] == 14 and cell[4, 4][0] == 2 and cell[5, 5][1] == 8   # painted colours in their painted roles
+    assert cell[10, 10] == pairs[selection.best_attr_indexes[10, 10]]           # unpainted: the selected pair
+    np.testing.assert_array_equal(colours(painted(fixed)), colours(painted(cells)))
+    assert ops.fix_overrides(selection, fixed) == fixed
+    whole = ops.fix_overrides(selection, ())
+    assert len(whole) == R * C and all(o[2:] == pairs[selection.best_attr_indexes[o[:2]]] for o in whole)
+    np.testing.assert_array_equal(colours(painted(whole)), colours(selection))
+
+
 def test_host_reruns_only_downstream_of_an_edit():
     from dizher.ui.app import Pipeline
     host = Pipeline()
@@ -104,6 +210,34 @@ def test_host_reruns_only_downstream_of_an_edit():
     assert 'target' in host.errors                   # C64 has no colour 16: an error on its block
     host.open(IMAGE.with_name('david.png'))          # another image is a new document
     assert host.shown('detail') is None and host.shown('optimise') is None and not host.errors   # nothing left on screen
+    host.close()
+
+
+def test_host_unpainted_view():
+    """Hide: the stages run without the painted cells, which stay in the graph, with no undo step; both conversions
+    stay in RAM, so switching either way reruns nothing; an edit of the painted cells shows them again."""
+    from dizher.ui.app import Pipeline
+    host = Pipeline()
+    host.open(IMAGE)
+    host.set_params('halftoner', replace(host.graph['halftoner'].params, halftoner=Ordered.label))
+    host.set_params('optimise', replace(host.graph['optimise'].params, enabled=False))
+    settle(host)
+    selected = host.result('select').best_attr_indexes
+    pairs = list(host.result('select').palette.iter_idxs_pairs())
+    paint = next(p for p in pairs if p != pairs[selected[0, 0]] and p[0] != p[1])
+    host.set_params('overpaint', replace(host.graph['overpaint'].params, overrides=((0, 0, *paint),)))
+    assert settle(host) == ['overpaint', 'halftone', 'optimise']
+    painted, graph, steps = host.result('optimise'), host.graph, len(host.past)
+    host.set_unpainted(True)
+    assert settle(host) == [], 'the conversion from before the painting is still in RAM'
+    assert (host.result('overpaint').best_attr_indexes == selected).all() and host.result('optimise') is not painted
+    assert host.graph is graph and len(host.past) == steps, 'a view: the painted cells stay, no undo step'
+    host.set_unpainted(False)
+    assert settle(host) == [] and host.result('optimise') is painted, 'the painted result is still in RAM'
+    host.set_unpainted(True)
+    assert settle(host) == []
+    host.set_params('overpaint', replace(host.graph['overpaint'].params, overrides=()))
+    assert not host.unpainted, 'an edit of the painted cells shows them'
     host.close()
 
 
@@ -213,8 +347,32 @@ def test_project_round_trip_and_restore():
     loaded.restore(older)
     assert loaded.graph['metric'] == ops.make_graph()['metric'] and 'future' not in loaded.graph
     assert loaded.graph['contrast'].params.contrast == 25.0
+    # a matrix under img2spec's name takes its new one
+    loaded.restore(host.graph.with_params('halftoner', replace(host.graph['halftoner'].params, matrix='Clustered dot 5')))
+    assert loaded.graph['halftoner'].params.matrix == 'Diamond 8x8 coarse'
     host.close(), loaded.close()
 
+
+def test_selection_methods():
+    """New documents score pairs by the newest method with the values it was tuned with; a project saved before the
+    choice existed opens as Halftoned, develop's scoring; picking a method brings its Metric, Select pairs,
+    Halftone, Optimise and Eye values."""
+    import json
+    from mokit import project
+    from dizher.converter.energy import METHODS, NEWEST, LEGACY
+    graph = ops.make_graph()
+    assert graph['metric'].params.method == NEWEST and ops.apply_preset(graph, NEWEST) == graph
+    data = json.loads(project.dumps(graph, {}))
+    del data['nodes']['metric']['params']['method']
+    loaded, _, diagnostics = project.loads(json.dumps(data))
+    assert loaded['metric'].params.method == LEGACY and not diagnostics
+    assert loaded['metric'].params.chroma == graph['metric'].params.chroma    # the saved values stay as they were
+    for method, scoring in METHODS.items():
+        picked = ops.apply_preset(loaded, method)
+        assert picked['metric'].params.method == method
+        for k, v in scoring.preset.items():
+            nodes = [n for n in ('metric', 'select', 'halftone', 'optimise', 'eye') if hasattr(picked[n].params, k)]
+            assert nodes and all(getattr(picked[n].params, k) == v for n in nodes), (method, k)
 
 
 def test_undo_redo():
@@ -243,10 +401,9 @@ def test_undo_redo():
         host.undo()
     assert host.graph == start and not host.past
     host.redo()
-    host.open(Path(__file__).parent / 'images' / 'goldhill-256.png')   # a new document has no history
+    host.open(Path(__file__).parent / 'images' / 'goldhill.png')   # a new document has no history
     assert not host.past and not host.future
     host.close()
-
 
 
 def test_host_watches_the_source_file():
@@ -314,9 +471,12 @@ if __name__ == '__main__':
     test_pipeline_converts_and_reuses_upstream()
     test_pipeline_matches_single_converter()
     test_overpaint()
+    test_fix_overrides()
     test_host_reruns_only_downstream_of_an_edit()
+    test_host_unpainted_view()
     test_host_discards_stale_completions()
     test_project_round_trip_and_restore()
+    test_selection_methods()
     test_undo_redo()
     test_host_watches_the_source_file()
     test_project_folder()

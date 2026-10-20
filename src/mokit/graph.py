@@ -22,7 +22,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from .paths import os_path
 
-__all__ = ["Node", "Graph", "GraphError", "Op", "meta", "evaluate", "ready_steps", "next_step", "run_step", "Memo", "Digests", "UNBOUND", "discover_ops",
+__all__ = ["Node", "Graph", "GraphError", "Op", "meta", "Like", "evaluate", "ready_steps", "next_step", "run_step", "Memo", "Digests", "UNBOUND", "discover_ops",
            "FileType", "FILE_TYPES", "register_file_type", "file_fields", "output_fields", "MISSING", "type_name", "accepts", "mro_lookup"]
 
 
@@ -38,12 +38,23 @@ MISSING = object()
 
 # ----- params metadata -------------------------------------------------------------------------------
 
-def meta(*, min=None, max=None, step=None, choices=(), editor="", label="", help="", output=False) -> dict:
+def meta(*, min=None, max=None, step=None, choices=(), editor="", label="", help="", output=False,
+         legacy=None) -> dict:
     """`field(metadata=meta(...))`: editor hints for a params field. Keyword-only so typos fail.
-    `output=True` marks a Path the op writes: its location, not its content, enters the key."""
+    `output=True` marks a Path the op writes: its location, not its content, enters the key.
+    `legacy` is the value the field takes in a saved project that predates it (project.params_from_json), or a
+    `Like` taking another node's field; the default stays for new documents and Reset."""
     return {k: v for k, v in dict(min=min, max=max, step=step, choices=tuple(choices), editor=editor,
-                                  label=label, help=help, output=output).items()
+                                  label=label, help=help, output=output, legacy=legacy).items()
             if v is not None and v is not False and v != "" and v != ()}
+
+
+@dataclass(frozen=True)
+class Like:
+    """meta(legacy=Like(node, field)): a saved project that predates the field gives it that node's field, the
+    setting it was split from (project.graph_from_json)."""
+    node: str
+    field: str
 
 
 def _type_hints(cls) -> dict:

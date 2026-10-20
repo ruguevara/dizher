@@ -5,9 +5,10 @@
 - `main`: released code only. It changes only by a PR from `develop` (a release) or from a `hotfix/*` branch, merged
   with a merge commit; every merge is followed by a release tag on it. No direct commits, no force pushes.
 - `develop`: where finished features come together; its CI stays green. It changes only by PRs from feature branches,
-  squash-merged, and by merging `main` back after a hotfix. No direct commits, no force pushes, except docs-only
-  commits (`*.md`, `notebooks/`), which the repository admin may push straight to it (the ruleset lets the admin
-  role bypass; it cannot tell docs from code, so keep code out of them).
+  squash-merged, and by merging `main` back after a hotfix. No direct commits, no force pushes,
+  except docs-only commits (`*.md`, `notebooks/`) and the `__version__` bump after a release, which the repository
+  admin may push straight to it (the ruleset lets the admin role bypass; it cannot tell these from other code, so
+  keep the rest out).
 - Feature branches (`feature/*`, and `claude/*` for Claude sessions): from `develop`, one topic each, a PR back into
   `develop`. Temporary diagnostics (extra workflows, timing scripts) may live on a feature branch and are gone from
   it before the PR; the squash merge drops its history.
@@ -45,19 +46,22 @@ tag is on `main` and matches the version in the code.
 - PATCH for fixes, MINOR for features, MAJOR from 1.0.
 - Right after a release, `develop` takes the next version, so dev builds show the version they lead to.
 - A release:
-  1. `develop` green, its build tested by hand (below), the README's changes updated.
+  1. `develop` green, its build tested by hand (below), the README's changes updated, and `CHANGELOG.md` given the
+     release's section, `## 0.2.4-alpha` (the tag without its `v`), with pictures of new panels from
+     `docs/screenshots.py` in `docs/images`. The release job puts that section above the generated list of PRs.
   2. A PR from `develop` into `main`, merged with a merge commit once its tests and builds pass.
   3. The tag on `main`, matching the code: `v` + `__version__` + `-` + `CHANNEL` (no suffix when `CHANNEL` is empty),
      annotated: `git tag -a v0.2.4-alpha -m 0.2.4-alpha && git push origin v0.2.4-alpha`. The tag builds and publishes
      the release, a tag with a `-` as a pre-release; the release job refuses a tag off `main` or not matching the code.
-  4. On `develop`, the next `__version__`.
+  4. On `develop`, the next version, pushed straight to it.
 - A tag is never made on another branch, moved or reused.
 
 ## By hand before a release
 
 - Each platform, from the downloaded archive: it launches; About shows the version; open an image through the dialog,
-  convert, export SCR and PNG, open the SCR in an emulator (Fuse or ZEsarUX; VICE for C64); the project autosaves and
-  reopens; recent images; undo and redo; Paint mode.
+  convert, export PNG and the native file (SCR for the ZX Spectrum, ART for the C64 hires mode), open the SCR in Fuse
+  or ZEsarUX and the ART in Art Studio under VICE; the project autosaves and reopens; recent images; undo and redo;
+  Paint mode.
 - Windows on a real GPU: DBS speed in the window (best on a 120 Hz or faster monitor), the UI while stages run, the
   save dialog opening in the project's build folder, Cyrillic and very long image names, SmartScreen on first launch.
 - macOS: the quarantine warning on first launch, the save dialog taking focus, Retina scaling.

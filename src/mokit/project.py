@@ -8,11 +8,11 @@ from __future__ import annotations
 import json
 import os
 import typing
-from dataclasses import asdict, dataclass, fields, is_dataclass, MISSING as DC_MISSING
+from dataclasses import asdict, dataclass, fields, is_dataclass, replace, MISSING as DC_MISSING
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from .graph import Graph, GraphError, Node, Op, _strip_annotated, _type_hints
+from .graph import Graph, GraphError, Like, Node, Op, _strip_annotated, _type_hints
 from .paths import exists, os_path
 
 FORMAT = "mokit-graph/1"
@@ -105,6 +105,8 @@ def params_from_json(params_type, data: Optional[dict], root: Optional[Path], di
                 values[f.name] = _coerce(raw, hints.get(f.name, f.type), root)
             except (TypeError, ValueError) as e:
                 diagnostics.append(f"{where}: {f.name}={raw!r} does not coerce ({e}); using default")
+        elif "legacy" in f.metadata:        # saved before the field existed: what it behaved as then
+            values[f.name] = f.metadata["legacy"]
         elif f.default is DC_MISSING and f.default_factory is DC_MISSING:
             raise GraphError(f"{where}: required field {f.name!r} missing")
     for name in data:
@@ -142,7 +144,18 @@ def graph_from_json(data: dict, root: Optional[Path]) -> Tuple[Graph, dict, Tupl
             continue
         params = params_from_json(op.params_type, raw, root, diagnostics, f"node {nid!r}")
         nodes.append((nid, Node(op_id, params, inputs)))
-    return Graph(tuple(nodes)), dict(data.get("view", {})), tuple(diagnostics)
+    return _likes(Graph(tuple(nodes))), dict(data.get("view", {})), tuple(diagnostics)
+
+
+def _likes(graph: Graph) -> Graph:
+    """Fields a saved project predates whose legacy is a Like take the other node's value, once every node is read."""
+    for nid, node in graph.nodes:
+        if is_dataclass(node.params):
+            likes = {f.name: getattr(graph[v.node].params, v.field) for f in fields(node.params)
+                     if isinstance(v := getattr(node.params, f.name), Like)}
+            if likes:
+                graph = graph.with_params(nid, replace(node.params, **likes))
+    return graph
 
 
 def dumps(graph: Graph, view: Optional[dict], root: Optional[Path] = None) -> str:

@@ -19,6 +19,8 @@ class C64Palette(Palette):
         'Grayscale': frozenset({0, 11, 12, 15, 1}),
         'Mono': frozenset({0, 1}),
     }
+    NAMES = ('black', 'white', 'red', 'cyan', 'purple', 'green', 'blue', 'yellow', 'orange', 'brown', 'light red',
+             'dark grey', 'grey', 'light green', 'light blue', 'light grey')
 
     def __init__(self):
         super().__init__(PEPTO)
