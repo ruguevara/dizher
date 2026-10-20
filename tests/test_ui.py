@@ -65,7 +65,7 @@ def test_conversion_lands(ctx):
 
 
 def test_slider_drag_moves_param(ctx):
-    r = rect(ctx, '//Tune', '**/contrast/contrast')   # the slider, under params_editor's push_id; '**/contrast' is the header
+    r = rect(ctx, '//Tune', '**/contrast/##contrast')   # the slider, under params_editor's push_id, its label in the column before it
     y = (r.min.y + r.max.y) / 2
     steps = len(ui.app.past)
     drag(ctx, imgui.ImVec2((r.min.x + r.max.x) / 2, y), imgui.ImVec2((r.min.x + r.max.x) / 2 + 60, y))
@@ -398,10 +398,10 @@ def test_custom_palette(ctx):
     ctx.yield_(2)
     assert params('target').colours == (0, *range(2, 16))
     assert ops.MODES[params('target').mode].palette.subset_name(params('target').colours) == 'Custom'
-    pick(ctx, 'target/palette', 'Grayscale')
+    pick(ctx, 'target/##palette', 'Grayscale')
     ctx.yield_(2)
     assert params('target').colours == (0, 7, 8, 15), params('target')
-    pick(ctx, 'target/mode', ops.c64.HIRES.name)
+    pick(ctx, 'target/##mode', ops.c64.HIRES.name)
     ctx.yield_(2)
     assert params('target') == replace(params('target'), mode=ops.c64.HIRES.name, colours=(0, 1, 11, 12, 15)), params('target')
     reset('target')
@@ -414,7 +414,7 @@ def test_method_switch_brings_its_values(ctx):
     from dizher.converter.energy import METHODS
     before = ui.app.graph
     ctx.set_ref('//Convert')
-    pick(ctx, 'metric/method', 'Halftoned')
+    pick(ctx, 'metric/##method', 'Halftoned')
     ctx.yield_(2)
     preset = METHODS['Halftoned'].preset
     assert params('metric').method == 'Halftoned' and params('metric').chroma == preset['chroma'], params('metric')
@@ -618,12 +618,12 @@ def test_paint(ctx):
 def test_pattern_combo(ctx):
     """The matrix combo in sections, an icon on every entry: a click picks it; Error diffusion's kernel likewise."""
     ctx.set_ref('//Convert')
-    pick(ctx, 'halftoner/matrix', '##Bayer 4x4')
+    pick(ctx, 'halftoner/##matrix', '##Bayer 4x4')
     ctx.yield_(2)
     assert params('halftoner').matrix == 'Bayer 4x4', params('halftoner')
     ui.app.set_params('halftoner', replace(params('halftoner'), halftoner=ErrorDiffusion.label))
     ctx.yield_(2)
-    pick(ctx, 'halftoner/kernel', '##Atkinson')
+    pick(ctx, 'halftoner/##kernel', '##Atkinson')
     ctx.yield_(2)
     assert params('halftoner').kernel == 'Atkinson', params('halftoner')
     ui.app.set_params('halftoner', replace(type(params('halftoner'))(), halftoner=Ordered.label))

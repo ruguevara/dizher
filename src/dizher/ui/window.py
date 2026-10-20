@@ -501,13 +501,19 @@ class Window:
             status, params = app.status(nid), app.graph[nid].params
             title = f'{label} · {app.job.text}' if status == 'running' and app.job.text else label
             x0, width = imgui.get_cursor_pos_x(), imgui.get_content_region_avail().x
+            at, pad = imgui.get_cursor_screen_pos(), imgui.get_style().frame_padding
+            reset = imgui.calc_text_size('Reset').x + 3 * pad.x if params is not None else pad.x
             imgui.set_next_item_open(self.expanded.get(nid, True), imgui.Cond_.once.value)
             imgui.set_next_item_allow_overlap()   # the Reset button sits on the header
             with header_style(status):
-                is_open = self.expanded[nid] = imgui.collapsing_header(f'{title}###{nid}')
-            imgui.set_item_tooltip(app.errors[nid] if status == 'error' else Op.resolve(op_id).fn.__doc__ or '')
+                is_open = self.expanded[nid] = imgui.collapsing_header(f'###{nid}')
+                # the title where imgui puts it (after the arrow), cut with … short of the Reset button
+                cut = widgets.text_ellipsis(title, imgui.ImVec2(at.x + imgui.get_font_size() + 3 * pad.x, at.y + pad.y),
+                                            at.x + width - reset - imgui.get_style().item_spacing.x)
+            tip = app.errors[nid] if status == 'error' else Op.resolve(op_id).fn.__doc__ or ''
+            imgui.set_item_tooltip(f'{title}\n{tip}' if cut else tip)
             if params is not None:
-                self._reset_button(nid, params, x0 + width)
+                self._reset_button(nid, params, x0 + width - reset)
             if status == 'error':
                 with style.text_color(Palette.error):
                     imgui.text_wrapped(app.errors[nid])
@@ -567,11 +573,10 @@ class Window:
                 self._save(native)
             imgui.end_disabled()
 
-    def _reset_button(self, nid: str, params, right: float) -> None:
-        """At the right end of the block header; disabled while every param is at its default."""
+    def _reset_button(self, nid: str, params, x: float) -> None:
+        """At x on the block header, its right end; disabled while every param is at its default."""
         default = type(params)()
-        style_ = imgui.get_style()
-        imgui.same_line(right - imgui.calc_text_size('Reset').x - 3 * style_.frame_padding.x)
+        imgui.same_line(x)
         imgui.begin_disabled(params == default)
         if imgui.small_button(f'Reset##{nid}'):
             self.app.set_params(nid, default)
