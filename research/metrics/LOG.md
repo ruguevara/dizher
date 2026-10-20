@@ -130,3 +130,13 @@ now marks seams on the cell borders: a stroke that starts within 0.22 of a cell 
 segments it runs along (`seams_v`, `seams_h`); a stroke that starts inside a cell paints cells (1 added inside them,
 2 lost or wrong). A half of a gradient in the wrong colour is its cells, kind 2; a seam between two halves each fine
 on its own is the border. B4 pilot 1's first two answers (m00 7.4 min, m01 2.1 min) have cells only.
+
+## 2026-10-20: B4 pilot 1 answered; seam strokes along the grid
+
+- B4 pilot 1 (pilot data): jojo at coherence 0, 1.6 min (after a Backspace; 7.4 min the first time), 0 seams, 24
+  added, 34 lost; autumn at 6, 2.1 min, cells only (99 added, 148 lost); diver-sunset at 24, 6.4 min, 116 seam
+  segments (partly the comb below), 1 added, 301 lost: strong binding loses colour over most of the picture.
+- The user: telling seams from cells by where a stroke starts is hard, and a seam stroke drew a comb of short
+  vertical segments as the hand wavered. Now key 3 draws seams and keys 1 and 2 paint cells; a seam stroke runs
+  along the grid from corner to corner and leaves its line only when the pointer is 0.65 of a cell off it (a
+  simulated stroke with half a cell of jitter marks only its own line and one clean turn).
