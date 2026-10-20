@@ -79,6 +79,10 @@ requests in its GitHub release. The pictures are made by `docs/screenshots.py`.
 
 ### Interface
 
+- Fields fill the dock, Lightroom's way: a label in a right-aligned column before its control, cut with … in a narrow
+  dock with the whole name in its tooltip. Block titles stop short of the Reset button.
+- Float sliders move in round steps, so 0.5, 0.25 or 0.1 can be set on a 0..1 slider; a typed value snaps too. A double
+  click resets a slider to its default, as one undo step.
 - An edit while DBS runs keeps the last picture on screen; the preview no longer flashes an older one.
 - Popups and windows are opaque in every theme.
 - PhotoshopStyle is the default theme. An installed app keeps the theme it last ran with; View > Theme picks another.

@@ -24,7 +24,7 @@ IMAGES = DOCS.parent / 'tests' / 'images'
 IMAGE = IMAGES / 'anubis.png'
 OUT = DOCS / 'images'
 SCALE = 2              # screen px per 96 dpi px
-SIZE = (2000, 1150)    # the window at 96 dpi: Convert wide enough for its labels
+SIZE = (2000, 1150)    # the window at 96 dpi: docks wide enough for the fields to read easily
 MARGIN = 6             # 96 dpi px around a panel
 GALLERY_ROW = 5        # gallery images a row
 SECTIONS = 2           # the pattern combo's sections shown
@@ -125,7 +125,7 @@ def preview(ctx, dx, dy):
 def metric_method(ctx):
     settled(ctx)
     opened(ctx, '//Convert', 'metric')
-    ctx.item_click('metric/method')
+    ctx.item_click('metric/##method')
     ctx.yield_(4)
     shot(ctx, 'metric-method', block(ctx, '//Convert', 'metric'), window('##Combo_00'))
     ctx.popup_close_all()   # a combo takes no Esc: keyboard nav is off
@@ -151,7 +151,7 @@ def halftone_optimise(ctx):
 def pattern_combo(ctx):
     settled(ctx)
     opened(ctx, '//Convert', 'halftoner')
-    ctx.item_click('halftoner/matrix')
+    ctx.item_click('halftoner/##matrix')
     ctx.yield_(4)
     x0, y0, x1, _ = window('##Combo_00')
     last = list(gallery.MATRIX_GROUPS.values())[SECTIONS - 1][-1]
