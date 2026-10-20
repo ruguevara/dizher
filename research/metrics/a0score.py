@@ -21,7 +21,7 @@ import metrics as M  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 VOTE = os.path.join(HERE, 'data', 'vote')
-ROUNDS = ('a0h-1', 'a0h-2', 'a0h-3')
+ROUNDS = ('a0h-1', 'a0h-2', 'a0h-3')     # --rounds for others
 CHECK = dict(dark='dark ramp', **{'band-white': 'banding', 'band-yellow': 'banding', 'grey50': '50% grey',
              'clash-grey': 'cell-scale noise', 'clash-salmon': 'cell-scale noise', 'edge': 'seam beside an edge',
              'stair': 'staircase'}, **{f'seam-{g}': 'seam on a gradient' for g in ('sky', 'sunset', 'skin', 'field')})
@@ -31,10 +31,10 @@ def load(rel):
     return np.asarray(Image.open(os.path.join(VOTE, 'files', rel)).convert('RGB'), np.float32) / 255
 
 
-def items():
+def items(rounds=ROUNDS):
     """[(round, item, check, original, {label: image}, picked label)] for the valid answers, repeats included."""
     out = []
-    for r in ROUNDS:
+    for r in rounds:
         manifest = json.load(open(os.path.join(VOTE, f'{r}.manifest.json')))
         key = json.load(open(os.path.join(VOTE, f'{r}.key.json')))
         for it in manifest['items']:
@@ -47,7 +47,7 @@ def items():
                 continue                    # uneven pixels: an answer the page should have refused (LOG, a0h-1)
             labels = key[it['id']]['options']
             base = key[it['id']]['repeat_of'] or it['id']
-            out.append((r, it['id'], CHECK[base], load(it['original']),
+            out.append((r, it['id'], CHECK.get(base, base.rsplit('-', 1)[-1]), load(it['original']),
                         {l: load(p) for l, p in zip(labels, it['options'])}, labels[v['pick'] - 1] if v['pick'] else None))
     return out
 
@@ -56,14 +56,16 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--ppd', type=float, default=19.4)
     ap.add_argument('--metrics', default=','.join(M.METRICS))
+    ap.add_argument('--rounds', default=','.join(ROUNDS))
+    ap.add_argument('--out', default='a0-human.md')
     args = ap.parse_args()
     names = args.metrics.split(',')
     rows = []
-    for r, iid, check, ref, options, pick in items():
+    for r, iid, check, ref, options, pick in items(args.rounds.split(',')):
         scores = {n: {l: M.score(n, ref, img, args.ppd)[0] for l, img in options.items()} for n in names}
         rows.append((r, iid, check, pick, {n: min(s, key=s.get) for n, s in scores.items()}, scores))
         print(iid, pick, {n: rows[-1][4][n] for n in names}, flush=True)
-    lines = [f'# The metrics against the user\'s picks in the A0 rounds\n',
+    lines = [f'# The metrics against the user\'s picks: {args.rounds}\n',
              f'At {args.ppd} pixels per degree (the grid at x2), device factor {M.device_factor(args.ppd)}. '
              'A cell is the option the metric scores lowest; **bold** where it is the user\'s pick.\n',
              '| item | check | user | ' + ' | '.join(names) + ' |', '|' + '---|' * (3 + len(names))]
@@ -76,7 +78,7 @@ def main():
     for r, iid, check, pick, best, scores in rows:
         lines.append(f'- {r}/{iid} ({pick}): ' + '; '.join(
             f'{n} ' + ', '.join(f'{l} {v:.4g}' for l, v in s.items()) for n, s in scores.items()))
-    open(os.path.join(HERE, 'a0-human.md'), 'w').write('\n'.join(lines) + '\n')
+    open(os.path.join(HERE, args.out), 'w').write('\n'.join(lines) + '\n')
     print('\n'.join(lines[:len(rows) + 5]))
 
 

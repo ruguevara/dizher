@@ -248,8 +248,20 @@ def eye(ref, test, ppd, factor):
     return float(m.sum()), m
 
 
+def tone(ref, test, ppd, factor, sigma=1.0):
+    """Our tone term (LOG, 2026-10-20): both images blurred in linear light by a Gaussian of sigma Spectrum pixels,
+    then CIELAB and CIEDE2000 per pixel. Score: the mean; map: per pixel. In Spectrum pixels: ppd and factor ignored."""
+    from skimage.color import deltaE_ciede2000
+    blur = lambda x: cv2.GaussianBlur(srgb_to_linear(x.astype(np.float64)), (0, 0), sigma,
+                                      borderType=cv2.BORDER_REFLECT_101)
+    lab = lambda x: _xyz2lab(blur(x) @ SRGB2XYZ.T.astype(np.float64))
+    m = deltaE_ciede2000(lab(ref), lab(test))
+    return float(m.mean()), m.astype(np.float32)
+
+
 METRICS = dict(cvvdp=cvvdp, ssimulacra2=ssimulacra2, butteraugli=butteraugli, butteraugli_max=butteraugli_max,
-               scielab=scielab, msssim=msssim, dists=dists, lpips=lpips, eye=eye)
+               scielab=scielab, msssim=msssim, dists=dists, lpips=lpips, eye=eye,
+               tone1=tone, tone2=lambda r, t, p, f: tone(r, t, p, f, 2.0))
 
 
 def score(name: str, ref: np.ndarray, test: np.ndarray, ppd: float = 12.9, factor: int = None):

@@ -81,3 +81,17 @@ original's edge, the staircase), to be agreed with the user before they are made
 - So stage A ends at A4: no candidate passes; our own model is built from a tone term of this kind and a seam term,
   the seam term's weight bounded below by the four gradients. 15 answers of one observer: a direction for the model,
   validated in B and C, not a fit.
+
+## 2026-10-20: B3 pilot 1 (pilot data, set-aside pictures)
+
+- The user's picks among Knoll-Bayer, Knoll-blue (n 64, multiplier 1), Floyd-Steinberg, Jarvis, all mixed in linear
+  light: Floyd-Steinberg 6 of 9, Knoll-Bayer 2, Knoll-blue 1 (the repeat of autumn-c64, first answered
+  Floyd-Steinberg), Jarvis never. 6-29 s an item: a real choice, the spread is right.
+- The metrics' nearest option (`b3-pilot-1.md`, x2): our tone term (sigma 1 or 2) 6/9, the eye baseline 6/9;
+  Butteraugli 3, SSIMULACRA2, LPIPS 2, cvvdp, Butteraugli max, DISTS 1, S-CIELAB, MS-SSIM 0 (chance 2.25). The
+  literature metrics mostly pick Jarvis, the smoothest texture, which the user never picks.
+- `metrics.py` gains `tone1`, `tone2` (the tone term at sigma 1 and 2 Spectrum pixels).
+- B3 pilot 2 (`b3build.py`): per picture and palette 18 variants (Floyd-Steinberg, Jarvis in linear, sRGB, Lab;
+  Knoll Bayer and blue noise in each space at multipliers 1 and 0.5), the four options the best by tone at sigma 1,
+  2, 3, the eye baseline, cvvdp and SSIMULACRA2 in turn; 8 pictures over the six palettes (EGA, CGA 1 and 0 high,
+  MSX1, ZX, C64) and a repeat.
