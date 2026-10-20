@@ -117,3 +117,8 @@ original's edge, the staircase), to be agreed with the user before they are made
   an answer is the 768 cells as a string of 0/1/2.
 - B4 pilot 1 (set-aside pictures, the default DBS style, R1 = Floyd-Steinberg linear on the ZX palette): jojo at
   coherence 0, autumn at 6 (the default), diver-sunset at 24.
+
+## 2026-10-20: the collection's tags and manifest
+
+`PICTURES.md`: the categories, ten difficulty tags, the manifest `pictures.csv`. A change to PLAN before any picture
+is collected: film and game frames may be used for the research but not shown in the article (a `publish` field).

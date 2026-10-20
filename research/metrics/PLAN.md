@@ -250,9 +250,10 @@ A new collection, before any conversion:
 
 1. 40 sources, by the real inputs: artists' illustrations (fantasy, sci-fi, portraits) 15, artistic and processed
    photo portraits 10, posters, film and game frames, game title screens, AI-made images 8, landscapes 5, plain
-   photographs 2. Licensed for publication (own works, public domain, CC, made for the purpose).
-2. Each tagged by a checklist of what makes conversions hard: smooth gradients (skies), faces, deep shadows, saturated
-   colours, fine detail, text. Each tag on at least 6 pictures; the collection is filled to that, not picked by how
+   photographs 2. Each marked publishable or not (own works, public domain and CC are; film and game frames are
+   not): the research uses all, the article's figures only the publishable ones (`PICTURES.md`).
+2. Each tagged by a checklist of what makes conversions hard (`PICTURES.md`): smooth gradients (skies), faces, deep
+   shadows, saturated colours, fine detail, text, skin, pastel, hues the palette lacks, flat-colour edges. Each tag on at least 6 pictures; the collection is filled to that, not picked by how
    the converter does.
 3. Prepared as the user prepares sources: cropped and composed to 256x192, cleaned. Frozen: the files' hashes are
    committed before anything is converted.
