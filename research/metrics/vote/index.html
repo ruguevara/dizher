@@ -46,6 +46,7 @@ figure.on figcaption { color: var(--accent); }
 img.px { display: block; image-rendering: pixelated; image-rendering: crisp-edges; max-width: none; cursor: pointer; }
 figure.ref img.px { cursor: default; }
 .done { color: var(--accent); }
+.warn { color: var(--warn); }
 @media (prefers-reduced-motion: no-preference) { figure.flash img.px { transition: opacity .08s; } }
 </style>
 
@@ -54,6 +55,7 @@ figure.ref img.px { cursor: default; }
   <label class="meta" for="round">Round</label>
   <select id="round" aria-label="Round"></select>
   <span class="progress" id="progress"></span>
+  <span class="meta" id="saving" aria-live="polite"></span>
   <button id="mode" type="button" title="Tab switches the layout">Grid</button>
   <span class="meta" id="pixels"></span>
   <span class="keys" id="keys"></span>
@@ -68,7 +70,8 @@ figure.ref img.px { cursor: default; }
 // `votes/<round>__<item>`. Images are files published beside the page. Nothing here reveals which method made
 // which picture: the options come shuffled under random names, and the key stays with the session.
 const $ = (id) => document.getElementById(id);
-const state = { db: null, rounds: {}, votes: {}, roundId: null, mode: 'grid', index: 0, shown: 1, flips: 0, t0: 0, busy: false };
+const state = { db: null, rounds: {}, votes: {}, roundId: null, mode: 'grid', index: 0, shown: 1, flips: 0, t0: 0,
+  pending: 0, failed: 0, writes: {} };
 
 function zoomFor(round) {
   const z = round.zoom || {};
@@ -115,34 +118,54 @@ function render() {
   stage.querySelectorAll('figure[data-n]').forEach((f) => {
     if (f.dataset.n) f.addEventListener('click', () => (state.mode === 'grid' ? answer(+f.dataset.n) : answer(state.shown)));
   });
-  preload(round.items[state.index + 1]);
+  preloadRound(round);
 }
 
 function block(text) {
   $('stage').hidden = true; const n = $('notice'); n.hidden = false; n.className = 'notice warn'; n.textContent = text;
 }
 
-function preload(item) { if (item) [item.original, ...item.options].forEach((s) => { const i = new Image(); i.src = s; }); }
+// Decoded ahead, so the next item paints with no wait. Kept for the whole round (a few dozen small PNGs).
+const warm = {};
+function preload(item) {
+  if (!item) return;
+  [item.original, ...item.options].forEach((s) => {
+    if (warm[s]) return;
+    const i = new Image(); i.src = s; warm[s] = i; i.decode().catch(() => {});
+  });
+}
+function preloadRound(round) { if (round) round.items.slice(state.index, state.index + 4).forEach(preload); }
 
 function startItem() { state.t0 = performance.now(); state.flips = 0; state.shown = 1; render(); }
 
-async function answer(pick) {
+// The next item shows at once; the write runs behind it. A failed write takes the answer back and says so.
+function answer(pick) {
   const round = currentRound(), item = round && round.items[state.index];
-  if (!item || state.busy || !state.db) return;
-  state.busy = true;
+  if (!item || !state.db || $('stage').hidden) return;
   const vote = {
     round: round.id, item: item.id, pick, ms: Math.round(performance.now() - state.t0), mode: state.mode,
     flips: state.flips, zoom: zoomFor(round), dpr: window.devicePixelRatio || 1,
     win: [window.innerWidth, window.innerHeight], at: new Date().toISOString(),
   };
-  try {
-    await state.db.collection('votes').doc(`${round.id}__${item.id}`).set(vote);
-    state.votes[`${round.id}__${item.id}`] = vote;
-    state.index = nextIndex(round, state.index + 1);
-    startItem();
-  } catch (e) {
-    block(`The answer was not saved (${e && e.code ? e.code : 'error'}). Reload the page; answers already saved are kept.`);
-  } finally { state.busy = false; }
+  const id = `${round.id}__${item.id}`;
+  state.votes[id] = vote;
+  state.pending += 1; showSaving();
+  state.index = nextIndex(round, state.index + 1);
+  startItem();
+  const write = (state.writes[id] || Promise.resolve()).then(() => state.db.collection('votes').doc(id).set(vote));
+  state.writes[id] = write.catch(() => {});
+  write.then(() => { state.pending -= 1; showSaving(); }, (e) => {
+    state.pending -= 1; delete state.votes[id]; state.failed += 1; showSaving(e && e.code);
+    if (round.id === state.roundId) { state.index = nextIndex(round, 0); startItem(); }
+  });
+}
+
+function showSaving(code) {
+  const el = $('saving');
+  el.className = state.failed ? 'warn' : 'meta';
+  el.textContent = state.failed
+    ? `${state.failed} answer${state.failed > 1 ? 's' : ''} not saved (${code || 'error'}): shown again`
+    : state.pending ? 'saving…' : 'saved';
 }
 
 function nextIndex(round, from) {
@@ -177,7 +200,7 @@ document.addEventListener('keydown', (e) => {
     if (state.index > 0) { state.index -= 1; startItem(); }   // shows the last item again; a new answer replaces the saved one
     return;
   }
-  if (!item) return;
+  if (!item || $('stage').hidden) return;   // no answers while a warning hides the pictures
   if (e.key === '0') { answer(0); return; }
   const n = Number(e.key);
   if (n >= 1 && n <= item.options.length) {

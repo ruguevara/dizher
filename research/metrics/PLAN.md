@@ -81,8 +81,8 @@ The CRT is set up by the user's chart: brightness and contrast set so that a non
 look the same tone. That makes one dither match one flat colour by construction, so H2 is not tested on the CRT, and
 the setting is written down as part of the display.
 
-The palette is part of the display model. The default is Pulsar's; the converter's own (`ZXPalette`, levels 205 and
-255) is checked against it. Other emulators' palettes and measurements of real machines are options. The rankings
+The palette is part of the display model. The default is Pulsar's, which is the converter's own (`ZXPalette`, levels
+205 and 255; the user, 2026-10-20). Other emulators' palettes and measurements of real machines are options. The rankings
 under different palettes are compared by the metric alone (A5).
 
 ## Two references

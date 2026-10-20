@@ -30,3 +30,16 @@ generators and the voting page; the user collects the 40 pictures meanwhile.
   PLAN's amendment puts them to the user first (round `a0h-1`).
 - The voting page: https://claude.ai/artifact/HbWZvbKsQYAWcCVPpoy3Ey (db: `rounds/<id>`, `votes/<round>__<item>`).
   Rounds: `b3-pilot-1` (pilot: the 4 dither methods, linear, ZX and C64, on 5 set-aside pictures), `a0h-1`.
+
+## 2026-10-20: round a0h-1, the user
+
+- Banding: the dither over three flat bands, on both ramps (white 37 s, yellow 2 s). The expectation holds; every
+  metric but the eye baseline fails a valid check.
+- 50% grey: the checkerboard first. Holds as far as one pick tells (the order of the other two is not asked).
+- Clash: on both surfaces a single pair over the whole surface, never the clash (grey: magenta/green; salmon:
+  red/white, the repeat the same). Consistent with "the clash costs more than the pair picked".
+- Dark ramp: not valid. The answer (0, none better) came while the page should have been blocked (browser zoom at
+  2.19 device px a CSS px, a window too narrow for the grid): the keys still answered under the warning. Fixed (no
+  answer while a warning hides the pictures); the item asked again as round `a0h-2`.
+- The page waited for the write before showing the next item; now it shows it at once and writes behind it.
+- The user: Pulsar's palette is the 205/255 levels the converter already uses.
