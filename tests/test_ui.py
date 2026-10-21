@@ -741,6 +741,53 @@ def test_snapshots(ctx):
     reset('contrast')
 
 
+def test_presets(ctx):
+    """The Presets dock, hidden by default: a built-in preset applies as one undo step and shows as the current one;
+    Save preset under Custom keeps the settings under a name typed in place, a click brings them back, a right click
+    deletes."""
+    from imgui_bundle import hello_imgui
+    from dizher.ui import presets
+    dock = hello_imgui.get_runner_params().docking_params.dockable_window_of_name('Presets')
+    assert not dock.is_visible, 'shown by default'
+    dock.is_visible = True
+    ctx.yield_(3)
+    before, steps = ui.app.graph, len(ui.app.past)
+    ctx.item_click('//Presets/**/###builtin Exact screen')
+    ctx.yield_(2)
+    assert params('select').coherence == 0.0 and params('halftone').dithering == 0.0 and not params('optimise').enabled
+    assert ui.app.graph['target'] == before['target'] and ui.app.graph['overpaint'] == before['overpaint']
+    assert len(ui.app.past) == steps + 1, 'not one undo step'
+    assert presets.apply(ui.app.graph, presets.BUILTIN['Exact screen'][0]) == ui.app.graph
+    ctx.yield_(60)   # the tooltip of the row under the pointer
+    from imgui_bundle.imgui.test_engine import CaptureFlags_
+    ctx.capture_set_filename('/tmp/dizher_presets.png')
+    ctx.capture_screenshot(CaptureFlags_.hide_mouse_cursor.value)
+    ctx.item_click('//Presets/**/Custom')
+    ctx.item_click('//Presets/**/Save preset')
+    ctx.yield_(2)
+    ctx.key_chars('exact')
+    ctx.key_press(imgui.Key.enter)
+    ctx.yield_(2)
+    assert presets.names(ui.preset_dir) == ['exact'] and list(ui.custom) == ['exact']
+    exact = ui.app.graph
+    ui.app.undo()
+    ctx.yield_(2)
+    assert ui.app.graph == before
+    ctx.item_click('//Presets/**/###custom exact')
+    ctx.yield_(2)
+    assert ui.app.graph == exact
+    ctx.item_click('//Presets/**/###custom exact', imgui.MouseButton_.right)
+    ctx.item_click('//$FOCUSED/Delete…')
+    ctx.yield_(2)
+    ctx.item_click('//Delete preset/Delete')
+    ctx.yield_(2)
+    assert presets.names(ui.preset_dir) == [] and not ui.custom
+    ui.app.undo()
+    ctx.item_click('//Presets/**/Built-in')
+    dock.is_visible = False
+    ctx.yield_(2)
+
+
 def test_capture_layout(ctx):   # keep last: a picture of the default layout for review
     from imgui_bundle.imgui.test_engine import CaptureFlags_
     wait(ctx, lambda: not ui.app.busy and ui.app.result('optimise') is not None, 'the conversion to settle')
@@ -779,6 +826,7 @@ TESTS = [
     ('ui', 'pattern_combo', test_pattern_combo),
     ('ui', 'pattern_gallery', test_pattern_gallery),
     ('ui', 'snapshots', test_snapshots),
+    ('ui', 'presets', test_presets),
     ('ui', 'capture_layout', test_capture_layout),
 ]
 
