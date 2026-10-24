@@ -185,7 +185,7 @@ class PatternPicker:
             imgui.set_cursor_pos_x(x)
         if imgui.button('Gallery…'):
             self._open, self.tab = True, None
-        imgui.set_item_tooltip(f'Every {field} of a section on the conversion, to pick one')
+        widgets.tooltip(f'Every {field} of a section on the conversion, to pick one')
         self._gallery(label, field, groups, current, pick, params)
 
     def _gallery(self, label, field, groups, current, pick, params) -> None:

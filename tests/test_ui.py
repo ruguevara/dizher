@@ -361,6 +361,25 @@ def test_block_collapses_and_expands(ctx):
     assert ui.expanded['framing'] is True
 
 
+def test_param_tooltip_on_label(ctx):
+    """A param's help shows on its label, wrapped, and never over its slider."""
+    from imgui_bundle import em_size
+    from mokit.ui import style
+    r = rect(ctx, '//Convert', '**/select/##surface dE')
+    y = (r.min.y + r.max.y) / 2
+    tooltip = lambda: imgui.internal.find_window_by_name('##Tooltip_00')
+    shown = lambda: tooltip() is not None and tooltip().active
+    ctx.mouse_move_to_pos(imgui.ImVec2(r.min.x - 10, y))
+    wait(ctx, shown, 'the tooltip of the label', 200)
+    ctx.yield_(3)   # a tooltip fits its text a frame after it appears
+    line = imgui.get_text_line_height()
+    assert tooltip().size.x <= em_size(style.TIP_WIDTH) + 4 * line, f'not wrapped: {tooltip().size.x}'
+    assert tooltip().size.y > 2.5 * line, f'one line: {tooltip().size.y}'
+    ctx.mouse_move_to_pos(imgui.ImVec2((r.min.x + r.max.x) / 2, y))
+    ctx.yield_(120)
+    assert not shown(), 'a tooltip over the slider'
+
+
 def test_block_reset(ctx):
     ui.app.set_params('light', replace(params('light'), exposure=0.37))
     ctx.yield_(2)
@@ -816,6 +835,7 @@ TESTS = [
     ('ui', 'about', test_about),
     ('ui', 'block_collapses_and_expands', test_block_collapses_and_expands),
     ('ui', 'block_reset', test_block_reset),
+    ('ui', 'param_tooltip_on_label', test_param_tooltip_on_label),
     ('ui', 'views_and_grid', test_views_and_grid),
     ('ui', 'mode_switch_refits_previews', test_mode_switch_refits_previews),
     ('ui', 'custom_palette', test_custom_palette),

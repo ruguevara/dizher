@@ -187,7 +187,7 @@ class LevelsEditor:
             flow(name)
             if widgets.toggle_button(f'{name}##channel', self.channel == c):
                 self.channel = c
-            imgui.set_item_tooltip('The composite, the channels after it' if not c else f'The {name} channel, after the composite')
+            widgets.tooltip('The composite, the channels after it' if not c else f'The {name} channel, after the composite')
         if params.mode == 'Levels':
             self._levels(params, picture, on_change, width)
         else:
@@ -213,8 +213,8 @@ class LevelsEditor:
                     self._ask = True
                 else:
                     on_change(replace(params, mode=m))
-            imgui.set_item_tooltip('Levels per channel; its values stay when Curves is on' if m == 'Levels' else
-                                   'Curves per channel; switching from Levels brings the levels along as curves')
+            widgets.tooltip('Levels per channel; its values stay when Curves is on' if m == 'Levels' else
+                            'Curves per channel; switching from Levels brings the levels along as curves')
         if self._ask:
             imgui.open_popup('curves from levels')
             self._ask = False
@@ -292,7 +292,7 @@ class LevelsEditor:
             in_black, in_white = tone.auto_levels(self._input(params, picture))
             set_(in_black=in_black, in_white=in_white)
         imgui.end_disabled()
-        imgui.set_item_tooltip("Black and white points clipping 0.1% of the shown channel's values at each end")
+        widgets.tooltip("Black and white points clipping 0.1% of the shown channel's values at each end")
 
     def _histogram(self, counts, width: float, ink=None) -> None:
         pos, height, pad = imgui.get_cursor_screen_pos(), em_size(HIST_HEIGHT), em_size(HANDLE)

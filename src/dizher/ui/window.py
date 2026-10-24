@@ -39,7 +39,7 @@ from mokit.ui.style import Palette
 from .. import ops, tone, version
 from ..converter.converter import os_path
 from .app import Pipeline, merged, project_folder
-from .levels import LevelsEditor, tip
+from .levels import LevelsEditor
 from . import gallery, presets, snapshots, views
 
 HEADER_TINT = dict(running=Palette.warn, error=Palette.error)   # header background of a running or failed stage
@@ -201,7 +201,7 @@ def palette_grid(palette, click, tip, marks={}, specials=()) -> None:
             if imgui.is_item_clicked(imgui.MouseButton_.right):
                 click(i, imgui.MouseButton_.right)
             imgui.end_disabled()
-            imgui.set_item_tooltip(tip(i))
+            widgets.tooltip(tip(i))
             mark, lo = marks.get(i, LABEL.get(i)), imgui.get_item_rect_min()
             ink = imgui.IM_COL32(*(3 * (0 if i >= 0 and np.dot(rgba[:3], (0.299, 0.587, 0.114)) > 0.5 else 255,)), 255)
             if mark == '✓':   # imgui's checkbox tick, black on light colours, white on dark
@@ -303,22 +303,22 @@ class OverpaintEditor:
         imgui.push_id(id)
         if widgets.toggle_button('Paint', self.on):
             self.paint(not self.on)
-        imgui.set_item_tooltip('Paint cells in the preview; Esc ends')
+        widgets.tooltip('Paint cells in the preview; Esc ends')
         imgui.same_line()
         imgui.begin_disabled(not params.overrides and not self.app.unpainted)
         if widgets.toggle_button('Hide', self.app.unpainted):
             self.app.set_unpainted(not self.app.unpainted)
             self.on = self.on and not self.app.unpainted
         imgui.end_disabled()
-        imgui.set_item_tooltip('Show the conversion without the painted cells; they stay in the project')
+        widgets.tooltip('Show the conversion without the painted cells; they stay in the project')
         imgui.same_line()
         fixed = self.fixed(params.overrides, selection)
         imgui.begin_disabled(fixed == params.overrides)
         if imgui.small_button('Freeze all'):
             on_change(replace(params, overrides=fixed))
         imgui.end_disabled()
-        imgui.set_item_tooltip('Paint every cell with the colours it shows: the whole field stops following Select '
-                               'pairs, an Auto ink or paper and a pair the palette cannot show become the ones shown')
+        widgets.tooltip('Paint every cell with the colours it shows: the whole field stops following Select '
+                        'pairs, an Auto ink or paper and a pair the palette cannot show become the ones shown')
         imgui.text(f'{len(params.overrides)} cells painted' + (', hidden' if self.app.unpainted else ''))
         if selection is not None:
             palette = selection.palette
@@ -530,7 +530,7 @@ class Window:
                 cut = widgets.text_ellipsis(title, imgui.ImVec2(at.x + imgui.get_font_size() + 3 * pad.x, at.y + pad.y),
                                             at.x + width - reset - imgui.get_style().item_spacing.x)
             tip = app.errors[nid] if status == 'error' else Op.resolve(op_id).fn.__doc__ or ''
-            imgui.set_item_tooltip(f'{title}\n{tip}' if cut else tip)
+            widgets.tooltip(f'{title}\n{tip}' if cut else tip)
             if params is not None:
                 self._reset_button(nid, params, x0 + width - reset)
             if status == 'error':
@@ -551,7 +551,7 @@ class Window:
                 if imgui.button('Random'):
                     x, y = np.random.randint(ops.BLUE_NOISE_RESOLUTION, size=2)
                     self.app.set_params(nid, replace(params, noise_x=int(x), noise_y=int(y)))
-                imgui.set_item_tooltip('Restart from a random tile origin')
+                widgets.tooltip('Restart from a random tile origin')
             widgets.gap()
 
     def _history(self) -> None:
@@ -564,7 +564,7 @@ class Window:
             label = change(steps[i - 1], steps[i]) if i else 'Start'
             with style.text_color(Palette.muted if i > here else imgui.get_style_color_vec4(imgui.Col_.text)):
                 clicked = imgui.selectable(f'{label}##{i}', i == here)[0]
-            imgui.set_item_tooltip(label)
+            widgets.tooltip(label)
             if i == here and len(steps) != self._steps:
                 imgui.set_scroll_here_y()   # follow a new step
             if clicked:
@@ -605,13 +605,13 @@ class Window:
         for view, tip in [*VIEWS.items(), *((v, d[0]) for v, d in DEBUG.items())]:
             if widgets.toggle_button(view, self.view == view):
                 self.view = view
-            imgui.set_item_tooltip(tip)
+            widgets.tooltip(tip)
             imgui.same_line(0, 0)
         imgui.same_line()
         imgui.push_id('grid')   # the bare '#' label would read as an id marker
         if widgets.toggle_button('#', self.grid):
             self.grid = not self.grid
-        imgui.set_item_tooltip('Cell grid over both previews')
+        widgets.tooltip('Cell grid over both previews')
         imgui.pop_id()
 
     def _live(self):
@@ -893,7 +893,7 @@ class Window:
         if imgui.button('Clear overpaint'):
             self._set_cell(r, c, None)
         imgui.end_disabled()
-        imgui.set_item_tooltip('Give the cell back to Select pairs')
+        widgets.tooltip('Give the cell back to Select pairs')
 
     def _candidates(self, r: int, c: int, pick=None):
         """The inspector's table: the best pairs at block (r, c) by SelectionEnergy.cell_candidates, and the chosen
@@ -948,12 +948,12 @@ class Window:
                 for i, path in enumerate(self.recent):
                     if imgui.menu_item_simple(f'{path.name}##{i}', enabled=exists(path)):
                         self._close(lambda p=path: self._open_image(p))
-                    imgui.set_item_tooltip(str(path))
+                    widgets.tooltip(str(path))
                 imgui.end_menu()
             if imgui.menu_item_simple('Save project', enabled=self.project is not None and self.app.graph != self.saved):
                 self._save_project()
             self.autosave = imgui.menu_item('Autosave project', '', self.autosave)[1]
-            imgui.set_item_tooltip('Save the project after every edit')
+            widgets.tooltip('Save the project after every edit')
             imgui.separator()
             if imgui.menu_item_simple('Save conversion…', enabled=self.result is not None):
                 self._save()
@@ -979,7 +979,7 @@ class Window:
 
     def _status(self) -> None:
         imgui.text(f"{self.project.name if self.project else 'untitled'}{' *' if self.app.graph != self.saved else ''}")
-        imgui.set_item_tooltip(str(self.project) if self.project else 'Open an image from the File menu')
+        widgets.tooltip(str(self.project) if self.project else 'Open an image from the File menu')
         imgui.same_line()
         job = self.app.job
         if job is not None:
@@ -1009,8 +1009,8 @@ class Window:
             return
         if imgui.button('Save snapshot'):
             self._new_snapshot()
-        imgui.set_item_tooltip('Keep every setting, overpaint included, as a snapshot of this image\'s project '
-                               f"({'Shift+Cmd+S' if sys.platform == 'darwin' else 'Ctrl+Shift+S'})")
+        widgets.tooltip('Keep every setting, overpaint included, as a snapshot of this image\'s project '
+                        f"({'Shift+Cmd+S' if sys.platform == 'darwin' else 'Ctrl+Shift+S'})")
         match = self._match()
         for name, graph in list(self.snaps.items()):
             if self._renaming and self._renaming[0] == name:
@@ -1021,7 +1021,7 @@ class Window:
                 self._restore(name)
             if imgui.is_item_hovered():
                 self._peek = name, imgui.get_frame_count()
-            imgui.set_item_tooltip(f'Differs in {change(graph, self.app.graph)}' if name != match else 'The current settings')
+            widgets.tooltip(f'Differs in {change(graph, self.app.graph)}' if name != match else 'The current settings')
             if imgui.begin_popup_context_item(f'menu {name}'):
                 if imgui.menu_item_simple('Update with current settings', enabled=name != match):
                     self._write_snapshot(name)
@@ -1200,8 +1200,8 @@ class Window:
         if imgui.begin_tab_item('Custom')[0]:
             if imgui.button('Save preset'):
                 self._new_preset()
-            imgui.set_item_tooltip('Keep the conversion settings, but the Target and the painted cells, as a preset '
-                                   'for every image')
+            widgets.tooltip('Keep the conversion settings, but the Target and the painted cells, as a preset '
+                            'for every image')
             if not self.custom:
                 widgets.hint('Presets saved here apply to any image')
             for name, preset in list(self.custom.items()):
@@ -1228,7 +1228,8 @@ class Window:
         if imgui.selectable(f'{name}###{id}', current)[0] and not current:
             self.app.set_graph(applied)
         if imgui.is_item_hovered(imgui.HoveredFlags_.for_tooltip.value):   # the change only then: it compares graphs
-            tip(*filter(None, (about, 'The current settings' if current else f'Changes {change(self.app.graph, applied)}')))
+            widgets.tooltip('\n'.join(filter(None, (about, 'The current settings' if current
+                                                         else f'Changes {change(self.app.graph, applied)}'))))
         return current
 
     def _new_preset(self) -> None:
