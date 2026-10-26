@@ -96,6 +96,7 @@ STATUS_DOT = {"radius": 0.22, "offset": (0.0, 0.0)}   # `widgets.status_dot`: di
 GAP = 0.6            # vertical gap between groups (`widgets.gap()`)
 LABEL_WIDTH = 6      # label column of a field row (`widgets.field`): the longest label; the field fills the rest
 LABEL_SHARE = 0.4    # ... but at most this share of the row, the label cut with … in a narrow dock
+TIP_WIDTH = 24       # a tooltip's text wraps at this width (`widgets.tooltip`)
 NUMBER_MIN = 4       # the narrowest number an int field keeps its -/+ buttons for
 DIALOG_WIDTH = 40    # text inputs in dialogs
 PROGRESS_WIDTH = 8   # status-bar progress bar

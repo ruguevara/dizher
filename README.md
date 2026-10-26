@@ -329,6 +329,12 @@ Done:
   its conversion. Save snapshot (Shift+Cmd+S) names one by the time, ready to rename; a click brings
   one back as one undo step, asking first only when no snapshot has the current settings; hovering
   one shows its conversion in the Preview. Right click: update, rename, delete.
+* [x] Conversion presets: the Presets panel, right of Convert and shown from the View menu, applies
+  a preset's Convert settings (all but the Target and the painted cells) as one undo step. Built-in:
+  Default, Halftoned (0.2.4), and Exact screen, which gives back a picture already drawn for the
+  screen pixel for pixel (Tune at its defaults; in the file a cell's ink and paper may swap). Custom:
+  the user's own, shared by every project, in `dizher/presets/` of the user config folder; Save
+  preset keeps the current settings, ready to rename. Right click: update, rename, delete.
 * [x] Overpaint: attributes and brightness painted by hand; Freeze all keeps the whole field as shown, so it
   no longer follows Select pairs; Hide shows the conversion without the painted cells. On the
   Spectrum ink and paper share a brightness, and the B1 and B0 brushes make a cell bright or not
@@ -352,7 +358,7 @@ Critical:
 * [ ] .dmg for macOS
 * [ ] Palette snapping prototype
 * [ ] Snapshots: the knobs a snapshot changes highlighted in the panels
-* [ ] Global presets of selected stages and params
+* [ ] Presets: a choice of the stages and params a preset holds
 
 ### Future versions
 

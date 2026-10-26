@@ -1,7 +1,8 @@
 """imgui_bundle window over the pipeline host, in AmaZX's layout: the Tune dock on the left and the Convert dock
 on the right, each with one collapsible block per stage in pipeline order (mokit's params editor inside, or a
 custom one), the Preview dock between them with the tuned image and the conversion, and the History dock under
-Convert's with every undo step, the Snapshots dock under Tune's with named copies of every setting. A block header shows its
+Convert's with every undo step, the Snapshots dock under Tune's with named copies of every setting, and the Presets dock
+right of Convert, hidden until View shows it, with conversion settings to apply to any image. A block header shows its
 stage's state: plain when done, tinted while it runs or after it failed, muted while waiting to run. hello_imgui's
 ini keeps the dock layout, its user prefs which blocks are open and the session: the project folder and its unsaved
 edits, restored on the next start when no path is given; with none the project opens as it is on disk.
@@ -16,6 +17,7 @@ import platform
 import signal
 import subprocess
 import sys
+import tempfile
 import time
 from contextlib import contextmanager
 from functools import lru_cache
@@ -38,7 +40,7 @@ from .. import ops, tone, version
 from ..converter.converter import os_path
 from .app import Pipeline, merged, project_folder
 from .levels import LevelsEditor
-from . import gallery, snapshots, views
+from . import gallery, presets, snapshots, views
 
 HEADER_TINT = dict(running=Palette.warn, error=Palette.error)   # header background of a running or failed stage
 LABELS = {nid: label for nid, label, _, _ in ops.PIPELINE}
@@ -199,7 +201,7 @@ def palette_grid(palette, click, tip, marks={}, specials=()) -> None:
             if imgui.is_item_clicked(imgui.MouseButton_.right):
                 click(i, imgui.MouseButton_.right)
             imgui.end_disabled()
-            imgui.set_item_tooltip(tip(i))
+            widgets.tooltip(tip(i))
             mark, lo = marks.get(i, LABEL.get(i)), imgui.get_item_rect_min()
             ink = imgui.IM_COL32(*(3 * (0 if i >= 0 and np.dot(rgba[:3], (0.299, 0.587, 0.114)) > 0.5 else 255,)), 255)
             if mark == '✓':   # imgui's checkbox tick, black on light colours, white on dark
@@ -301,22 +303,22 @@ class OverpaintEditor:
         imgui.push_id(id)
         if widgets.toggle_button('Paint', self.on):
             self.paint(not self.on)
-        imgui.set_item_tooltip('Paint cells in the preview; Esc ends')
+        widgets.tooltip('Paint cells in the preview; Esc ends')
         imgui.same_line()
         imgui.begin_disabled(not params.overrides and not self.app.unpainted)
         if widgets.toggle_button('Hide', self.app.unpainted):
             self.app.set_unpainted(not self.app.unpainted)
             self.on = self.on and not self.app.unpainted
         imgui.end_disabled()
-        imgui.set_item_tooltip('Show the conversion without the painted cells; they stay in the project')
+        widgets.tooltip('Show the conversion without the painted cells; they stay in the project')
         imgui.same_line()
         fixed = self.fixed(params.overrides, selection)
         imgui.begin_disabled(fixed == params.overrides)
         if imgui.small_button('Freeze all'):
             on_change(replace(params, overrides=fixed))
         imgui.end_disabled()
-        imgui.set_item_tooltip('Paint every cell with the colours it shows: the whole field stops following Select '
-                               'pairs, an Auto ink or paper and a pair the palette cannot show become the ones shown')
+        widgets.tooltip('Paint every cell with the colours it shows: the whole field stops following Select '
+                        'pairs, an Auto ink or paper and a pair the palette cannot show become the ones shown')
         imgui.text(f'{len(params.overrides)} cells painted' + (', hidden' if self.app.unpainted else ''))
         if selection is not None:
             palette = selection.palette
@@ -353,6 +355,11 @@ class Window:
         self._renaming = None              # [snapshot name, the text typed, focus the field]: renamed in place
         self._asking = None                # the snapshot a restore waits with, asking about the current settings
         self._deleting = None              # the snapshot waiting for Delete's confirmation
+        self.preset_dir = presets.folder()  # the user's presets, shared by every project
+        self.custom = {}                   # the user's preset name -> its preset graph (presets.of), by name
+        self._preset_renaming = None       # as _renaming, for a preset
+        self._preset_deleting = None       # the preset waiting for Delete's confirmation
+        self._read_presets()
         self.restore_session = path is None
         if path and exists(Path(path) / project.PROJECT_FILE):
             self._open_project(path)
@@ -400,7 +407,9 @@ class Window:
         p.imgui_window_params.default_imgui_window_type = hello_imgui.DefaultImGuiWindowType.provide_full_screen_dock_space
         p.docking_params.docking_splits = [
             hello_imgui.DockingSplit('MainDockSpace', 'TuneSpace', imgui.Dir.left, 0.22),
-            hello_imgui.DockingSplit('MainDockSpace', 'ConvertSpace', imgui.Dir.right, 0.28),
+            # a column of its own at the right edge: shown, it narrows the Preview, not Convert
+            hello_imgui.DockingSplit('MainDockSpace', 'PresetsSpace', imgui.Dir.right, 0.2),
+            hello_imgui.DockingSplit('MainDockSpace', 'ConvertSpace', imgui.Dir.right, 0.36),
             hello_imgui.DockingSplit('ConvertSpace', 'HistorySpace', imgui.Dir.down, 0.25),
             hello_imgui.DockingSplit('TuneSpace', 'SnapshotsSpace', imgui.Dir.down, 0.25)]
         p.docking_params.dockable_windows = [
@@ -408,7 +417,8 @@ class Window:
             hello_imgui.DockableWindow('Convert', 'ConvertSpace', lambda: (self._column(ops.CONVERT), self._export())),
             hello_imgui.DockableWindow('Preview', 'MainDockSpace', self._preview),
             hello_imgui.DockableWindow('History', 'HistorySpace', self._history),
-            hello_imgui.DockableWindow('Snapshots', 'SnapshotsSpace', self._snapshots)]
+            hello_imgui.DockableWindow('Snapshots', 'SnapshotsSpace', self._snapshots),
+            hello_imgui.DockableWindow('Presets', 'PresetsSpace', self._presets, is_visible_=False)]   # View shows it
         if not persist:   # tests: the default layout in an ini of their own, the user's stays untouched
             p.app_window_params.window_geometry.size = (1100, 1000)   # narrow: C64 fits at a smaller zoom than ZX
             p.app_window_params.restore_previous_geometry = False
@@ -416,6 +426,8 @@ class Window:
             p.docking_params.layout_condition = hello_imgui.DockingLayoutCondition.application_start
             p.imgui_window_params.remember_theme = False   # the default theme, not the one a run before left in the ini
             p.callbacks.post_init = p.callbacks.before_exit = lambda: None
+            self.preset_dir = Path(tempfile.mkdtemp(prefix='dizher-presets-'))   # the user's presets stay untouched
+            self._read_presets()
         return p
 
     def run_tests(self, tests) -> bool:
@@ -493,6 +505,7 @@ class Window:
         self._due_picture()
         self._unsaved_dialog()
         self._snapshot_dialogs()
+        self._preset_dialog()
         self._about_dialog()
         self.app.update()
         fps = hello_imgui.get_runner_params().fps_idling
@@ -517,7 +530,7 @@ class Window:
                 cut = widgets.text_ellipsis(title, imgui.ImVec2(at.x + imgui.get_font_size() + 3 * pad.x, at.y + pad.y),
                                             at.x + width - reset - imgui.get_style().item_spacing.x)
             tip = app.errors[nid] if status == 'error' else Op.resolve(op_id).fn.__doc__ or ''
-            imgui.set_item_tooltip(f'{title}\n{tip}' if cut else tip)
+            widgets.tooltip(f'{title}\n{tip}' if cut else tip)
             if params is not None:
                 self._reset_button(nid, params, x0 + width - reset)
             if status == 'error':
@@ -538,7 +551,7 @@ class Window:
                 if imgui.button('Random'):
                     x, y = np.random.randint(ops.BLUE_NOISE_RESOLUTION, size=2)
                     self.app.set_params(nid, replace(params, noise_x=int(x), noise_y=int(y)))
-                imgui.set_item_tooltip('Restart from a random tile origin')
+                widgets.tooltip('Restart from a random tile origin')
             widgets.gap()
 
     def _history(self) -> None:
@@ -551,7 +564,7 @@ class Window:
             label = change(steps[i - 1], steps[i]) if i else 'Start'
             with style.text_color(Palette.muted if i > here else imgui.get_style_color_vec4(imgui.Col_.text)):
                 clicked = imgui.selectable(f'{label}##{i}', i == here)[0]
-            imgui.set_item_tooltip(label)
+            widgets.tooltip(label)
             if i == here and len(steps) != self._steps:
                 imgui.set_scroll_here_y()   # follow a new step
             if clicked:
@@ -592,13 +605,13 @@ class Window:
         for view, tip in [*VIEWS.items(), *((v, d[0]) for v, d in DEBUG.items())]:
             if widgets.toggle_button(view, self.view == view):
                 self.view = view
-            imgui.set_item_tooltip(tip)
+            widgets.tooltip(tip)
             imgui.same_line(0, 0)
         imgui.same_line()
         imgui.push_id('grid')   # the bare '#' label would read as an id marker
         if widgets.toggle_button('#', self.grid):
             self.grid = not self.grid
-        imgui.set_item_tooltip('Cell grid over both previews')
+        widgets.tooltip('Cell grid over both previews')
         imgui.pop_id()
 
     def _live(self):
@@ -880,7 +893,7 @@ class Window:
         if imgui.button('Clear overpaint'):
             self._set_cell(r, c, None)
         imgui.end_disabled()
-        imgui.set_item_tooltip('Give the cell back to Select pairs')
+        widgets.tooltip('Give the cell back to Select pairs')
 
     def _candidates(self, r: int, c: int, pick=None):
         """The inspector's table: the best pairs at block (r, c) by SelectionEnergy.cell_candidates, and the chosen
@@ -935,12 +948,12 @@ class Window:
                 for i, path in enumerate(self.recent):
                     if imgui.menu_item_simple(f'{path.name}##{i}', enabled=exists(path)):
                         self._close(lambda p=path: self._open_image(p))
-                    imgui.set_item_tooltip(str(path))
+                    widgets.tooltip(str(path))
                 imgui.end_menu()
             if imgui.menu_item_simple('Save project', enabled=self.project is not None and self.app.graph != self.saved):
                 self._save_project()
             self.autosave = imgui.menu_item('Autosave project', '', self.autosave)[1]
-            imgui.set_item_tooltip('Save the project after every edit')
+            widgets.tooltip('Save the project after every edit')
             imgui.separator()
             if imgui.menu_item_simple('Save conversion…', enabled=self.result is not None):
                 self._save()
@@ -966,7 +979,7 @@ class Window:
 
     def _status(self) -> None:
         imgui.text(f"{self.project.name if self.project else 'untitled'}{' *' if self.app.graph != self.saved else ''}")
-        imgui.set_item_tooltip(str(self.project) if self.project else 'Open an image from the File menu')
+        widgets.tooltip(str(self.project) if self.project else 'Open an image from the File menu')
         imgui.same_line()
         job = self.app.job
         if job is not None:
@@ -996,8 +1009,8 @@ class Window:
             return
         if imgui.button('Save snapshot'):
             self._new_snapshot()
-        imgui.set_item_tooltip('Keep every setting, overpaint included, as a snapshot of this image\'s project '
-                               f"({'Shift+Cmd+S' if sys.platform == 'darwin' else 'Ctrl+Shift+S'})")
+        widgets.tooltip('Keep every setting, overpaint included, as a snapshot of this image\'s project '
+                        f"({'Shift+Cmd+S' if sys.platform == 'darwin' else 'Ctrl+Shift+S'})")
         match = self._match()
         for name, graph in list(self.snaps.items()):
             if self._renaming and self._renaming[0] == name:
@@ -1008,7 +1021,7 @@ class Window:
                 self._restore(name)
             if imgui.is_item_hovered():
                 self._peek = name, imgui.get_frame_count()
-            imgui.set_item_tooltip(f'Differs in {change(graph, self.app.graph)}' if name != match else 'The current settings')
+            widgets.tooltip(f'Differs in {change(graph, self.app.graph)}' if name != match else 'The current settings')
             if imgui.begin_popup_context_item(f'menu {name}'):
                 if imgui.menu_item_simple('Update with current settings', enabled=name != match):
                     self._write_snapshot(name)
@@ -1018,19 +1031,28 @@ class Window:
                     self._deleting = name
                 imgui.end_popup()
 
-    def _rename_field(self) -> None:
-        """The renamed snapshot's row: Enter or a click away renames it, Esc keeps its name."""
-        name, text, focus = self._renaming
+    @staticmethod
+    def _name_field(renaming: list):
+        """A row renamed in place, renaming [its name, the text typed, focus the field], as a text field: the new name
+        cleaned once Enter or a click away ends it ("" when Esc keeps the name or nothing is left), None till then."""
+        name, text, focus = renaming
         if focus:
             imgui.set_keyboard_focus_here()
-            self._renaming[2] = False
+            renaming[2] = False
         imgui.set_next_item_width(-1)
         flags = imgui.InputTextFlags_.enter_returns_true.value | imgui.InputTextFlags_.auto_select_all.value
-        entered, self._renaming[1] = imgui.input_text(f'##rename {name}', text, flags)
+        entered, renaming[1] = imgui.input_text(f'##rename {name}', text, flags)
         if not (entered or imgui.is_item_deactivated()):
+            return None
+        return '' if imgui.is_key_pressed(imgui.Key.escape) else snapshots.clean(renaming[1])
+
+    def _rename_field(self) -> None:
+        """The renamed snapshot's row: Enter or a click away renames it, Esc keeps its name."""
+        name, new = self._renaming[0], self._name_field(self._renaming)
+        if new is None:
             return
-        self._renaming, new = None, snapshots.clean(self._renaming[1])
-        if not new or new == name or imgui.is_key_pressed(imgui.Key.escape):
+        self._renaming = None
+        if not new or new == name:
             return
         new = snapshots.free_name(self.project, new)
         try:
@@ -1161,6 +1183,106 @@ class Window:
         size, draw = imgui.calc_text_size(text), imgui.get_window_draw_list()
         draw.add_rect_filled(lo, imgui.ImVec2(lo.x + size.x + 2 * pad.x, lo.y + size.y + 2 * pad.y), imgui.IM_COL32(0, 0, 0, 200))
         draw.add_text(imgui.ImVec2(lo.x + pad.x, lo.y + pad.y), imgui.IM_COL32(255, 255, 255, 255), text)
+
+    # ----- presets ---------------------------------------------------------------------------------
+
+    def _presets(self) -> None:
+        """Conversion presets (presets.py): the Convert column's settings but the Target and the painted cells. A click
+        applies one, one undo step; the one the settings are is selected. Built-in ones come with the app; Custom ones
+        are the user's, shared by every project: Save preset keeps the current settings, its name in a field to type
+        another; a right click updates, renames or deletes one."""
+        if not imgui.begin_tab_bar('presets'):
+            return
+        if imgui.begin_tab_item('Built-in')[0]:
+            for name, (preset, about) in presets.BUILTIN.items():
+                self._preset_row(f'builtin {name}', name, preset, about)
+            imgui.end_tab_item()
+        if imgui.begin_tab_item('Custom')[0]:
+            if imgui.button('Save preset'):
+                self._new_preset()
+            widgets.tooltip('Keep the conversion settings, but the Target and the painted cells, as a preset '
+                            'for every image')
+            if not self.custom:
+                widgets.hint('Presets saved here apply to any image')
+            for name, preset in list(self.custom.items()):
+                if self._preset_renaming and self._preset_renaming[0] == name:
+                    self._rename_preset()
+                    continue
+                current = self._preset_row(f'custom {name}', name, preset)
+                if imgui.begin_popup_context_item(f'menu {name}'):
+                    if imgui.menu_item_simple('Update with current settings', enabled=not current):
+                        self._write_preset(name)
+                    if imgui.menu_item_simple('Rename'):
+                        self._preset_renaming = [name, name, True]
+                    if imgui.menu_item_simple('Delete…'):
+                        self._preset_deleting = name
+                    imgui.end_popup()
+            imgui.end_tab_item()
+        imgui.end_tab_bar()
+
+    def _preset_row(self, id: str, name: str, preset, about: str = '') -> bool:
+        """A preset's row: a click applies it; the tooltip says what it is for and what it would change. True when the
+        settings are the preset's."""
+        applied = presets.apply(self.app.graph, preset)
+        current = applied == self.app.graph
+        if imgui.selectable(f'{name}###{id}', current)[0] and not current:
+            self.app.set_graph(applied)
+        if imgui.is_item_hovered(imgui.HoveredFlags_.for_tooltip.value):   # the change only then: it compares graphs
+            widgets.tooltip('\n'.join(filter(None, (about, 'The current settings' if current
+                                                         else f'Changes {change(self.app.graph, applied)}'))))
+        return current
+
+    def _new_preset(self) -> None:
+        """The settings as a new preset, its name in a field to type another."""
+        name = presets.free_name(self.preset_dir, 'Preset')
+        if self._write_preset(name):
+            self._preset_renaming = [name, name, True]
+
+    def _write_preset(self, name: str) -> bool:
+        try:
+            presets.save(self.preset_dir, name, self.app.graph)
+        except OSError as e:
+            self.app.errors['preset'] = f'cannot save preset {name}: {e}'
+            return False
+        self._read_presets()
+        return True
+
+    def _rename_preset(self) -> None:
+        """The renamed preset's row: Enter or a click away renames it, Esc keeps its name."""
+        name, new = self._preset_renaming[0], self._name_field(self._preset_renaming)
+        if new is None:
+            return
+        self._preset_renaming = None
+        if not new or new == name:
+            return
+        try:
+            presets.rename(self.preset_dir, name, presets.free_name(self.preset_dir, new))
+        except OSError as e:
+            self.app.errors['preset'] = f'cannot rename {name}: {e}'
+        self._read_presets()
+
+    def _preset_dialog(self) -> None:
+        if self._preset_deleting is None:
+            return
+        name = self._preset_deleting
+        choice = self._modal('Delete preset', f'Delete the preset {name}? This cannot be undone.', ('Delete', 'Cancel'))
+        if choice == 'Delete':
+            try:
+                presets.delete(self.preset_dir, name)
+            except OSError as e:
+                self.app.errors['preset'] = f'cannot delete {name}: {e}'
+            self._read_presets()
+        if choice:
+            self._preset_deleting = None
+
+    def _read_presets(self) -> None:
+        """The user's presets; an unreadable one is left out."""
+        self.custom, self._preset_renaming = {}, None
+        for name in presets.names(self.preset_dir):
+            try:
+                self.custom[name] = presets.load(self.preset_dir, name)
+            except (OSError, ValueError, GraphError):
+                continue
 
     # ----- files -----------------------------------------------------------------------------------
 

@@ -6,7 +6,7 @@ int -> input_int (clamped to min/max, -/+ buttons with `step`), float -> slider 
 set (a double click resets it) else input_float, bool -> checkbox, str -> combo when `choices` else input_text, Path ->
 text + Browse (meta editor "file"/"folder", output paths pick folders), Optional[X] -> X with an empty value meaning None. Tuples and other types are shown
 read-only. Label = meta(label) or the field name with spaces; meta(help) draws a hint under the widget, or with
-help="tooltip" shows on hovering it.
+help="tooltip" shows on hovering its label, wrapped (a checkbox's label is its own), never over the slider or field.
 """
 import math
 from dataclasses import fields, replace
@@ -60,16 +60,19 @@ def _field(params, f, tp, on_change, help: str = "hint") -> None:
     meta = f.metadata
     value = getattr(params, f.name)
     label = field_label(f)
+    tip = meta.get("help", "") if help == "tooltip" else ""
     set_value = lambda v: on_change(replace(params, **{f.name: v}))
     if tp is bool:
         widgets.field('')   # the box in the fields' column, its name after it (Blender's)
         changed, new = imgui.checkbox(label, bool(value))
+        widgets.tooltip(tip)
         if changed:
             set_value(new)
     elif tp is int:
-        widgets.input_int(label, int(value or 0), lambda v: set_value(_clamp(v, meta)), step=meta.get("step", 0))
+        widgets.input_int(label, int(value or 0), lambda v: set_value(_clamp(v, meta)), step=meta.get("step", 0),
+                          tip=tip)
     elif tp is float:
-        id = widgets.field(label)
+        id = widgets.field(label, tip=tip)
         if meta.get("min") is not None and meta.get("max") is not None:
             step, decimals = slider_step(meta["min"], meta["max"])
             changed, new = imgui.slider_float(id, float(value or 0.0), float(meta["min"]), float(meta["max"]),
@@ -84,20 +87,18 @@ def _field(params, f, tp, on_change, help: str = "hint") -> None:
             set_value(_clamp(new, meta))
     elif tp is str:
         if meta.get("choices"):
-            widgets.combo(label, str(value), [str(c) for c in meta["choices"]], set_value)
+            widgets.combo(label, str(value), [str(c) for c in meta["choices"]], set_value, tip=tip)
         else:
-            widgets.input_text(label, str(value or ""), set_value)
+            widgets.input_text(label, str(value or ""), set_value, tip=tip)
     elif tp is Path:
         kind = meta.get("editor") or "folder"
         imgui.text(label)
+        widgets.tooltip(tip)
         widgets.path_input(f"##{f.name}", str(value) if value else "",
                            lambda v: set_value(Path(v) if v else None), kind, label, str(value or Path.cwd()))
     else:
         imgui.text(f"{label}: {value!r}")
         widgets.hint("(not editable here)")
         return
-    if meta.get("help"):
-        if help == "tooltip":
-            imgui.set_item_tooltip(meta["help"])
-        else:
-            widgets.hint(meta["help"])
+    if meta.get("help") and help != "tooltip":
+        widgets.hint(meta["help"])
