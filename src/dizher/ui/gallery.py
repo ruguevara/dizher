@@ -47,6 +47,11 @@ def halftoned(conv, ditherer) -> np.ndarray:
     return c.dithered_result
 
 
+# the combo's own preview (begin_combo_preview after end_combo): imgui up to 1.92 asks for this flag, 1.93 has none
+_PRIVATE = getattr(imgui.internal, 'ComboFlagsPrivate_', None)
+CUSTOM_PREVIEW = _PRIVATE.custom_preview.value if _PRIVATE is not None else 0
+
+
 class Thumbnails:
     """The gallery's images, halftoned on a worker thread one at a time, in the order last asked for. A new source (a
     finished conversion, another halftoner or origin) drops them all."""
@@ -150,7 +155,7 @@ class PatternPicker:
         style_ = imgui.get_style()
         spacing, pad = style_.item_spacing.x, style_.frame_padding.x
 
-        flags = imgui.ComboFlags_.height_largest.value | imgui.internal.ComboFlagsPrivate_.custom_preview.value
+        flags = imgui.ComboFlags_.height_largest.value | CUSTOM_PREVIEW
         # the Gallery button after the combo, or under it where the combo would be narrower than MIN_WIDTH beside it
         id, x = widgets.field(field, imgui.calc_text_size('Gallery…').x + 2 * pad + spacing), imgui.get_cursor_pos_x()
         beside = imgui.calc_item_width() >= em_size(MIN_WIDTH)
