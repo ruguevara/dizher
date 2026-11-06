@@ -14,7 +14,41 @@ permissions:
   contents: read
 
 jobs:
+  # code=false when a PR touches only the push trigger's paths-ignore files.
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - id: diff
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          code=true
+          if [ -n "$PR" ]; then
+            gh api "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --paginate --jq '.[].filename' > files
+            grep -qvE '\.md$|^notebooks/' files || code=false
+          fi
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
+  # Docs-only PRs: report the required test checks without running them.
+  test-docs-only:
+    needs: changes
+    if: needs.changes.outputs.code == 'false'
+    name: test (${{ matrix.os }})
+    strategy:
+      matrix:
+        os: [windows-latest, macos-15, ubuntu-latest]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Docs-only change, nothing to test"
+
   test:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
       matrix:
