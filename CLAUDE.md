@@ -24,7 +24,8 @@ A Claude session's branch is created from the default branch. Before the first c
 - Before every push: `pytest`. When the UI changes also `python tests/test_ui.py` (on Linux without a display:
   `xvfb-run -a python tests/test_ui.py`).
 - CI (`.github/workflows/test.yml`) runs `pytest` on Windows, with long paths off as on most machines, macOS and Linux,
-  and `tests/test_ui.py` on Linux under Xvfb, on every push to any branch and on PRs. A PR merges only with all green.
+  and `tests/test_ui.py` on Linux under Xvfb, on every push to any branch and on PRs. A PR merges only with all green;
+  a PR touching only `*.md` and `notebooks/` reports the checks green without running them.
 - A failing test is fixed or the change is; a test is never skipped, disabled or loosened to get green.
 
 ## Builds
